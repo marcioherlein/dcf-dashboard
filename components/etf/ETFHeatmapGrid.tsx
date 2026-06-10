@@ -4,19 +4,11 @@ import { memo } from 'react'
 import Link from 'next/link'
 import { Plus, Check, AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { scoreColor, scoreLabel, scoreBgCell, scoreBadge } from '@/lib/data/etfScore'
+import { scoreColor, scoreLabel, scoreBadge } from '@/lib/data/etfScore'
 import { fmtMultiple } from '@/lib/formatters'
 import { InfoTooltip } from '@/components/ui/info-tooltip'
 import type { ETFMeta } from '@/lib/data/etfUniverse'
 import type { ETFBatchItem } from '@/lib/data/etfTypes'
-
-// Score tier icon — gives colorblind users a non-color signal
-function ScoreTierIcon({ score }: { score: number }) {
-  if (score >= 70) return <span className="text-[10px] leading-none" aria-hidden="true">↓</span>
-  if (score >= 50) return <span className="text-[10px] leading-none" aria-hidden="true">→</span>
-  if (score >= 30) return <span className="text-[10px] leading-none" aria-hidden="true">↑</span>
-  return <span className="text-[10px] leading-none" aria-hidden="true">↑↑</span>
-}
 
 interface Props {
   metas: ETFMeta[]
@@ -42,7 +34,7 @@ export const ETFHeatmapGrid = memo(function ETFHeatmapGrid({ metas, data, watchl
   return (
     <div
       className={cn(
-        'grid gap-3',
+        'grid gap-2',
         cols === 4 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3',
       )}
     >
@@ -53,17 +45,14 @@ export const ETFHeatmapGrid = memo(function ETFHeatmapGrid({ metas, data, watchl
 
         if (loading) {
           return (
-            <div key={meta.ticker} className="h-[108px] rounded-xl border border-[#E3E1DA] bg-[#F5F5F5] motion-safe:animate-pulse" />
+            <div key={meta.ticker} className="h-[76px] rounded-xl border border-[#E3E1DA] bg-[#F5F5F5] motion-safe:animate-pulse" />
           )
         }
 
         return (
           <div
             key={meta.ticker}
-            className={cn(
-              'group relative rounded-xl border p-3 transition-all hover:shadow-sm cursor-pointer',
-              score != null ? scoreBgCell(score) : 'bg-white border-[#E3E1DA]',
-            )}
+            className="group relative rounded-xl border border-[#E3E1DA] bg-white p-3 transition-all hover:border-[#BFD2A1] hover:shadow-sm cursor-pointer"
           >
             {/* Full-card invisible link */}
             <Link
@@ -73,60 +62,49 @@ export const ETFHeatmapGrid = memo(function ETFHeatmapGrid({ metas, data, watchl
               aria-hidden="true"
             />
 
-            {/* Score — primary visual element */}
-            <div className="relative z-10 flex items-baseline gap-1.5 mb-1.5">
-              {score != null ? (
-                <>
-                  <span className={cn('font-[700] text-[26px] leading-none', scoreColor(score))}>
-                    {score}
-                  </span>
-                  <div className="flex items-center gap-0.5">
-                    <span className={cn('text-[10px] font-bold px-1.5 py-0.5 rounded-full', scoreBadge(score))}>
-                      <ScoreTierIcon score={score} />
-                      {' '}{scoreLabel(score)}
-                    </span>
-                  </div>
-                  <InfoTooltip text="Score = P/E (30 pts) + P/B (25 pts) + Yield (25 pts) − Expense ratio penalty (20 pts). 70+ = Deep Value." side="top" />
-                </>
-              ) : (
-                <div className="h-6 w-16 rounded bg-[#E3E1DA] motion-safe:animate-pulse" />
-              )}
-            </div>
-
-            {/* Ticker row */}
-            <div className="relative z-10 flex items-start justify-between gap-1 mb-1">
+            {/* Ticker + add button row */}
+            <div className="relative z-10 flex items-start justify-between gap-1 mb-1.5">
               <Link href={`/etf/${meta.ticker}`} tabIndex={0} className="min-w-0 flex-1">
-                <span className="block font-[700] text-[13px] text-[#06101F] leading-none group-hover:text-olive-700 transition-colors">
+                <span className="block font-[700] text-[13px] text-[#111111] leading-none group-hover:text-olive-700 transition-colors">
                   {meta.ticker}
                 </span>
-                <span className="block text-[11px] text-[#6B6B6B] mt-0.5 leading-tight truncate">
+                <span className="block text-[11px] text-[#8A95A6] mt-0.5 leading-tight truncate">
                   {meta.label}
                 </span>
               </Link>
               <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAdd(meta.ticker) }}
+                data-no-min-h
                 className={cn(
-                  'relative z-20 shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-all focus-visible:ring-2 focus-visible:ring-olive-700 focus-visible:ring-offset-1 focus-visible:outline-none',
+                  'relative z-20 shrink-0 w-7 h-7 flex items-center justify-center rounded-lg transition-all focus-visible:ring-2 focus-visible:ring-olive-700 focus-visible:ring-offset-1 focus-visible:outline-none',
                   isWatchlisted
                     ? 'bg-[#E8F7EF] text-[#11875D]'
-                    : 'bg-white/80 text-[#8A95A6] hover:bg-olive-50 hover:text-olive-700 border border-[#E3E1DA] hover:border-[#BFD2A1]',
+                    : 'bg-[#F5F5F5] text-[#8A95A6] hover:bg-olive-50 hover:text-olive-700',
                 )}
                 aria-label={isWatchlisted ? `${meta.ticker} is in your watchlist` : `Add ${meta.ticker} to watchlist`}
               >
-                {isWatchlisted ? <Check size={11} /> : <Plus size={11} />}
+                {isWatchlisted ? <Check size={10} /> : <Plus size={10} />}
               </button>
             </div>
 
-            {/* Stat row */}
-            <div className="relative z-10 flex items-center gap-3 text-[11px]">
-              {item?.peRatio != null && (
-                <span className="text-[#6B6B6B]">
-                  P/E <span className="font-[600] tabular-nums text-[#06101F]">{fmtMultiple(item.peRatio)}</span>
-                </span>
+            {/* Score + stats row */}
+            <div className="relative z-10 flex items-center gap-2 flex-wrap">
+              {score != null ? (
+                <>
+                  <span className={cn('text-[12px] font-[700] tabular-nums leading-none', scoreColor(score))}>
+                    {score}
+                  </span>
+                  <span className={cn('text-[10px] font-[600] px-1.5 py-0.5 rounded-full leading-none', scoreBadge(score))}>
+                    {scoreLabel(score)}
+                  </span>
+                  <InfoTooltip text="Score = P/E (30 pts) + P/B (25 pts) + Yield (25 pts) − Expense ratio penalty (20 pts). 70+ = Deep Value." side="top" />
+                </>
+              ) : (
+                <div className="h-4 w-12 rounded bg-[#E3E1DA] motion-safe:animate-pulse" />
               )}
-              {item?.expenseRatio != null && (
-                <span className="text-[#6B6B6B]">
-                  ER <span className="font-[600] tabular-nums text-[#06101F]">{(item.expenseRatio * 100).toFixed(2)}%</span>
+              {item?.peRatio != null && (
+                <span className="text-[10px] text-[#8A95A6] ml-auto">
+                  P/E <span className="font-[600] tabular-nums text-[#566174]">{fmtMultiple(item.peRatio)}</span>
                 </span>
               )}
             </div>

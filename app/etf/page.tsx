@@ -1,19 +1,211 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { PieChart, RefreshCw, GitCompare, CheckSquare, Square } from 'lucide-react'
+import { RefreshCw, GitCompare, CheckSquare, Square } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { useSession, signIn } from 'next-auth/react'
 import { ETFSearchBar } from '@/components/etf/ETFSearchBar'
 import { ETFWatchlistCard } from '@/components/etf/ETFWatchlistCard'
-import { ETFUniverseSection } from '@/components/etf/ETFUniverseSection'
 import { ETFMarketPulse } from '@/components/etf/ETFMarketPulse'
+import { ETFHeatmapGrid } from '@/components/etf/ETFHeatmapGrid'
 import { ETFHelpButton } from '@/components/etf/ETFOnboardBanner'
 import ETFLoginToSaveModal from '@/components/etf/ETFLoginToSaveModal'
 import { loadETFWatchlist, deleteETFEntry, saveETFEntry, readLocalWatchlist } from '@/lib/data/etfWatchlistStore'
-import { ALL_TICKERS } from '@/lib/data/etfUniverse'
+import { ALL_TICKERS, SECTOR_META, GEO_META, STYLE_META, ALL_META } from '@/lib/data/etfUniverse'
+import { fmtLarge, fmtPctAbs, fmtMultiple } from '@/lib/formatters'
+import { scoreColor, scoreLabel } from '@/lib/data/etfScore'
+import { InfoTooltip } from '@/components/ui/info-tooltip'
+import { ChevronUp, ChevronDown, ChevronsUpDown, Plus, Check } from 'lucide-react'
+import type { ETFMeta, ETFGroup } from '@/lib/data/etfUniverse'
 import type { ETFEntry, ETFBatchItem } from '@/lib/data/etfTypes'
+
+// ── Inline Rankings table (replaces ETFUniverseSection's Leaderboard) ────────
+
+type SortKey = 'valueScore' | 'peRatio' | 'pbRatio' | 'expenseRatio' | 'yield' | 'aum'
+type SortDir = 'asc' | 'desc'
+type FilterGroup = 'all' | ETFGroup
+
+function SortIcon({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey; sortDir: SortDir }) {
+  if (col !== sortKey) return <ChevronsUpDown size={11} className="text-[#8A95A6]" />
+  return sortDir === 'desc'
+    ? <ChevronDown size={11} className="text-olive-700" />
+    : <ChevronUp size={11} className="text-olive-700" />
+}
+
+const groupBadge: Record<ETFGroup, string> = {
+  sector: 'bg-[#F4F3EF] text-[#566174] border-[#E3E1DA]',
+  geo:    'bg-[#EFF6FF] text-[#2563EB] border-[#BFDBFE]',
+  style:  'bg-[#F0FDF4] text-[#11875D] border-[#BBF7D0]',
+}
+const groupLabel: Record<ETFGroup, string> = { sector: 'Sector', geo: 'Geography', style: 'Style' }
+
+function Rankings({
+  data,
+  watchlistedTickers,
+  onAdd,
+}: {
+  data: Record<string, ETFBatchItem | null>
+  watchlistedTickers: Set<string>
+  onAdd: (ticker: string) => void
+}) {
+  const [filter, setFilter] = useState<FilterGroup>('all')
+  const [sortKey, setSortKey] = useState<SortKey>('valueScore')
+  const [sortDir, setSortDir] = useState<SortDir>('desc')
+  const [showAll, setShowAll] = useState(false)
+
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) setSortDir((d) => d === 'desc' ? 'asc' : 'desc')
+    else { setSortKey(key); setSortDir('desc') }
+  }
+
+  const FILTERS: { id: FilterGroup; label: string }[] = [
+    { id: 'all', label: 'All' },
+    { id: 'sector', label: 'Sectors' },
+    { id: 'geo', label: 'Geographies' },
+    { id: 'style', label: 'Styles' },
+  ]
+
+  const COLS: { key: SortKey; label: string }[] = [
+    { key: 'peRatio', label: 'P/E' },
+    { key: 'pbRatio', label: 'P/B' },
+    { key: 'expenseRatio', label: 'Exp.' },
+    { key: 'yield', label: 'Yield' },
+    { key: 'aum', label: 'AUM' },
+    { key: 'valueScore', label: 'Score' },
+  ]
+
+  const allRows = (ALL_META as ETFMeta[])
+    .filter((m) => filter === 'all' || m.group === filter)
+    .map((m) => ({ meta: m, item: data[m.ticker] ?? null }))
+    .sort((a, b) => {
+      const va = a.item?.[sortKey] ?? null
+      const vb = b.item?.[sortKey] ?? null
+      if (va == null && vb == null) return 0
+      if (va == null) return 1
+      if (vb == null) return -1
+      return sortDir === 'desc' ? (vb as number) - (va as number) : (va as number) - (vb as number)
+    })
+
+  const rows = showAll ? allRows : allRows.slice(0, 10)
+
+  return (
+    <div>
+      <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
+        <div className="flex gap-1.5 flex-wrap">
+          {FILTERS.map((f) => (
+            <button
+              key={f.id}
+              onClick={() => setFilter(f.id)}
+              className={cn(
+                'px-3 py-1.5 rounded-full text-[12px] font-[600] transition-colors border',
+                filter === f.id
+                  ? 'bg-olive-700 text-white border-olive-700'
+                  : 'bg-white text-[#566174] border-[#E3E1DA] hover:border-[#BFD2A1] hover:text-olive-700',
+              )}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+        <p className="text-[11px] text-[#8A95A6]">Click column to sort</p>
+      </div>
+
+      <div className="bg-white rounded-xl border border-[#E3E1DA] overflow-clip">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-[#E3E1DA] bg-[#F4F3EF]">
+                <th className="text-left pl-4 pr-3 py-2 text-[11px] font-[600] text-[#566174] sticky left-0 bg-[#F4F3EF]">ETF</th>
+                <th className="text-left px-3 py-2 text-[11px] font-[600] text-[#566174]">Type</th>
+                {COLS.map((col) => (
+                  <th
+                    key={col.key}
+                    className="px-3 py-2 text-right cursor-pointer select-none whitespace-nowrap"
+                    onClick={() => toggleSort(col.key)}
+                    aria-sort={col.key === sortKey ? (sortDir === 'desc' ? 'descending' : 'ascending') : 'none'}
+                  >
+                    <span className="inline-flex items-center justify-end gap-1 text-[11px] font-[600] text-[#566174] hover:text-[#111111] transition-colors">
+                      {col.label}
+                      <SortIcon col={col.key} sortKey={sortKey} sortDir={sortDir} />
+                    </span>
+                  </th>
+                ))}
+                <th className="px-3 py-2 w-10" />
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#F4F3EF]">
+              {rows.map(({ meta, item }) => {
+                const score = item?.valueScore ?? null
+                const isWatchlisted = watchlistedTickers.has(meta.ticker)
+                return (
+                  <tr key={meta.ticker} className="hover:bg-[#F9F8F5] transition-colors group">
+                    <td className="pl-4 pr-3 py-2.5 sticky left-0 bg-white group-hover:bg-[#F9F8F5] transition-colors">
+                      <Link href={`/etf/${meta.ticker}`} className="block">
+                        <span className="font-[700] text-[12px] text-[#111111] hover:text-olive-700 transition-colors">{meta.ticker}</span>
+                        <span className="block text-[11px] text-[#8A95A6] mt-0.5 truncate max-w-[140px]">{item?.name ?? meta.label}</span>
+                      </Link>
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <span className={cn('inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-[600] border', groupBadge[meta.group])}>
+                        {groupLabel[meta.group]}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2.5 text-right tabular-nums text-[12px] text-[#111111]">
+                      {item?.peRatio != null ? fmtMultiple(item.peRatio) : <span className="text-[#8A95A6]">—</span>}
+                    </td>
+                    <td className="px-3 py-2.5 text-right tabular-nums text-[12px] text-[#111111]">
+                      {item?.pbRatio != null ? fmtMultiple(item.pbRatio) : <span className="text-[#8A95A6]">—</span>}
+                    </td>
+                    <td className="px-3 py-2.5 text-right tabular-nums text-[12px] text-[#111111]">
+                      {item?.expenseRatio != null ? (item.expenseRatio * 100).toFixed(2) + '%' : <span className="text-[#8A95A6]">—</span>}
+                    </td>
+                    <td className="px-3 py-2.5 text-right tabular-nums text-[12px] text-[#111111]">
+                      {item?.yield != null ? fmtPctAbs(item.yield) : <span className="text-[#8A95A6]">—</span>}
+                    </td>
+                    <td className="px-3 py-2.5 text-right tabular-nums text-[12px] text-[#111111]">
+                      {item?.aum != null ? fmtLarge(item.aum) : <span className="text-[#8A95A6]">—</span>}
+                    </td>
+                    <td className="px-3 py-2.5 text-right">
+                      {score != null ? (
+                        <div className="inline-flex items-center gap-1 justify-end">
+                          <span className={cn('text-[12px] font-[700]', scoreColor(score))}>{score}</span>
+                          <span className={cn('text-[10px] font-[600] hidden sm:block', scoreColor(score))}>{scoreLabel(score)}</span>
+                          <InfoTooltip text="Score = P/E (30 pts) + P/B (25 pts) + Yield (25 pts) − Expense ratio penalty (20 pts). 70+ = Deep Value." side="top" />
+                        </div>
+                      ) : <span className="text-[#8A95A6]">—</span>}
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <button
+                        onClick={() => !isWatchlisted && onAdd(meta.ticker)}
+                        data-no-min-h
+                        aria-label={isWatchlisted ? `${meta.ticker} in watchlist` : `Add ${meta.ticker} to watchlist`}
+                        className={cn(
+                          'w-7 h-7 flex items-center justify-center rounded-lg transition-all',
+                          isWatchlisted ? 'bg-[#E8F7EF] text-[#11875D]' : 'bg-[#F4F3EF] text-[#8A95A6] hover:bg-olive-50 hover:text-olive-700',
+                        )}
+                      >
+                        {isWatchlisted ? <Check size={10} /> : <Plus size={10} />}
+                      </button>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+        {allRows.length > 10 && (
+          <button
+            onClick={() => setShowAll((v) => !v)}
+            className="w-full py-2.5 text-[12px] font-[600] text-[#566174] hover:text-olive-700 hover:bg-[#F9F8F5] border-t border-[#E3E1DA] transition-colors"
+          >
+            {showAll ? `Show less ↑` : `Show all ${allRows.length} ETFs ↓`}
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
 
 const SESSION_CACHE_KEY = 'etf_batch_v1'
 const SESSION_CACHE_TTL = 30 * 60 * 1000
@@ -261,6 +453,16 @@ export default function ETFTrackerPage() {
     ? `/etf/compare?symbols=${Array.from(compareSelected).join(',')}`
     : null
 
+  // ── Subtab state ──────────────────────────────────────────────────────────
+  const [activeTab, setActiveTab] = useState<'overview' | 'sectors' | 'geographies' | 'styles'>('overview')
+
+  const TABS = [
+    { id: 'overview' as const,     label: 'Overview'     },
+    { id: 'sectors' as const,      label: 'Sectors'      },
+    { id: 'geographies' as const,  label: 'Geographies'  },
+    { id: 'styles' as const,       label: 'Styles'       },
+  ]
+
   return (
     <div className="min-h-dvh bg-[#F9F8F5]">
 
@@ -274,185 +476,252 @@ export default function ETFTrackerPage() {
         />
       )}
 
-      {/* ── Page header ─────────────────────────────────────────────────────── */}
-      <div className="bg-white border-b border-[#E3E1DA] px-4 sm:px-8 pt-6 pb-5">
+      {/* ── Compact page header ─────────────────────────────────────────────── */}
+      <div className="bg-white border-b border-[#E3E1DA] px-4 sm:px-8 pt-4 pb-3">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-start justify-between gap-4 mb-1">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-olive-700 flex items-center justify-center shrink-0">
-                <PieChart size={15} className="text-white" />
-              </div>
-              <h1 className="text-[24px] sm:text-[28px] font-bold tracking-tight text-[#06101F]">
-                ETF Tracker
-              </h1>
-              <ETFHelpButton />
-            </div>
+          <div className="flex items-center gap-3">
+            <ETFSearchBar
+              onAdd={async (symbol, name) => {
+                const item = batchData[symbol]
+                await handleSaveWithGate(symbol, item?.name ?? name, {
+                  valueScore: item?.valueScore ?? null,
+                  expenseRatio: item?.expenseRatio ?? null,
+                  yield: item?.yield ?? null,
+                  peRatio: item?.peRatio ?? null,
+                  pbRatio: item?.pbRatio ?? null,
+                  totalAssets: item?.aum ?? null,
+                  price: item?.price ?? null,
+                  priceChangePct: item?.priceChangePct ?? null,
+                  metricsUpdatedAt: new Date().toISOString(),
+                }, item?.valueScore ?? null)
+              }}
+              watchlistedTickers={new Set(watchlist.map((e) => e.ticker))}
+            />
             <Link
               href="/etf/compare"
-              className="hidden sm:flex items-center gap-1.5 text-[12px] font-semibold text-[#6B6B6B] hover:text-olive-700 border border-[#E3E1DA] hover:border-[#BFD2A1] rounded-lg px-3 py-2 transition-colors whitespace-nowrap bg-white"
+              className="shrink-0 hidden sm:flex items-center gap-1.5 text-[12px] font-[600] text-[#566174] hover:text-olive-700 border border-[#E3E1DA] hover:border-[#BFD2A1] rounded-lg px-3 py-2.5 transition-colors bg-white whitespace-nowrap"
             >
               <GitCompare size={13} />
-              Compare ETFs
+              Compare
             </Link>
+            <ETFHelpButton />
           </div>
-          <p className="text-[13px] text-[#6B6B6B] mb-5 ml-[42px]">
-            Value-oriented lens on the ETF universe — basket P/E, P/B, expense ratios, and a Value Score.
-          </p>
-          <ETFSearchBar
-            onAdd={async (symbol, name) => {
-              const item = batchData[symbol]
-              await handleSaveWithGate(symbol, item?.name ?? name, {
-                valueScore: item?.valueScore ?? null,
-                expenseRatio: item?.expenseRatio ?? null,
-                yield: item?.yield ?? null,
-                peRatio: item?.peRatio ?? null,
-                pbRatio: item?.pbRatio ?? null,
-                totalAssets: item?.aum ?? null,
-                price: item?.price ?? null,
-                priceChangePct: item?.priceChangePct ?? null,
-                metricsUpdatedAt: new Date().toISOString(),
-              }, item?.valueScore ?? null)
-            }}
-            watchlistedTickers={new Set(watchlist.map((e) => e.ticker))}
-          />
+
+          {/* Subtab nav */}
+          <div className="flex gap-0 mt-3 overflow-x-auto scrollbar-hide border-b-0 -mb-px">
+            {TABS.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  'px-4 py-2 text-[13px] font-[600] whitespace-nowrap border-b-2 transition-colors',
+                  activeTab === tab.id
+                    ? 'text-olive-700 border-olive-700'
+                    : 'text-[#6B6B6B] border-transparent hover:text-[#111111] hover:border-[#CDD1C8]',
+                )}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* ── Content ─────────────────────────────────────────────────────────── */}
-      <div className="px-4 sm:px-8 py-6 sm:py-8 max-w-7xl mx-auto space-y-10">
+      <div className="px-4 sm:px-8 py-5 sm:py-6 max-w-7xl mx-auto space-y-6">
 
-        {/* Market Pulse — always first */}
-        {batchError ? (
+        {/* Error banner */}
+        {batchError && (
           <div className="bg-white border border-[#E3E1DA] rounded-xl p-4 flex items-center justify-between gap-4">
             <p className="text-sm text-[#566174]">{batchError}</p>
             <button
               onClick={() => { setBatchFetched(false); fetchBatch() }}
-              className="flex items-center gap-1.5 text-sm font-semibold text-olive-700 hover:text-olive-600 transition-colors"
+              className="flex items-center gap-1.5 text-sm font-[600] text-olive-700 hover:text-olive-600 transition-colors"
             >
               <RefreshCw size={13} /> Retry
             </button>
           </div>
-        ) : (
-          <ETFMarketPulse data={batchData} loading={batchLoading} />
         )}
 
-        {/* ── My Watchlist (only shown when it has items) ──────────────────── */}
-        {hasWatchlist && (
-          <section>
-            <div className="flex items-center gap-2.5 mb-4 flex-wrap">
-              <h2 className="text-[18px] font-bold text-[#06101F]">My Watchlist</h2>
-              <span className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-1.5 rounded-full text-[11px] font-bold bg-olive-100 text-olive-700">
-                {watchlist.length}
-              </span>
-              <div className="ml-auto flex items-center gap-2">
-                {!userEmail && (
-                  <button
-                    onClick={() => signIn('google', { callbackUrl: window.location.href })}
-                    className="flex items-center gap-1.5 text-[12px] font-semibold text-[#5F790B] hover:text-[#6F8F12] transition-colors"
-                    title="Sign in to sync your watchlist across devices"
-                  >
-                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-3.5 h-3.5" aria-hidden="true">
-                      <rect x="3" y="7" width="10" height="8" rx="1.5" />
-                      <path d="M5 7V5a3 3 0 016 0v2" />
-                    </svg>
-                    Sign in to sync
-                  </button>
-                )}
-                {compareMode && compareSelected.size > 0 && (
-                  <span className="text-[12px] text-[#6B6B6B]">{compareSelected.size}/4 selected</span>
-                )}
-                {compareMode && compareUrl && (
-                  <Link
-                    href={compareUrl}
-                    className="flex items-center gap-1.5 px-3 py-2 text-[12px] font-semibold bg-olive-700 text-white rounded-lg hover:bg-olive-600 transition-colors min-h-[36px]"
-                  >
-                    <GitCompare size={12} />
-                    Compare {compareSelected.size}
-                  </Link>
-                )}
-                {watchlist.length >= 2 && (
-                  <button
-                    onClick={() => { setCompareMode((v) => !v); setCompareSelected(new Set()) }}
-                    className={cn(
-                      'flex items-center gap-1.5 px-3 py-2 text-[12px] font-semibold rounded-lg border transition-colors min-h-[36px]',
-                      compareMode
-                        ? 'bg-olive-50 border-[#BFD2A1] text-olive-700'
-                        : 'bg-white border-[#E3E1DA] text-[#6B6B6B] hover:border-[#BFD2A1] hover:text-olive-700',
+        {/* ── OVERVIEW TAB ─────────────────────────────────────────────────── */}
+        {activeTab === 'overview' && (
+          <>
+            {/* Market Pulse */}
+            {!batchError && <ETFMarketPulse data={batchData} loading={batchLoading} />}
+
+            {/* My Watchlist */}
+            {hasWatchlist && (
+              <section>
+                <div className="flex items-center gap-2 mb-3 flex-wrap">
+                  <h2 className="text-[13px] font-[700] text-[#111111]">My Watchlist</h2>
+                  <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-[700] bg-olive-100 text-olive-700">
+                    {watchlist.length}
+                  </span>
+                  <div className="ml-auto flex items-center gap-2">
+                    {!userEmail && (
+                      <button
+                        onClick={() => signIn('google', { callbackUrl: window.location.href })}
+                        className="text-[11px] font-[600] text-olive-700 hover:text-olive-600 transition-colors"
+                      >
+                        Sign in to sync
+                      </button>
                     )}
-                  >
-                    <GitCompare size={12} />
-                    {compareMode ? 'Cancel' : 'Compare'}
-                  </button>
-                )}
-              </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              {watchlist.map((entry) => (
-                <div key={entry.ticker} className="relative">
-                  {compareMode && (
-                    <button
-                      onClick={() => toggleCompareSelect(entry.ticker)}
-                      aria-label={compareSelected.has(entry.ticker) ? `Deselect ${entry.ticker}` : `Select ${entry.ticker} for comparison`}
-                      className="absolute top-3 left-3 z-20 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-md bg-white border border-[#E3E1DA] shadow-sm transition-colors hover:border-olive-700"
-                    >
-                      {compareSelected.has(entry.ticker)
-                        ? <CheckSquare size={16} className="text-olive-700" />
-                        : <Square size={16} className="text-[#8A95A6]" />
-                      }
-                    </button>
-                  )}
-                  <div className={cn('transition-opacity', compareMode && compareSelected.size >= 4 && !compareSelected.has(entry.ticker) ? 'opacity-40' : 'opacity-100')}>
-                    <ETFWatchlistCard
-                      entry={entry}
-                      sparklineData={entry.ticker in sparklines ? sparklines[entry.ticker] : undefined}
-                      onDelete={handleDelete}
-                    />
+                    {compareMode && compareSelected.size > 0 && (
+                      <span className="text-[11px] text-[#6B6B6B]">{compareSelected.size}/4 selected</span>
+                    )}
+                    {compareMode && compareUrl && (
+                      <Link
+                        href={compareUrl}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-[600] bg-olive-700 text-white rounded-lg hover:bg-olive-600 transition-colors"
+                      >
+                        <GitCompare size={12} />
+                        Compare {compareSelected.size}
+                      </Link>
+                    )}
+                    {watchlist.length >= 2 && (
+                      <button
+                        onClick={() => { setCompareMode((v) => !v); setCompareSelected(new Set()) }}
+                        className={cn(
+                          'flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-[600] rounded-lg border transition-colors',
+                          compareMode
+                            ? 'bg-olive-50 border-[#BFD2A1] text-olive-700'
+                            : 'bg-white border-[#E3E1DA] text-[#6B6B6B] hover:border-[#BFD2A1] hover:text-olive-700',
+                        )}
+                      >
+                        <GitCompare size={12} />
+                        {compareMode ? 'Cancel' : 'Compare'}
+                      </button>
+                    )}
                   </div>
                 </div>
-              ))}
-            </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {watchlist.map((entry) => (
+                    <div key={entry.ticker} className="relative">
+                      {compareMode && (
+                        <button
+                          onClick={() => toggleCompareSelect(entry.ticker)}
+                          aria-label={compareSelected.has(entry.ticker) ? `Deselect ${entry.ticker}` : `Select ${entry.ticker} for comparison`}
+                          className="absolute top-3 left-3 z-20 w-9 h-9 flex items-center justify-center rounded-md bg-white border border-[#E3E1DA] shadow-sm transition-colors hover:border-olive-700"
+                        >
+                          {compareSelected.has(entry.ticker)
+                            ? <CheckSquare size={15} className="text-olive-700" />
+                            : <Square size={15} className="text-[#8A95A6]" />
+                          }
+                        </button>
+                      )}
+                      <div className={cn('transition-opacity', compareMode && compareSelected.size >= 4 && !compareSelected.has(entry.ticker) ? 'opacity-40' : 'opacity-100')}>
+                        <ETFWatchlistCard
+                          entry={entry}
+                          sparklineData={entry.ticker in sparklines ? sparklines[entry.ticker] : undefined}
+                          onDelete={handleDelete}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {wlLoading && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {Array.from({ length: 2 }).map((_, i) => (
+                  <div key={i} className="h-[320px] bg-white rounded-2xl border border-[#E3E1DA] motion-safe:animate-pulse" />
+                ))}
+              </div>
+            )}
+
+            {/* Empty watchlist prompt */}
+            {!hasWatchlist && !wlLoading && (
+              <div className="bg-white border border-[#E3E1DA] rounded-xl p-6 flex flex-col items-center text-center gap-3">
+                <p className="text-[14px] font-[600] text-[#111111]">Track ETFs by what they&apos;re actually worth</p>
+                <p className="text-[13px] text-[#8A95A6] max-w-xs">Search above or add from Sectors, Geographies, or Styles tabs.</p>
+                <div className="flex gap-2 flex-wrap justify-center">
+                  {['SPY', 'VTV', 'VYM'].map((t) => {
+                    const item = batchData[t]
+                    const score = item?.valueScore ?? null
+                    return (
+                      <button
+                        key={t}
+                        onClick={() => handleQuickAdd(t)}
+                        className="flex flex-col items-center px-4 py-2 rounded-xl border border-[#E3E1DA] bg-white hover:border-[#BFD2A1] hover:bg-olive-50 transition-colors"
+                      >
+                        <span className="text-[13px] font-[700] text-[#111111]">+ {t}</span>
+                        {score != null && (
+                          <span className={cn('text-[11px] font-[600] mt-0.5', scoreColor(score))}>
+                            {score} · {scoreLabel(score)}
+                          </span>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Rankings */}
+            <section>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-[13px] font-[700] text-[#111111]">Rankings</h2>
+              </div>
+              <Rankings
+                data={batchData}
+                watchlistedTickers={new Set(watchlist.map((e) => e.ticker))}
+                onAdd={handleQuickAdd}
+              />
+            </section>
+          </>
+        )}
+
+        {/* ── SECTORS TAB ──────────────────────────────────────────────────── */}
+        {activeTab === 'sectors' && (
+          <section>
+            <p className="text-[12px] text-[#8A95A6] mb-3">US SPDR sector ETFs (GICS) — click a card to analyze, + to track</p>
+            <ETFHeatmapGrid
+              metas={SECTOR_META}
+              data={batchData}
+              watchlistedTickers={new Set(watchlist.map((e) => e.ticker))}
+              onAdd={handleQuickAdd}
+              cols={4}
+              hasError={!!batchError}
+            />
           </section>
         )}
 
-        {/* Loading skeletons for watchlist */}
-        {wlLoading && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {Array.from({ length: 2 }).map((_, i) => (
-              <div key={i} className="h-[340px] bg-white rounded-2xl border border-[#E3E1DA] motion-safe:animate-pulse" />
-            ))}
-          </div>
+        {/* ── GEOGRAPHIES TAB ──────────────────────────────────────────────── */}
+        {activeTab === 'geographies' && (
+          <section>
+            <p className="text-[12px] text-[#8A95A6] mb-3">Regional and country exposure</p>
+            <ETFHeatmapGrid
+              metas={GEO_META}
+              data={batchData}
+              watchlistedTickers={new Set(watchlist.map((e) => e.ticker))}
+              onAdd={handleQuickAdd}
+              cols={3}
+              hasError={!!batchError}
+            />
+          </section>
         )}
 
-        {/* ── Universe: sectors, geographies, styles, rankings ─────────────── */}
-        <ETFUniverseSection
-          data={batchData}
-          watchlist={watchlist}
-          userEmail={userEmail}
-          onWatchlistUpdate={loadWatchlist}
-          hasError={!!batchError}
-          emptyWatchlist={!hasWatchlist && !wlLoading}
-          batchData={batchData}
-          onQuickAdd={handleQuickAdd}
-          onSave={async (ticker, name, item) => {
-            await handleSaveWithGate(ticker, name, {
-              valueScore: item.valueScore,
-              expenseRatio: item.expenseRatio,
-              yield: item.yield,
-              peRatio: item.peRatio,
-              pbRatio: item.pbRatio,
-              totalAssets: item.aum,
-              price: item.price ?? null,
-              priceChangePct: item.priceChangePct ?? null,
-              metricsUpdatedAt: new Date().toISOString(),
-            }, item.valueScore)
-          }}
-        />
+        {/* ── STYLES TAB ───────────────────────────────────────────────────── */}
+        {activeTab === 'styles' && (
+          <section>
+            <p className="text-[12px] text-[#8A95A6] mb-3">Factor tilts and smart beta</p>
+            <ETFHeatmapGrid
+              metas={STYLE_META}
+              data={batchData}
+              watchlistedTickers={new Set(watchlist.map((e) => e.ticker))}
+              onAdd={handleQuickAdd}
+              cols={4}
+              hasError={!!batchError}
+            />
+          </section>
+        )}
 
       </div>
 
       {/* ── Undo toast ───────────────────────────────────────────────────────── */}
       {undoToast && (
-        <div className="fixed left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-[#06101F] text-white rounded-xl px-4 py-3 shadow-lg text-[13px] font-medium whitespace-nowrap animate-in slide-in-from-bottom-2 duration-200 lg:bottom-6" style={{ bottom: 'calc(56px + env(safe-area-inset-bottom, 0px) + 12px)' }}>
+        <div className="fixed left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-[#06101F] text-white rounded-xl px-4 py-3 shadow-lg text-[13px] font-medium whitespace-nowrap" style={{ bottom: 'calc(56px + env(safe-area-inset-bottom, 0px) + 12px)' }}>
           <span>{undoToast.ticker} removed from watchlist</span>
           <button
             onClick={handleUndo}
