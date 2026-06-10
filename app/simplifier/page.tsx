@@ -73,7 +73,6 @@ export default function SimplifierPage() {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h1 className="text-[15px] font-bold text-[#2D2C31]">Stock Simplifier</h1>
                   <span className="text-[10px] font-semibold text-olive-700 bg-olive-50 px-1.5 py-0.5 rounded border border-olive-100">BETA</span>
                 </div>
                 <p className="text-[#6B6A72] text-xs mt-0.5">My Watch Lists</p>

@@ -667,9 +667,6 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
 
       {/* Page header */}
       <div className="flex items-center justify-between gap-4 mb-5">
-        <h1 className="text-[22px] sm:text-[24px] font-bold text-[#111111] tracking-tight leading-none">
-          My Valuations
-        </h1>
         <div className="flex items-center gap-1 p-1 bg-[#F5F5F5] rounded-xl shrink-0">
           <button
             onClick={() => setView('table')}

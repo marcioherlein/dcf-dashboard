@@ -163,14 +163,8 @@ export default function MarketsPage() {
         )}
 
         {/* ── Page Header ─────────────────────────────────────────────────── */}
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-2 mb-4">
-          <div className="min-w-0">
-            <h1 className="text-[22px] sm:text-[24px] font-bold text-[#111111] leading-tight [text-wrap:balance]">Markets</h1>
-            <p className="text-[12px] text-[#6B6B6B] mt-0.5 hidden sm:block">
-              Context and key drivers that influence valuation decisions.
-            </p>
-          </div>
-          <div className="flex items-center gap-2 sm:pt-0.5 shrink-0">
+        <div className="flex items-center gap-2 justify-end mb-4">
+          <div className="flex items-center gap-2 shrink-0">
             <span className="text-[11px] text-[#6B6B6B] hidden md:block">{etDate}, {etTime} ET</span>
             {lastFetch > 0 && (
               <span className="text-[11px] text-[#6B6B6B] hidden lg:block">· Updated {timeAgo(lastFetch)}</span>
