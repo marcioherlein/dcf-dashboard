@@ -72,11 +72,11 @@ export async function GET(req: NextRequest) {
   const dateStr     = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 
   // Conviction / checklist
-  const checkPassed = p.get('checkPassed') ? parseInt(p.get('checkPassed')!) : null
-  const checkTotal  = p.get('checkTotal')  ? parseInt(p.get('checkTotal')!)  : null
+  const checkPassedRaw = p.get('checkPassed') ? parseInt(p.get('checkPassed')!) : null
+  const checkTotalRaw  = p.get('checkTotal')  ? parseInt(p.get('checkTotal')!)  : null
   const checkLabel  = p.get('checkLabel')  ?? ''
 
-  // Passing + failing bullets (pipe-separated, comma-split per group)
+  // Passing + failing bullets (pipe-separated)
   const passBulletsRaw  = p.get('passBullets')  ?? ''
   const failBulletsRaw  = p.get('failBullets')  ?? ''
   const passBullets = passBulletsRaw ? passBulletsRaw.split('|').slice(0, 3) : []
@@ -86,13 +86,20 @@ export async function GET(req: NextRequest) {
   let methods: Array<{ label: string; fv: number }> = []
   try {
     const m = p.get('methods')
-    if (m) methods = JSON.parse(decodeURIComponent(m)).slice(0, 3)
+    if (m) methods = JSON.parse(decodeURIComponent(m)).filter((x: { fv: number }) => x.fv > 0).slice(0, 3)
   } catch { /* ignore */ }
 
-  const vd         = VERDICT_DISPLAY[verdict] ?? VERDICT_DISPLAY['Insufficient Data']
-  const price       = priceRaw
-  const fv          = fvRaw
-  const upside      = upsideRaw
+  const vd          = VERDICT_DISPLAY[verdict] ?? VERDICT_DISPLAY['Insufficient Data']
+  // Guard all numbers against NaN (same pattern as square route)
+  const price       = isNaN(priceRaw) ? 0 : priceRaw
+  const fv          = fvRaw    != null && !isNaN(fvRaw)    ? fvRaw    : null
+  const upside      = upsideRaw != null && !isNaN(upsideRaw) ? upsideRaw : null
+  const checkPassed = checkPassedRaw != null && !isNaN(checkPassedRaw) ? checkPassedRaw : null
+  const checkTotal  = checkTotalRaw  != null && !isNaN(checkTotalRaw)  ? checkTotalRaw  : null
+  const bear        = bearRaw   != null && !isNaN(bearRaw)   ? bearRaw   : null
+  const bull        = bullRaw   != null && !isNaN(bullRaw)   ? bullRaw   : null
+  const migFinal    = migRaw    != null && !isNaN(migRaw)    ? migRaw    : null
+  const migAFinal   = migAssumed != null && !isNaN(migAssumed) ? migAssumed : null
   const isUp        = (upside ?? 0) >= 0
   const upsideStr   = upside != null ? fmtPct(upside) : null
   const upsideColor = upside == null ? '#64748B' : isUp ? BRAND.positive : BRAND.negative
@@ -108,10 +115,9 @@ export async function GET(req: NextRequest) {
     else descLine = `The stock trades ${absPct}% above our intrinsic value estimate.`
   }
 
-  const interp = migInterp(migRaw, migAssumed)
+  const interp = migInterp(migFinal, migAFinal)
 
-  // Scenario bar
-  const bear = bearRaw, bull = bullRaw
+  // Scenario bar — use NaN-guarded values
   const hasScenar = bear != null && bull != null && bull > bear
   let basePx: number | null = null, pricePx: number | null = null
   const TRACK_W = 720
@@ -335,7 +341,7 @@ export async function GET(req: NextRequest) {
         )}
 
         {/* ── WHAT THE PRICE IMPLIES ───────────────────────────────────────────── */}
-        {interp && migRaw != null && migAssumed != null && (
+        {interp && migFinal != null && migAFinal != null && (
           <div style={{
             marginBottom: 28,
             background: interp.bg, borderRadius: 14,
@@ -356,8 +362,8 @@ export async function GET(req: NextRequest) {
             </div>
             <span style={{ fontSize: 15, color: '#111111', fontWeight: 500, lineHeight: 1.5 }}>
               At {fmt(price, currency)}, the market expects{' '}
-              <span style={{ fontWeight: 700 }}>{(migRaw * 100).toFixed(1)}% annual growth</span>
-              {' '}over 5 years. Our model assumes {(migAssumed * 100).toFixed(1)}%.
+              <span style={{ fontWeight: 700 }}>{(migFinal * 100).toFixed(1)}% annual growth</span>
+              {' '}over 5 years. Our model assumes {(migAFinal * 100).toFixed(1)}%.
             </span>
           </div>
         )}
