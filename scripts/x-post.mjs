@@ -1490,9 +1490,6 @@ async function runMorningBrief() {
     fetchYahooChart('^IXIC'),
   ])
 
-  // News headlines via Yahoo RSS — filtered for quality
-  const headlines = await fetchNewsHeadlines(5)
-
   // Earnings today + this week — large caps only (>$10B market cap)
   // Build date set for Mon–Fri of current week
   const now = new Date()
@@ -1665,11 +1662,8 @@ async function runMorningBrief() {
     }
   }
 
-  // Headlines always shown
-  if (headlines.length > 0) {
-    lines.push(``, `━━━ IN THE NEWS ━━━`)
-    headlines.slice(0, 4).forEach(h => lines.push(`• ${h}`))
-  }
+  // News section removed — RSS feeds mix personal finance with market news,
+  // no reliable filter without LLM. Data-only posts are more credible.
 
   if (tomorrowNote) lines.push(``, tomorrowNote)
 
@@ -1714,7 +1708,6 @@ async function runMiddayPulse() {
   sectorData.sort((a, b) => b.changePct - a.changePct)
 
   const vix = await fetchEtfQuote('VIX').catch(() => null)
-  const headlines = await fetchNewsHeadlines(4)
   const macroToday = MACRO_CALENDAR.filter(e => e.date === todayUtc)
 
   // ── Narrative ──────────────────────────────────────────────────────────────
@@ -1788,11 +1781,6 @@ async function runMiddayPulse() {
 
   if (macroNote.length > 0) lines.push(``, `━━━ EVENTS ━━━`, ...macroNote)
 
-  if (headlines.length > 0) {
-    lines.push(``, `━━━ MIDDAY HEADLINES ━━━`)
-    headlines.slice(0, 3).forEach(h => lines.push(`• ${h}`))
-  }
-
   lines.push(``, hooks[weekOfYear % hooks.length], ``, `Run the valuations → ${APP_URL}`)
   lines.push(`#Midday #StockMarket #Investing #WallStreet`)
 
@@ -1833,7 +1821,6 @@ async function runMarketClose() {
   sectorData.sort((a, b) => b.changePct - a.changePct)
 
   const vix = await fetchEtfQuote('VIX').catch(() => null)
-  const headlines = await fetchNewsHeadlines(5)
   const macroTomorrow = MACRO_CALENDAR.filter(e => e.date === tomorrowUtc)
 
   // ── Narrative ──────────────────────────────────────────────────────────────
@@ -1909,11 +1896,6 @@ async function runMarketClose() {
 
   lines.push(``, `━━━ WHAT DROVE IT ━━━`)
   whatDroveIt.forEach(l => lines.push(l))
-
-  if (headlines.length > 0) {
-    lines.push(``, `━━━ TODAY'S HEADLINES ━━━`)
-    headlines.slice(0, 3).forEach(h => lines.push(`• ${h}`))
-  }
 
   lines.push(``, `━━━ WHAT TO WATCH TOMORROW ━━━`)
   watchTomorrow.forEach(w => lines.push(`→ ${w}`))
