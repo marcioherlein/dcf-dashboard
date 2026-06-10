@@ -486,19 +486,128 @@ export default function TopBar() {
             </div>
           </>
         ) : pageTitle ? (
-          /* Page title — shown on named pages (Markets, ETF Tracker, etc.) */
-          <div className="flex items-center gap-3 min-w-0 pl-1">
-            <div className="min-w-0">
-              <p className="text-[14px] font-[700] text-[#111111] leading-tight tracking-tight">
-                {pageTitle.title}
-              </p>
-              {pageTitle.sub && (
-                <p className="text-[11px] text-[#8A95A6] leading-none mt-0.5 hidden sm:block">
-                  {pageTitle.sub}
+          /* Page title + search — title left, search bar right on lg+ */
+          <>
+            {/* Mobile: just the title (search icon in col 3) */}
+            <div className="flex items-center gap-3 min-w-0 pl-1 lg:hidden">
+              <div className="min-w-0">
+                <p className="text-[14px] font-[700] text-[#111111] leading-tight tracking-tight">
+                  {pageTitle.title}
                 </p>
-              )}
+                {pageTitle.sub && (
+                  <p className="text-[11px] text-[#8A95A6] leading-none mt-0.5 hidden sm:block">
+                    {pageTitle.sub}
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
+            {/* lg+: title left + search bar right */}
+            <div className="hidden lg:flex items-center gap-4 w-full">
+              <div className="shrink-0">
+                <p className="text-[14px] font-[700] text-[#111111] leading-tight tracking-tight">
+                  {pageTitle.title}
+                </p>
+                {pageTitle.sub && (
+                  <p className="text-[11px] text-[#8A95A6] leading-none mt-0.5">
+                    {pageTitle.sub}
+                  </p>
+                )}
+              </div>
+              <div className="flex-1 flex justify-end">
+                <div className="relative w-full max-w-[360px]" ref={searchRef}>
+                  <div
+                    className="flex items-center gap-2 rounded-[999px] px-3.5 py-2 transition-all border"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.80)',
+                      backdropFilter: 'blur(10px)',
+                      WebkitBackdropFilter: 'blur(10px)',
+                      borderColor: open ? 'rgba(74, 97, 9, 0.45)' : '#E5E5E5',
+                      boxShadow: open ? '0 0 0 3px rgba(74, 97, 9, 0.09)' : 'none',
+                    }}
+                  >
+                    {loading ? (
+                      <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#E5E5E5] border-t-[#4A6109] shrink-0" />
+                    ) : (
+                      <Search size={14} className={searchError ? 'text-[#D83B3B] shrink-0' : 'text-[#9B9B9B] shrink-0'} />
+                    )}
+                    <input
+                      type="text"
+                      role="combobox"
+                      aria-expanded={open}
+                      aria-haspopup="listbox"
+                      aria-autocomplete="list"
+                      aria-controls={open ? topbarListboxId : undefined}
+                      aria-activedescendant={activeIdx >= 0 ? `topbar-result-${activeIdx}` : undefined}
+                      value={query}
+                      onChange={e => { setQuery(e.target.value); setUnsupportedError(null); setSearchError(false) }}
+                      onKeyDown={e => {
+                        if (e.key === 'Escape') { setOpen(false); setActiveIdx(-1); return }
+                        if (e.key === 'ArrowDown') {
+                          e.preventDefault()
+                          if (!open && results.length > 0) setOpen(true)
+                          setActiveIdx(prev => Math.min(prev + 1, results.length - 1))
+                          return
+                        }
+                        if (e.key === 'ArrowUp') { e.preventDefault(); setActiveIdx(prev => Math.max(prev - 1, -1)); return }
+                        if (e.key === 'Enter') {
+                          if (activeIdx >= 0 && results[activeIdx]?.supported) { select(results[activeIdx].symbol) }
+                          else if (query.trim()) { handleSubmit(query) }
+                        }
+                      }}
+                      placeholder="Search ticker or company…"
+                      className="flex-1 min-w-0 bg-transparent text-[13px] text-[#111111] placeholder-[#9B9B9B] focus:outline-none"
+                      autoCorrect="off"
+                      autoCapitalize="characters"
+                      spellCheck={false}
+                    />
+                    {searchError && !open && (
+                      <span className="text-[11px] text-[#D83B3B] shrink-0 whitespace-nowrap">Search unavailable</span>
+                    )}
+                  </div>
+                  <AnimatePresence>
+                    {open && (
+                      <motion.div
+                        key="search-dropdown-pagetitle"
+                        id={topbarListboxId}
+                        role="listbox"
+                        aria-label="Search suggestions"
+                        variants={reduced ? {} : slideDown}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                        style={{ originY: 0 }}
+                        className="absolute left-0 right-0 top-full mt-1.5 overflow-hidden glass-card-light rounded-xl z-50 max-h-[70vh] overflow-y-auto"
+                      >
+                        {unsupportedError && (
+                          <div className="px-4 py-3 flex items-start gap-2 bg-[#FFF4DA] border-t border-[#F3D391]">
+                            <svg className="w-3.5 h-3.5 shrink-0 mt-0.5 text-[#B56A00]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                            </svg>
+                            <p className="text-[11px] text-[#B56A00] leading-snug">{unsupportedError}</p>
+                          </div>
+                        )}
+                        {results.map((r, i) => (
+                          <button
+                            key={r.symbol}
+                            id={`topbar-result-${i}`}
+                            role="option"
+                            aria-selected={i === activeIdx}
+                            onMouseDown={() => r.supported && select(r.symbol)}
+                            className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
+                              i === activeIdx ? 'bg-olive-50' : ''
+                            } ${r.supported ? 'hover:bg-olive-50 cursor-pointer' : 'opacity-40 cursor-not-allowed'}`}
+                          >
+                            <span className="font-bold text-[13px] text-[#111111] w-14 shrink-0">{r.symbol}</span>
+                            <span className="text-[12px] text-[#6B6B6B] truncate flex-1">{r.longname ?? r.shortname}</span>
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </div>
+            </div>
+          </>
         ) : (
           <div className="flex justify-center w-full">
             <div className="relative w-full max-w-[calc(100vw-120px)] sm:w-auto sm:max-w-[480px]" ref={searchRef}>
