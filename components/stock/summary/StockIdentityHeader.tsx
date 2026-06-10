@@ -9,7 +9,7 @@ import { fmtLargeCurrency } from '@/lib/formatters'
 const PriceChart = dynamic(() => import('@/components/stock/PriceChart'), {
   ssr: false,
   loading: () => (
-    <div className="h-[320px] animate-pulse rounded-xl bg-[#F4F3EF]" />
+    <div className="h-[320px] animate-pulse rounded-xl bg-[#F5F5F5]" />
   ),
 })
 
@@ -47,8 +47,11 @@ interface Props {
   fcfMargin?: number | null
   grossMargin?: number | null
   netMargin?: number | null
+  revenueGrowth?: number | null
   high52: number
   low52: number
+  // earnings
+  nextEarningsDate?: string | null
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -66,15 +69,6 @@ function fmtPriceValue(v: number, currency: string): string {
     return prefix + v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   }
   return prefix + v.toFixed(2)
-}
-
-/** Company size label from employee count */
-function companySizeLabel(employees: number | null | undefined): string | null {
-  if (employees == null) return null
-  if (employees < 200) return 'Small-Cap'
-  if (employees < 5_000) return 'Mid-Size'
-  if (employees < 50_000) return 'Large Enterprise'
-  return 'Mega-Corp'
 }
 
 /** Initials from company name (up to 2 chars) */
@@ -98,18 +92,28 @@ function TagChip({ children }: { children: React.ReactNode }) {
   )
 }
 
+type Sentiment = 'positive' | 'negative' | 'neutral'
+
 interface MetricRowProps {
   label: string
   value: string
   last?: boolean
+  sentiment?: Sentiment
 }
-function MetricRow({ label, value, last }: MetricRowProps) {
+function MetricRow({ label, value, last, sentiment }: MetricRowProps) {
+  const valueColor =
+    sentiment === 'positive'
+      ? 'text-[#11875D]'
+      : sentiment === 'negative'
+      ? 'text-[#D83B3B]'
+      : 'text-[#111111]'
+
   return (
     <div
-      className={`flex items-center justify-between py-2.5 ${last ? '' : 'border-b border-[#E3E1DA]'}`}
+      className={`flex items-center justify-between py-2.5 ${last ? '' : 'border-b border-[#E5E5E5]'}`}
     >
       <span className="text-[12px] text-[#6B6B6B] leading-none">{label}</span>
-      <span className="text-[12px] font-bold text-[#111111] leading-none tabular-nums">
+      <span className={`text-[12px] font-bold leading-none tabular-nums ${valueColor}`}>
         {value}
       </span>
     </div>
@@ -197,19 +201,44 @@ export default function StockIdentityHeader({
   fcfMargin,
   grossMargin,
   netMargin,
+  revenueGrowth,
   high52,
   low52,
+  nextEarningsDate,
 }: Props) {
-  const [descExpanded, setDescExpanded] = useState(false)
   const [logoError, setLogoError] = useState(false)
 
   const logoSrc = "https://financialmodelingprep.com/image-stock/" + ticker + ".png"
 
   const isPositive = change >= 0
-
   const prefix = currencyPrefix(currency)
 
-  // Computed metrics (memoised to avoid recomputation on unrelated re-renders)
+  // ── Fair value derived values ──────────────────────────────────────────────
+  const upside = fairValue != null ? (fairValue - price) / price * 100 : null
+  const fairValueBg =
+    upside == null
+      ? ''
+      : upside > 15
+      ? 'bg-[#E8F7EF] border border-[#A3D9BE]'
+      : upside < -10
+      ? 'bg-[#FCEAEA] border border-[#F0B8B8]'
+      : 'bg-white border border-[#E5E5E5]'
+
+  const analystUpside =
+    analystTargetMean != null ? (analystTargetMean - price) / price * 100 : null
+
+  // ── Next earnings ──────────────────────────────────────────────────────────
+  const earningsInfo = useMemo(() => {
+    if (!nextEarningsDate) return null
+    const now = new Date()
+    const earningsDay = new Date(nextEarningsDate)
+    const diffMs = earningsDay.getTime() - now.setHours(0, 0, 0, 0)
+    const days = Math.round(diffMs / (1000 * 60 * 60 * 24))
+    if (days < 0 || days > 60) return null
+    return { days }
+  }, [nextEarningsDate])
+
+  // ── Computed metric strings ────────────────────────────────────────────────
   const roeStr = useMemo(
     () => (roe != null && isFinite(roe) ? (roe * 100).toFixed(1) + '%' : '—'),
     [roe],
@@ -226,27 +255,37 @@ export default function StockIdentityHeader({
     [dividendYield],
   )
 
-  // Description truncation
-  const DESC_LIMIT = 300
-  const shouldTruncate = description && description.length > DESC_LIMIT
-  const displayedDesc =
-    shouldTruncate && !descExpanded
-      ? description!.slice(0, DESC_LIMIT).trimEnd() + '…'
-      : description
-
-  // Tag chips
+  // ── Tag chips — sector, industry, dividend only (no employee-size label) ──
   const tags = useMemo(() => {
     const result: string[] = []
     if (sector) result.push(sector)
     if (industry) result.push(industry)
-    const sizeLabel = companySizeLabel(employees)
-    if (sizeLabel) result.push(sizeLabel)
-    if (dividendYield != null && dividendYield > 0) result.push('Dividend Paying')
+    if (dividendYield != null && dividendYield > 0) result.push('Dividend')
     return result
-  }, [sector, industry, employees, dividendYield])
+  }, [sector, industry, dividendYield])
 
   // Company type label (simple heuristic)
   const companyType = industry ?? sector ?? 'Equity'
+
+  // ── Metric sentiments ──────────────────────────────────────────────────────
+  const peSentiment: Sentiment =
+    peRatio == null ? 'neutral' : peRatio < 15 ? 'positive' : peRatio > 50 ? 'negative' : 'neutral'
+  const evSentiment: Sentiment =
+    evToEbitda == null ? 'neutral' : evToEbitda < 10 ? 'positive' : evToEbitda > 30 ? 'negative' : 'neutral'
+  const revGrowthSentiment: Sentiment =
+    revenueGrowth == null ? 'neutral' : revenueGrowth > 0.10 ? 'positive' : revenueGrowth < 0 ? 'negative' : 'neutral'
+  const grossMarginSentiment: Sentiment =
+    grossMargin == null ? 'neutral' : grossMargin > 0.40 ? 'positive' : 'neutral'
+  const netMarginSentiment: Sentiment =
+    netMargin == null ? 'neutral' : netMargin > 0.15 ? 'positive' : netMargin < 0 ? 'negative' : 'neutral'
+  const fcfMarginSentiment: Sentiment =
+    fcfMargin == null ? 'neutral' : fcfMargin > 0.15 ? 'positive' : fcfMargin < 0 ? 'negative' : 'neutral'
+  const divYieldSentiment: Sentiment =
+    dividendYield != null && dividendYield > 0 ? 'positive' : 'neutral'
+  const roeSentiment: Sentiment =
+    roe == null ? 'neutral' : roe > 0.15 ? 'positive' : roe < 0 ? 'negative' : 'neutral'
+  const roicSentiment: Sentiment =
+    roic == null ? 'neutral' : roic > 0.12 ? 'positive' : roic < 0 ? 'negative' : 'neutral'
 
   return (
     <div className="flex flex-col gap-4">
@@ -270,7 +309,7 @@ export default function StockIdentityHeader({
               <div
                 role="img"
                 aria-label={companyName + ' logo'}
-                className="flex-shrink-0 flex items-center justify-center rounded-xl bg-[#F4F3EF] border border-[#E5E5E5] text-[#6B6B6B] font-bold select-none w-14 h-14 text-lg tracking-wide"
+                className="flex-shrink-0 flex items-center justify-center rounded-xl bg-[#F5F5F5] border border-[#E5E5E5] text-[#6B6B6B] font-bold select-none w-14 h-14 text-lg tracking-wide"
               >
                 {initials(companyName)}
               </div>
@@ -287,12 +326,17 @@ export default function StockIdentityHeader({
                 {country ? ` · ${country}` : ''}
               </p>
 
-              {/* Tag chips — inline under ticker, matching screenshot layout */}
-              {tags.length > 0 && (
+              {/* Tag chips — inline under ticker */}
+              {(tags.length > 0 || earningsInfo) && (
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {tags.map((tag) => (
                     <TagChip key={tag}>{tag}</TagChip>
                   ))}
+                  {earningsInfo && (
+                    <span className="rounded-full border border-[#F3D391] bg-[#FFF4DA] px-2.5 py-0.5 text-[11px] font-[600] text-[#B56A00]">
+                      Earnings {earningsInfo.days === 0 ? 'today' : earningsInfo.days === 1 ? 'tomorrow' : `in ${earningsInfo.days}d`}
+                    </span>
+                  )}
                 </div>
               )}
 
@@ -307,33 +351,12 @@ export default function StockIdentityHeader({
               </div>
             </div>
           </div>
-
-          {/* Description */}
-          {displayedDesc && (
-            <div className="mt-3">
-              <p className="text-[13px] text-[#6B6B6B] leading-relaxed">
-                {displayedDesc}
-              </p>
-              {shouldTruncate && (
-                <button
-                  onClick={() => setDescExpanded((v) => !v)}
-                  aria-expanded={descExpanded}
-                  className="mt-1 text-[#5F790B] font-semibold hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-offset-1 rounded text-[13px]"
-                >
-                  {descExpanded ? 'Show less' : 'Read more'}
-                </button>
-              )}
-            </div>
-          )}
         </div>
 
         {/* Right col (≈30%) — Price — HIDDEN on mobile, shown on sm+ */}
         <div
           className="hidden sm:flex flex-shrink-0 flex-col justify-start sm:basis-[30%] sm:max-w-[30%] sm:min-w-[160px]"
         >
-          <p className="text-[11px] font-[700] text-[#566174] uppercase tracking-wider mb-1">
-            Current Price
-          </p>
           <p className="text-[34px] font-bold leading-none text-[#111111] tracking-tight">
             {prefix}
             {price.toLocaleString(undefined, {
@@ -350,7 +373,7 @@ export default function StockIdentityHeader({
             <span className="text-[13px] opacity-80">
               ({isPositive ? '+' : ''}{Math.abs(changePct).toFixed(2)}%)
             </span>
-            <span className="text-[12px] font-normal text-[#9B9B9B] ml-0.5">1D</span>
+            <span className="text-[12px] font-normal text-[#6B6B6B] ml-0.5">1D</span>
           </div>
 
           {/* Pre-Market row */}
@@ -390,6 +413,37 @@ export default function StockIdentityHeader({
               )}
             </div>
           )}
+
+          {/* Fair Value block */}
+          {fairValue != null && upside != null && (
+            <>
+              <div className="mt-3 border-t border-[#E5E5E5]" />
+              <div className={`mt-3 rounded-lg p-3 ${fairValueBg}`}>
+                <p className="text-[11px] text-[#6B6B6B]">Fair Value</p>
+                <p className="text-[24px] font-bold leading-none text-[#111111] tracking-tight mt-0.5">
+                  {fmtPriceValue(fairValue, currency)}
+                </p>
+                <p className={`mt-1 text-[13px] font-semibold ${upside >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
+                  {upside >= 0 ? '+' : ''}{upside.toFixed(1)}% {upside >= 0 ? 'upside' : 'downside'}
+                </p>
+              </div>
+            </>
+          )}
+
+          {/* Analyst target */}
+          {analystTargetMean != null && analystUpside != null && (
+            <div className="mt-2 flex items-center justify-between gap-2">
+              <span className="text-[12px] text-[#6B6B6B]">Analyst target</span>
+              <span className="flex items-center gap-1.5 tabular-nums">
+                <span className="text-[12px] font-semibold text-[#111111]">
+                  {fmtPriceValue(analystTargetMean, currency)}
+                </span>
+                <span className={`text-[11px] font-semibold ${analystUpside >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
+                  ({analystUpside >= 0 ? '+' : ''}{analystUpside.toFixed(1)}%)
+                </span>
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -407,8 +461,32 @@ export default function StockIdentityHeader({
               triangulatedFairValue={fairValue ?? undefined}
               analystTarget={analystTargetMean ?? undefined}
               userModelFairValue={userModelFairValue ?? undefined}
+              initialPeriod="3mo"
             />
           </div>
+          {/* Chart legend */}
+          {(fairValue != null || analystTargetMean != null || userModelFairValue != null) && (
+            <div className="flex items-center gap-4 px-4 py-2 border-t border-[#E5E5E5]">
+              {fairValue != null && (
+                <span className="flex items-center gap-1.5 text-[11px] text-[#6B6B6B]">
+                  <span className="w-3 h-0.5 bg-[#5F790B] rounded-full inline-block" />
+                  Insic estimate
+                </span>
+              )}
+              {analystTargetMean != null && (
+                <span className="flex items-center gap-1.5 text-[11px] text-[#6B6B6B]">
+                  <span className="w-3 h-0.5 bg-[#2563EB] rounded-full inline-block" />
+                  Analyst target
+                </span>
+              )}
+              {userModelFairValue != null && (
+                <span className="flex items-center gap-1.5 text-[11px] text-[#6B6B6B]">
+                  <span className="w-3 h-0.5 bg-[#B56A00] rounded-full inline-block" />
+                  Your model
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Right col (≈30%) — Market Metrics */}
@@ -416,11 +494,7 @@ export default function StockIdentityHeader({
           className="bg-white border border-[#E5E5E5] rounded-xl flex flex-col w-full sm:basis-[30%] sm:max-w-[30%] sm:min-w-[200px]"
           style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}
         >
-          <div className="px-4 pt-4 pb-3 border-b border-[#E3E1DA]">
-            <p className="text-[11px] font-[600] text-[#566174]">
-              Market metrics
-            </p>
-          </div>
+          <div className="px-4 pt-4 pb-3 border-b border-[#E5E5E5]" />
 
           <div className="px-4 pt-1 pb-2 flex-1">
             <MetricRow
@@ -430,18 +504,27 @@ export default function StockIdentityHeader({
             <MetricRow
               label="P/E (TTM)"
               value={peRatio != null ? peRatio.toFixed(2) + '×' : '—'}
+              sentiment={peSentiment}
+            />
+            <MetricRow
+              label="Revenue Growth (TTM)"
+              value={revenueGrowth != null ? (revenueGrowth * 100).toFixed(1) + '%' : '—'}
+              sentiment={revGrowthSentiment}
             />
             <MetricRow
               label="EV/EBITDA (TTM)"
               value={evToEbitda != null ? evToEbitda.toFixed(2) + '×' : '—'}
+              sentiment={evSentiment}
             />
             <MetricRow
               label="ROE (TTM)"
               value={roeStr}
+              sentiment={roeSentiment}
             />
             <MetricRow
               label="ROIC (TTM)"
               value={roicStr}
+              sentiment={roicSentiment}
             />
             <MetricRow
               label="Beta (5Y Monthly)"
@@ -450,27 +533,28 @@ export default function StockIdentityHeader({
             <MetricRow
               label="Dividend Yield (TTM)"
               value={divYieldStr}
+              sentiment={divYieldSentiment}
             />
             <MetricRow
               label="Gross Margin (TTM)"
               value={grossMargin != null ? (grossMargin * 100).toFixed(1) + '%' : '—'}
+              sentiment={grossMarginSentiment}
             />
             <MetricRow
               label="Net Margin (TTM)"
               value={netMargin != null ? (netMargin * 100).toFixed(1) + '%' : '—'}
+              sentiment={netMarginSentiment}
             />
             <MetricRow
               label="FCF Margin (TTM)"
               value={fcfMargin != null ? (fcfMargin * 100).toFixed(1) + '%' : '—'}
+              sentiment={fcfMarginSentiment}
               last
             />
           </div>
 
-          {/* 52-Week Range */}
-          <div className="px-4 pb-4 pt-1 border-t border-[#E3E1DA] mt-1">
-            <p className="text-[11px] font-[600] text-[#566174] mb-1">
-              52-week range
-            </p>
+          {/* 52-Week Range — label removed, slider is self-explanatory */}
+          <div className="px-4 pb-4 pt-1 border-t border-[#E5E5E5] mt-1">
             <RangeSlider
               low={low52}
               high={high52}

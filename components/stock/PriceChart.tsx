@@ -19,7 +19,7 @@ interface ValuationLevels {
   analystTarget?: number | null
   userModelFairValue?: number | null
 }
-interface Props extends ValuationLevels { ticker: string; isDark?: boolean }
+interface Props extends ValuationLevels { ticker: string; isDark?: boolean; initialPeriod?: Period }
 
 interface OHLCVBar {
   time: Time
@@ -96,9 +96,9 @@ const VAL_LINES = [
 type SubPanel = 'volume' | 'rsi'
 
 // ─────────────────────────────────────────────────────────────────────────────
-export default function PriceChart({ ticker, triangulatedFairValue, analystTarget, userModelFairValue }: Props) {
+export default function PriceChart({ ticker, triangulatedFairValue, analystTarget, userModelFairValue, initialPeriod }: Props) {
   // state
-  const [period, setPeriod]             = useState<Period>('1y')
+  const [period, setPeriod]             = useState<Period>(initialPeriod ?? '1y')
   const [rawBars, setRawBars]           = useState<OHLCVBar[]>([])
   const [loading, setLoading]           = useState(true)
   const [activeMA, setActiveMA]         = useState<Set<MAKey>>(new Set(['sma50', 'sma200'] as MAKey[]))

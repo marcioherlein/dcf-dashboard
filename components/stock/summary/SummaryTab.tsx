@@ -223,6 +223,8 @@ export default function SummaryTab({
         netMargin={businessProfile?.netMargin ?? null}
         high52={high52}
         low52={low52}
+        nextEarningsDate={_nextEarningsDate ?? null}
+        revenueGrowth={cagrAnalysis?.historicalCagr3y ?? null}
       />
 
       {/* ── 2. FUNDAMENTALS SECTION LABEL ──────────────────────────────────── */}
