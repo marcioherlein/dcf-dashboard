@@ -1,8 +1,23 @@
 {
   "crons": [
-    {
-      "path": "/api/cron/etf-snapshot",
-      "schedule": "0 22 * * 1-5"
-    }
+    { "path": "/api/cron/etf-snapshot",              "schedule": "0 22 * * 1-5" },
+    { "path": "/api/cron/x-post?mode=morning_brief", "schedule": "0 11 * * 1-5" },
+    { "path": "/api/cron/x-post?mode=earnings",      "schedule": "0 13 * * 1-5" },
+    { "path": "/api/cron/x-post?mode=feature",       "schedule": "0 14 * * 1-5" },
+    { "path": "/api/cron/x-post?mode=dcf",           "schedule": "0 15 * * 1-5" },
+    { "path": "/api/cron/x-post?mode=midday_pulse",  "schedule": "0 16 * * 1-5" },
+    { "path": "/api/cron/x-post?mode=macro",         "schedule": "0 17 * * 1-5" },
+    { "path": "/api/cron/x-post?mode=etf_pulse",     "schedule": "0 19 * * 1-5" },
+    { "path": "/api/cron/x-post?mode=dcf_bear",      "schedule": "0 20 * * 1-5" },
+    { "path": "/api/cron/x-post?mode=market_close",  "schedule": "0 22 * * 1-5" },
+    { "path": "/api/cron/x-post?mode=etf_pulse",     "schedule": "0 13 * * 6"   },
+    { "path": "/api/cron/x-post?mode=feature",       "schedule": "0 14 * * 6"   },
+    { "path": "/api/cron/x-post?mode=weekly_wrap",   "schedule": "0 15 * * 6"   },
+    { "path": "/api/cron/x-post?mode=dcf",           "schedule": "0 16 * * 6"   },
+    { "path": "/api/cron/x-post?mode=sentiment",     "schedule": "0 17 * * 6"   },
+    { "path": "/api/cron/x-post?mode=sentiment",     "schedule": "0 13 * * 0"   },
+    { "path": "/api/cron/x-post?mode=question",      "schedule": "0 14 * * 0"   },
+    { "path": "/api/cron/x-post?mode=etf_pulse",     "schedule": "0 16 * * 0"   },
+    { "path": "/api/cron/x-post?mode=news",          "schedule": "0 18 * * 0"   }
   ]
 }
