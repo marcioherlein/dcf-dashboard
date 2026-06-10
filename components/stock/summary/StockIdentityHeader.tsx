@@ -231,15 +231,24 @@ export default function StockIdentityHeader({
         {/* Right — Price + Valuation narrative */}
         <div className="hidden sm:flex flex-shrink-0 flex-col sm:basis-[34%] sm:max-w-[34%] sm:min-w-[200px]">
 
-          {/* Price */}
-          <p className="text-[11px] text-[#9B9B9B] mb-0.5 leading-none">Current price</p>
-          <p className="text-[32px] font-bold leading-none text-[#111111] tracking-tight">
-            {prefix}{price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </p>
-          <div className={`mt-1 flex items-center gap-1 text-[13px] font-semibold ${isPositive ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
-            <span>{isPositive ? '+' : ''}{change.toFixed(2)}</span>
-            <span className="opacity-80">({isPositive ? '+' : ''}{Math.abs(changePct).toFixed(2)}%)</span>
-            <span className="text-[11px] font-normal text-[#9B9B9B] ml-0.5">1D</span>
+          {/* Price — gradient block */}
+          <div
+            className="rounded-xl px-3.5 py-3 -mx-3.5 mb-1"
+            style={{
+              background: isPositive
+                ? 'linear-gradient(135deg, rgba(17,135,93,0.06) 0%, rgba(17,135,93,0.02) 60%, transparent 100%)'
+                : 'linear-gradient(135deg, rgba(216,59,59,0.06) 0%, rgba(216,59,59,0.02) 60%, transparent 100%)',
+            }}
+          >
+            <p className="text-[11px] text-[#9B9B9B] mb-0.5 leading-none">Current price</p>
+            <p className="text-[32px] font-bold leading-none text-[#111111] tracking-tight">
+              {prefix}{price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
+            <div className={`mt-1 flex items-center gap-1 text-[13px] font-semibold ${isPositive ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
+              <span>{isPositive ? '+' : ''}{change.toFixed(2)}</span>
+              <span className="opacity-80">({isPositive ? '+' : ''}{Math.abs(changePct).toFixed(2)}%)</span>
+              <span className="text-[11px] font-normal text-[#9B9B9B] ml-0.5">1D</span>
+            </div>
           </div>
 
           {/* Pre/post market */}
