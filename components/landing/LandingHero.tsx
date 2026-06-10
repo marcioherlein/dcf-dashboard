@@ -63,48 +63,60 @@ export default function LandingHero() {
           {/* ── Left: Copy ── */}
           <div className="text-left">
 
-
-            {/* Headline — line-by-line stagger */}
-            <div className="mb-3 sm:mb-4" style={{ lineHeight: 1.05, letterSpacing: '-0.035em' }}>
-              {[
-                { text: 'Invest with', delay: 0.06, plain: true },
-                { text: 'a process,', delay: 0.14, plain: true },
-                { text: 'not a story.', delay: 0.22, plain: false },
-              ].map(({ text, delay, plain }) => (
-                <motion.div
-                  key={text}
-                  initial={reduced ? {} : { opacity: 0, y: 20, filter: 'blur(4px)' }}
-                  animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                  transition={{ duration: 0.6, ease: EASE, delay }}
-                  className="font-bold block"
-                  style={{
-                    fontSize: 'clamp(32px, 9.5vw, 60px)',
-                    color: plain ? '#FFFFFF' : '#7C9A19',
-                    textWrap: 'balance',
-                  }}
-                >
-                  {text}
-                </motion.div>
-              ))}
-            </div>
-
-            {/* Sub-copy */}
-            <motion.p
-              initial={reduced ? {} : { opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease: EASE, delay: 0.32 }}
-              className="text-[14px] sm:text-[16px] leading-relaxed mb-6"
-              style={{ maxWidth: '440px', color: 'rgba(255,255,255,0.72)' }}
+            {/* iOS-glass copy block */}
+            <div
+              style={{
+                background: 'rgba(255,255,255,0.06)',
+                backdropFilter: 'blur(18px) saturate(1.4)',
+                WebkitBackdropFilter: 'blur(18px) saturate(1.4)',
+                border: '1px solid rgba(255,255,255,0.10)',
+                borderRadius: '20px',
+                padding: 'clamp(20px, 3vw, 32px)',
+                marginBottom: '20px',
+              }}
             >
-              Instantly see if a stock is undervalued or overpriced. Analyze any ticker in seconds — no spreadsheets required.
-            </motion.p>
+              {/* Headline — line-by-line stagger */}
+              <div className="mb-3 sm:mb-4" style={{ lineHeight: 1.05, letterSpacing: '-0.035em' }}>
+                {[
+                  { text: 'Invest with', delay: 0.06, plain: true },
+                  { text: 'a process,', delay: 0.14, plain: true },
+                  { text: 'not a story.', delay: 0.22, plain: false },
+                ].map(({ text, delay, plain }) => (
+                  <motion.div
+                    key={text}
+                    initial={reduced ? {} : { opacity: 0, y: 20, filter: 'blur(4px)' }}
+                    animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                    transition={{ duration: 0.6, ease: EASE, delay }}
+                    className="font-bold block"
+                    style={{
+                      fontSize: 'clamp(32px, 9.5vw, 60px)',
+                      color: plain ? 'rgba(255,255,255,0.92)' : '#7C9A19',
+                      textWrap: 'balance',
+                    }}
+                  >
+                    {text}
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Sub-copy */}
+              <motion.p
+                initial={reduced ? {} : { opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: EASE, delay: 0.32 }}
+                className="text-[14px] sm:text-[16px] leading-relaxed"
+                style={{ maxWidth: '440px', color: 'rgba(255,255,255,0.62)' }}
+              >
+                Instantly see if a stock is undervalued or overpriced. Analyze any ticker in seconds — no spreadsheets required.
+              </motion.p>
+            </div>
 
             {/* CTAs */}
             <motion.div
               initial={reduced ? {} : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, ease: EASE, delay: 0.42 }}
-              className="flex flex-col sm:flex-row gap-3 mb-6"
+              className="flex flex-col sm:flex-row gap-3 mb-5"
             >
               {session ? (
                 <Link
