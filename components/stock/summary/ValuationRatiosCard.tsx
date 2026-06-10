@@ -148,7 +148,7 @@ function PEGBlock({ peg }: { peg: number | null | undefined }) {
   return (
     <div className="flex flex-col gap-0.5">
       <span className="text-[11px] font-[600] text-[#6B6B6B]">PEG ratio</span>
-      <span className={cn('text-[36px] font-[800] leading-none tabular-nums font-mono', peg != null ? pegColor(peg) : 'text-[#9B9B9B]')}>
+      <span className={cn('text-[28px] font-[800] leading-none tabular-nums font-mono', peg != null ? pegColor(peg) : 'text-[#6B6B6B]')}>
         {peg != null ? peg.toFixed(2) : '—'}
       </span>
       <span className="text-[11px] text-[#6B6B6B] mt-0.5">
@@ -158,7 +158,6 @@ function PEGBlock({ peg }: { peg: number | null | undefined }) {
           : peg < 2.5 ? 'Growth priced at a premium'
           : 'High premium relative to growth'}
       </span>
-      <span className="text-[11px] text-[#9B9B9B] mt-0.5">Industry median: 1.0 – 2.5 typical range</span>
     </div>
   )
 }
@@ -193,7 +192,7 @@ function RatioRow({ name, actual, median, isLast, chartPoints, chartColor }: Rat
         </span>
       </div>
       <div className="mt-1 pl-20">
-        <span className="text-[11px] text-[#9B9B9B]">
+        <span className="text-[11px] text-[#6B6B6B]">
           Sector median: <span className="font-mono">{fmtMultiple(median)}</span>
         </span>
       </div>
@@ -206,9 +205,18 @@ function RatioRow({ name, actual, median, isLast, chartPoints, chartColor }: Rat
             color={chartColor}
           />
           <div className="flex items-center justify-between mt-0.5">
-            <span className="text-[9px] text-[#C4C4C4]">{chartPoints[0]?.label}</span>
-            <span className="text-[9px] text-[#9B9B9B]">{chartPoints.length} quarters</span>
-            <span className="text-[9px] text-[#C4C4C4]">{chartPoints[chartPoints.length - 1]?.label}</span>
+            <span className="text-[9px] text-[#9B9B9B]">{chartPoints[0]?.label}</span>
+            <div className="flex items-center gap-3">
+              <span className="flex items-center gap-1 text-[9px] text-[#9B9B9B]">
+                <span className="inline-block w-3" style={{ borderTop: `1.5px solid ${chartColor}` }} />
+                Actual
+              </span>
+              <span className="flex items-center gap-1 text-[9px] text-[#9B9B9B]">
+                <span className="inline-block w-3" style={{ borderTop: '1px dashed #E5E5E5' }} />
+                Sector median
+              </span>
+            </div>
+            <span className="text-[9px] text-[#9B9B9B]">{chartPoints[chartPoints.length - 1]?.label}</span>
           </div>
         </>
       )}
@@ -306,8 +314,8 @@ export default function ValuationRatiosCard({
           {['P/E', 'EV/EBITDA', 'P/Book', 'P/Sales', 'EV/Revenue'].map((name, i, arr) => (
             <div key={name} className={cn('py-3 flex items-center justify-between', i < arr.length - 1 && 'border-b border-[#E5E5E5]')}>
               <span className="text-[12px] font-[600] text-[#111111] min-w-[64px] w-20 shrink-0">{name}</span>
-              <span className="text-[13px] font-[700] text-[#9B9B9B] tabular-nums font-mono flex-1 text-center">—</span>
-              <span className="inline-block rounded-full px-2.5 py-0.5 text-[11px] font-[600] bg-[#F5F5F5] text-[#9B9B9B] shrink-0">No data</span>
+              <span className="text-[13px] font-[700] text-[#6B6B6B] tabular-nums font-mono flex-1 text-center">—</span>
+              <span className="inline-block rounded-full px-2.5 py-0.5 text-[11px] font-[600] bg-[#F5F5F5] text-[#6B6B6B] shrink-0">No data</span>
             </div>
           ))}
         </div>
@@ -328,7 +336,7 @@ export default function ValuationRatiosCard({
       )}
 
       {(benchmarkSource || sector) && (
-        <p className="mt-3 text-[11px] text-[#9B9B9B] leading-snug">
+        <p className="mt-3 text-[11px] text-[#6B6B6B] leading-snug">
           {benchmarkSource ? `(${benchmarkSource})` : null}
           {benchmarkSource && sector ? ' · ' : null}
           {sector ?? null}
