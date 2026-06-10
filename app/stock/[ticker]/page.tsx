@@ -326,7 +326,13 @@ function StockPageBody() {
       fetch(`/api/statements?ticker=${ticker}`).then(r => r.json()).catch(() => null),
     ])
       .then(([finJson, stmtJson]) => {
-        if (finJson.error) { setError(finJson.error); setLoading(false); return }
+        if (finJson.error) {
+          // Show a friendlier message for auth errors
+          const msg = finJson.error === 'Unauthorized'
+            ? 'Sign in to view the full analysis.'
+            : finJson.error
+          setError(msg); setLoading(false); return
+        }
         setData(finJson)
         setStatementsData(stmtJson ?? null)
         setLoading(false)

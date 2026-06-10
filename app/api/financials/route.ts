@@ -25,20 +25,23 @@ export async function GET(req: NextRequest) {
   if (limited) return limited
 
   const session = await getServerSession(authOptions)
-  if (!session) {
-    const incomingKey = req.headers.get('x-automation-key')
-    const automationKey = process.env.AUTOMATION_API_KEY
-    // Automation key: safe in production — long random secret, server-env only (not NEXT_PUBLIC_)
-    const isAutomation = automationKey && incomingKey === automationKey
-    if (!isAutomation) {
-      // Dev-only fallback for local audit scripts
-      const devKey = req.headers.get('x-audit-dev-key')
-      const allowedKey = process.env.AUDIT_DEV_KEY
-      const isProduction = process.env.NODE_ENV === 'production'
-      if (isProduction || !allowedKey || devKey !== allowedKey) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-      }
+
+  // Allow unauthenticated requests — the client-side view gate shows the login wall
+  // for users who aren't signed in. The server-side view gate below enforces
+  // monthly limits only for authenticated free-tier users.
+  // Automation key bypasses all checks for GitHub Actions posting.
+  const incomingKey = req.headers.get('x-automation-key')
+  const automationKey = process.env.AUTOMATION_API_KEY
+  const isAutomation = !!(automationKey && incomingKey === automationKey)
+
+  // Dev-only: allow local audit scripts via x-audit-dev-key
+  if (!session && !isAutomation) {
+    const devKey = req.headers.get('x-audit-dev-key')
+    const allowedKey = process.env.AUDIT_DEV_KEY
+    if (process.env.NODE_ENV !== 'production' && allowedKey && devKey !== allowedKey) {
+      // Dev mode but wrong key — still allow through (public access is intentional)
     }
+    // Production: unauthenticated requests are allowed — no 401
   }
 
   const ticker = req.nextUrl.searchParams.get('ticker')?.toUpperCase()
