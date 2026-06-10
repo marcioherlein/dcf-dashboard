@@ -154,7 +154,7 @@ export default function VerdictHero({
 
           {/* Headline */}
           <div>
-            <h2 className="text-[2.5rem] sm:text-[2rem] lg:text-[2.5rem] font-[800] leading-[1.05] tracking-tight text-[#111111]" style={{ fontFamily: 'Inter, system-ui, sans-serif', textWrap: 'balance' }}>
+            <h2 className="text-[2rem] sm:text-[2rem] lg:text-[2.5rem] font-[800] leading-[1.05] tracking-tight text-[#111111]" style={{ fontFamily: 'Inter, system-ui, sans-serif', textWrap: 'balance' }}>
               <span>{ticker} looks </span>
               <span className={verdictTailwind}>{vd.word}</span>
             </h2>
@@ -191,23 +191,22 @@ export default function VerdictHero({
             </div>
           </div>
 
-          {/* Three key numbers */}
           <div className="grid grid-cols-3 gap-0 border border-[#E5E5E5] rounded-xl overflow-hidden">
             {/* Fair Value */}
-            <div className="px-4 py-3 flex flex-col gap-0.5">
-              <p className="text-[10px] font-[650] text-[#6B6B6B]">
+            <div className="px-3 py-3 flex flex-col gap-0.5">
+              <p className="text-[10px] font-[650] text-[#6B6B6B] leading-tight">
                 Fair value
                 {' '}<InfoTooltip text="Weighted average of available valuation models." />
               </p>
-              <p className="text-[24px] sm:text-[20px] font-[750] tabular-nums text-[#111111] leading-tight">
+              <p className="text-[18px] sm:text-[22px] font-[750] tabular-nums text-[#111111] leading-tight">
                 {output.blendedFairValue != null ? fmtPrice(output.blendedFairValue, currency) : '—'}
               </p>
               <p className="text-[10px] text-[#6B6B6B]">Per share</p>
             </div>
 
             {/* Divider */}
-            <div className="border-l border-r border-[#E5E5E5] px-4 py-3 flex flex-col gap-0.5">
-              <p className="text-[10px] font-[650] text-[#6B6B6B]">
+            <div className="border-l border-r border-[#E5E5E5] px-3 py-3 flex flex-col gap-0.5">
+              <p className="text-[10px] font-[650] text-[#6B6B6B] leading-tight">
                 Current price
                 {changePct != null && (
                   <span className={`ml-1 ${changePct >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
@@ -215,16 +214,16 @@ export default function VerdictHero({
                   </span>
                 )}
               </p>
-              <p className="text-[24px] sm:text-[20px] font-[750] tabular-nums text-[#111111] leading-tight">
+              <p className="text-[18px] sm:text-[22px] font-[750] tabular-nums text-[#111111] leading-tight">
                 {fmtPrice(currentPrice, currency)}
               </p>
               <p className="text-[10px] text-[#6B6B6B]">Per share</p>
             </div>
 
             {/* Upside */}
-            <div className="px-4 py-3 flex flex-col gap-0.5">
-              <p className="text-[10px] font-[650] text-[#6B6B6B]">Upside / Downside</p>
-              <p className={`text-[24px] sm:text-[20px] font-[750] tabular-nums leading-tight ${upColor}`}>
+            <div className="px-3 py-3 flex flex-col gap-0.5">
+              <p className="text-[10px] font-[650] text-[#6B6B6B] leading-tight">Upside / Downside</p>
+              <p className={`text-[18px] sm:text-[22px] font-[750] tabular-nums leading-tight ${upColor}`}>
                 {output.upsidePct != null
                   ? `${upsideSign}${(output.upsidePct * 100).toFixed(1)}%`
                   : '—'}
