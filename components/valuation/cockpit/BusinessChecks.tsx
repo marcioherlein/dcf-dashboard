@@ -2,6 +2,7 @@
 
 import { fmtPrice } from '@/lib/formatters'
 import type { StarRatingResult, UncertaintyLevel } from '@/lib/valuation/valueInvestingAnalysis'
+import type { ReverseDCFInterpretation } from '@/lib/valuation/methods/reverseDcf'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -17,6 +18,7 @@ interface Props {
   rfRate: number | null
   marketImpliedGrowth: number | null
   marketImpliedText: string
+  marketImpliedInterpretation: ReverseDCFInterpretation
   priceToBook: number | null
   pbSectorMedian: number | null
   sector: string | null
@@ -82,6 +84,16 @@ function CheckCard({
       <p className="text-[10px] text-[#9B9B9B] leading-tight">{question}</p>
       <div>
         <span className={`inline-flex items-center gap-1 text-[10px] font-[700] px-2 py-0.5 rounded-full border ${s.badge} ${s.badgeBg}`}>
+          {signal === 'green' && (
+            <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3} aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          )}
+          {signal === 'red' && (
+            <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3} aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          )}
           {badge}
         </span>
       </div>
@@ -255,23 +267,29 @@ function buildBondsCard(fcfYield: number | null, rfRate: number | null) {
   }
 }
 
-function buildReverseDcfCard(impliedGrowth: number | null, impliedText: string) {
-  if (impliedGrowth == null || impliedText.includes('not_meaningful') || impliedText === '') {
+function buildReverseDcfCard(
+  impliedGrowth: number | null,
+  impliedText: string,
+  interpretation: ReverseDCFInterpretation,
+) {
+  if (impliedGrowth == null || interpretation === 'not_meaningful' || impliedText === '') {
     return { question: 'What growth does today\'s price assume?', verdict: 'Insufficient data to compute implied growth rate', signal: 'slate' as Signal, badge: 'No data', metrics: [] }
   }
 
-  // Derive signal from interpretation keywords in the text
+  // Derive signal from structured interpretation enum — immune to prose wording changes
   let signal: Signal
   let badge: string
 
-  if (impliedText.toLowerCase().includes('very aggressive')) {
-    signal = 'red'; badge = 'Very aggressive'
-  } else if (impliedText.toLowerCase().includes('aggressive')) {
-    signal = 'amber'; badge = 'Aggressive'
-  } else if (impliedText.toLowerCase().includes('conservative')) {
-    signal = 'green'; badge = 'Conservative'
-  } else {
-    signal = 'green'; badge = 'Reasonable'
+  switch (interpretation) {
+    case 'very_aggressive':
+      signal = 'red'; badge = 'Very aggressive'; break
+    case 'aggressive':
+      signal = 'amber'; badge = 'Aggressive'; break
+    case 'conservative':
+      signal = 'green'; badge = 'Conservative'; break
+    case 'reasonable':
+    default:
+      signal = 'green'; badge = 'Reasonable'; break
   }
 
   return {
@@ -343,7 +361,7 @@ export default function BusinessChecks({
   epvGrowthPremiumPct, epvPerShare,
   currentPrice, currency,
   fcfYield, rfRate,
-  marketImpliedGrowth, marketImpliedText,
+  marketImpliedGrowth, marketImpliedText, marketImpliedInterpretation,
   priceToBook, pbSectorMedian, sector,
   starRating, uncertainty,
   structuralRisk, countryRisk,
@@ -353,7 +371,7 @@ export default function BusinessChecks({
   const roicCard     = buildRoicCard(roic, roicSpread, wacc)
   const epvCard      = buildEpvCard(epvGrowthPremiumPct, epvPerShare, currentPrice, currency)
   const bondsCard    = buildBondsCard(fcfYield, rfRate)
-  const reverseDcf   = buildReverseDcfCard(marketImpliedGrowth, marketImpliedText)
+  const reverseDcf   = buildReverseDcfCard(marketImpliedGrowth, marketImpliedText, marketImpliedInterpretation)
   const pbCard       = showPb ? buildPbCard(priceToBook, pbSectorMedian, sector) : null
 
   const gridCols = showPb
@@ -366,7 +384,7 @@ export default function BusinessChecks({
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-3 flex-wrap">
         <div>
-          <p className="text-[12px] font-[650] text-[#6B6B6B]">Independent Checks</p>
+          <p className="text-sm font-[700] text-[#111111]">Independent Checks</p>
           <p className="text-[11px] text-[#6B6B6B]">Each check asks a different question. Not blended into the fair value.</p>
         </div>
         <StarRow starRating={starRating} uncertainty={uncertainty} />
@@ -378,7 +396,7 @@ export default function BusinessChecks({
           {structuralRisk && (
             <a
               href="#model_evidence"
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FCEAEA] border border-[#F0B8B8] text-[10px] font-[700] text-[#D83B3B] hover:bg-[#FCEAEA] transition-colors"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FCEAEA] border border-[#F0B8B8] text-[10px] font-[700] text-[#D83B3B] hover:bg-[#FDD] hover:border-[#D83B3B] transition-colors"
               title={structuralRisk}
             >
               <span aria-hidden="true">⚑</span>

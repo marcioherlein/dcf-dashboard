@@ -407,6 +407,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
         rfRate={rfRate}
         marketImpliedGrowth={output.marketImpliedGrowth}
         marketImpliedText={output.marketImpliedText}
+        marketImpliedInterpretation={output.marketImpliedInterpretation}
         priceToBook={
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (apiData.valuationMethods?.models?.multiples?.estimates ?? []).find((e: any) => e.multiple === 'P/Book')?.actualValue ?? null

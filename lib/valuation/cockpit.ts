@@ -1,7 +1,7 @@
 import { computeForwardPE } from './methods/forwardPE'
 import { computeEVEBITDA } from './methods/evEbitda'
 import { computeRevenueMultiple } from './methods/revenueMultiple'
-import { computeReverseDCF } from './methods/reverseDcf'
+import { computeReverseDCF, type ReverseDCFInterpretation } from './methods/reverseDcf'
 import { computePFFO } from './methods/pFfo'
 import { computeEPV } from './methods/epv'
 import { projectCashFlows } from '../dcf/projectCashFlows'
@@ -167,6 +167,7 @@ export interface CockpitOutput {
   upsidePct: number | null
   marketImpliedGrowth: number | null
   marketImpliedText: string
+  marketImpliedInterpretation: ReverseDCFInterpretation
   divergence: DivergenceAnalysis
 }
 
@@ -870,6 +871,7 @@ export function computeCockpitOutput(
     upsidePct: canonicalUpside,
     marketImpliedGrowth: reverseDcf.impliedCAGR,
     marketImpliedText: reverseDcf.interpretationText,
+    marketImpliedInterpretation: reverseDcf.interpretation,
     divergence,
   }
 }
