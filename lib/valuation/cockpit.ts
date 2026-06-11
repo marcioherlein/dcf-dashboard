@@ -3,6 +3,7 @@ import { computeEVEBITDA } from './methods/evEbitda'
 import { computeRevenueMultiple } from './methods/revenueMultiple'
 import { computeReverseDCF } from './methods/reverseDcf'
 import { computePFFO } from './methods/pFfo'
+import { computeEPV } from './methods/epv'
 import { projectCashFlows } from '../dcf/projectCashFlows'
 import { calculateDDM } from '../dcf/calculateDDM'
 
@@ -64,6 +65,7 @@ export interface ValuationAssumptions {
   revenueMultiple: number // EV/Revenue e.g. 4.5
   priceToBookMultiple?: number // P/B target multiple (financial companies only)
   exitPFFOMultiple?: number    // P/FFO target multiple (REITs only)
+  taxRate?: number             // Effective tax rate for EPV (reuses WACC pipeline value)
 }
 
 // Fixed financial data extracted from apiData — does NOT change with assumptions
@@ -109,6 +111,12 @@ export interface CockpitSnapshot {
   // Pre-computed 4-model DCF blend from Full DCF Table (scenarios.base.fairValue).
   // When present, Core DCF uses this directly instead of re-running the UFCF-only blend.
   fullDcfFairValue?: number | null
+  // EPV inputs — TTM operating income and 5Y normalized operating income (dollars)
+  ttmOperatingIncomeDollars?: number | null
+  normalizedOperatingIncomeDollars?: number | null
+  // EPS for cyclicality detection
+  currentEPS?: number | null
+  normalizedEPS?: number | null
 }
 
 export interface CockpitMethodResult {
@@ -120,6 +128,13 @@ export interface CockpitMethodResult {
   description: string
   upsidePct: number | null
   errors: string[]
+  // Optional metadata for EPV (growth premium, cyclicality, NOPAT display)
+  meta?: {
+    growthPremiumPct?: number | null
+    isCyclical?: boolean
+    cyclicalWarning?: string | null
+    effectiveNopatM?: number | null
+  }
 }
 
 export interface MethodExplanation {
@@ -155,32 +170,28 @@ export interface CockpitOutput {
   divergence: DivergenceAnalysis
 }
 
-type MethodWeights = { forward_pe: number; ev_ebitda: number; revenue_multiple: number; core_dcf: number }
+type MethodWeights = { forward_pe: number; ev_ebitda: number; revenue_multiple: number; core_dcf: number; epv: number }
 
 const COCKPIT_WEIGHTS: Record<string, MethodWeights> = {
-  standard:  { forward_pe: 0.35, ev_ebitda: 0.30, revenue_multiple: 0.25, core_dcf: 0.10 },
-  growth:    { forward_pe: 0.25, ev_ebitda: 0.25, revenue_multiple: 0.35, core_dcf: 0.15 },
-  startup:   { forward_pe: 0.10, ev_ebitda: 0.15, revenue_multiple: 0.45, core_dcf: 0.30 },
-  // financial: Core DCF reduced 35%→15% (GAAP earnings embed provisions; P/E and P/B are more reliable)
-  financial: { forward_pe: 0.50, ev_ebitda: 0.35, revenue_multiple: 0.00, core_dcf: 0.15 },
-  // fintech: auto-promoted from financial when industry matches FINTECH_INDUSTRY_RE
-  fintech:   { forward_pe: 0.20, ev_ebitda: 0.25, revenue_multiple: 0.25, core_dcf: 0.30 },
-  // alt_asset: FRE-based — P/B and P/E primary; revenue multiple secondary
-  alt_asset: { forward_pe: 0.40, ev_ebitda: 0.30, revenue_multiple: 0.10, core_dcf: 0.20 },
-  // mreeit: P/B primary (book value/NAV); DDM secondary; no revenue multiple
-  mreeit:    { forward_pe: 0.15, ev_ebitda: 0.50, revenue_multiple: 0.00, core_dcf: 0.35 },
-  // bdc: DDM primary; P/B secondary; revenue multiple not meaningful
-  bdc:       { forward_pe: 0.15, ev_ebitda: 0.55, revenue_multiple: 0.00, core_dcf: 0.30 },
-  dividend:  { forward_pe: 0.35, ev_ebitda: 0.25, revenue_multiple: 0.15, core_dcf: 0.25 },
-  // REITs: Forward P/E excluded (distorted by real estate depreciation); P/FFO primary
-  reit:      { forward_pe: 0.00, ev_ebitda: 0.55, revenue_multiple: 0.15, core_dcf: 0.30 },
-  // Utilities: DDM primary; stable regulated cash flows suit income-based valuation
-  utility:   { forward_pe: 0.20, ev_ebitda: 0.50, revenue_multiple: 0.00, core_dcf: 0.30 },
-  // Energy: EV/EBITDA primary (CAGR capped, commodity cycles distort P/E)
-  energy:    { forward_pe: 0.25, ev_ebitda: 0.45, revenue_multiple: 0.15, core_dcf: 0.15 },
-  // Mining: same logic as energy
-  mining:    { forward_pe: 0.25, ev_ebitda: 0.45, revenue_multiple: 0.15, core_dcf: 0.15 },
-  etf:       { forward_pe: 0.25, ev_ebitda: 0.25, revenue_multiple: 0.25, core_dcf: 0.25 },
+  // standard: EPV 10% (taken from forward_pe 35→30 and core_dcf 10→05)
+  standard:  { forward_pe: 0.30, ev_ebitda: 0.30, revenue_multiple: 0.25, core_dcf: 0.05, epv: 0.10 },
+  growth:    { forward_pe: 0.25, ev_ebitda: 0.25, revenue_multiple: 0.35, core_dcf: 0.15, epv: 0.00 },
+  startup:   { forward_pe: 0.10, ev_ebitda: 0.15, revenue_multiple: 0.45, core_dcf: 0.30, epv: 0.00 },
+  financial: { forward_pe: 0.50, ev_ebitda: 0.35, revenue_multiple: 0.00, core_dcf: 0.15, epv: 0.00 },
+  fintech:   { forward_pe: 0.20, ev_ebitda: 0.25, revenue_multiple: 0.25, core_dcf: 0.30, epv: 0.00 },
+  alt_asset: { forward_pe: 0.40, ev_ebitda: 0.30, revenue_multiple: 0.10, core_dcf: 0.20, epv: 0.00 },
+  mreeit:    { forward_pe: 0.15, ev_ebitda: 0.50, revenue_multiple: 0.00, core_dcf: 0.35, epv: 0.00 },
+  bdc:       { forward_pe: 0.15, ev_ebitda: 0.55, revenue_multiple: 0.00, core_dcf: 0.30, epv: 0.00 },
+  // dividend: EPV 10% (mature stable earnings; taken from ev_ebitda 25→15)
+  dividend:  { forward_pe: 0.35, ev_ebitda: 0.15, revenue_multiple: 0.15, core_dcf: 0.25, epv: 0.10 },
+  reit:      { forward_pe: 0.00, ev_ebitda: 0.55, revenue_multiple: 0.15, core_dcf: 0.30, epv: 0.00 },
+  // utility: EPV 15% (regulated stable earnings ideal for EPV; taken from ev_ebitda 50→35)
+  utility:   { forward_pe: 0.20, ev_ebitda: 0.35, revenue_multiple: 0.00, core_dcf: 0.30, epv: 0.15 },
+  // energy: EPV 15% (cycle normalization is EPV's strength; taken from forward_pe 25→10)
+  energy:    { forward_pe: 0.10, ev_ebitda: 0.45, revenue_multiple: 0.15, core_dcf: 0.15, epv: 0.15 },
+  // mining: same as energy
+  mining:    { forward_pe: 0.10, ev_ebitda: 0.45, revenue_multiple: 0.15, core_dcf: 0.15, epv: 0.15 },
+  etf:       { forward_pe: 0.25, ev_ebitda: 0.25, revenue_multiple: 0.25, core_dcf: 0.25, epv: 0.00 },
 }
 
 const FINTECH_INDUSTRY_RE = /fintech|neobank|digital.?bank|payment|credit.?service|consumer.?finance|insurtech/i
@@ -700,6 +711,22 @@ export function computeCockpitOutput(
   const upside = (fv: number | null) =>
     fv != null && currentPrice > 0 ? (fv - currentPrice) / currentPrice : null
 
+  // 5. EPV (Earnings Power Value — Greenwald zero-growth perpetuity)
+  // Only computed for company types where EPV weight > 0
+  const epvResult = W.epv > 0 ? computeEPV({
+    operatingIncomeM: snapshot.ttmOperatingIncomeDollars != null
+      ? snapshot.ttmOperatingIncomeDollars / 1e6 : null,
+    normalizedOperatingIncomeM: snapshot.normalizedOperatingIncomeDollars != null
+      ? snapshot.normalizedOperatingIncomeDollars / 1e6 : null,
+    taxRate: assumptions.taxRate ?? 0.21,
+    wacc: assumptions.wacc,
+    netDebtM: snapshot.debtM - snapshot.cashM,
+    sharesM: snapshot.sharesM,
+    currentPrice,
+    currentEPS: snapshot.currentEPS ?? null,
+    normalizedEPS: snapshot.normalizedEPS ?? null,
+  }) : null
+
   const fwdPEFairValue = skipFwdPE ? null : (fwdPE?.fairValueToday ?? null)
   const fwdPEErrors = skipFwdPE
     ? ['Pre-revenue or no earnings base — Forward P/E excluded from blend']
@@ -749,6 +776,34 @@ export function computeCockpitOutput(
       errors: dcfErrors,
     },
   ]
+
+  // Add EPV method when weight > 0 (standard, dividend, utility, energy, mining types)
+  if (W.epv > 0) {
+    const epvFV = epvResult?.epvPerShare ?? null
+    const epvErrors = epvResult?.guardErrors ?? ['EPV not applicable for this company type']
+    const premPct = epvResult?.growthPremiumPct
+    const premStr = premPct != null ? `${(premPct * 100).toFixed(0)}%` : 'N/A'
+    const epvConf: CockpitMethodResult['confidence'] =
+      epvFV == null ? 'low' : epvResult?.isCyclical ? 'medium' : 'high'
+    methods.push({
+      id: 'epv',
+      method: 'Earnings Power Value',
+      fairValue: epvFV,
+      weight: W.epv,
+      confidence: epvConf,
+      description: epvResult?.isCyclical
+        ? `EPV = NOPAT ÷ WACC using 5Y normalized EBIT. ${epvResult.cyclicalWarning ?? ''} Growth premium: ${premStr} of price.`
+        : `EPV = NOPAT ÷ WACC. Zero-growth floor — what this business earns today in steady state. Growth premium: ${premStr} of price.`,
+      upsidePct: upside(epvFV),
+      errors: epvErrors,
+      meta: {
+        growthPremiumPct: epvResult?.growthPremiumPct ?? null,
+        isCyclical: epvResult?.isCyclical ?? false,
+        cyclicalWarning: epvResult?.cyclicalWarning ?? null,
+        effectiveNopatM: epvResult?.effectiveNopatM ?? null,
+      },
+    })
+  }
 
   const valid = methods.filter(m => m.fairValue != null && m.fairValue > 0)
   const totalWeight = valid.reduce((s, m) => s + m.weight, 0)

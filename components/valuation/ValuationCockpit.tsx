@@ -287,6 +287,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
         base: output.scenarios.base.fairValue ?? 0,
         bear: output.scenarios.bear.fairValue ?? 0,
       },
+      epv_fair_value: output.methods.find(m => m.id === 'epv')?.fairValue ?? null,
     } : null,
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [ticker, output, assumptions, currentPrice, apiData.quote])

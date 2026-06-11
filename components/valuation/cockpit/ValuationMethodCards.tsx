@@ -1,6 +1,6 @@
 'use client'
 
-import { TrendingUp, BarChart2, BarChart, Target, RotateCcw, Undo2, BookOpen, Building2, Coins } from 'lucide-react'
+import { TrendingUp, BarChart2, BarChart, Target, RotateCcw, Undo2, BookOpen, Building2, Coins, Sigma } from 'lucide-react'
 import {
   LineChart, Line, XAxis, YAxis, ResponsiveContainer,
   ReferenceLine, Tooltip,
@@ -62,6 +62,8 @@ const METHOD_INPUTS: Record<string, FieldDef[]> = {
   ],
   ddm: [],
   core_dcf: [],
+  // EPV has no user-adjustable inputs — fully deterministic from WACC + operating income
+  epv: [],
 }
 
 // ─── Visual config per method ─────────────────────────────────────────────────
@@ -113,6 +115,13 @@ const METHOD_CFG: Record<string, {
     barBg: 'bg-[#11875D]', valueBg: 'bg-[#E8F7EF]', valueText: 'text-[#11875D]',
     chartHex: '#11875D',
     Icon: Coins as IconComp,
+  },
+  // Earnings Power Value — deep indigo (semantically distinct from all other methods)
+  epv: {
+    iconBg: 'bg-[#EDE9FE]', iconText: 'text-[#6D28D9]',
+    barBg: 'bg-[#6D28D9]', valueBg: 'bg-[#F5F3FF]', valueText: 'text-[#6D28D9]',
+    chartHex: '#6D28D9',
+    Icon: Sigma as IconComp,
   },
   // Core DCF — olive (brand primary, most trusted model)
   core_dcf: {
@@ -503,6 +512,8 @@ export default function ValuationMethodCards({
             ? (m.upsidePct >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')
             : 'text-[#9B9B9B]'
           const isCoreDCF = m.id === 'core_dcf'
+          const isEPV = m.id === 'epv'
+          const epvMeta = isEPV ? m.meta : null
 
           return (
             <div
@@ -566,8 +577,8 @@ export default function ValuationMethodCards({
                 </div>
               )}
 
-              {/* Inputs — editable method cards */}
-              {hasValue && !isCoreDCF && fields.length > 0 && (
+              {/* Inputs — editable method cards (not Core DCF, not EPV) */}
+              {hasValue && !isCoreDCF && !isEPV && fields.length > 0 && (
                 <div className="space-y-1 pt-1 border-t border-[#E5E5E5]">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-[10px] font-[600] text-[#9B9B9B]">Assumptions</p>
@@ -610,6 +621,51 @@ export default function ValuationMethodCards({
                   >
                     Edit assumptions in Full DCF ↓
                   </button>
+                </div>
+              )}
+
+              {/* EPV card — read-only data display */}
+              {isEPV && hasValue && (
+                <div className="pt-1 border-t border-[#E5E5E5] space-y-2.5">
+                  {/* NOPAT display */}
+                  {epvMeta?.effectiveNopatM != null && epvMeta.effectiveNopatM > 0 && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-[#6B6B6B]">
+                        {epvMeta.isCyclical ? 'Normalized NOPAT' : 'NOPAT (TTM)'}
+                      </span>
+                      <span className="text-[11px] font-[650] text-[#111111] tabular-nums">
+                        {epvMeta.effectiveNopatM >= 1000
+                          ? `$${(epvMeta.effectiveNopatM / 1000).toFixed(1)}B`
+                          : `$${epvMeta.effectiveNopatM.toFixed(0)}M`
+                        }
+                      </span>
+                    </div>
+                  )}
+                  {/* Growth premium pill */}
+                  {epvMeta?.growthPremiumPct != null && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-[#6B6B6B]">Growth premium</span>
+                      <span className={`text-[11px] font-[650] tabular-nums px-2 py-0.5 rounded-full border ${
+                        epvMeta.growthPremiumPct < 0.15
+                          ? 'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D]'
+                          : epvMeta.growthPremiumPct < 0.40
+                          ? 'bg-[#FFF4DA] border-[#F3D391] text-[#B56A00]'
+                          : 'bg-[#FCEAEA] border-[#F0B8B8] text-[#D83B3B]'
+                      }`}>
+                        {(epvMeta.growthPremiumPct * 100).toFixed(0)}% of price
+                      </span>
+                    </div>
+                  )}
+                  {/* Cyclical warning */}
+                  {epvMeta?.isCyclical && epvMeta.cyclicalWarning && (
+                    <div className="flex items-start gap-1.5 rounded-lg bg-[#FFF4DA] border border-[#F3D391] px-2.5 py-1.5">
+                      <span className="text-[#B56A00] shrink-0 text-[11px] leading-tight mt-px">⚠</span>
+                      <span className="text-[10px] text-[#B56A00] leading-tight">{epvMeta.cyclicalWarning}</span>
+                    </div>
+                  )}
+                  <p className="text-[10px] text-[#9B9B9B] leading-relaxed">
+                    NOPAT ÷ WACC. Zero-growth floor (Greenwald). Inputs: WACC and operating income.
+                  </p>
                 </div>
               )}
 

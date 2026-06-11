@@ -24,6 +24,8 @@ export interface ValuationSnapshot {
   upside_pct: number
   inputs: Record<string, number>
   scenarios: { bull: number; base: number; bear: number }
+  // EPV fair value — stored when EPV is included in the blend (null when not applicable)
+  epv_fair_value?: number | null
 }
 
 export async function saveValuation(

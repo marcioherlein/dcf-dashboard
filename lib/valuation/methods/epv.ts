@@ -32,6 +32,8 @@ export interface EPVResult {
   isCyclical: boolean                     // current deviates >50% from normalized
   cyclicalWarning: string | null
   guardErrors: string[]
+  // Exposed for UI display
+  effectiveNopatM: number | null          // same as effectiveNopat, aliased for clarity
 }
 
 export function computeEPV(inputs: EPVInputs): EPVResult {
@@ -64,6 +66,7 @@ export function computeEPV(inputs: EPVInputs): EPVResult {
       nopat, normalizedNopat, effectiveNopat: effectiveNopat ?? null,
       epvPerShare: null, upsidePct: null, growthPremiumPct: null,
       isNormalized, isCyclical, cyclicalWarning, guardErrors: errors,
+      effectiveNopatM: effectiveNopat ?? null,
     }
   }
 
@@ -76,6 +79,7 @@ export function computeEPV(inputs: EPVInputs): EPVResult {
       nopat, normalizedNopat, effectiveNopat,
       epvPerShare: null, upsidePct: null, growthPremiumPct: null,
       isNormalized, isCyclical, cyclicalWarning, guardErrors: ['Shares outstanding unavailable'],
+      effectiveNopatM: effectiveNopat,
     }
   }
 
@@ -88,5 +92,6 @@ export function computeEPV(inputs: EPVInputs): EPVResult {
     nopat, normalizedNopat, effectiveNopat,
     epvPerShare, upsidePct, growthPremiumPct,
     isNormalized, isCyclical, cyclicalWarning, guardErrors: [],
+    effectiveNopatM: effectiveNopat,
   }
 }

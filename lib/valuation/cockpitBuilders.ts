@@ -17,7 +17,7 @@ export function buildSnapshot(apiData: ApiData, statementsData?: ApiData | null)
   const debtM     = apiData.fairValue?.debt ?? 0
   const sharesRaw = sharesM > 0 ? sharesM * 1e6 : null
 
-  const incomeRows: Array<{ isProjected: boolean; revenue: number | null; ebitda?: number | null }> =
+  const incomeRows: Array<{ isProjected: boolean; revenue: number | null; ebitda?: number | null; operatingIncome?: number | null; netIncome?: number | null }> =
     apiData.financialStatements?.incomeStatement ?? []
   const actuals = incomeRows.filter(r => !r.isProjected && r.revenue != null && r.revenue > 0)
   const lastRow = actuals[actuals.length - 1] ?? null
@@ -204,6 +204,33 @@ export function buildSnapshot(apiData: ApiData, statementsData?: ApiData | null)
   const dividendPerShare: number | null = apiData.quote?.dividendRate ?? apiData.quote?.trailingAnnualDividendRate ?? null
   const payoutRatio: number | null = apiData.quote?.payoutRatio ?? null
 
+  // EPV inputs: TTM operating income and 5Y normalized (median) operating income
+  function medianOf(vals: number[]): number {
+    const s = [...vals].sort((a, b) => a - b)
+    const m = Math.floor(s.length / 2)
+    return s.length % 2 !== 0 ? s[m] : (s[m - 1] + s[m]) / 2
+  }
+  const opIncomeRows = incomeRows.filter(r => !r.isProjected && r.operatingIncome != null && r.operatingIncome > 0)
+  // Most recent TTM operating income (last actual row in the array, stored oldest-first)
+  const ttmOperatingIncomeDollars: number | null = opIncomeRows.length > 0
+    ? opIncomeRows[opIncomeRows.length - 1].operatingIncome! * 1e6
+    : null
+  // 5Y normalized: median of up to 5 most recent actuals (slice from end for most recent)
+  const opIncomeVals = opIncomeRows.slice(-5).map(r => r.operatingIncome!)
+  const normalizedOperatingIncomeDollars: number | null = opIncomeVals.length >= 2
+    ? medianOf(opIncomeVals) * 1e6
+    : (opIncomeVals.length === 1 ? opIncomeVals[0] * 1e6 : null)
+
+  // EPS for cyclicality detection
+  const currentEPS: number | null = apiData.quote?.epsTrailingTwelveMonths ?? null
+  const epsRows = incomeRows
+    .filter(r => !r.isProjected && r.netIncome != null && r.revenue != null && r.revenue > 0)
+    .slice(-5)
+  const sharesForEPS = sharesM > 0 ? sharesM : null
+  const normalizedEPS: number | null = epsRows.length >= 2 && sharesForEPS != null
+    ? medianOf(epsRows.map(r => r.netIncome! / sharesForEPS))
+    : null
+
   return {
     currentPrice: apiData.quote?.price ?? 0,
     currency: apiData.quote?.currency ?? 'USD',
@@ -232,6 +259,10 @@ export function buildSnapshot(apiData: ApiData, statementsData?: ApiData | null)
     dividendPerShare,
     payoutRatio,
     fullDcfFairValue: apiData.scenarios?.base?.fairValue ?? null,
+    ttmOperatingIncomeDollars,
+    normalizedOperatingIncomeDollars,
+    currentEPS,
+    normalizedEPS,
   }
 }
 
@@ -330,5 +361,6 @@ export function seedAssumptions(apiData: ApiData): ValuationAssumptions {
     revenueMultiple: revMultBase.exitEVRevenue,
     priceToBookMultiple,
     exitPFFOMultiple,
+    taxRate:         apiData.wacc?.inputs?.taxRate ?? undefined,
   }
 }

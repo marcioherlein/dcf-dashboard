@@ -29,6 +29,7 @@ interface Props {
   confidence?: 'High' | 'Medium' | 'Low'
   growthModel?: 'two-stage' | 'three-stage'
   scores?: Scores | null
+  epvGrowthPremium?: number | null  // from EPV method — what % of price is growth premium
 }
 
 interface RedFlag {
@@ -143,7 +144,7 @@ const CONFIDENCE_COLOR: Record<string, string> = {
 }
 
 export default function InvestorVerdictCard({
-  upside, fairValue, price, currency, analystRecommendation, ratings, confidence, growthModel, scores,
+  upside, fairValue, price, currency, analystRecommendation, ratings, confidence, growthModel, scores, epvGrowthPremium,
 }: Props) {
   if (upside == null || fairValue == null) return null
 
@@ -232,6 +233,29 @@ export default function InvestorVerdictCard({
           <span className="text-[12px] text-[#6B6B6B] px-2.5 py-1 rounded-full border border-[#E5E5E5] bg-white min-h-[32px] flex items-center">
             {growthModel === 'three-stage' ? '3-stage DCF' : '2-stage DCF'}
           </span>
+        )}
+        {epvGrowthPremium != null && (
+          <Tooltip>
+            <TooltipTrigger
+              render={<span className={cn(
+                'text-[12px] font-semibold px-2.5 py-1 rounded-full border cursor-help min-h-[32px] flex items-center',
+                epvGrowthPremium < 0.15
+                  ? 'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D]'
+                  : epvGrowthPremium < 0.40
+                  ? 'bg-[#FFF4DA] border-[#F3D391] text-[#B56A00]'
+                  : 'bg-[#FCEAEA] border-[#F0B8B8] text-[#D83B3B]'
+              )} />}
+            >
+              Growth Premium: {(epvGrowthPremium * 100).toFixed(0)}%
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-[220px] text-center text-[11px]">
+              {epvGrowthPremium < 0.15
+                ? 'Low growth premium (EPV). Stock trades near its earnings power floor — value-oriented signal.'
+                : epvGrowthPremium < 0.40
+                ? 'Moderate growth premium (EPV). Market pricing in reasonable future expansion.'
+                : 'High growth premium (EPV). A significant portion of the price depends on future growth materializing.'}
+            </TooltipContent>
+          </Tooltip>
         )}
       </div>
 
