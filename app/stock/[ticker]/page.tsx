@@ -642,9 +642,6 @@ function StockPageBody() {
                   exit={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * -12 }}
                   transition={{ type: 'spring', duration: 0.32, bounce: 0.1 }}
                 >
-                  {!session?.user ? (
-                    <GatedTabOverlay tabName="Valuation" />
-                  ) : (
                   <TabErrorBoundary tabName="Valuation">
                   {data.canComputeDCF === false ? (
                     <ValuationNotAvailableCard
@@ -675,7 +672,7 @@ function StockPageBody() {
                     />
                   )}
                   </TabErrorBoundary>
-                  )}
+                  {!session?.user && <GatedTabOverlay tabName="Valuation" />}
                   <NextTabBanner currentTab="valuation" onNavigate={handleTabChange} />
                 </motion.div>
               )}
@@ -721,9 +718,6 @@ function StockPageBody() {
                   exit={{ opacity: 0, x: reducedMotion ? 0 : tabDirection * -12 }}
                   transition={{ type: 'spring', duration: 0.32, bounce: 0.1 }}
                 >
-                  {!session?.user ? (
-                    <GatedTabOverlay tabName="Conviction" />
-                  ) : (
                   <TabErrorBoundary tabName="Conviction">
                   {data.ratings && data.scores ? (
                     <HealthSection
@@ -737,7 +731,7 @@ function StockPageBody() {
                     <p className="text-sm text-[#8A95A6] text-center py-12">Health data unavailable for this stock.</p>
                   )}
                   </TabErrorBoundary>
-                  )}
+                  {!session?.user && <GatedTabOverlay tabName="Conviction" />}
                   <NextTabBanner currentTab="conviction" onNavigate={handleTabChange} />
                 </motion.div>
               )}
@@ -756,11 +750,8 @@ function StockPageBody() {
                   transition={{ type: 'spring', duration: 0.32, bounce: 0.1 }}
                 >
                   <TabErrorBoundary tabName="News">
-                  {!session?.user ? (
-                    <GatedTabOverlay tabName="News" />
-                  ) : (
                     <NewsPanel ticker={ticker} />
-                  )}
+                    {!session?.user && <GatedTabOverlay tabName="News" />}
                   </TabErrorBoundary>
                 </motion.div>
               )}
