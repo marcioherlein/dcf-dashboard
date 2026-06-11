@@ -39,6 +39,7 @@ export async function saveValuation(
   if (userEmail) {
     const { data: user } = await client.from('users').select('id').eq('email', userEmail).single()
     userId = user?.id ?? null
+    if (!userId) throw new Error(`User not found for email: ${userEmail}`)
   }
 
   const { data, error } = await client

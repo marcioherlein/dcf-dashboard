@@ -821,7 +821,14 @@ export default function TopBar() {
                 </button>
               )}
               <button
-                onClick={() => signOut()}
+                onClick={() => {
+                  try {
+                    localStorage.removeItem('etf_watchlist')
+                    localStorage.removeItem('simplifier_watchlist')
+                    localStorage.removeItem('intrinsico_recent')
+                  } catch {}
+                  signOut()
+                }}
                 className="text-[12px] text-[#6B6B6B] hover:text-[#111111] transition-colors whitespace-nowrap"
               >
                 Sign out

@@ -99,16 +99,24 @@ export async function PATCH(req: NextRequest) {
   if (!userEmail) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   try {
-    const body = await req.json() as { ticker: string; listTag: ListTag }
-    const { ticker, listTag } = body
+    const body = await req.json() as { ticker: string; listTag?: ListTag; groupName?: string | null }
+    const { ticker, listTag, groupName } = body
     if (!ticker) {
       return NextResponse.json({ error: 'ticker required' }, { status: 400 })
+    }
+
+    const updates: Record<string, unknown> = {}
+    if (listTag !== undefined)  updates.list_tag   = listTag
+    if (groupName !== undefined) updates.group_name = groupName
+
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json({ error: 'No fields to update' }, { status: 400 })
     }
 
     const client = createServiceClient()
     const { error } = await client
       .from(TABLE)
-      .update({ list_tag: listTag })
+      .update(updates)
       .eq('user_id', userEmail)
       .eq('ticker', ticker.toUpperCase())
 

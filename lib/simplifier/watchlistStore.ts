@@ -1,19 +1,6 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import type { WatchlistEntry } from './types'
 
 const LOCAL_KEY = 'simplifier_watchlist'
-
-// ── Supabase client (anon key, isomorphic) ────────────────────────────────────
-
-let _client: SupabaseClient | null = null
-
-function getClient(): SupabaseClient | null {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  if (!url || !key || url === '' || key === '') return null
-  if (!_client) _client = createClient(url, key)
-  return _client
-}
 
 // ── localStorage helpers (anonymous users only) ───────────────────────────────
 
@@ -32,74 +19,73 @@ function writeLocal(entries: WatchlistEntry[]): void {
   try {
     localStorage.setItem(LOCAL_KEY, JSON.stringify(entries))
   } catch {
-    // quota exceeded or SSR
+    // quota exceeded
   }
+}
+
+export function clearLocalWatchlist(): void {
+  if (typeof window === 'undefined') return
+  try { localStorage.removeItem(LOCAL_KEY) } catch {}
+}
+
+// ── API helpers (authenticated users — always server-side DB) ─────────────────
+
+async function apiFetch(method: string, body?: unknown, params?: Record<string, string>): Promise<Response> {
+  const url = new URL('/api/simplifier/watchlist', window.location.origin)
+  if (params) Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v))
+  return fetch(url.toString(), {
+    method,
+    headers: body ? { 'Content-Type': 'application/json' } : {},
+    body: body ? JSON.stringify(body) : undefined,
+  })
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
 /**
  * Load the full watchlist.
- * Logged-in: Supabase only (cross-device consistent).
+ * Logged-in: server API → Supabase (cross-device consistent, service-role key).
  * Anonymous: localStorage only.
  */
 export async function loadWatchlist(userEmail?: string | null): Promise<WatchlistEntry[]> {
-  const client = getClient()
-
-  // Logged-in user — Supabase is the only source of truth
-  if (client && userEmail) {
+  if (userEmail) {
     try {
-      const { data, error } = await client
-        .from('simplifier_watchlist')
-        .select('*')
-        .eq('user_id', userEmail)
-        .order('updated_at', { ascending: false })
-
-      if (error) return readLocal() // fallback on error only
-      return (data ?? []).map(rowToEntry)
+      const res = await apiFetch('GET')
+      if (!res.ok) return readLocal()
+      const data = await res.json() as Record<string, unknown>[]
+      return data.map(rowToEntry)
     } catch {
       return readLocal()
     }
   }
-
-  // Anonymous user — localStorage only
   return readLocal()
 }
 
 /**
  * Save or update a watchlist entry.
- * Logged-in: Supabase only.
+ * Logged-in: server API → Supabase.
  * Anonymous: localStorage only.
  */
 export async function saveWatchlistEntry(
   entry: WatchlistEntry,
   userEmail?: string | null,
 ): Promise<void> {
-  const client = getClient()
-
-  if (client && userEmail) {
-    // Logged-in: write only to Supabase
-    await client.from('simplifier_watchlist').upsert(
-      {
-        user_id: userEmail,
-        ticker: entry.ticker,
-        company_name: entry.companyName,
-        updated_at: entry.updatedAt,
-        current_phase: entry.currentPhase,
-        answers: entry.answers,
-        notes: entry.notes,
-        phase_scores: entry.phaseScores,
-        overall_score: entry.overallScore,
-        financial_snapshot: entry.snapshot,
-        list_tag: entry.listTag ?? null,
-        group_name: entry.groupName ?? null,
-      },
-      { onConflict: 'user_id,ticker' },
-    )
+  if (userEmail) {
+    await apiFetch('POST', { entry: {
+      ticker:       entry.ticker,
+      companyName:  entry.companyName,
+      updatedAt:    entry.updatedAt,
+      currentPhase: entry.currentPhase,
+      answers:      entry.answers,
+      notes:        entry.notes,
+      phaseScores:  entry.phaseScores,
+      overallScore: entry.overallScore,
+      snapshot:     entry.snapshot,
+      listTag:      entry.listTag ?? null,
+      groupName:    entry.groupName ?? null,
+    } })
     return
   }
-
-  // Anonymous: localStorage only
   const local = readLocal()
   const idx = local.findIndex((e) => e.ticker === entry.ticker)
   if (idx >= 0) local[idx] = entry
@@ -114,17 +100,10 @@ export async function deleteWatchlistEntry(
   ticker: string,
   userEmail?: string | null,
 ): Promise<void> {
-  const client = getClient()
-
-  if (client && userEmail) {
-    await client
-      .from('simplifier_watchlist')
-      .delete()
-      .eq('user_id', userEmail)
-      .eq('ticker', ticker)
+  if (userEmail) {
+    await apiFetch('DELETE', undefined, { ticker })
     return
   }
-
   writeLocal(readLocal().filter((e) => e.ticker !== ticker))
 }
 
@@ -143,17 +122,10 @@ export async function updateListTag(
   listTag: WatchlistEntry['listTag'],
   userEmail?: string | null,
 ): Promise<void> {
-  const client = getClient()
-
-  if (client && userEmail) {
-    await client
-      .from('simplifier_watchlist')
-      .update({ list_tag: listTag })
-      .eq('user_id', userEmail)
-      .eq('ticker', ticker)
+  if (userEmail) {
+    await apiFetch('PATCH', { ticker, listTag })
     return
   }
-
   const local = readLocal()
   const idx = local.findIndex((e) => e.ticker === ticker)
   if (idx >= 0) { local[idx] = { ...local[idx], listTag }; writeLocal(local) }
@@ -167,17 +139,10 @@ export async function updateGroupName(
   groupName: string | null,
   userEmail?: string | null,
 ): Promise<void> {
-  const client = getClient()
-
-  if (client && userEmail) {
-    await client
-      .from('simplifier_watchlist')
-      .update({ group_name: groupName })
-      .eq('user_id', userEmail)
-      .eq('ticker', ticker)
+  if (userEmail) {
+    await apiFetch('PATCH', { ticker, groupName: groupName ?? null })
     return
   }
-
   const local = readLocal()
   const idx = local.findIndex((e) => e.ticker === ticker)
   if (idx >= 0) { local[idx] = { ...local[idx], groupName: groupName ?? undefined }; writeLocal(local) }

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { saveValuation } from '@/lib/data/supabaseClient'
 import { createClient } from '@supabase/supabase-js'
 
 const FREE_SAVE_LIMIT = 10
@@ -71,7 +70,18 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const saved = await saveValuation(body, userEmail)
+
+    // INSERT using service-role client — bypasses RLS correctly since this is
+    // a server-side route with a validated session. user_id comes from the
+    // server-resolved userRow.id, never from client-supplied body.
+    const userId = (userRow as { id: string }).id
+    const { data: saved, error: insertError } = await sb
+      .from('valuations')
+      .insert([{ ...body, user_id: userId, saved_at: new Date().toISOString() }])
+      .select()
+      .single()
+
+    if (insertError) throw insertError
     return NextResponse.json(saved, { status: 201 })
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 })
