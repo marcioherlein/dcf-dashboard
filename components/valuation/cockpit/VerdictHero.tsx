@@ -41,11 +41,15 @@ function ScenarioSlider({
   currentPrice: number
   currency: string
 }) {
-  if (bear == null || base == null || bull == null) return null
+  if (bear == null || base == null || bull == null) return (
+    <p className="text-[11px] text-[#9B9B9B]">Scenario range unavailable — insufficient model data.</p>
+  )
   const lo = Math.min(bear, bull)
   const hi = Math.max(bear, bull)
   const range = hi - lo
-  if (range <= 0) return null
+  if (range <= 0) return (
+    <p className="text-[11px] text-[#9B9B9B]">All scenarios converge to the same value.</p>
+  )
 
   const basePct = Math.max(2, Math.min(98, ((base - lo) / range) * 100))
   const currentPct = Math.max(0, Math.min(100, ((currentPrice - lo) / range) * 100))

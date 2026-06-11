@@ -454,7 +454,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 items-start">
 
         {/* ── 6. INDEPENDENT CHECKS ──────────────────────────────────────────── */}
-        <div className="rounded-xl border border-[#E5E5E5] bg-white overflow-hidden flex flex-col">
+        <div className="w-full rounded-xl border border-[#E5E5E5] bg-white overflow-hidden flex flex-col">
           <div className="px-4 py-3 border-b border-[#E5E5E5] flex items-center justify-between shrink-0">
             <div>
               <p className="text-[11px] font-[700] uppercase tracking-widest text-[#9B9B9B]">Independent Checks</p>
@@ -527,7 +527,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
               </div>
             )}
           </div>
-          <p className="px-4 pb-3 text-[10px] text-[#9B9B9B] italic">Checks are signals, not guarantees. Use judgement.</p>
+          <p className="px-4 pb-3 text-[10px] text-[#9B9B9B] italic">Checks are signals, not guarantees. Use judgment.</p>
         </div>
 
         {/* ── 7. SENSITIVITY MATRIX ────────────────────────────────────────────── */}
@@ -558,7 +558,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
       </div>
 
       {/* ── 9. FULL DCF MODEL (collapsed) — year-by-year projections ─────────── */}
-      <details ref={fullDcfRef} className="group" id="full_dcf">
+      <details ref={fullDcfRef} className="group" id="full_dcf" open>
         <summary className="flex items-center gap-2 cursor-pointer list-none bg-white rounded-xl border border-[#E5E5E5] shadow-sm px-4 sm:px-5 py-3.5 hover:bg-[#EAF1FF] transition-colors select-none">
           <span className="text-[#2563EB] text-xs group-open:rotate-90 transition-transform inline-block">▶</span>
           <span className="text-sm font-[650] text-[#2563EB]">

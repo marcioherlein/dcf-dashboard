@@ -31,7 +31,15 @@ export default function FairValueChart({ methods, blendedFairValue, currentPrice
   }, [])
 
   const validMethods = methods.filter(m => m.fairValue != null && m.fairValue > 0)
-  if (validMethods.length === 0) return null
+  if (validMethods.length === 0) return (
+    <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm px-3 sm:px-5 py-4 sm:py-5 w-full min-h-[200px] flex flex-col items-center justify-center gap-2">
+      <svg className="w-6 h-6 text-[#CDD1C8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <circle cx="12" cy="12" r="9" /><path strokeLinecap="round" d="M12 8v4M12 16h.01" />
+      </svg>
+      <p className="text-[12px] font-semibold text-[#9B9B9B]">Fair Value by Method</p>
+      <p className="text-[11px] text-[#9B9B9B]">No models produced a result for this ticker.</p>
+    </div>
+  )
 
   const all = [currentPrice, ...validMethods.map(m => m.fairValue!)]
   if (blendedFairValue != null) all.push(blendedFairValue)

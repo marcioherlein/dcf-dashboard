@@ -127,42 +127,44 @@ function CompactHeatmap({
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Table */}
-      <div className="overflow-x-auto -mx-5 px-5">
-        <table className="w-full border-collapse" style={{ minWidth: 260 }}>
+      {/* Table — full-bleed scroll on mobile */}
+      <div className="overflow-x-auto -mx-4 sm:-mx-5 px-4 sm:px-5" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <table className="w-full border-collapse" style={{ minWidth: 240 }}>
           <thead>
             <tr>
               {/* Corner label */}
-              <td className="w-[52px] pb-1.5 text-right pr-1.5">
+              <td className="w-[48px] pb-1.5 text-right pr-1.5">
                 <div className="flex flex-col items-end gap-px">
                   <span className="text-[9px] font-[700] text-[#5F790B]">{fieldY.shortLabel} ↓</span>
                   <span className="text-[9px] font-[700] text-[#9B9B9B]">{fieldX.shortLabel} →</span>
                 </div>
               </td>
               {xVals.map((xv, xi) => (
-                <td
+                <th
                   key={xi}
+                  scope="col"
                   className={cn(
-                    'pb-1.5 text-center text-[9px] font-[700] tabular-nums leading-none',
+                    'pb-1.5 text-center text-[10px] font-[700] tabular-nums leading-none',
                     xi === baseXIdx ? 'text-[#5F790B]' : 'text-[#9B9B9B]'
                   )}
                 >
                   {fieldX.format(xv)}
-                </td>
+                </th>
               ))}
             </tr>
           </thead>
           <tbody>
             {yVals.map((yv, yi) => (
               <tr key={yi}>
-                <td
+                <th
+                  scope="row"
                   className={cn(
-                    'pr-1.5 text-right text-[9px] font-[700] tabular-nums py-0.5',
+                    'pr-1.5 text-right text-[10px] font-[700] tabular-nums py-0.5',
                     yi === baseYIdx ? 'text-[#5F790B]' : 'text-[#9B9B9B]'
                   )}
                 >
                   {fieldY.format(yv)}
-                </td>
+                </th>
                 {xVals.map((_, xi) => {
                   const cell = grid[yi][xi]
                   const isBase = yi === baseYIdx && xi === baseXIdx
@@ -175,7 +177,7 @@ function CompactHeatmap({
                           bg, text,
                           isBase && 'ring-2 ring-[#5F790B] ring-offset-1'
                         )}
-                        style={{ minWidth: 36 }}
+                        style={{ minWidth: 32 }}
                       >
                         {cell.upside != null
                           ? `${cell.upside >= 0 ? '+' : ''}${(cell.upside * 100).toFixed(0)}%`
@@ -522,7 +524,7 @@ function ExpandedMatrix({
                   </div>
                 </th>
                 {xVals.map((xv, xi) => (
-                  <th key={xi} className="pb-2 text-center">
+                  <th key={xi} scope="col" className="pb-2 text-center">
                     <div className={cn('text-[11px] font-[700] tabular-nums', xi === baseXIdx ? 'text-[#3D5207]' : 'text-[#6B6B6B]')}>
                       {fieldX.format(xv)}
                     </div>
@@ -556,14 +558,14 @@ function ExpandedMatrix({
                   )}
 
                   {/* Row label */}
-                  <td className="pr-2 text-right py-0.5 w-[52px]">
+                  <th scope="row" className="pr-2 text-right py-0.5 w-[52px]">
                     <div className={cn('text-[11px] font-[700] tabular-nums', yi === baseYIdx ? 'text-[#5F790B]' : 'text-[#6B6B6B]')}>
                       {fieldY.format(yv)}
                     </div>
                     {yi === histYIdx && histY != null && (
                       <div className="text-[10px] text-[#9B9B9B] leading-none">hist</div>
                     )}
-                  </td>
+                  </th>
 
                   {/* Data cells */}
                   {xVals.map((_, xi) => {

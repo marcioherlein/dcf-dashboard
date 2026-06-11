@@ -431,7 +431,10 @@ function SynthesisBox({
           <p className="text-[10px] font-[700] uppercase tracking-widest text-[#9B9B9B] mb-1">
             Blended Fair Value <span className="normal-case font-[500] tracking-normal text-[#9B9B9B]">(Synthesis)</span>
           </p>
-          <p className="text-[2rem] font-[800] leading-none tabular-nums text-[#111111]">
+          <p
+            className="text-[2rem] font-[800] leading-none tabular-nums text-[#111111]"
+            aria-label={blendedFairValue != null ? `Blended fair value: ${fmtPrice(blendedFairValue, currency)} per share` : 'Blended fair value unavailable'}
+          >
             {blendedFairValue != null ? fmtPrice(blendedFairValue, currency) : '—'}
           </p>
           <p className="text-[11px] text-[#9B9B9B] mt-0.5">Per share</p>
@@ -443,8 +446,10 @@ function SynthesisBox({
         {/* Center: description + stats */}
         <div className="flex-1 min-w-0">
           <p className="text-[12px] text-[#6B6B6B] leading-snug mb-3">
-            Weighted average of {validMethods.length} independent model{validMethods.length !== 1 ? 's' : ''}.
-            Weights reflect model reliability, data quality, and market context.
+            {blendedFairValue == null || validMethods.length === 0
+              ? 'Insufficient data to compute fair value.'
+              : `Weighted average of ${validMethods.length} independent model${validMethods.length !== 1 ? 's' : ''}. Weights reflect model reliability, data quality, and market context.`
+            }
           </p>
           <div className="flex items-center gap-4 flex-wrap">
             <div>
@@ -467,18 +472,18 @@ function SynthesisBox({
 
         {/* Right: weight legend pills */}
         {validMethods.length > 0 && (
-          <div className="shrink-0 flex flex-col gap-1 min-w-[140px]">
+          <div className="flex flex-row flex-wrap gap-1 sm:flex-col sm:flex-nowrap sm:min-w-[140px] mt-1 sm:mt-0">
             {validMethods.map(m => {
               const cfg = METHOD_CFG[m.id]
               const pct = validTotal > 0 ? Math.round((m.weight / validTotal) * 100) : 0
               return (
-                <div key={m.id} className="flex items-center gap-2">
+                <div key={m.id} className="flex items-center gap-1.5 min-w-0">
                   <span
                     className="w-2 h-2 rounded-full shrink-0"
                     style={{ backgroundColor: cfg?.chartHex ?? '#9B9B9B' }}
                   />
-                  <span className="text-[11px] text-[#6B6B6B] truncate flex-1">{m.method}</span>
-                  <span className="text-[11px] font-[650] tabular-nums text-[#111111]">{pct}%</span>
+                  <span className="text-[10px] sm:text-[11px] text-[#6B6B6B] truncate max-w-[80px] sm:max-w-none flex-1">{m.method}</span>
+                  <span className="text-[10px] sm:text-[11px] font-[650] tabular-nums text-[#111111]">{pct}%</span>
                 </div>
               )
             })}
@@ -553,8 +558,7 @@ function KeyAssumptionsSection({
     <div className="mt-5 rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] px-5 py-4">
       {/* Section header */}
       <div className="mb-4">
-        <p className="text-[10px] font-[700] tracking-widest uppercase text-[#9B9B9B]">Historical Trends</p>
-        <p className="text-[13px] font-[700] text-[#06101F] mt-0.5">Key Assumptions</p>
+        <p className="text-[10px] font-[700] tracking-widest uppercase text-[#9B9B9B]">Historical Trends / Key Assumptions</p>
         <p className="text-[11px] text-[#9B9B9B] mt-0.5">
           Dashed line shows your current assumption.
         </p>
@@ -701,6 +705,8 @@ export default function ValuationMethodCards({
               className={`relative rounded-xl border flex flex-col min-w-[240px] sm:min-w-0 snap-start flex-shrink-0 sm:flex-shrink overflow-hidden ${
                 hasValue ? 'border-[#E5E5E5] bg-white' : 'border-[#E5E5E5] bg-[#F5F5F5]/50'
               }`}
+              role="article"
+              aria-label={`${m.method} valuation model`}
             >
               {/* Colored top accent bar */}
               {cfg && (

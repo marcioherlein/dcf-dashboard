@@ -67,7 +67,11 @@ function Histogram({
   p10: number; p25: number; p75: number; p90: number
   currentPrice: number; adjustedP50: number; currency: string
 }) {
-  if (!histogram.length) return null
+  if (!histogram.length) return (
+    <div className="h-16 bg-[#F5F5F5] rounded-lg flex items-center justify-center">
+      <p className="text-[11px] text-[#9B9B9B]">Distribution unavailable</p>
+    </div>
+  )
   const maxPct = Math.max(...histogram.map(b => b.pct), 0.001)
 
   return (
@@ -142,21 +146,21 @@ function PercentileStrip({
     { label: 'P90',  value: p90,          color: 'text-[#11875D]', sub: 'Best 10%'     },
   ]
   return (
-    <div className="grid grid-cols-3 sm:grid-cols-5 gap-px bg-[#F5F5F5] rounded-xl overflow-hidden border border-[#E5E5E5]">
+    <div className="grid grid-cols-5 gap-px bg-[#F5F5F5] rounded-xl overflow-hidden border border-[#E5E5E5]">
       {items.map(({ label, value, color, sub }) => {
         const upside = currentPrice > 0 ? (value - currentPrice) / currentPrice : null
         return (
-          <div key={label} className="bg-white px-1.5 sm:px-2 py-2 sm:py-2.5 flex flex-col items-center gap-0.5">
-            <span className="text-[10px] sm:text-[11px] font-[700] text-[#9B9B9B]">{label}</span>
-            <span className={cn('text-[15px] sm:text-[17px] font-[800] tabular-nums leading-tight', color)}>
+          <div key={label} className="bg-white px-1 sm:px-2 py-2 sm:py-2.5 flex flex-col items-center gap-0.5 min-w-0">
+            <span className="text-[9px] sm:text-[11px] font-[700] text-[#9B9B9B]">{label}</span>
+            <span className={cn('text-[11px] sm:text-[17px] font-[800] tabular-nums leading-tight truncate w-full text-center', color)}>
               {fmtPrice(value, currency)}
             </span>
             {upside != null && (
-              <span className={cn('text-[11px] font-[650] tabular-nums', upside >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
+              <span className={cn('text-[9px] sm:text-[11px] font-[650] tabular-nums', upside >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
                 {upside >= 0 ? '+' : ''}{(upside * 100).toFixed(0)}%
               </span>
             )}
-            <span className="text-[8px] text-[#9B9B9B] leading-none text-center">{sub}</span>
+            <span className="text-[8px] text-[#9B9B9B] leading-none text-center hidden sm:block">{sub}</span>
           </div>
         )
       })}
@@ -232,6 +236,7 @@ export default function MonteCarloPanel({
 }: Props) {
   const [result,    setResult]    = useState<MCResult | null>(null)
   const [running,   setRunning]   = useState(false)
+  const [error,     setError]     = useState<string | null>(null)
   const [expanded,  setExpanded]  = useState(defaultExpanded)
   const [hasRun,    setHasRun]    = useState(false)
   const [showOnboard, setShowOnboard] = useState(false)
@@ -254,12 +259,18 @@ export default function MonteCarloPanel({
 
   const runSimulation = useCallback(() => {
     setRunning(true)
+    setError(null)
     const id = ++runIdRef.current
     setTimeout(() => {
       try {
         const inputs: MCInputs = { ...buildMCInputs(assumptions, snapshot, apiData, sensitivity), nPaths }
         const r = runMonteCarlo(inputs)
         if (runIdRef.current === id) { setResult(r); setHasRun(true) }
+      } catch (e) {
+        if (runIdRef.current === id) {
+          setError(e instanceof Error ? e.message : 'Simulation failed. Try re-running.')
+          setHasRun(true)
+        }
       } finally {
         if (runIdRef.current === id) setRunning(false)
       }
@@ -399,6 +410,17 @@ export default function MonteCarloPanel({
             <div className="py-8 text-center rounded-xl border border-[#E5E5E5] bg-[#F5F5F5]">
               <p className="text-[12px] font-[650] text-[#6B6B6B]">Insufficient data</p>
               <p className="text-[11px] text-[#9B9B9B] mt-1">Requires positive trailing FCF and diluted share count.</p>
+            </div>
+          ) : error ? (
+            <div className="py-8 text-center rounded-xl border border-[#F0B8B8] bg-[#FCEAEA]">
+              <p className="text-[12px] font-[650] text-[#D83B3B]">Simulation error</p>
+              <p className="text-[11px] text-[#9B9B9B] mt-1">{error}</p>
+              <button
+                onClick={runSimulation}
+                className="mt-3 px-4 py-1.5 rounded-lg bg-[#5F790B] text-white text-[11px] font-[650] hover:bg-[#4A6009] transition-colors"
+              >
+                Retry
+              </button>
             </div>
           ) : !result || running ? (
             <div className="space-y-3">
