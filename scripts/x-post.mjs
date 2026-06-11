@@ -1824,10 +1824,10 @@ async function runMiddayPulse() {
 
   const weekOfYear = Math.floor((Date.now() / 86400000 + 4) / 7)
   const hooks = [
-    "What's moving in your portfolio right now?",
-    'Which sector are you watching this afternoon?',
-    'Where are you seeing opportunity mid-session?',
-    "What's your read on the rotation today?",
+    'Interesting session. What are you watching?',
+    'Rotation is clear today. How are you positioned?',
+    'Mid-session check. Anything surprising you?',
+    'This rotation has a story behind it. What\'s your read?',
   ]
 
   const lines = [`📊 Midday Pulse — ${dayName}`, ``, indexLine]
@@ -1853,7 +1853,7 @@ async function runMiddayPulse() {
 
   if (macroNote.length > 0) lines.push(``, `━━━ EVENTS ━━━`, ...macroNote)
 
-  lines.push(``, hooks[weekOfYear % hooks.length], ``, `Run the valuations → ${APP_URL}`)
+  lines.push(``, hooks[weekOfYear % hooks.length], ``, `Model any stock free → ${APP_URL}`)
   lines.push(`#Midday #StockMarket #Investing #WallStreet`)
 
   await post(lines.join('\n'))
@@ -1935,10 +1935,10 @@ async function runMarketClose() {
 
   const weekOfYear = Math.floor((Date.now() / 86400000 + 4) / 7)
   const hooks = [
-    'What was your read on today?',
-    'How did you play it today?',
-    "Any setups you're watching for tomorrow?",
-    'Biggest lesson from today\'s session?',
+    'Tough session or easy one — the model doesn\'t care. What mattered today?',
+    'Markets closed. What stood out?',
+    'One thing today confirmed or changed in your thesis?',
+    'The close tells a story. What\'s yours?',
   ]
 
   const lines = [
@@ -1972,26 +1972,601 @@ async function runMarketClose() {
   lines.push(``, `━━━ WHAT TO WATCH TOMORROW ━━━`)
   watchTomorrow.forEach(w => lines.push(`→ ${w}`))
 
-  lines.push(``, hooks[weekOfYear % hooks.length], ``, `Run the valuations → ${APP_URL}`)
+  lines.push(``, hooks[weekOfYear % hooks.length], ``, `Model any stock free → ${APP_URL}`)
   lines.push(`#MarketClose #Investing #WallStreet #StockMarket`)
 
   await post(lines.join('\n'))
 }
 
+// ─── Mode: market_open ────────────────────────────────────────────────────────
+// 10:30 AM ART — NYSE bell. Intraday opening data, NOT a repeat of morning_brief.
+
+async function runMarketOpen() {
+  const dayName = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+
+  const [sp500, nasdaq, dow] = await Promise.all([
+    fetchYahooChart('^GSPC'),
+    fetchYahooChart('^IXIC'),
+    fetchYahooChart('^DJI'),
+  ])
+  await new Promise(r => setTimeout(r, 800))
+  const vix = await fetchEtfQuote('VIX').catch(() => null)
+
+  const spChg = sp500?.changePct ?? 0
+  const openEmoji = spChg > 0.5 ? '🟢' : spChg < -0.5 ? '🔴' : '🟡'
+  const openLabel = spChg > 1.0 ? 'strong open' : spChg > 0.2 ? 'positive open' : spChg > -0.2 ? 'flat open' : spChg > -1.0 ? 'soft open' : 'risk-off open'
+
+  const lines = [
+    `${openEmoji} NYSE Open — ${dayName}`,
+    ``,
+    `S&P 500: ${sp500?.changePct >= 0 ? '+' : ''}${sp500?.changePct.toFixed(2) ?? 'N/A'}% · ${sp500?.price.toFixed(0) ?? ''}`,
+    `Nasdaq:  ${nasdaq?.changePct >= 0 ? '+' : ''}${nasdaq?.changePct.toFixed(2) ?? 'N/A'}%`,
+    `Dow:     ${dow?.changePct >= 0 ? '+' : ''}${dow?.changePct.toFixed(2) ?? 'N/A'}%`,
+    vix ? `VIX: ${vix.price.toFixed(1)} — ${vixSentiment(vix.price).label}` : null,
+    ``,
+    `${openLabel.charAt(0).toUpperCase() + openLabel.slice(1)}. Watch sector rotation in the first 30 minutes — that sets the tone for the session.`,
+    ``,
+    `${APP_URL}`,
+    `#NYSE #StockMarket #Investing`,
+  ].filter(Boolean)
+
+  await post(lines.join('\n'))
+}
+
+// ─── Mode: sector_spotlight ───────────────────────────────────────────────────
+// 11:30 AM ART — Best performing sector mid-morning with narrative.
+
+const SECTOR_STOCKS = {
+  XLK: ['AAPL','MSFT','NVDA','GOOGL','META'],
+  XLE: ['XOM','CVX','COP','SLB','EOG'],
+  XLF: ['JPM','BAC','GS','V','MA'],
+  XLV: ['UNH','LLY','JNJ','ABBV','MRK'],
+  XLU: ['NEE','DUK','SO','AEP','EXC'],
+  XLI: ['HON','GE','CAT','RTX','UPS'],
+}
+
+const SECTOR_NARRATIVES = {
+  XLK: 'Technology leading — growth expectations rising or rate pressure easing. Watch the mega-caps.',
+  XLE: 'Energy outperforming — oil/gas prices or supply concerns moving the sector.',
+  XLF: 'Financials in favor — typically signals rising rates or improving credit outlook.',
+  XLV: 'Healthcare defensive bid — investors rotating to safety or specific drug catalysts.',
+  XLU: 'Utilities leading — classic risk-off rotation. Market pricing in rate cuts or economic slowdown.',
+  XLI: 'Industrials up — cyclical strength, infrastructure spending, or global demand optimism.',
+}
+
+async function runSectorSpotlight() {
+  const dayName = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+
+  const symbols = Object.keys(SECTOR_STOCKS)
+  const sectorData = (await Promise.all(symbols.map(s => fetchYahooChart(s).catch(() => null)))).filter(Boolean)
+  sectorData.sort((a, b) => b.changePct - a.changePct)
+
+  if (sectorData.length === 0) throw new Error('No sector data available')
+
+  const best = sectorData[0]
+  const worst = sectorData[sectorData.length - 1]
+  const sectorName = {
+    XLK: 'Technology', XLE: 'Energy', XLF: 'Financials',
+    XLV: 'Healthcare', XLU: 'Utilities', XLI: 'Industrials',
+  }
+  const narrative = SECTOR_NARRATIVES[best.symbol] ?? 'Sector rotation underway.'
+  const stocks = SECTOR_STOCKS[best.symbol] ?? []
+
+  const lines = [
+    `📌 Sector Spotlight — ${dayName}`,
+    ``,
+    `🏆 Leading: ${sectorName[best.symbol] ?? best.symbol} ${best.changePct >= 0 ? '+' : ''}${best.changePct.toFixed(2)}%`,
+    `📉 Lagging:  ${sectorName[worst.symbol] ?? worst.symbol} ${worst.changePct >= 0 ? '+' : ''}${worst.changePct.toFixed(2)}%`,
+    ``,
+    narrative,
+    ``,
+    `━━━ ALL SECTORS ━━━`,
+    ...sectorData.map(s => {
+      const e = s.changePct >= 1 ? '🟢' : s.changePct <= -1 ? '🔴' : '🟡'
+      return `${e} ${sectorName[s.symbol] ?? s.symbol}: ${s.changePct >= 0 ? '+' : ''}${s.changePct.toFixed(2)}%`
+    }),
+    ``,
+    `Key names in ${sectorName[best.symbol]}: ${stocks.slice(0, 3).map(t => `$${t}`).join(' · ')}`,
+    `Run their DCF models → ${APP_URL}`,
+    `#${best.symbol} #SectorRotation #StockMarket`,
+  ]
+
+  await post(lines.join('\n'))
+}
+
+// ─── Mode: dcf2 ───────────────────────────────────────────────────────────────
+// 1:30 PM ART — Second DCF of the day. Different pool, different offset, never repeats noon pick.
+
+const ROTATION2 = {
+  1: ['AAPL','MSFT','GOOGL','META','AMZN','NFLX','ADBE','CRM','NOW','INTU'],  // Monday: mega-cap tech
+  2: ['NVDA','AMD','INTC','QCOM','AVGO','TXN','MU','AMAT','LRCX','ON'],       // Tuesday: semis
+  3: ['JPM','BAC','GS','MS','WFC','V','MA','BLK','AXP','C'],                  // Wednesday: financials
+  4: ['WMT','COST','HD','TGT','MCD','SBUX','NKE','CMG','YUM','BKNG'],        // Thursday: consumer
+  5: ['XOM','CVX','NEE','DUK','COP','SLB','BA','CAT','HON','GE'],            // Friday: energy+industrials
+}
+
+async function runDcf2() {
+  const day = new Date().getDay()
+  const pool = TICKER ? [TICKER] : (ROTATION2[day] ?? ROTATION2[1])
+  // Offset by 13 from dayOfYear so it never picks the same stock as runDcf
+  const dayOfYear = Math.floor(Date.now() / 86400000) + 13
+
+  let ticker = null
+  let data = null
+  for (let attempt = 0; attempt < Math.min(5, pool.length); attempt++) {
+    const candidate = pool[(dayOfYear + attempt) % pool.length]
+    try {
+      const result = await fetchValuation(candidate)
+      if (result?.quote?.price && appFairValue(result)) { ticker = candidate; data = result; break }
+    } catch { /* try next */ }
+  }
+  if (!data) throw new Error('No valid DCF2 data found')
+
+  const price = data.quote?.price
+  const fair  = appFairValue(data)
+  const upside = appUpside(data)
+  const v = verdictLabel(upside)
+  const cagr = data.cagr
+  const wacc = data.wacc?.wacc
+  const grossM = data.businessProfile?.grossMargin
+  const netM   = data.businessProfile?.netMargin
+  const roic   = data.scores?.roic?.roic
+  const roicSpread = data.scores?.roic?.spread
+  const analyst1y = data.cagrAnalysis?.analystEstimate1y
+  const numAnalysts = data.cagrAnalysis?.numAnalysts ?? 0
+  const rec = data.analystRecommendation ?? ''
+  const recLabel = rec === 'strong_buy' ? 'Strong Buy' : rec === 'buy' ? 'Buy' : rec === 'hold' ? 'Hold' : rec === 'sell' ? 'Sell' : null
+  const grade = data.ratings?.overall?.grade ?? ''
+  const label = data.ratings?.overall?.label ?? ''
+  const sector = data.quote?.sector ?? ''
+  const bear = data.scenarios?.bear?.fairValue
+  const bull = data.scenarios?.bull?.fairValue
+
+  if (!price || !fair) throw new Error(`No price/fair value for ${ticker}`)
+
+  const lines = [
+    `${v.emoji} $${ticker} — ${v.short}`,
+    ``,
+    `━━━ VALUATION ━━━`,
+    `Current price:  ${fmt(price)}`,
+    `Fair value est: ${fmt(fair)}`,
+    `Difference:     ${pct(upside)} vs current price`,
+    ...(bear && bull ? [`Scenario range: ${fmt(bear)} (bear) → ${fmt(bull)} (bull)`] : []),
+    ``,
+    `━━━ MODEL INPUTS ━━━`,
+    `WACC: ${pct(wacc, false)} · CAGR: ${pct(cagr, false)}${analyst1y != null && numAnalysts >= 3 ? ` (analysts: ${pct(analyst1y, false)}, n=${numAnalysts})` : ''}`,
+    ``,
+    `━━━ QUALITY ━━━`,
+    ...(grossM != null ? [`Gross margin: ${pct(grossM, false)}`] : []),
+    ...(netM != null ? [`Net margin:   ${pct(netM, false)}`] : []),
+    ...(roic != null ? [`ROIC: ${pct(roic, false)}${roicSpread != null ? ` (${roicSpread > 0 ? '+' : ''}${pct(roicSpread, false)} vs WACC)` : ''}`] : []),
+    ``,
+    ...(recLabel ? [`Wall St: ${recLabel}`] : []),
+    `Rating: ${grade} ${label} · ${sector}`,
+    ``,
+    `$${ticker} ${v.long}.`,
+    `${APP_URL}/stock/${ticker}`,
+    `#DCF #${ticker} #Valuation #Investing`,
+  ].filter(Boolean)
+
+  await post(lines.join('\n'))
+}
+
+// ─── Mode: pre_close ──────────────────────────────────────────────────────────
+// 3:30 PM ART — 30 min before US close. What's setting up, what to watch.
+
+async function runPreClose() {
+  const dayName = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+  const tomorrowUtc = new Date(Date.now() + 86400000).toISOString().split('T')[0]
+
+  const [sp500, nasdaq, tnx] = await Promise.all([
+    fetchYahooChart('^GSPC'),
+    fetchYahooChart('^IXIC'),
+    fetchYahooChart('^TNX'),
+  ])
+  await new Promise(r => setTimeout(r, 800))
+
+  const sectorSymbols = ['XLK','XLE','XLF','XLV','XLU','XLI']
+  const sectors = []
+  for (const sym of sectorSymbols) {
+    const d = await fetchYahooChart(sym).catch(() => null)
+    if (d) sectors.push({ ...d, name: {XLK:'Tech',XLE:'Energy',XLF:'Financials',XLV:'Healthcare',XLU:'Utilities',XLI:'Industrials'}[sym] })
+    await new Promise(r => setTimeout(r, 250))
+  }
+  sectors.sort((a, b) => b.changePct - a.changePct)
+
+  const macroTomorrow = MACRO_CALENDAR.filter(e => e.date === tomorrowUtc)
+  const spChg = sp500?.changePct ?? 0
+  const lateSignal = Math.abs(spChg) > 0.5
+    ? spChg > 0 ? 'Buyers holding control into the close.' : 'Sellers maintaining pressure into the close.'
+    : 'Choppy session. Close will matter for tomorrow\'s open.'
+
+  const lines = [
+    `⏰ 30 Min to Close — ${dayName}`,
+    ``,
+    `S&P 500: ${sp500?.changePct >= 0 ? '+' : ''}${sp500?.changePct.toFixed(2) ?? 'N/A'}% · ${sp500?.price.toFixed(0) ?? ''}`,
+    `Nasdaq:  ${nasdaq?.changePct >= 0 ? '+' : ''}${nasdaq?.changePct.toFixed(2) ?? 'N/A'}%`,
+    tnx ? `10Y Yield: ${tnx.price.toFixed(3)}%` : null,
+    ``,
+    `━━━ SECTORS INTO CLOSE ━━━`,
+    ...sectors.map(s => {
+      const e = s.changePct >= 0.5 ? '🟢' : s.changePct <= -0.5 ? '🔴' : '🟡'
+      return `${e} ${s.name}: ${s.changePct >= 0 ? '+' : ''}${s.changePct.toFixed(2)}%`
+    }),
+    ``,
+    lateSignal,
+    ...(macroTomorrow.length > 0 ? [``, `Tomorrow: ${macroTomorrow.map(e => e.label).join(' · ')}`] : []),
+    ``,
+    `${APP_URL}`,
+    `#StockMarket #MarketClose #Investing`,
+  ].filter(Boolean)
+
+  await post(lines.join('\n'))
+}
+
+// ─── Mode: after_hours ────────────────────────────────────────────────────────
+// 6:00 PM ART — Post-close final numbers + any after-hours earnings.
+
+async function runAfterHours() {
+  const dayName = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+  const todayUtc = new Date().toISOString().split('T')[0]
+  const tomorrowUtc = new Date(Date.now() + 86400000).toISOString().split('T')[0]
+
+  const [sp500, nasdaq, dow] = await Promise.all([
+    fetchYahooChart('^GSPC'), fetchYahooChart('^IXIC'), fetchYahooChart('^DJI'),
+  ])
+
+  // Scan for companies that report after hours today or pre-market tomorrow
+  const ahTickers = []
+  for (let i = 0; i < SP500_SAMPLE.length; i += 8) {
+    const batch = SP500_SAMPLE.slice(i, i + 8)
+    const settled = await Promise.allSettled(batch.map(async t => {
+      const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${t}?interval=1d&range=1d`,
+        { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(5000) }).catch(() => null)
+      if (!res?.ok) return null
+      const json = await res.json().catch(() => null)
+      const meta = json?.chart?.result?.[0]?.meta
+      if (!meta) return null
+      const cap = meta.marketCap ?? 0
+      if (cap < 10_000_000_000) return null
+      const ts = meta.earningsTimestampStart ?? meta.earningsTimestamp
+      if (!ts) return null
+      const d = new Date(ts * 1000).toISOString().split('T')[0]
+      return (d === todayUtc || d === tomorrowUtc) ? { symbol: t, marketCap: cap, date: d } : null
+    }))
+    for (const r of settled) if (r.status === 'fulfilled' && r.value) ahTickers.push(r.value)
+    if (i + 8 < SP500_SAMPLE.length) await new Promise(r => setTimeout(r, 300))
+  }
+  ahTickers.sort((a, b) => a.date.localeCompare(a.date) || b.marketCap - a.marketCap)
+
+  const todayEarners = ahTickers.filter(t => t.date === todayUtc).slice(0, 4)
+  const tomorrowEarners = ahTickers.filter(t => t.date === tomorrowUtc).slice(0, 4)
+
+  const macroTomorrow = MACRO_CALENDAR.filter(e => e.date === tomorrowUtc)
+
+  const spChg = sp500?.changePct ?? 0
+  const sessionSummary = spChg > 1 ? 'Strong session.' : spChg > 0 ? 'Modest gains.' : spChg > -1 ? 'Mild losses.' : 'Significant selling pressure today.'
+
+  const lines = [
+    `🔔 After Hours — ${dayName}`,
+    ``,
+    `━━━ FINAL CLOSE ━━━`,
+    `S&P 500: ${sp500?.changePct >= 0 ? '+' : ''}${sp500?.changePct.toFixed(2) ?? 'N/A'}% · ${sp500?.price.toFixed(0) ?? ''}`,
+    `Nasdaq:  ${nasdaq?.changePct >= 0 ? '+' : ''}${nasdaq?.changePct.toFixed(2) ?? 'N/A'}%`,
+    `Dow:     ${dow?.changePct >= 0 ? '+' : ''}${dow?.changePct.toFixed(2) ?? 'N/A'}%`,
+    ``,
+    sessionSummary,
+  ]
+
+  if (todayEarners.length > 0) {
+    lines.push(``, `━━━ REPORTING AFTER HOURS ━━━`)
+    todayEarners.forEach(t => lines.push(`📊 $${t.symbol} — run the model before results: ${APP_URL}/stock/${t.symbol}`))
+  }
+
+  if (tomorrowEarners.length > 0) {
+    lines.push(``, `━━━ TOMORROW'S EARNINGS ━━━`)
+    lines.push(tomorrowEarners.map(t => `$${t.symbol}`).join(' · '))
+  }
+
+  if (macroTomorrow.length > 0) {
+    lines.push(``, `━━━ TOMORROW'S CALENDAR ━━━`)
+    macroTomorrow.forEach(e => lines.push(`📅 ${e.label}`))
+  }
+
+  lines.push(``, `${APP_URL}`, `#AfterHours #StockMarket #Earnings #Investing`)
+
+  await post(lines.join('\n'))
+}
+
+// ─── Mode: theory_overnight ───────────────────────────────────────────────────
+// 10:00 PM ART — Rotates through all theory posts including 10 new ones.
+
+const THEORY_POSTS = {
+  // Existing 7 (0-6) accessed via FEATURE_POSTS — this extends the rotation
+  7: {
+    lines: [
+      `📖 Graham's Margin of Safety — the most important concept in investing`,
+      ``,
+      `Benjamin Graham said: "The margin of safety is always dependent on the price paid."`,
+      ``,
+      `It's not about finding great companies. It's about finding great companies at prices that leave room for you to be wrong.`,
+      ``,
+      `━━━ HOW IT WORKS ━━━`,
+      `You estimate intrinsic value: $100`,
+      `You only buy at: $70 (30% margin of safety)`,
+      ``,
+      `If your estimate was wrong and the real value is $80 — you still made money.`,
+      `If your estimate was right — you made 43%.`,
+      ``,
+      `The margin of safety is your protection against: bad luck, bad assumptions, and bad timing.`,
+      ``,
+      `A DCF model gives you an estimate. The margin of safety is what you demand below it.`,
+      ``,
+      `${APP_URL}`,
+      `#GrahamInvesting #MarginOfSafety #ValueInvesting`,
+    ],
+  },
+  8: {
+    lines: [
+      `📖 EV/EBITDA vs P/E — why enterprise value matters more than price`,
+      ``,
+      `P/E is the most quoted multiple in finance. It's also one of the most misleading.`,
+      ``,
+      `━━━ THE PROBLEM WITH P/E ━━━`,
+      `P/E ignores capital structure. A company with $10B in debt looks "cheaper" on P/E than one with no debt — but the acquirer takes on that debt.`,
+      ``,
+      `━━━ WHY EV/EBITDA IS BETTER ━━━`,
+      `Enterprise Value = Market Cap + Debt - Cash`,
+      `It's what you'd actually pay to own the whole business.`,
+      ``,
+      `EBITDA strips out financing choices. It lets you compare a leveraged buyout candidate with a debt-free tech company on equal footing.`,
+      ``,
+      `━━━ WHEN EACH IS USEFUL ━━━`,
+      `P/E: Quick screen, mature profitable businesses, same-sector comparison`,
+      `EV/EBITDA: Cross-sector comparison, M&A analysis, capital-intensive businesses`,
+      ``,
+      `Neither replaces a DCF. Both are shortcuts.`,
+      ``,
+      `${APP_URL}`,
+      `#Valuation #EV #Multiples #Investing`,
+    ],
+  },
+  9: {
+    lines: [
+      `📖 Buffett's "Owner Earnings" — the metric Wall St ignores`,
+      ``,
+      `In his 1986 letter, Buffett defined owner earnings as:`,
+      ``,
+      `Net income + D&A + other non-cash charges − average annual capex − additional working capital needed`,
+      ``,
+      `In plain English: the cash a business actually generates for its owners — after investing what it needs to maintain its competitive position.`,
+      ``,
+      `━━━ WHY THIS MATTERS ━━━`,
+      `Reported earnings can be manipulated. Revenue is even easier to game. Free cash flow gets distorted by working capital timing.`,
+      ``,
+      `Owner earnings strips all of that out. It asks: if I owned this entire business, how much cash would actually end up in my pocket each year?`,
+      ``,
+      `━━━ THE DCF CONNECTION ━━━`,
+      `Owner earnings is essentially what we're discounting in a FCFF model. The best investors aren't doing anything exotic — they're just being rigorous about this one number.`,
+      ``,
+      `${APP_URL}`,
+      `#Buffett #OwnerEarnings #ValueInvesting #DCF`,
+    ],
+  },
+  10: {
+    lines: [
+      `📖 Mean reversion in valuations — why trees don't grow to the sky`,
+      ``,
+      `The most consistent pattern in 100 years of equity market data: valuation multiples mean revert.`,
+      ``,
+      `Companies that trade at 50× earnings today rarely still trade at 50× in 10 years. Companies at 8× rarely stay at 8×.`,
+      ``,
+      `━━━ THE EVIDENCE ━━━`,
+      `Damodaran's data shows that high-growth companies (>25% revenue CAGR) sustain that growth for an average of 4-5 years before converging toward industry averages.`,
+      ``,
+      `This is why we apply a convergence discount in our models. It's not pessimism — it's empiricism.`,
+      ``,
+      `━━━ THE INVESTOR IMPLICATION ━━━`,
+      `Paying for perpetual high growth is almost always a mistake.`,
+      `The opportunity is when the market prices in mean reversion faster than it actually happens.`,
+      ``,
+      `That gap — between the market's implied CAGR and your estimate — is where the edge lives.`,
+      ``,
+      `${APP_URL}`,
+      `#MeanReversion #Valuation #DCF #ValueInvesting`,
+    ],
+  },
+  11: {
+    lines: [
+      `📖 Why ROIC > WACC is the only moat signal that compounds`,
+      ``,
+      `Everyone talks about moats: brand, network effects, switching costs, cost advantages.`,
+      ``,
+      `These are qualitative observations. ROIC vs WACC is the quantitative proof.`,
+      ``,
+      `━━━ THE MATH ━━━`,
+      `If ROIC = 20% and WACC = 10%, every $1 reinvested creates $0.20 of economic profit above the cost of capital.`,
+      ``,
+      `Compound that for 20 years with a business that can redeploy most of its earnings at 20% ROIC — that's how generational wealth is created.`,
+      ``,
+      `━━━ WHY MOST COMPANIES DON'T HAVE IT ━━━`,
+      `ROIC > WACC attracts competition. Competition erodes returns. Most businesses converge to ROIC ≈ WACC over time.`,
+      ``,
+      `The question isn't "does this company have a moat today?" — it's "how long can they sustain ROIC > WACC?"`,
+      ``,
+      `That duration is what separates a 10× stock from the rest.`,
+      ``,
+      `${APP_URL}`,
+      `#ROIC #Moat #CompoundingReturns #ValueInvesting`,
+    ],
+  },
+  12: {
+    lines: [
+      `📖 The quality vs value debate — and why it's a false choice`,
+      ``,
+      `Classic value investing: buy cheap things.`,
+      `Quality investing: buy great things.`,
+      ``,
+      `The debate between them has consumed decades of academic research. Both sides have data. Both sides are right some of the time.`,
+      ``,
+      `━━━ WHAT THE DATA ACTUALLY SHOWS ━━━`,
+      `Value (low P/B, low P/E) has historically outperformed — but much of that premium disappeared after it was discovered and arbitraged.`,
+      ``,
+      `Quality (high ROIC, strong balance sheet, stable earnings) has shown persistent outperformance, especially in the modern information economy.`,
+      ``,
+      `━━━ THE SYNTHESIS ━━━`,
+      `The real edge is buying quality at a discount to intrinsic value.`,
+      ``,
+      `Not: buy anything cheap. Not: buy quality at any price.`,
+      `But: buy businesses with durable competitive advantages at prices below what those advantages justify.`,
+      ``,
+      `That's what a DCF tries to systematize.`,
+      ``,
+      `${APP_URL}`,
+      `#ValueInvesting #QualityInvesting #DCF #Damodaran`,
+    ],
+  },
+  13: {
+    lines: [
+      `📖 The implied CAGR — the question that changes how you see every stock`,
+      ``,
+      `Most investors ask: "is this stock cheap?"`,
+      ``,
+      `A better question: "what growth rate is the current price assuming?"`,
+      ``,
+      `━━━ WHAT IS THE IMPLIED CAGR? ━━━`,
+      `Reverse DCF: instead of estimating growth to get a fair value, you take the current price as given and solve for the growth rate that justifies it.`,
+      ``,
+      `━━━ WHY IT'S MORE USEFUL ━━━`,
+      `"NVDA at $200 — is it cheap or expensive?"`,
+      `→ Hard to say.`,
+      ``,
+      `"NVDA at $200 implies 47% revenue CAGR for 5 years — do you believe that?"`,
+      `→ Now you're asking the right question.`,
+      ``,
+      `The implied CAGR converts a price judgment into a business belief. You don't need to know if the stock is cheap. You need to decide if you believe in the business trajectory the price is embedding.`,
+      ``,
+      `${APP_URL}`,
+      `#ReverseDCF #ImpliedGrowth #Valuation #Investing`,
+    ],
+  },
+  14: {
+    lines: [
+      `📖 Terminal value — the number that drives 60-80% of your DCF`,
+      ``,
+      `Here is an uncomfortable truth about DCF modeling:`,
+      ``,
+      `For most growth companies, 60-80% of the total valuation comes from the terminal value — the value assigned to all cash flows after your explicit forecast period.`,
+      ``,
+      `━━━ WHAT THIS MEANS ━━━`,
+      `You spend hours modeling years 1-5 in detail. Then you apply a single terminal growth rate that determines most of the answer.`,
+      ``,
+      `A 0.5% difference in terminal growth rate can change fair value by 20-30% for a growth stock.`,
+      ``,
+      `━━━ HOW TO BE RIGOROUS ABOUT IT ━━━`,
+      `1. Terminal growth should approximate long-run nominal GDP growth (2-3% for developed markets)`,
+      `2. Never use a terminal growth rate above the growth rate of the economy the company operates in`,
+      `3. Apply a convergence discount from high near-term growth down to terminal`,
+      `4. Run sensitivity: what does fair value look like at 1.5%, 2.0%, 2.5%?`,
+      ``,
+      `The terminal value is where most valuation errors hide.`,
+      ``,
+      `${APP_URL}`,
+      `#TerminalValue #DCF #Valuation #ValueInvesting`,
+    ],
+  },
+  15: {
+    lines: [
+      `📖 Why the discount rate is the most important number in finance`,
+      ``,
+      `Every asset in finance is priced by discounting future cash flows. The discount rate is the rate you use.`,
+      ``,
+      `Change the discount rate — and every valuation on earth changes simultaneously.`,
+      ``,
+      `━━━ THIS IS WHY INTEREST RATES MATTER SO MUCH ━━━`,
+      `When the Fed raises rates, it raises the risk-free rate. The risk-free rate is the floor of every discount rate. When the floor rises, every asset's present value falls.`,
+      ``,
+      `It's not sentiment. It's arithmetic.`,
+      ``,
+      `━━━ WACC IS YOUR PERSONAL DISCOUNT RATE ━━━`,
+      `WACC (Weighted Average Cost of Capital) is the discount rate for a specific business — it reflects the riskiness of that business's cash flows, its capital structure, and the current interest rate environment.`,
+      ``,
+      `When you see "NVDA WACC: 13.8%" — that means you're demanding 13.8% annual return to justify the risk of owning NVDA's future cash flows. At current prices, does NVDA deliver that?`,
+      ``,
+      `That's the only question that matters.`,
+      ``,
+      `${APP_URL}`,
+      `#WACC #DiscountRate #DCF #FedPolicy #Investing`,
+    ],
+  },
+  16: {
+    lines: [
+      `📖 Intrinsic value vs price target — and why confusing them is dangerous`,
+      ``,
+      `Wall St analysts produce price targets. These are not valuations.`,
+      ``,
+      `━━━ WHAT A PRICE TARGET IS ━━━`,
+      `A 12-month estimate of where an analyst thinks the stock will trade. It's based on relative multiples, recent momentum, sentiment, and what the analyst thinks other investors will pay.`,
+      ``,
+      `It's a prediction about human psychology.`,
+      ``,
+      `━━━ WHAT INTRINSIC VALUE IS ━━━`,
+      `The present value of all future cash flows the business will generate. It's independent of what other investors think. It changes only when the business fundamentals change.`,
+      ``,
+      `It's a claim about economic reality.`,
+      ``,
+      `━━━ WHY THIS MATTERS ━━━`,
+      `Price targets cluster near the current price (anchoring bias). They rise after stocks rise and fall after stocks fall. They are reactive, not predictive.`,
+      ``,
+      `Intrinsic value is the anchor you use when the market is being irrational — in either direction.`,
+      ``,
+      `${APP_URL}`,
+      `#IntrinsicValue #PriceTarget #ValueInvesting #DCF`,
+    ],
+  },
+}
+
+async function runTheoryOvernight() {
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+  const hour = new Date().getUTCHours()
+  // Rotate through all 17 theory posts (7 in FEATURE_POSTS + 10 new ones)
+  const totalPosts = 17
+  const seed = (dayOfYear * 3 + Math.floor(hour / 6)) % totalPosts
+
+  // Posts 0-6 come from FEATURE_POSTS, posts 7-16 come from THEORY_POSTS
+  let lines
+  if (seed <= 6) {
+    const day = seed // use seed as day index into FEATURE_POSTS
+    const content = FEATURE_POSTS[day] ?? FEATURE_POSTS[1]
+    lines = content.lines.map(l => l.replace(/\$\{APP_URL\}/g, APP_URL))
+  } else {
+    const content = THEORY_POSTS[seed] ?? THEORY_POSTS[7]
+    lines = content.lines.map(l => l.replace(/\$\{APP_URL\}/g, APP_URL))
+  }
+
+  await post(lines.join('\n'))
+}
+
 const MODES = {
-  earnings:       runEarnings,
-  dcf:            runDcf,
-  dcf_bear:       runDcfBear,
-  news:           runNews,
-  macro:          runMacro,
-  feature:        runFeature,
-  weekly_wrap:    runWeeklyWrap,
-  question:       runQuestion,
-  etf_pulse:      runEtfPulse,
-  sentiment:      runSentiment,
-  morning_brief:  runMorningBrief,
-  midday_pulse:   runMiddayPulse,
-  market_close:   runMarketClose,
+  earnings:         runEarnings,
+  dcf:              runDcf,
+  dcf2:             runDcf2,
+  dcf_bear:         runDcfBear,
+  news:             runNews,
+  macro:            runMacro,
+  feature:          runFeature,
+  weekly_wrap:      runWeeklyWrap,
+  question:         runQuestion,
+  etf_pulse:        runEtfPulse,
+  sentiment:        runSentiment,
+  morning_brief:    runMorningBrief,
+  midday_pulse:     runMiddayPulse,
+  market_close:     runMarketClose,
+  market_open:      runMarketOpen,
+  sector_spotlight: runSectorSpotlight,
+  pre_close:        runPreClose,
+  after_hours:      runAfterHours,
+  theory_overnight: runTheoryOvernight,
 }
 
 if (!MODES[MODE]) {

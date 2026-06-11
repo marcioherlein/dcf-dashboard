@@ -2,27 +2,34 @@ name: X Auto-Post
 
 on:
   schedule:
-    # ── Weekdays Mon–Fri ──────────────────────────────────────────────────────
-    - cron: '0 11 * * 1-5'   # 08:00 AM ART — Morning brief
-    - cron: '0 13 * * 1-5'   # 10:00 AM ART — Earnings preview
-    - cron: '0 14 * * 1-5'   # 11:00 AM ART — Feature/education
-    - cron: '0 15 * * 1-5'   # 12:00 PM ART — DCF snapshot
-    - cron: '0 16 * * 1-5'   # 01:00 PM ART — Midday pulse
-    - cron: '0 17 * * 1-5'   # 02:00 PM ART — Macro
-    - cron: '0 19 * * 1-5'   # 04:00 PM ART — ETF pulse
-    - cron: '0 20 * * 1-5'   # 05:00 PM ART — DCF bear
-    - cron: '0 22 * * 1-5'   # 07:00 PM ART — Market close
+    # ── Weekdays Mon–Fri (Vercel crons are primary; these are backup) ──────────
+    - cron: '0 11 * * 1-5'    # 08:00 AM ART — Morning brief
+    - cron: '0 12 * * 1-5'    # 09:00 AM ART — Earnings preview
+    - cron: '0 13 * * 1-5'    # 10:00 AM ART — Feature/education
+    - cron: '30 13 * * 1-5'   # 10:30 AM ART — Market open (NYSE bell)
+    - cron: '0 14 * * 1-5'    # 11:00 AM ART — DCF snapshot
+    - cron: '30 14 * * 1-5'   # 11:30 AM ART — Sector spotlight
+    - cron: '0 15 * * 1-5'    # 12:00 PM ART — Midday pulse
+    - cron: '0 16 * * 1-5'    # 01:00 PM ART — Macro
+    - cron: '30 16 * * 1-5'   # 01:30 PM ART — DCF2 (second valuation)
+    - cron: '0 17 * * 1-5'    # 02:00 PM ART — ETF pulse
+    - cron: '0 18 * * 1-5'    # 03:00 PM ART — DCF bear
+    - cron: '30 18 * * 1-5'   # 03:30 PM ART — Pre-close setup
+    - cron: '0 20 * * 1-5'    # 05:00 PM ART — Market close recap
+    - cron: '0 21 * * 1-5'    # 06:00 PM ART — After hours
+    - cron: '0 1 * * 1-5'     # 10:00 PM ART — Theory overnight
     # ── Saturday ─────────────────────────────────────────────────────────────
-    - cron: '0 13 * * 6'     # 10:00 AM ART — ETF pulse
-    - cron: '0 14 * * 6'     # 11:00 AM ART — Feature
-    - cron: '0 15 * * 6'     # 12:00 PM ART — Weekly wrap
-    - cron: '0 16 * * 6'     # 01:00 PM ART — DCF
-    - cron: '0 17 * * 6'     # 02:00 PM ART — Sentiment
+    - cron: '0 13 * * 6'      # 10:00 AM ART — ETF pulse
+    - cron: '0 14 * * 6'      # 11:00 AM ART — Feature
+    - cron: '0 15 * * 6'      # 12:00 PM ART — Weekly wrap
+    - cron: '0 16 * * 6'      # 01:00 PM ART — DCF
+    - cron: '0 17 * * 6'      # 02:00 PM ART — Sentiment
+    - cron: '0 2 * * 6'       # 11:00 PM ART — Theory overnight
     # ── Sunday ───────────────────────────────────────────────────────────────
-    - cron: '0 13 * * 0'     # 10:00 AM ART — Sentiment
-    - cron: '0 14 * * 0'     # 11:00 AM ART — Question
-    - cron: '0 16 * * 0'     # 01:00 PM ART — ETF pulse
-    - cron: '0 18 * * 0'     # 03:00 PM ART — News
+    - cron: '0 13 * * 0'      # 10:00 AM ART — Sentiment
+    - cron: '0 14 * * 0'      # 11:00 AM ART — Question
+    - cron: '0 16 * * 0'      # 01:00 PM ART — ETF pulse
+    - cron: '0 2 * * 0'       # 11:00 PM ART — Theory overnight
 
   workflow_dispatch:
     inputs:
@@ -31,9 +38,9 @@ on:
         required: true
         default: 'dcf'
         type: choice
-        options: [earnings, dcf, dcf_bear, macro, news, feature, weekly_wrap, question, etf_pulse, sentiment, morning_brief, midday_pulse, market_close]
+        options: [earnings, dcf, dcf2, dcf_bear, macro, news, feature, weekly_wrap, question, etf_pulse, sentiment, morning_brief, midday_pulse, market_close, market_open, sector_spotlight, pre_close, after_hours, theory_overnight]
       ticker:
-        description: 'Ticker override (dcf / dcf_bear modes only)'
+        description: 'Ticker override (dcf / dcf2 / dcf_bear modes only)'
         required: false
       dry_run:
         description: 'Dry run (print without posting)'
@@ -66,30 +73,37 @@ jobs:
           INPUT_DRY_RUN: ${{ github.event.inputs.dry_run }}
         run: |
           if [ "$EVENT" = "workflow_dispatch" ]; then
-            echo "MODE=$INPUT_MODE"     >> $GITHUB_ENV
-            echo "TICKER=$INPUT_TICKER" >> $GITHUB_ENV
+            echo "MODE=$INPUT_MODE"       >> $GITHUB_ENV
+            echo "TICKER=$INPUT_TICKER"   >> $GITHUB_ENV
             echo "DRY_RUN=$INPUT_DRY_RUN" >> $GITHUB_ENV
           else
             echo "Cron schedule: [$SCHEDULE]"
             case "$SCHEDULE" in
-              "0 11 * * 1-5")  echo "MODE=morning_brief" >> $GITHUB_ENV ;;
-              "0 13 * * 1-5")  echo "MODE=earnings"      >> $GITHUB_ENV ;;
-              "0 14 * * 1-5")  echo "MODE=feature"       >> $GITHUB_ENV ;;
-              "0 15 * * 1-5")  echo "MODE=dcf"           >> $GITHUB_ENV ;;
-              "0 16 * * 1-5")  echo "MODE=midday_pulse"  >> $GITHUB_ENV ;;
-              "0 17 * * 1-5")  echo "MODE=macro"         >> $GITHUB_ENV ;;
-              "0 19 * * 1-5")  echo "MODE=etf_pulse"     >> $GITHUB_ENV ;;
-              "0 20 * * 1-5")  echo "MODE=dcf_bear"      >> $GITHUB_ENV ;;
-              "0 22 * * 1-5")  echo "MODE=market_close"  >> $GITHUB_ENV ;;
-              "0 13 * * 6")    echo "MODE=etf_pulse"     >> $GITHUB_ENV ;;
-              "0 14 * * 6")    echo "MODE=feature"       >> $GITHUB_ENV ;;
-              "0 15 * * 6")    echo "MODE=weekly_wrap"   >> $GITHUB_ENV ;;
-              "0 16 * * 6")    echo "MODE=dcf"           >> $GITHUB_ENV ;;
-              "0 17 * * 6")    echo "MODE=sentiment"     >> $GITHUB_ENV ;;
-              "0 13 * * 0")    echo "MODE=sentiment"     >> $GITHUB_ENV ;;
-              "0 14 * * 0")    echo "MODE=question"      >> $GITHUB_ENV ;;
-              "0 16 * * 0")    echo "MODE=etf_pulse"     >> $GITHUB_ENV ;;
-              "0 18 * * 0")    echo "MODE=news"          >> $GITHUB_ENV ;;
+              "0 11 * * 1-5")   echo "MODE=morning_brief"    >> $GITHUB_ENV ;;
+              "0 12 * * 1-5")   echo "MODE=earnings"         >> $GITHUB_ENV ;;
+              "0 13 * * 1-5")   echo "MODE=feature"          >> $GITHUB_ENV ;;
+              "30 13 * * 1-5")  echo "MODE=market_open"      >> $GITHUB_ENV ;;
+              "0 14 * * 1-5")   echo "MODE=dcf"              >> $GITHUB_ENV ;;
+              "30 14 * * 1-5")  echo "MODE=sector_spotlight" >> $GITHUB_ENV ;;
+              "0 15 * * 1-5")   echo "MODE=midday_pulse"     >> $GITHUB_ENV ;;
+              "0 16 * * 1-5")   echo "MODE=macro"            >> $GITHUB_ENV ;;
+              "30 16 * * 1-5")  echo "MODE=dcf2"             >> $GITHUB_ENV ;;
+              "0 17 * * 1-5")   echo "MODE=etf_pulse"        >> $GITHUB_ENV ;;
+              "0 18 * * 1-5")   echo "MODE=dcf_bear"         >> $GITHUB_ENV ;;
+              "30 18 * * 1-5")  echo "MODE=pre_close"        >> $GITHUB_ENV ;;
+              "0 20 * * 1-5")   echo "MODE=market_close"     >> $GITHUB_ENV ;;
+              "0 21 * * 1-5")   echo "MODE=after_hours"      >> $GITHUB_ENV ;;
+              "0 1 * * 1-5")    echo "MODE=theory_overnight" >> $GITHUB_ENV ;;
+              "0 13 * * 6")     echo "MODE=etf_pulse"        >> $GITHUB_ENV ;;
+              "0 14 * * 6")     echo "MODE=feature"          >> $GITHUB_ENV ;;
+              "0 15 * * 6")     echo "MODE=weekly_wrap"      >> $GITHUB_ENV ;;
+              "0 16 * * 6")     echo "MODE=dcf"              >> $GITHUB_ENV ;;
+              "0 17 * * 6")     echo "MODE=sentiment"        >> $GITHUB_ENV ;;
+              "0 2 * * 6")      echo "MODE=theory_overnight" >> $GITHUB_ENV ;;
+              "0 13 * * 0")     echo "MODE=sentiment"        >> $GITHUB_ENV ;;
+              "0 14 * * 0")     echo "MODE=question"         >> $GITHUB_ENV ;;
+              "0 16 * * 0")     echo "MODE=etf_pulse"        >> $GITHUB_ENV ;;
+              "0 2 * * 0")      echo "MODE=theory_overnight" >> $GITHUB_ENV ;;
               *)
                 echo "No match for schedule [$SCHEDULE] — skipping"
                 echo "MODE=skip" >> $GITHUB_ENV
