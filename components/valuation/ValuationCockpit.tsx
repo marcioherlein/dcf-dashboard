@@ -450,89 +450,112 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
         />
       </div>
 
-      {/* ── 6. INDEPENDENT CHECKS — signals outside the DCF model ──────────── */}
-      <div className="rounded-xl border border-[#E5E5E5] bg-white overflow-hidden">
-        <div className="px-4 py-3 border-b border-[#E5E5E5] flex items-center justify-between">
-          <p className="text-[13px] font-semibold text-[#111111]">Independent checks</p>
-          <p className="text-[11px] text-[#9B9B9B]">Signals outside the valuation model — not included in fair value</p>
-        </div>
-        <div className="divide-y divide-[#F5F5F5]">
-          {/* Structural risk */}
-          {valueInvestingData.structuralRiskDisclaimer && (
-            <div className="px-4 py-3 flex items-start gap-3">
-              <span className="mt-0.5 w-5 h-5 rounded-full bg-[#FFF4DA] flex items-center justify-center shrink-0 text-[10px] font-bold text-[#B56A00]">!</span>
-              <div>
-                <p className="text-[12px] font-semibold text-[#111111] mb-0.5">Risk to watch</p>
-                <p className="text-[12px] text-[#6B6B6B] leading-snug">{valueInvestingData.structuralRiskDisclaimer}</p>
-              </div>
-            </div>
-          )}
-          {/* Country risk */}
-          {valueInvestingData.countryRiskDisclaimer && (
-            <div className="px-4 py-3 flex items-start gap-3">
-              <span className="mt-0.5 w-5 h-5 rounded-full bg-[#FFF4DA] flex items-center justify-center shrink-0 text-[10px] font-bold text-[#B56A00]">!</span>
-              <div>
-                <p className="text-[12px] font-semibold text-[#111111] mb-0.5">Country risk</p>
-                <p className="text-[12px] text-[#6B6B6B] leading-snug">{valueInvestingData.countryRiskDisclaimer}</p>
-              </div>
-            </div>
-          )}
-          {/* ROIC vs WACC — supporting thesis */}
-          {valueInvestingData.roic != null && valueInvestingData.roicSpread != null && (
-            <div className="px-4 py-3 flex items-start gap-3">
-              <span className={`mt-0.5 w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold ${valueInvestingData.roicSpread > 0 ? 'bg-[#E8F7EF] text-[#11875D]' : 'bg-[#FCEAEA] text-[#D83B3B]'}`}>
-                {valueInvestingData.roicSpread > 0 ? '✓' : '✗'}
-              </span>
-              <div>
-                <p className="text-[12px] font-semibold text-[#111111] mb-0.5">
-                  {valueInvestingData.roicSpread > 0 ? 'Supporting thesis' : 'Against thesis'}
-                </p>
-                <p className="text-[12px] text-[#6B6B6B] leading-snug">
-                  ROIC {(valueInvestingData.roic * 100).toFixed(1)}% {valueInvestingData.roicSpread > 0 ? 'exceeds' : 'below'} WACC {(valueInvestingData.wacc * 100).toFixed(1)}% — spread {valueInvestingData.roicSpread > 0 ? '+' : ''}{(valueInvestingData.roicSpread * 100).toFixed(1)}pp
-                </p>
-              </div>
-            </div>
-          )}
-          {/* FCF yield vs risk-free */}
-          {fcfYield != null && rfRate != null && (
-            <div className="px-4 py-3 flex items-start gap-3">
-              <span className={`mt-0.5 w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold ${fcfYield > rfRate ? 'bg-[#E8F7EF] text-[#11875D]' : 'bg-[#FCEAEA] text-[#D83B3B]'}`}>
-                {fcfYield > rfRate ? '✓' : '✗'}
-              </span>
-              <div>
-                <p className="text-[12px] font-semibold text-[#111111] mb-0.5">FCF yield vs risk-free</p>
-                <p className="text-[12px] text-[#6B6B6B] leading-snug">
-                  FCF yield {(fcfYield * 100).toFixed(1)}% {fcfYield > rfRate ? '>' : '<'} risk-free {(rfRate * 100).toFixed(1)}% — {fcfYield > rfRate ? 'equity compensates adequately' : 'risk premium is thin'}
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+      {/* ── 6-7-8. THREE-COLUMN ROW: Independent Checks · Sensitivity · Monte Carlo */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 items-start">
 
-      {/* ── 7. SENSITIVITY MATRIX ────────────────────────────────────────────── */}
-      <ProGate featureName="Sensitivity table" isPro={isPro} placeholderHeight="h-40">
-        <SensitivityMatrix
+        {/* ── 6. INDEPENDENT CHECKS ──────────────────────────────────────────── */}
+        <div className="rounded-xl border border-[#E5E5E5] bg-white overflow-hidden flex flex-col">
+          <div className="px-4 py-3 border-b border-[#E5E5E5] flex items-center justify-between shrink-0">
+            <div>
+              <p className="text-[11px] font-[700] uppercase tracking-widest text-[#9B9B9B]">Independent Checks</p>
+              <p className="text-[10px] text-[#9B9B9B] mt-0.5">Thesis Scorecard</p>
+            </div>
+          </div>
+          <div className="px-4 py-3 divide-y divide-[#F5F5F5] flex-1">
+            {/* Structural risk */}
+            {valueInvestingData.structuralRiskDisclaimer && (
+              <div className="py-2.5 flex items-start gap-3">
+                <span className="mt-0.5 w-5 h-5 rounded-full bg-[#FFF4DA] flex items-center justify-center shrink-0 text-[10px] font-bold text-[#B56A00]">!</span>
+                <div>
+                  <p className="text-[12px] font-semibold text-[#111111] mb-0.5">Risk to watch</p>
+                  <p className="text-[11px] text-[#6B6B6B] leading-snug">{valueInvestingData.structuralRiskDisclaimer}</p>
+                </div>
+              </div>
+            )}
+            {/* Country risk */}
+            {valueInvestingData.countryRiskDisclaimer && (
+              <div className="py-2.5 flex items-start gap-3">
+                <span className="mt-0.5 w-5 h-5 rounded-full bg-[#FFF4DA] flex items-center justify-center shrink-0 text-[10px] font-bold text-[#B56A00]">!</span>
+                <div>
+                  <p className="text-[12px] font-semibold text-[#111111] mb-0.5">Country risk</p>
+                  <p className="text-[11px] text-[#6B6B6B] leading-snug">{valueInvestingData.countryRiskDisclaimer}</p>
+                </div>
+              </div>
+            )}
+            {/* ROIC vs WACC */}
+            {valueInvestingData.roic != null && valueInvestingData.roicSpread != null && (
+              <div className="py-2.5 flex items-start gap-3">
+                <span className={`mt-0.5 w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold ${valueInvestingData.roicSpread > 0 ? 'bg-[#E8F7EF] text-[#11875D]' : 'bg-[#FCEAEA] text-[#D83B3B]'}`}>
+                  {valueInvestingData.roicSpread > 0 ? '✓' : '✗'}
+                </span>
+                <div>
+                  <p className="text-[12px] font-semibold text-[#111111] mb-0.5">
+                    Economic value creation
+                  </p>
+                  <p className="text-[11px] text-[#6B6B6B] leading-snug">
+                    ROIC {(valueInvestingData.roic * 100).toFixed(1)}% {valueInvestingData.roicSpread > 0 ? '>' : '<'} WACC {(valueInvestingData.wacc * 100).toFixed(1)}%
+                    {' '}({valueInvestingData.roicSpread > 0 ? '+' : ''}{(valueInvestingData.roicSpread * 100).toFixed(1)}pp spread).
+                  </p>
+                </div>
+              </div>
+            )}
+            {/* FCF yield vs risk-free */}
+            {fcfYield != null && rfRate != null && (
+              <div className="py-2.5 flex items-start gap-3">
+                <span className={`mt-0.5 w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold ${fcfYield > rfRate ? 'bg-[#E8F7EF] text-[#11875D]' : 'bg-[#FCEAEA] text-[#D83B3B]'}`}>
+                  {fcfYield > rfRate ? '✓' : '✗'}
+                </span>
+                <div>
+                  <p className="text-[12px] font-semibold text-[#111111] mb-0.5">Compensation for risk</p>
+                  <p className="text-[11px] text-[#6B6B6B] leading-snug">
+                    FCF yield {(fcfYield * 100).toFixed(1)}% {fcfYield > rfRate ? '>' : '<'} risk-free {(rfRate * 100).toFixed(1)}%
+                    {fcfYield > rfRate ? ' — equity compensates adequately.' : ' — risk premium is thin.'}
+                  </p>
+                </div>
+              </div>
+            )}
+            {/* Market-implied growth (Reverse DCF) */}
+            {output.marketImpliedGrowth != null && (
+              <div className="py-2.5 flex items-start gap-3">
+                <span className="mt-0.5 w-5 h-5 rounded-full bg-[#EAF1FF] flex items-center justify-center shrink-0 text-[10px] font-bold text-[#2563EB]">i</span>
+                <div>
+                  <p className="text-[12px] font-semibold text-[#111111] mb-0.5">What the market prices in</p>
+                  <p className="text-[11px] text-[#6B6B6B] leading-snug">
+                    Implied 5Y revenue CAGR {(output.marketImpliedGrowth * 100).toFixed(1)}%.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+          <p className="px-4 pb-3 text-[10px] text-[#9B9B9B] italic">Checks are signals, not guarantees. Use judgement.</p>
+        </div>
+
+        {/* ── 7. SENSITIVITY MATRIX ────────────────────────────────────────────── */}
+        <ProGate featureName="Sensitivity table" isPro={isPro} placeholderHeight="h-40">
+          <SensitivityMatrix
+            assumptions={assumptions}
+            snapshot={effectiveSnapshot}
+            currentPrice={currentPrice}
+            currency={currency}
+            epvPerShare={valueInvestingData.epv.epvPerShare}
+            historicalData={historicalData}
+            defaultAxisY={defaultAxisY}
+            defaultAxisX={defaultAxisX}
+          />
+        </ProGate>
+
+        {/* ── 8. MONTE CARLO ───────────────────────────────────────────────────── */}
+        <MonteCarloPanel
           assumptions={assumptions}
           snapshot={effectiveSnapshot}
+          apiData={apiData}
+          sensitivity={sensitivity}
           currentPrice={currentPrice}
           currency={currency}
-          epvPerShare={valueInvestingData.epv.epvPerShare}
-          historicalData={historicalData}
-          defaultAxisY={defaultAxisY}
-          defaultAxisX={defaultAxisX}
+          defaultExpanded
         />
-      </ProGate>
 
-      {/* ── 8. MONTE CARLO ───────────────────────────────────────────────────── */}
-      <MonteCarloPanel
-        assumptions={assumptions}
-        snapshot={effectiveSnapshot}
-        apiData={apiData}
-        sensitivity={sensitivity}
-        currentPrice={currentPrice}
-        currency={currency}
-      />
+      </div>
 
       {/* ── 9. FULL DCF MODEL (collapsed) — year-by-year projections ─────────── */}
       <details ref={fullDcfRef} className="group" id="full_dcf">

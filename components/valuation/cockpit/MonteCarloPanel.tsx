@@ -15,6 +15,7 @@ interface Props {
   sensitivity:  Partial<Record<keyof ValuationAssumptions, number>>
   currentPrice: number
   currency:     string
+  defaultExpanded?: boolean
 }
 
 // ── CVaR quality dots ─────────────────────────────────────────────────────────
@@ -147,7 +148,7 @@ function PercentileStrip({
         return (
           <div key={label} className="bg-white px-1.5 sm:px-2 py-2 sm:py-2.5 flex flex-col items-center gap-0.5">
             <span className="text-[10px] sm:text-[11px] font-[700] text-[#9B9B9B]">{label}</span>
-            <span className={cn('text-[12px] sm:text-[13px] font-[800] tabular-nums leading-tight', color)}>
+            <span className={cn('text-[15px] sm:text-[17px] font-[800] tabular-nums leading-tight', color)}>
               {fmtPrice(value, currency)}
             </span>
             {upside != null && (
@@ -227,11 +228,11 @@ function OnboardTooltip({ onDismiss }: { onDismiss: () => void }) {
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function MonteCarloPanel({
-  assumptions, snapshot, apiData, sensitivity, currentPrice, currency,
+  assumptions, snapshot, apiData, sensitivity, currentPrice, currency, defaultExpanded = false,
 }: Props) {
   const [result,    setResult]    = useState<MCResult | null>(null)
   const [running,   setRunning]   = useState(false)
-  const [expanded,  setExpanded]  = useState(false)
+  const [expanded,  setExpanded]  = useState(defaultExpanded)
   const [hasRun,    setHasRun]    = useState(false)
   const [showOnboard, setShowOnboard] = useState(false)
   const [nPaths, setNPaths] = useState<5_000 | 10_000 | 50_000>(10_000)
