@@ -445,6 +445,8 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
           sensitivity={sensitivity}
           sectorBenchmarks={sectorBenchmarks}
           onScrollToFullDCF={scrollToFullDCF}
+          blendedFairValue={output.blendedFairValue}
+          upsidePct={output.upsidePct}
         />
       </div>
 

@@ -27,8 +27,10 @@ interface Props {
   sensitivity?: Partial<Record<keyof ValuationAssumptions, number>>
   sectorBenchmarks?: { exitPE: number; exitMultiple: number; revenueMultiple: number } | null
   onScrollToFullDCF: () => void
-  // Optional FCF margin series for the assumptions charts section
   fcfMarginSeries?: SparkPoint[]
+  // Synthesis box props — blended result from cockpit output
+  blendedFairValue?: number | null
+  upsidePct?: number | null
 }
 
 type IconComp = React.ComponentType<{ size?: number; className?: string }>
@@ -326,11 +328,11 @@ export function FieldStepper({
 }
 
 // ─── SharedCAGRPanel ──────────────────────────────────────────────────────────
+// Only the CAGR stepper — charts live exclusively in KeyAssumptionsSection below.
 
 export function SharedCAGRPanel({
   value, step = 0.005, min = -0.05, max = 0.60,
-  onChange, cagrSeries, peSeries, evRevSeries,
-  peAssumption, evRevAssumption,
+  onChange, cagrSeries,
   color = '#8b5cf6',
 }: {
   value: number
@@ -346,12 +348,10 @@ export function SharedCAGRPanel({
   color?: string
 }) {
   const hint = historicalHint(cagrSeries, '%')
-  const hasAnySeries = (cagrSeries?.length ?? 0) > 0 || (peSeries?.length ?? 0) > 0 || (evRevSeries?.length ?? 0) > 0
 
   return (
-    <div className="rounded-xl border border-[#E5E5E5] bg-white px-5 py-4 mb-3">
-      {/* Top row: label + stepper */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+    <div className="rounded-xl border border-[#E5E5E5] bg-[#FAFAFA] px-5 py-3.5 mb-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="min-w-0">
           <p className="text-[12px] font-[650] text-[#111111]">Revenue CAGR</p>
           <p className="text-[11px] text-[#9B9B9B]">Shared by Forward P/E and Revenue Multiple</p>
@@ -368,33 +368,6 @@ export function SharedCAGRPanel({
           color={color}
         />
       </div>
-
-      {/* Charts row — full panel width */}
-      {hasAnySeries && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-          <TinyLineChart
-            data={cagrSeries ?? []}
-            title="Revenue growth % / yr"
-            color={color}
-            refValue={value}
-            yFormat={v => `${(v * 100).toFixed(0)}%`}
-          />
-          <TinyLineChart
-            data={peSeries ?? []}
-            title="Historical P/E ratio"
-            color="#3b82f6"
-            refValue={peAssumption}
-            yFormat={v => `${v.toFixed(0)}x`}
-          />
-          <TinyLineChart
-            data={evRevSeries ?? []}
-            title="Historical EV / Revenue"
-            color="#a855f7"
-            refValue={evRevAssumption}
-            yFormat={v => `${v.toFixed(1)}x`}
-          />
-        </div>
-      )}
     </div>
   )
 }
@@ -429,9 +402,97 @@ function DcfDriverRow({
   )
 }
 
+// ─── SynthesisBox ─────────────────────────────────────────────────────────────
+// The "Blended Fair Value (Synthesis)" header box. Shows blended FV, upside,
+// WACC, model count, and a legend of method weights. Arrows drop from here
+// down to the method cards below.
+
+function SynthesisBox({
+  blendedFairValue, upsidePct, currency, wacc, methods, validTotal,
+}: {
+  blendedFairValue: number | null
+  upsidePct: number | null
+  currency: string
+  wacc: number
+  methods: CockpitMethodResult[]
+  validTotal: number
+}) {
+  const upColor = upsidePct != null
+    ? (upsidePct >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')
+    : 'text-[#9B9B9B]'
+  const validMethods = methods.filter(m => m.fairValue != null && m.fairValue > 0)
+
+  return (
+    <div className="rounded-xl border border-[#E5E5E5] bg-white px-5 py-4 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+
+        {/* Left: blended FV */}
+        <div className="shrink-0">
+          <p className="text-[10px] font-[700] uppercase tracking-widest text-[#9B9B9B] mb-1">
+            Blended Fair Value <span className="normal-case font-[500] tracking-normal text-[#9B9B9B]">(Synthesis)</span>
+          </p>
+          <p className="text-[2rem] font-[800] leading-none tabular-nums text-[#111111]">
+            {blendedFairValue != null ? fmtPrice(blendedFairValue, currency) : '—'}
+          </p>
+          <p className="text-[11px] text-[#9B9B9B] mt-0.5">Per share</p>
+        </div>
+
+        {/* Divider */}
+        <div className="hidden sm:block w-px bg-[#E5E5E5] self-stretch mx-2" />
+
+        {/* Center: description + stats */}
+        <div className="flex-1 min-w-0">
+          <p className="text-[12px] text-[#6B6B6B] leading-snug mb-3">
+            Weighted average of {validMethods.length} independent model{validMethods.length !== 1 ? 's' : ''}.
+            Weights reflect model reliability, data quality, and market context.
+          </p>
+          <div className="flex items-center gap-4 flex-wrap">
+            <div>
+              <p className="text-[10px] text-[#9B9B9B] mb-0.5">Implied Return</p>
+              <p className={`text-[16px] font-[750] tabular-nums ${upColor}`}>
+                {upsidePct != null ? `${upsidePct >= 0 ? '+' : ''}${(upsidePct * 100).toFixed(1)}%` : '—'}
+              </p>
+              <p className="text-[10px] text-[#9B9B9B]">vs current price</p>
+            </div>
+            <div className="w-px h-10 bg-[#E5E5E5] hidden sm:block" />
+            <div>
+              <p className="text-[10px] text-[#9B9B9B] mb-0.5">WACC</p>
+              <p className="text-[16px] font-[750] tabular-nums text-[#111111]">
+                {(wacc * 100).toFixed(1)}%
+              </p>
+              <p className="text-[10px] text-[#9B9B9B]">Discount rate</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Right: weight legend pills */}
+        {validMethods.length > 0 && (
+          <div className="shrink-0 flex flex-col gap-1 min-w-[140px]">
+            {validMethods.map(m => {
+              const cfg = METHOD_CFG[m.id]
+              const pct = validTotal > 0 ? Math.round((m.weight / validTotal) * 100) : 0
+              return (
+                <div key={m.id} className="flex items-center gap-2">
+                  <span
+                    className="w-2 h-2 rounded-full shrink-0"
+                    style={{ backgroundColor: cfg?.chartHex ?? '#9B9B9B' }}
+                  />
+                  <span className="text-[11px] text-[#6B6B6B] truncate flex-1">{m.method}</span>
+                  <span className="text-[11px] font-[650] tabular-nums text-[#111111]">{pct}%</span>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+      </div>
+    </div>
+  )
+}
+
 // ─── ArrowConnectors ─────────────────────────────────────────────────────────
-// CSS-only vertical arrow connectors from synthesis box to method cards.
-// Uses an absolutely-positioned row of lines with arrowhead polygons.
+// SVG bus-and-arrowhead connectors from synthesis box to method cards.
+// Only rendered on xl+ where the grid is guaranteed to be 4-col.
 
 function ArrowConnectors({ count }: { count: number }) {
   if (count === 0) return null
@@ -439,14 +500,10 @@ function ArrowConnectors({ count }: { count: number }) {
 
   return (
     <div className="relative hidden xl:block" style={{ height: 40 }} aria-hidden="true">
-      <svg
-        viewBox="0 0 1000 40"
-        preserveAspectRatio="none"
-        className="absolute inset-0 w-full h-full"
-      >
+      <svg viewBox="0 0 1000 40" preserveAspectRatio="none" className="absolute inset-0 w-full h-full">
         {/* Vertical drop from center of synthesis box */}
         <line x1="500" y1="0" x2="500" y2="16" stroke={COLOR} strokeWidth="2" />
-        {/* Horizontal bus */}
+        {/* Horizontal bus across all card centers */}
         {count > 1 && (
           <line
             x1={((0 + 0.5) / count) * 1000}
@@ -457,7 +514,7 @@ function ArrowConnectors({ count }: { count: number }) {
             strokeWidth="2"
           />
         )}
-        {/* Per-card drops + arrowheads */}
+        {/* Per-card vertical drops + arrowheads */}
         {Array.from({ length: count }, (_, i) => {
           const x = ((i + 0.5) / count) * 1000
           return (
@@ -468,12 +525,6 @@ function ArrowConnectors({ count }: { count: number }) {
           )
         })}
       </svg>
-      {/* Invisible spacer divs to establish column positions for semantic alignment */}
-      <div className="flex" style={{ height: 0 }}>
-        {Array.from({ length: count }, (_, i) => (
-          <div key={i} className="flex-1" />
-        ))}
-      </div>
     </div>
   )
 }
@@ -553,6 +604,8 @@ export default function ValuationMethodCards({
   sensitivity: _sensitivity, sectorBenchmarks: _sectorBenchmarks,
   onScrollToFullDCF,
   fcfMarginSeries,
+  blendedFairValue,
+  upsidePct,
 }: Props) {
   const validTotal = methods
     .filter(m => m.fairValue != null && m.fairValue > 0)
@@ -575,17 +628,23 @@ export default function ValuationMethodCards({
       aria-label="Valuation models"
     >
 
-      {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between gap-4 mb-4">
-        <div>
-          <p className="text-sm font-semibold text-[#111111] mb-1">Valuation Models</p>
-          <p className="text-xs text-[#9B9B9B]">Edit each model&apos;s key inputs directly — fair values update live</p>
+      {/* ── Synthesis header box ─────────────────────────────────────────────── */}
+      <div className="flex items-start gap-2">
+        <div className="flex-1 min-w-0">
+          <SynthesisBox
+            blendedFairValue={blendedFairValue ?? null}
+            upsidePct={upsidePct ?? null}
+            currency={currency}
+            wacc={assumptions.wacc}
+            methods={methods}
+            validTotal={validTotal}
+          />
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex flex-col gap-1.5 shrink-0 pt-0.5">
           {canUndo && (
             <button
               onClick={onUndo}
-              className="flex items-center gap-1 text-[11px] text-[#6B6B6B] hover:text-[#111111] px-2.5 py-2.5 min-h-[44px] rounded-lg border border-[#E5E5E5] hover:bg-[#F5F5F5] transition-colors"
+              className="flex items-center gap-1 text-[11px] text-[#6B6B6B] hover:text-[#111111] px-2.5 py-2 min-h-[36px] rounded-lg border border-[#E5E5E5] hover:bg-[#F5F5F5] transition-colors"
               aria-label="Undo last change"
             >
               <Undo2 size={11} />
@@ -594,7 +653,7 @@ export default function ValuationMethodCards({
           )}
           <button
             onClick={onReset}
-            className="flex items-center gap-1 text-[11px] text-[#6B6B6B] hover:text-[#111111] px-2.5 py-2.5 min-h-[44px] rounded-lg border border-[#E5E5E5] hover:bg-[#F5F5F5] transition-colors"
+            className="flex items-center gap-1 text-[11px] text-[#6B6B6B] hover:text-[#111111] px-2.5 py-2 min-h-[36px] rounded-lg border border-[#E5E5E5] hover:bg-[#F5F5F5] transition-colors"
             aria-label="Reset to defaults"
           >
             <RotateCcw size={11} />
@@ -603,20 +662,18 @@ export default function ValuationMethodCards({
         </div>
       </div>
 
-      {/* ── Shared CAGR panel ───────────────────────────────────────────────── */}
+      {/* ── Shared CAGR stepper (no charts — charts are in Key Assumptions below) */}
       {showCAGRPanel && (
-        <SharedCAGRPanel
-          value={assumptions.cagr}
-          onChange={v => change('cagr', v)}
-          cagrSeries={historicalData?.cagr}
-          peSeries={historicalData?.exitPE}
-          evRevSeries={historicalData?.revenueMultiple}
-          peAssumption={assumptions.exitPE}
-          evRevAssumption={assumptions.revenueMultiple}
-        />
+        <div className="mt-3">
+          <SharedCAGRPanel
+            value={assumptions.cagr}
+            onChange={v => change('cagr', v)}
+            cagrSeries={historicalData?.cagr}
+          />
+        </div>
       )}
 
-      {/* ── Arrow connector row (desktop only) ─────────────────────────────── */}
+      {/* ── Arrow connector row → method cards (desktop xl only) ───────────── */}
       <ArrowConnectors count={visibleCount} />
 
       {/* ── Cards grid ─────────────────────────────────────────────────────── */}
@@ -635,14 +692,8 @@ export default function ValuationMethodCards({
           const isEPV = m.id === 'epv'
           const epvMeta = isEPV ? m.meta : null
 
-          // Per-card "key driver" sparkline — pick the primary field's historical series
-          const primaryField = fields[0]
-          const primarySeries = primaryField
-            ? (historicalData?.[primaryField.chartKey ?? primaryField.key] ?? [])
-            : []
-          const primaryValue = primaryField
-            ? (assumptions[primaryField.key] as number ?? (primaryField.unit === '%' ? 0 : 1))
-            : null
+          // primaryField kept for assumptions stepper hint lookup
+          const _primaryField = fields[0]
 
           return (
             <div
@@ -718,20 +769,6 @@ export default function ValuationMethodCards({
                     <p className="text-[11px] text-[#9B9B9B] italic text-center leading-snug px-2">
                       {m.errors[0] ?? 'Insufficient data. Excluded from the blend.'}
                     </p>
-                  </div>
-                )}
-
-                {/* Per-card key driver sparkline (not for Core DCF / EPV / unavailable) */}
-                {hasValue && !isCoreDCF && !isEPV && primaryField && primarySeries.length >= 2 && (
-                  <div className="pt-2 border-t border-[#F5F5F5]">
-                    <p className="text-[10px] font-[600] text-[#9B9B9B] mb-1">Key driver trend</p>
-                    <TinyLineChart
-                      data={primarySeries}
-                      title={primaryField.label}
-                      color={cfg?.chartHex ?? '#566174'}
-                      refValue={primaryValue ?? undefined}
-                      yFormat={v => fmt(v, primaryField.unit)}
-                    />
                   </div>
                 )}
 
