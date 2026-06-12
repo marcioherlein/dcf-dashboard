@@ -28,9 +28,11 @@ interface Props {
   sectorBenchmarks?: { exitPE: number; exitMultiple: number; revenueMultiple: number } | null
   onScrollToFullDCF: () => void
   fcfMarginSeries?: SparkPoint[]
-  // Synthesis box props — blended result from cockpit output
   blendedFairValue?: number | null
   upsidePct?: number | null
+  // Ratio context for historical + NTM display inside each method card
+  analystForwardPE?: number | null
+  ntmEVRevenue?: number | null
 }
 
 type IconComp = React.ComponentType<{ size?: number; className?: string }>
@@ -495,6 +497,77 @@ function SynthesisBox({
   )
 }
 
+// ─── RatioHistoryRow ─────────────────────────────────────────────────────────
+// Compact "FY22 28× · FY23 24× · TTM 21× · NTM 19×" strip shown inside method
+// cards for P/E, EV/EBITDA, EV/Revenue, and P/Book to give instant trend context.
+
+interface RatioPoint { label: string; value: number }
+
+function RatioHistoryRow({
+  series, ntm, unit = 'x', color: _color,
+}: {
+  series?: SparkPoint[]       // from historicalData — includes 'curr' as last point
+  ntm?: number | null         // next twelve months estimate (analyst)
+  unit?: 'x' | '%'
+  color: string
+}) {
+  if (!series || series.length < 2) return null
+
+  // Extract up to 2 historical FY points (exclude 'curr') + TTM ('curr')
+  const historical = series.filter(p => p.label !== 'curr').slice(-2)
+  const ttm = series.find(p => p.label === 'curr')
+
+  const points: Array<RatioPoint & { isNTM?: boolean; isTTM?: boolean }> = [
+    ...historical.map(p => ({ label: p.label, value: p.value })),
+    ...(ttm ? [{ label: 'TTM', value: ttm.value, isTTM: true }] : []),
+    ...(ntm != null ? [{ label: 'NTM', value: ntm, isNTM: true }] : []),
+  ]
+
+  if (points.length < 2) return null
+
+  const fmtRatio = (v: number) =>
+    unit === '%' ? `${(v * 100).toFixed(1)}%` : `${v.toFixed(1)}×`
+
+  // Trend arrow: compare last two points
+  const last = points[points.length - 1].value
+  const prev = points[points.length - 2].value
+  const trend = last < prev - 0.3 ? 'down' : last > prev + 0.3 ? 'up' : 'flat'
+
+  return (
+    <div className="flex items-center gap-1.5 flex-wrap pt-1.5 border-t border-[#F5F5F5]">
+      <span className="text-[10px] font-[600] text-[#9B9B9B] shrink-0">Ratio trend</span>
+      <div className="flex items-center gap-1 flex-wrap">
+        {points.map((p, _i) => (
+          <span
+            key={p.label}
+            className={`inline-flex items-center gap-0.5 text-[10px] tabular-nums font-[600] px-1.5 py-0.5 rounded-md ${
+              p.isNTM
+                ? 'bg-[#EAF1FF] text-[#2563EB]'
+                : p.isTTM
+                ? 'bg-[#FAFAFA] text-[#06101F]'
+                : 'text-[#9B9B9B]'
+            }`}
+          >
+            <span className="text-[9px] font-[500] mr-0.5 opacity-60">{p.label}</span>
+            {fmtRatio(p.value)}
+            {p.isNTM && (
+              <span className="text-[9px] ml-0.5 opacity-70">est</span>
+            )}
+          </span>
+        ))}
+        {trend !== 'flat' && (
+          <span
+            className={`text-[11px] font-[700] ${trend === 'down' ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}
+            title={trend === 'down' ? 'Multiple compressing (cheaper)' : 'Multiple expanding (more expensive)'}
+          >
+            {trend === 'down' ? '↓' : '↑'}
+          </span>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ─── ArrowConnectors ─────────────────────────────────────────────────────────
 // SVG bus-and-arrowhead connectors from synthesis box to method cards.
 // Only rendered on xl+ where the grid is guaranteed to be 4-col.
@@ -610,6 +683,8 @@ export default function ValuationMethodCards({
   fcfMarginSeries,
   blendedFairValue,
   upsidePct,
+  analystForwardPE,
+  ntmEVRevenue,
 }: Props) {
   const validTotal = methods
     .filter(m => m.fairValue != null && m.fairValue > 0)
@@ -787,6 +862,26 @@ export default function ValuationMethodCards({
                       {m.errors[0] ?? 'Insufficient data. Excluded from the blend.'}
                     </p>
                   </div>
+                )}
+
+                {/* Ratio history context — FY-2, FY-1, TTM, NTM for relevant methods */}
+                {hasValue && (m.id === 'forward_pe' || m.id === 'ev_ebitda' || m.id === 'revenue_multiple' || m.id === 'price_to_book') && (
+                  <RatioHistoryRow
+                    series={
+                      m.id === 'forward_pe'       ? historicalData?.exitPE :
+                      m.id === 'ev_ebitda'         ? historicalData?.exitMultiple :
+                      m.id === 'revenue_multiple'  ? historicalData?.revenueMultiple :
+                      m.id === 'price_to_book'     ? historicalData?.priceToBookMultiple :
+                      undefined
+                    }
+                    ntm={
+                      m.id === 'forward_pe'      ? analystForwardPE :
+                      m.id === 'revenue_multiple' ? ntmEVRevenue :
+                      undefined
+                    }
+                    unit="x"
+                    color={cfg?.chartHex ?? '#9B9B9B'}
+                  />
                 )}
 
                 {/* Inputs — editable method cards (not Core DCF, not EPV) */}

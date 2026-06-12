@@ -325,6 +325,18 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
     return { exitPE: m.pe, exitMultiple: m.evEbitda, revenueMultiple: m.evRevenue }
   }, [industry, sector])
 
+  // NTM EV/Revenue: current EV/Revenue discounted by 1 year of analyst growth
+  // approximation: evRevCurrent / (1 + analystEstimate1y)
+  const ntmEVRevenue = useMemo(() => {
+    const multEst: Array<{ multiple: string; actualValue: number }> =
+      apiData.valuationMethods?.models?.multiples?.estimates ?? []
+    const evRevCurrent = multEst.find(e => e.multiple === 'EV/Revenue')?.actualValue ?? null
+    const growthEst = apiData.cagrAnalysis?.analystEstimate1y ?? null
+    if (evRevCurrent == null || evRevCurrent <= 0) return null
+    if (growthEst == null || growthEst <= -0.5) return evRevCurrent // no estimate, show current
+    return evRevCurrent / (1 + growthEst)
+  }, [apiData])
+
   const valueInvestingData = useMemo(
     () => buildValueInvestingData(apiData, assumptions.wacc, assumptions.terminalG),
     [apiData, assumptions.wacc, assumptions.terminalG]
@@ -492,6 +504,8 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
           assumptions={assumptions}
           historicalData={historicalData}
           fcfMarginSeries={fcfMarginSeries.length >= 2 ? fcfMarginSeries : undefined}
+          analystForwardPE={apiData.analystForwardPE ?? null}
+          ntmEVRevenue={ntmEVRevenue}
           onChange={handleAssumptionChange}
           onReset={handleReset}
           onUndo={handleUndo}
