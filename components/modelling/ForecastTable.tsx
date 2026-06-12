@@ -291,6 +291,8 @@ export default function ForecastTable({
   const [terminalGDraft, setTerminalGDraft] = useState<string | null>(null)
   const [blendOpen, setBlendOpen] = useState(false)
   const [tgError, setTgError] = useState(false)
+  const [waccExpanded, setWaccExpanded] = useState(false)
+  const [terminalExpanded, setTerminalExpanded] = useState(false)
 
   const curr = currency === 'USD' ? '$' : currency + ' '
 
@@ -799,92 +801,105 @@ export default function ForecastTable({
     const displayWacc = currentWacc ?? wd.wacc * 100
 
     return (
-      <div className="bg-white px-4 sm:px-6 py-5 border-t border-[#E3E1DA]">
-        <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-          <div>
-            <p className="text-[11px] font-semibold text-[#06101F]">Discount Rate (WACC)</p>
-            <p className="text-[11px] text-[#06101F] mt-0.5">
-              Weighted average cost of capital applied to discount projected free cash flows
-            </p>
+      <div className="bg-white border-t border-[#E3E1DA]">
+        {/* Compact header row — always visible */}
+        <div className="flex items-center gap-3 px-4 sm:px-5 py-3 flex-wrap">
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <span className="text-[11px] font-[700] text-[#06101F]">
+              {wd.wacc != null ? 'WACC' : 'Discount Rate'}
+            </span>
+            <span className="text-[15px] font-[750] tabular-nums text-[#2563EB]">{displayWacc.toFixed(1)}%</span>
+            <span className="text-[10px] text-[#9B9B9B]">
+              Ke {(wd.costOfEquity * 100).toFixed(1)}%
+              {wd.debtWeighting != null && wd.debtWeighting > 0 && (
+                <> · Kd {(wd.afterTaxCostOfDebt * 100).toFixed(1)}% at {(wd.debtWeighting * 100).toFixed(0)}%</>
+              )}
+            </span>
           </div>
-          <div className="text-right">
-            <span className="text-2xl font-bold text-[#93B4F5] tabular-nums">{displayWacc.toFixed(1)}%</span>
-            {onWaccChange && <p className="text-[11px] text-[#06101F] mt-0.5">drag slider to adjust</p>}
-          </div>
+
+          {onWaccChange && (
+            <div className="flex items-center gap-2 shrink-0">
+              <input
+                type="range"
+                min={5}
+                max={25}
+                step={0.1}
+                value={displayWacc}
+                onChange={e => onWaccChange(parseFloat(e.target.value))}
+                className="w-24 sm:w-32 h-2 accent-blue-600 rounded-lg cursor-pointer"
+                aria-label="WACC slider"
+              />
+            </div>
+          )}
+
+          <button
+            data-no-min-h
+            onClick={() => setWaccExpanded(v => !v)}
+            className="flex items-center gap-1 text-[11px] text-[#566174] hover:text-[#06101F] transition-colors shrink-0"
+            aria-expanded={waccExpanded}
+            aria-controls="wacc-breakdown"
+          >
+            <span>{waccExpanded ? 'Hide' : 'Breakdown'}</span>
+            <svg className={cn('w-3 h-3 transition-transform', waccExpanded ? 'rotate-180' : '')} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+          </button>
         </div>
 
-        {onWaccChange && (
-          <div className="mb-5">
-            <input
-              type="range"
-              min={5}
-              max={25}
-              step={0.1}
-              value={displayWacc}
-              onChange={e => onWaccChange(parseFloat(e.target.value))}
-              className="w-full h-3 accent-blue-500 rounded-lg cursor-pointer"
-            />
-            <div className="flex justify-between text-[11px] text-[#06101F] mt-1">
-              <span>5%</span>
-              <span className="text-[#2563EB] font-bold">{displayWacc.toFixed(1)}% current</span>
-              <span>25%</span>
-            </div>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Equity side */}
-          <div className="rounded-xl bg-white/5 border border-[#E3E1DA] p-4">
-            <p className="text-[11px] font-semibold text-[#06101F] mb-3">Equity side</p>
-            <div className="space-y-2.5">
-              {([
-                { label: 'Risk-Free Rate', value: (wd.rfRate * 100).toFixed(2) + '%' },
-                {
-                  label: wd.crp && wd.crp > 0 ? 'ERP (adj. + CRP)' : 'Equity Risk Premium',
-                  value: wd.crp && wd.crp > 0
-                    ? `${((wd.erp + wd.crp) * 100).toFixed(1)}%`
-                    : (wd.erp * 100).toFixed(0) + '%',
-                },
-                { label: 'Beta', value: wd.beta.toFixed(2) },
-                { label: 'Cost of Equity', value: (wd.costOfEquity * 100).toFixed(1) + '%', bold: true },
-                { label: 'Equity Weight', value: wd.equityWeighting != null ? (wd.equityWeighting * 100).toFixed(0) + '%' : null },
-              ] as { label: string; value: string | null; bold?: boolean }[]).map(({ label, value, bold }) => (
-                <div key={label} className="flex items-center justify-between">
-                  <span className="text-[11px] text-[#06101F]">{label}</span>
-                  <span className={cn('text-[11px] tabular-nums font-mono', bold ? 'font-bold text-[#06101F]' : 'text-[#566174]')}>
-                    {value ?? <NABadge reason="no-data" />}
-                  </span>
+        {/* Expandable equity/debt breakdown */}
+        {waccExpanded && (
+          <div id="wacc-breakdown" className="px-4 sm:px-5 pb-4 border-t border-[#F0EEE8]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+              {/* Equity side */}
+              <div className="rounded-lg border border-[#E3E1DA] p-3">
+                <p className="text-[11px] font-[650] text-[#06101F] mb-2">Equity side</p>
+                <div className="space-y-1.5">
+                  {([
+                    { label: 'Risk-Free Rate', value: (wd.rfRate * 100).toFixed(2) + '%' },
+                    {
+                      label: wd.crp && wd.crp > 0 ? 'ERP + CRP' : 'ERP',
+                      value: wd.crp && wd.crp > 0
+                        ? ((wd.erp + wd.crp) * 100).toFixed(1) + '%'
+                        : (wd.erp * 100).toFixed(0) + '%',
+                    },
+                    { label: 'Beta', value: wd.beta.toFixed(2) },
+                    { label: 'Cost of Equity', value: (wd.costOfEquity * 100).toFixed(1) + '%', bold: true },
+                    { label: 'Equity Weight', value: wd.equityWeighting != null ? (wd.equityWeighting * 100).toFixed(0) + '%' : null },
+                  ] as { label: string; value: string | null; bold?: boolean }[]).map(({ label, value, bold }) => (
+                    <div key={label} className="flex items-center justify-between">
+                      <span className="text-[11px] text-[#566174]">{label}</span>
+                      <span className={cn('text-[11px] tabular-nums font-mono', bold ? 'font-bold text-[#06101F]' : 'text-[#566174]')}>
+                        {value ?? <NABadge reason="no-data" />}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Debt side */}
-          <div className="rounded-xl bg-white/5 border border-[#E3E1DA] p-4">
-            <p className="text-[11px] font-semibold text-[#06101F] mb-3">Debt side</p>
-            <div className="space-y-2.5">
-              {([
-                { label: 'Cost of Debt', value: wd.costOfDebt != null ? (wd.costOfDebt * 100).toFixed(2) + '%' : null },
-                { label: 'Tax Rate', value: (wd.taxRate * 100).toFixed(1) + '%' },
-                { label: 'After-Tax CoD', value: (wd.afterTaxCostOfDebt * 100).toFixed(2) + '%', bold: true },
-                { label: 'Total Debt', value: wd.totalDebtM != null ? fmtLargeM(wd.totalDebtM) : null },
-                { label: 'Debt Weight', value: wd.debtWeighting != null ? (wd.debtWeighting * 100).toFixed(0) + '%' : null },
-              ] as { label: string; value: string | null; bold?: boolean }[]).map(({ label, value, bold }) => (
-                <div key={label} className="flex items-center justify-between">
-                  <span className="text-[11px] text-[#06101F]">{label}</span>
-                  <span className={cn('text-[11px] tabular-nums font-mono', bold ? 'font-bold text-[#06101F]' : 'text-[#566174]')}>
-                    {value ?? <NABadge reason="no-data" />}
-                  </span>
+              </div>
+              {/* Debt side */}
+              <div className="rounded-lg border border-[#E3E1DA] p-3">
+                <p className="text-[11px] font-[650] text-[#06101F] mb-2">Debt side</p>
+                <div className="space-y-1.5">
+                  {([
+                    { label: 'Cost of Debt', value: wd.costOfDebt != null ? (wd.costOfDebt * 100).toFixed(2) + '%' : null },
+                    { label: 'Tax Rate', value: (wd.taxRate * 100).toFixed(1) + '%' },
+                    { label: 'After-Tax CoD', value: (wd.afterTaxCostOfDebt * 100).toFixed(2) + '%', bold: true },
+                    { label: 'Total Debt', value: wd.totalDebtM != null ? fmtLargeM(wd.totalDebtM) : null },
+                    { label: 'Debt Weight', value: wd.debtWeighting != null ? (wd.debtWeighting * 100).toFixed(0) + '%' : null },
+                  ] as { label: string; value: string | null; bold?: boolean }[]).map(({ label, value, bold }) => (
+                    <div key={label} className="flex items-center justify-between">
+                      <span className="text-[11px] text-[#566174]">{label}</span>
+                      <span className={cn('text-[11px] tabular-nums font-mono', bold ? 'font-bold text-[#06101F]' : 'text-[#566174]')}>
+                        {value ?? <NABadge reason="no-data" />}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
             </div>
+            {wd.crp != null && wd.crp > 0 && (
+              <p className="text-[11px] text-[#566174] mt-2 italic">
+                Country risk premium of {(wd.crp * 100).toFixed(1)}% applied{wd.financialCurrency ? ` for ${wd.financialCurrency} reporting` : ''}.
+              </p>
+            )}
           </div>
-        </div>
-
-        {wd.crp != null && wd.crp > 0 && (
-          <p className="text-[11px] text-[#06101F] mt-3 italic">
-            Country risk premium of {(wd.crp * 100).toFixed(1)}% applied{wd.financialCurrency ? ` for ${wd.financialCurrency} reporting currency` : ''}.
-          </p>
         )}
       </div>
     )
@@ -936,198 +951,163 @@ export default function ForecastTable({
     ]
 
     return (
-      <div className="bg-white px-4 sm:px-6 py-5 border-t border-[#E3E1DA]">
-        {/* Method toggle */}
-        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-          <p className="text-[11px] font-semibold text-[#06101F]">Terminal value</p>
-          <div className="flex rounded-lg border border-[#E3E1DA] overflow-hidden" role="radiogroup" aria-label="Terminal value method">
-            {(['perpetuity', 'multiple'] as const).map(m => (
+      <div className="bg-white border-t border-[#E3E1DA]">
+        {/* Compact always-visible summary row */}
+        <div className="flex items-center gap-3 px-4 sm:px-5 py-3 flex-wrap">
+          <span className="text-[11px] font-[700] text-[#06101F] shrink-0">Terminal Value</span>
+
+          {/* Method toggle — always visible and compact */}
+          <div className="flex rounded-lg overflow-hidden border border-[#E3E1DA] shrink-0" role="radiogroup" aria-label="Terminal value method">
+            {(['multiple', 'perpetuity'] as const).map(m => (
               <button
                 key={m}
+                data-no-min-h
                 onClick={() => onTerminalMethodChange(m)}
                 role="radio"
                 aria-checked={td.method === m}
                 className={cn(
-                  'px-4 py-2 text-[12px] font-semibold transition-colors min-h-[44px]',
-                  td.method === m ? 'bg-blue-600 text-white' : 'text-[#06101F] hover:bg-white/10'
+                  'px-2.5 py-1 text-[11px] font-[650] transition-colors',
+                  td.method === m ? 'bg-[#2563EB] text-white' : 'text-[#566174] bg-white hover:bg-[#F4F3EF]',
                 )}
               >
-                {m === 'perpetuity' ? 'Perpetuity Growth' : 'Exit Multiple'}
+                {m === 'multiple' ? 'Exit ×' : 'Perp. g'}
               </button>
             ))}
           </div>
-        </div>
 
-        {activeGuardError && td.method === 'perpetuity' && (
-          <div role="alert" aria-live="polite" className="mb-3 flex items-center gap-2 rounded-lg border border-red-500/30 bg-[#FCEAEA]0/10 px-3 py-2 text-xs text-red-400">
-            <span className="font-bold">!</span>
-            <span>{activeGuardError}</span>
-          </div>
-        )}
-
-        {/* Method input */}
-        <div className="mb-5">
+          {/* Inline input for active method */}
           {isMultiple ? (
-            <div className="flex items-center gap-3 rounded-xl bg-white/5 border border-[#E3E1DA] px-4 py-3">
-              <div className="flex-1 min-w-0">
-                <p className="text-[12px] font-semibold text-[#566174]">Exit Multiple (EV / FCF)</p>
-                <p className="text-[11px] text-[#06101F] mt-0.5">Applied to final-year FCF to compute terminal enterprise value</p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  onClick={() => onExitMultipleChange(Math.round(Math.max(1, td.exitMultiple - 1) * 10) / 10)}
-                  aria-label="Decrease exit multiple"
-                  className="w-9 h-9 rounded-lg border border-[#E3E1DA] bg-white/5 text-[#06101F] hover:bg-white/10 font-bold text-sm flex items-center justify-center min-h-[44px] min-w-[44px]"
-                >−</button>
-                <input
-                  className="w-16 border border-[#E3E1DA] bg-[#F4F3EF] px-2 py-2 text-center text-[14px] font-bold text-[#06101F] rounded-lg focus:border-[#5F790B] focus:outline-none min-h-[44px]"
-                  style={{ fontSize: '16px' }}
-                  value={exitMultipleDraft ?? Math.max(1, td.exitMultiple).toFixed(1)}
-                  onChange={e => setExitMultipleDraft(e.target.value)}
-                  onBlur={() => {
-                    if (exitMultipleDraft != null) {
-                      const p = parseFloat(exitMultipleDraft)
-                      if (!isNaN(p) && p > 0) onExitMultipleChange(p)
-                      setExitMultipleDraft(null)
-                    }
-                  }}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter' && exitMultipleDraft != null) {
-                      const p = parseFloat(exitMultipleDraft)
-                      if (!isNaN(p) && p > 0) onExitMultipleChange(p)
-                      setExitMultipleDraft(null)
-                    }
-                  }}
-                />
-                <span className="text-[12px] text-[#06101F]">×</span>
-                <button
-                  onClick={() => onExitMultipleChange(Math.round((td.exitMultiple + 1) * 10) / 10)}
-                  aria-label="Increase exit multiple"
-                  className="w-9 h-9 rounded-lg border border-[#E3E1DA] bg-white/5 text-[#06101F] hover:bg-white/10 font-bold text-sm flex items-center justify-center min-h-[44px] min-w-[44px]"
-                >+</button>
-              </div>
+            <div className="flex items-center gap-1 shrink-0">
+              <button data-no-min-h onClick={() => onExitMultipleChange(Math.round(Math.max(1, td.exitMultiple - 1) * 10) / 10)} className="w-5 h-5 rounded bg-white border border-[#E3E1DA] text-[#566174] hover:bg-[#E3E1DA] text-xs font-bold flex items-center justify-center">−</button>
+              <input
+                className="w-12 border border-[#E3E1DA] bg-[#F4F3EF] px-1.5 py-0.5 text-center text-[12px] font-[700] text-[#06101F] rounded focus:border-[#2563EB] focus:outline-none"
+                style={{ fontSize: '16px' }}
+                value={exitMultipleDraft ?? Math.max(1, td.exitMultiple).toFixed(1)}
+                onChange={e => setExitMultipleDraft(e.target.value)}
+                onBlur={() => { if (exitMultipleDraft != null) { const p = parseFloat(exitMultipleDraft); if (!isNaN(p) && p > 0) onExitMultipleChange(p); setExitMultipleDraft(null) } }}
+                onKeyDown={e => { if (e.key === 'Enter' && exitMultipleDraft != null) { const p = parseFloat(exitMultipleDraft); if (!isNaN(p) && p > 0) onExitMultipleChange(p); setExitMultipleDraft(null) } }}
+                aria-label="Exit multiple"
+              />
+              <span className="text-[11px] text-[#9B9B9B]">×</span>
+              <button data-no-min-h onClick={() => onExitMultipleChange(Math.round((td.exitMultiple + 1) * 10) / 10)} className="w-5 h-5 rounded bg-white border border-[#E3E1DA] text-[#566174] hover:bg-[#E3E1DA] text-xs font-bold flex items-center justify-center">+</button>
             </div>
           ) : (
-            <div className="flex items-center gap-3 rounded-xl bg-white/5 border border-[#E3E1DA] px-4 py-3">
-              <div className="flex-1 min-w-0">
-                <p className="text-[12px] font-semibold text-[#566174]">Terminal Growth Rate</p>
-                <p className="text-[11px] text-[#06101F] mt-0.5">Long-run FCF growth rate beyond projection period (typically 2–3%)</p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  onClick={() => onTerminalGChange(Math.round(Math.max(0, td.terminalG - 0.005) * 1000) / 1000)}
-                  className="w-9 h-9 rounded-lg border border-[#E3E1DA] bg-white/5 text-[#06101F] hover:bg-white/10 font-bold text-sm flex items-center justify-center min-h-[44px] min-w-[44px]"
-                >−</button>
-                <input
-                  className={cn("w-16 border px-2 py-2 text-center text-[14px] font-bold bg-[#F4F3EF] text-[#06101F] rounded-lg focus:border-[#5F790B] focus:outline-none min-h-[44px]", tgError ? 'border-red-400' : 'border-[#E3E1DA]')}
-                  style={{ fontSize: '16px' }}
-                  value={terminalGDraft ?? (td.terminalG * 100).toFixed(1)}
-                  onChange={e => setTerminalGDraft(e.target.value)}
-                  onBlur={() => {
-                    if (terminalGDraft != null) {
-                      const p = parseFloat(terminalGDraft)
-                      if (!isNaN(p) && p >= 0 && p < 15) {
-                        onTerminalGChange(p / 100)
-                      } else {
-                        setTgError(true)
-                        setTimeout(() => setTgError(false), 800)
-                      }
-                      setTerminalGDraft(null)
-                    }
-                  }}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter' && terminalGDraft != null) {
-                      const p = parseFloat(terminalGDraft)
-                      if (!isNaN(p) && p >= 0 && p < 15) onTerminalGChange(p / 100)
-                      setTerminalGDraft(null)
-                    }
-                  }}
-                />
-                <span className="text-[12px] text-[#06101F]">%</span>
-                <button
-                  onClick={() => onTerminalGChange(Math.round(Math.min(0.14, td.terminalG + 0.005) * 1000) / 1000)}
-                  className="w-9 h-9 rounded-lg border border-[#E3E1DA] bg-white/5 text-[#06101F] hover:bg-white/10 font-bold text-sm flex items-center justify-center min-h-[44px] min-w-[44px]"
-                >+</button>
-              </div>
+            <div className="flex items-center gap-1 shrink-0">
+              <button data-no-min-h onClick={() => onTerminalGChange(Math.round(Math.max(0, td.terminalG - 0.005) * 1000) / 1000)} className="w-5 h-5 rounded bg-white border border-[#E3E1DA] text-[#566174] hover:bg-[#E3E1DA] text-xs font-bold flex items-center justify-center">−</button>
+              <input
+                className={cn("w-12 border bg-[#F4F3EF] px-1.5 py-0.5 text-center text-[12px] font-[700] text-[#06101F] rounded focus:border-[#2563EB] focus:outline-none", tgError ? 'border-red-400' : 'border-[#E3E1DA]')}
+                style={{ fontSize: '16px' }}
+                value={terminalGDraft ?? (td.terminalG * 100).toFixed(1)}
+                onChange={e => setTerminalGDraft(e.target.value)}
+                onBlur={() => { if (terminalGDraft != null) { const p = parseFloat(terminalGDraft); if (!isNaN(p) && p >= 0 && p < 15) { onTerminalGChange(p / 100) } else { setTgError(true); setTimeout(() => setTgError(false), 800) }; setTerminalGDraft(null) } }}
+                onKeyDown={e => { if (e.key === 'Enter' && terminalGDraft != null) { const p = parseFloat(terminalGDraft); if (!isNaN(p) && p >= 0 && p < 15) onTerminalGChange(p / 100); setTerminalGDraft(null) } }}
+                aria-label="Terminal growth rate %"
+              />
+              <span className="text-[11px] text-[#9B9B9B]">%</span>
+              <button data-no-min-h onClick={() => onTerminalGChange(Math.round(Math.min(0.14, td.terminalG + 0.005) * 1000) / 1000)} className="w-5 h-5 rounded bg-white border border-[#E3E1DA] text-[#566174] hover:bg-[#E3E1DA] text-xs font-bold flex items-center justify-center">+</button>
             </div>
           )}
-        </div>
 
-        {/* Composition bar */}
-        {fcfShare != null && tvShare != null && (
-          <div className="mb-5">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-[11px] font-semibold text-[#06101F]">Valuation Composition</p>
-              {tvWarning && (
-                <span className="text-[11px] text-amber-400 font-semibold bg-amber-50 border border-amber-500/20 px-2 py-0.5 rounded-full">
-                  TV {tvShare.toFixed(0)}% — high terminal reliance
+          {/* Quick TV summary */}
+          {pvTv != null && (
+            <span className="text-[11px] text-[#9B9B9B]">
+              PV of TV: <span className="font-[650] text-[#566174]">{fmtLargeM(pvTv)}</span>
+              {tvShare != null && (
+                <span className={cn('ml-1', tvWarning ? 'text-amber-600 font-[650]' : '')}>
+                  ({tvShare.toFixed(0)}% of EV{tvWarning ? ' ⚠' : ''})
                 </span>
               )}
-            </div>
-            <div className="h-3 flex rounded-full overflow-hidden">
-              <div
-                className="bg-blue-800 transition-all duration-500"
-                style={{ width: `${Math.max(2, fcfShare)}%` }}
-                title={`PV of FCFs: ${fcfShare.toFixed(1)}%`}
-              />
-              <div
-                className={cn('flex-1 transition-all duration-500', tvWarning ? 'bg-[#B56A00]' : 'bg-[#93B4F5]')}
-                title={`PV of Terminal Value: ${tvShare.toFixed(1)}%`}
-              />
-            </div>
-            <div className="flex items-center justify-between mt-2 text-[11px] text-[#566174]">
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-sm bg-blue-800 inline-block" />
-                <span>PV of FCFs ({fcfShare.toFixed(0)}%)</span>
+            </span>
+          )}
+
+          {/* Implied price — compact */}
+          {impliedPrice != null && (
+            <span className={cn('ml-auto text-[12px] font-[750] tabular-nums shrink-0', impliedUpside != null && impliedUpside >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
+              {curr}{impliedPrice.toFixed(2)}
+              {impliedUpside != null && <span className="text-[10px] ml-1">({impliedUpside >= 0 ? '+' : ''}{(impliedUpside * 100).toFixed(1)}%)</span>}
+            </span>
+          )}
+
+          <button
+            data-no-min-h
+            onClick={() => setTerminalExpanded(v => !v)}
+            className="flex items-center gap-1 text-[11px] text-[#566174] hover:text-[#06101F] transition-colors shrink-0"
+            aria-expanded={terminalExpanded}
+            aria-controls="terminal-breakdown"
+          >
+            <span>{terminalExpanded ? 'Hide' : 'Bridge'}</span>
+            <svg className={cn('w-3 h-3 transition-transform', terminalExpanded ? 'rotate-180' : '')} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+          </button>
+        </div>
+
+        {/* Expandable: guard error, composition bar, equity bridge */}
+        {terminalExpanded && (
+          <div id="terminal-breakdown" className="px-4 sm:px-5 pb-5 border-t border-[#F0EEE8]">
+
+            {activeGuardError && td.method === 'perpetuity' && (
+              <div role="alert" className="mt-3 mb-2 flex items-center gap-2 rounded-lg border border-red-200 bg-[#FCEAEA] px-3 py-2 text-xs text-[#D83B3B]">
+                <span className="font-bold shrink-0">!</span>
+                <span>{activeGuardError}</span>
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className={cn('w-2 h-2 rounded-sm inline-block', tvWarning ? 'bg-[#B56A00]' : 'bg-[#93B4F5]')} />
-                <span>PV of Terminal Value ({tvShare.toFixed(0)}%)</span>
+            )}
+
+            {/* Composition bar */}
+            {fcfShare != null && tvShare != null && (
+              <div className="mt-3 mb-4">
+                <div className="flex items-center justify-between mb-1.5">
+                  <p className="text-[11px] font-[650] text-[#06101F]">Valuation Composition</p>
+                  {tvWarning && (
+                    <span className="text-[10px] text-amber-600 font-[650] bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full">
+                      TV {tvShare.toFixed(0)}% — high terminal reliance
+                    </span>
+                  )}
+                </div>
+                <div className="h-2 flex rounded-full overflow-hidden">
+                  <div className="bg-[#2563EB] transition-all duration-500" style={{ width: `${Math.max(2, fcfShare)}%` }} title={`PV of FCFs: ${fcfShare.toFixed(1)}%`} />
+                  <div className={cn('flex-1 transition-all duration-500', tvWarning ? 'bg-amber-500' : 'bg-[#93B4F5]')} title={`PV of Terminal Value: ${tvShare.toFixed(1)}%`} />
+                </div>
+                <div className="flex items-center justify-between mt-1.5 text-[10px] text-[#566174]">
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-[#2563EB] inline-block" /> PV FCFs ({fcfShare.toFixed(0)}%)</span>
+                  <span className="flex items-center gap-1"><span className={cn('w-2 h-2 rounded-sm inline-block', tvWarning ? 'bg-amber-500' : 'bg-[#93B4F5]')} /> PV TV ({tvShare.toFixed(0)}%)</span>
+                </div>
+              </div>
+            )}
+
+            {/* Equity bridge */}
+            <div className="rounded-xl border border-[#E3E1DA] overflow-hidden">
+              <div className="px-4 py-2 bg-[#FAFAF8] border-b border-[#E3E1DA]">
+                <p className="text-[11px] font-[650] text-[#06101F]">Equity value bridge</p>
+              </div>
+              <div className="divide-y divide-[#F0EEE8]">
+                {bridgeRows.map(({ label, value, bold, sub }) => (
+                  <div key={label} className={cn('flex items-center justify-between px-4 py-1.5', bold && 'bg-[#FAFAF8]')}>
+                    <span className={cn('text-[11px]', sub ? 'text-[#566174] pl-3' : bold ? 'font-[650] text-[#06101F]' : 'text-[#06101F]')}>{label}</span>
+                    <span className={cn('text-[11px] tabular-nums font-mono', bold ? 'font-bold text-[#06101F]' : 'text-[#566174]')}>
+                      {value ?? <NABadge reason="calc-error" />}
+                    </span>
+                  </div>
+                ))}
+                {/* Implied price */}
+                <div className="flex items-center justify-between px-4 py-3 border-t-2 border-[#E3E1DA]">
+                  <div>
+                    <p className="text-[13px] font-[700] text-[#06101F]">Implied Share Price</p>
+                    <p className="text-[11px] text-[#566174] mt-0.5">vs. {curr}{td.currentPrice.toFixed(2)} current</p>
+                  </div>
+                  <div className="text-right">
+                    <p className={cn('text-[22px] font-[800] tabular-nums', impliedUpside != null && impliedUpside >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
+                      {impliedPrice != null ? `${curr}${impliedPrice.toFixed(2)}` : <NABadge reason="calc-error" />}
+                    </p>
+                    {impliedUpside != null && (
+                      <p className={cn('text-[13px] font-[650] mt-0.5', impliedUpside >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
+                        {impliedUpside >= 0 ? '+' : ''}{(impliedUpside * 100).toFixed(1)}%
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         )}
-
-        {/* Equity bridge */}
-        <div className="rounded-xl border border-[#E3E1DA] overflow-hidden">
-          <div className="px-4 py-2 bg-white/5 border-b border-[#E3E1DA]">
-            <p className="text-[11px] font-semibold text-[#06101F]">Equity value bridge</p>
-          </div>
-          <div className="divide-y divide-white/8">
-            {bridgeRows.map(({ label, value, bold, sub }) => (
-              <div key={label} className={cn('flex items-center justify-between px-4 py-2', bold && 'bg-white/5')}>
-                <span className={cn('text-xs', sub ? 'text-[#06101F] pl-3' : bold ? 'font-semibold text-[#566174]' : 'text-[#06101F]')}>
-                  {label}
-                </span>
-                <span className={cn('text-xs tabular-nums font-mono', bold ? 'font-bold text-[#06101F]' : 'text-[#566174]')}>
-                  {value ?? <NABadge reason="calc-error" />}
-                </span>
-              </div>
-            ))}
-
-            {/* Implied price hero */}
-            <div className="flex items-center justify-between px-4 py-4 border-t-2 border-[#E3E1DA]">
-              <div>
-                <p className="text-sm font-bold text-[#06101F]">Implied Share Price</p>
-                <p className="text-[11px] text-[#06101F] mt-0.5">vs. {curr}{td.currentPrice.toFixed(2)} current price</p>
-              </div>
-              <div className="text-right">
-                <p className={cn('text-2xl font-bold tabular-nums',
-                  impliedUpside != null && impliedUpside >= 0 ? 'text-emerald-400' : 'text-red-400'
-                )}>
-                  {impliedPrice != null ? `${curr}${impliedPrice.toFixed(2)}` : <NABadge reason="calc-error" />}
-                </p>
-                {impliedUpside != null && (
-                  <p className={cn('text-sm font-semibold mt-0.5',
-                    impliedUpside >= 0 ? 'text-emerald-400' : 'text-red-400'
-                  )}>
-                    {impliedUpside >= 0 ? '+' : ''}{(impliedUpside * 100).toFixed(1)}%
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     )
   }

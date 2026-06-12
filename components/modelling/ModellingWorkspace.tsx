@@ -7,6 +7,7 @@ import { computeUFCFRows, computeUFCFEV, type UFCFRow } from '@/lib/valuation/un
 import { computeLFCFRows, type LFCFRow } from '@/lib/valuation/leveredDcf'
 import { computeTerminalValues } from '@/lib/valuation/terminalValue'
 import { FOUR_MODEL_DCF_WEIGHTS } from '@/lib/dcf/detectCompanyType'
+import { cn } from '@/lib/utils'
 import ForecastTable, {
   type DisplayRow,
   type WACCData,
@@ -136,7 +137,7 @@ function buildDisplayRows(
   })
 }
 
-// ── Modelling Approach panel ──────────────────────────────────────────────────
+// ── DCF Setup Bar (compact single-row replacement for ModellingApproach) ─────
 
 interface ApproachProps {
   isLfcf: boolean
@@ -156,7 +157,7 @@ interface ApproachProps {
   onResetAll: () => void
 }
 
-function ModellingApproach({
+function DCFSetupBar({
   isLfcf, onModeChange,
   terminalMethod, onTerminalMethodChange,
   wacc, cockpitWacc, onWaccChange,
@@ -168,176 +169,127 @@ function ModellingApproach({
   const cockpitDiverged = cockpitWacc != null && Math.abs(wacc - cockpitWacc) > 0.001
   const displayCagrPct = flatCagrPct ?? baseCagrPct
 
-  const selectCls = "bg-[#0d1829] text-[12px] font-[600] text-white/80 rounded-lg pl-2.5 pr-7 py-1.5 border border-white/[0.12] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70 focus:border-[#5F790B]/50 cursor-pointer w-full appearance-none"
-
-  const SelectCaret = () => (
-    <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-white/35" width="10" height="6" viewBox="0 0 10 6" aria-hidden="true">
-      <path d="M1 1l4 4 4-4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-
   return (
-    <div className="px-5 pt-5 pb-4 border-b border-white/[0.08]">
-      <div className="flex items-start justify-between mb-4 gap-3">
-        <div>
-          <p className="text-[11px] font-[700] text-white/50 uppercase tracking-widest">Modelling Approach</p>
-          <p className="text-[10px] text-white/25 mt-0.5">
-            Projection engine controls — independent from the valuation cockpit assumptions above.
-          </p>
-        </div>
-        {hasOverrides && (
+    <div className="px-4 sm:px-5 py-3 border-b border-[#E3E1DA] bg-[#F4F3EF] flex flex-wrap items-center gap-2">
+
+      {/* Label */}
+      <span className="text-[10px] font-[700] text-[#9B9B9B] uppercase tracking-widest shrink-0 mr-1">
+        DCF Setup
+      </span>
+
+      {/* Cash flow toggle */}
+      <div className="flex rounded-lg overflow-hidden border border-[#E3E1DA] shrink-0">
+        {(['ufcf', 'lfcf'] as const).map(m => (
           <button
-            onClick={onResetAll}
-            className="shrink-0 text-[10px] text-white/30 hover:text-red-400 transition-colors px-2.5 py-1 rounded-md border border-white/[0.1] hover:border-red-400/30"
+            key={m}
+            onClick={() => onModeChange(m === 'lfcf')}
+            aria-pressed={isLfcf === (m === 'lfcf')}
+            className={cn(
+              'px-2.5 py-1 text-[11px] font-[650] transition-colors min-h-[28px]',
+              isLfcf === (m === 'lfcf') ? 'bg-[#4A6109] text-white' : 'bg-white text-[#566174] hover:bg-[#F4F3EF]',
+            )}
           >
-            Reset all
+            {m === 'ufcf' ? 'UFCF' : 'LFCF'}
+          </button>
+        ))}
+      </div>
+
+      {/* Terminal method toggle */}
+      <div className="flex rounded-lg overflow-hidden border border-[#E3E1DA] shrink-0">
+        {(['multiple', 'perpetuity'] as const).map(m => (
+          <button
+            key={m}
+            onClick={() => onTerminalMethodChange(m)}
+            aria-pressed={terminalMethod === m}
+            className={cn(
+              'px-2.5 py-1 text-[11px] font-[650] transition-colors min-h-[28px]',
+              terminalMethod === m ? 'bg-[#2563EB] text-white' : 'bg-white text-[#566174] hover:bg-[#F4F3EF]',
+            )}
+          >
+            {m === 'multiple' ? 'Exit ×' : 'Perp. g'}
+          </button>
+        ))}
+      </div>
+
+      {/* WACC stepper */}
+      <div className="flex items-center gap-1 shrink-0">
+        <span className="text-[10px] text-[#9B9B9B] font-[600]">
+          {isLfcf ? 'Ke' : 'WACC'}
+        </span>
+        <button
+          data-no-min-h
+          onClick={() => onWaccChange(Math.max(1, waccPct - 0.25))}
+          className="w-5 h-5 rounded bg-white border border-[#E3E1DA] text-[#566174] hover:bg-[#E3E1DA] text-xs font-bold flex items-center justify-center"
+        >−</button>
+        <span className="text-[12px] font-[750] tabular-nums text-[#06101F] min-w-[36px] text-center">
+          {waccPct.toFixed(1)}%
+        </span>
+        <button
+          data-no-min-h
+          onClick={() => onWaccChange(Math.min(30, waccPct + 0.25))}
+          className="w-5 h-5 rounded bg-white border border-[#E3E1DA] text-[#566174] hover:bg-[#E3E1DA] text-xs font-bold flex items-center justify-center"
+        >+</button>
+        {cockpitDiverged && (
+          <button
+            data-no-min-h
+            onClick={() => onWaccChange(cockpitWacc! * 100)}
+            className="text-[10px] text-amber-600 underline hover:no-underline ml-0.5"
+            title={`Cockpit uses ${(cockpitWacc! * 100).toFixed(1)}% — click to sync`}
+          >
+            Sync
           </button>
         )}
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-
-        {/* Cash Flow Mode */}
-        <div className="bg-white/[0.04] rounded-xl p-3 flex flex-col gap-2">
-          <p className="text-[10px] font-[700] text-white/40 uppercase tracking-widest">Cash Flow</p>
-          <div className="relative">
-            <select
-              aria-label="Cash flow mode"
-              value={isLfcf ? 'lfcf' : 'ufcf'}
-              onChange={e => onModeChange(e.target.value === 'lfcf')}
-              className={selectCls}
+      {/* Growth mode selector */}
+      <div className="flex items-center gap-1.5 shrink-0">
+        <span className="text-[10px] text-[#9B9B9B] font-[600]">Growth</span>
+        <div className="relative">
+          <select
+            aria-label="Revenue growth mode"
+            value={growthMode}
+            onChange={e => onGrowthModeChange(e.target.value as typeof growthMode)}
+            className="appearance-none bg-white border border-[#E3E1DA] text-[#06101F] text-[11px] font-[600] rounded-lg pl-2 pr-6 py-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-olive-700 cursor-pointer"
+            style={{ fontSize: '16px' }}
+          >
+            <option value="analyst">Analyst blend</option>
+            <option value="cagr">Flat CAGR</option>
+            <option value="manual">Manual</option>
+          </select>
+          <svg className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-[#9B9B9B]" width="8" height="5" viewBox="0 0 10 6" aria-hidden="true">
+            <path d="M1 1l4 4 4-4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+        {growthMode === 'cagr' && (
+          <div className="flex items-center gap-1">
+            <input
+              type="number"
+              step={0.5}
+              min={-20}
+              max={100}
+              value={displayCagrPct.toFixed(1)}
+              onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v)) onFlatCagrChange(v) }}
+              className="w-14 bg-white border border-[#E3E1DA] text-[11px] font-[650] text-[#06101F] rounded-lg px-2 py-1 focus:outline-none tabular-nums text-center"
               style={{ fontSize: '16px' }}
-            >
-              <option value="ufcf">UFCF — Enterprise</option>
-              <option value="lfcf">LFCF — Equity</option>
-            </select>
-            <SelectCaret />
+              aria-label="Flat CAGR %"
+            />
+            <span className="text-[10px] text-[#9B9B9B]">%</span>
           </div>
-          <p className="text-[10px] text-white/30 leading-relaxed">
-            {isLfcf
-              ? 'Cash after debt payments. Discounted by cost of equity — no bridge needed.'
-              : 'Cash before interest. Discounted by WACC. Cash added, debt subtracted at end.'}
-          </p>
-        </div>
-
-        {/* Terminal Value */}
-        <div className="bg-white/[0.04] rounded-xl p-3 flex flex-col gap-2">
-          <p className="text-[10px] font-[700] text-white/40 uppercase tracking-widest">Terminal Value</p>
-          <div className="relative">
-            <select
-              aria-label="Terminal value method"
-              value={terminalMethod}
-              onChange={e => onTerminalMethodChange(e.target.value as 'perpetuity' | 'multiple')}
-              className={selectCls}
-              style={{ fontSize: '16px' }}
-            >
-              <option value="multiple">Exit Multiple</option>
-              <option value="perpetuity">Perpetuity Growth</option>
-            </select>
-            <SelectCaret />
-          </div>
-          <p className="text-[10px] text-white/30 leading-relaxed">
-            {terminalMethod === 'multiple'
-              ? 'Company is sold at an EV/EBITDA multiple after the projection period.'
-              : 'Business generates cash at the terminal growth rate indefinitely.'}
-          </p>
-        </div>
-
-        {/* Discount Rate */}
-        <div className="bg-white/[0.04] rounded-xl p-3 flex flex-col gap-2">
-          <p className="text-[10px] font-[700] text-white/40 uppercase tracking-widest">
-            {isLfcf ? 'Cost of Equity' : 'Discount Rate (WACC)'}
-          </p>
-          {!isLfcf ? (
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => onWaccChange(Math.max(1, waccPct - 0.25))}
-                className="w-7 h-7 rounded-lg bg-white/[0.06] text-white/50 hover:bg-white/[0.12] hover:text-white/80 transition-colors text-base font-bold flex items-center justify-center"
-              >−</button>
-              <span className="flex-1 text-center text-[15px] font-[750] tabular-nums text-white/90">
-                {waccPct.toFixed(1)}%
-              </span>
-              <button
-                onClick={() => onWaccChange(Math.min(30, waccPct + 0.25))}
-                className="w-7 h-7 rounded-lg bg-white/[0.06] text-white/50 hover:bg-white/[0.12] hover:text-white/80 transition-colors text-base font-bold flex items-center justify-center"
-              >+</button>
-            </div>
-          ) : (
-            <p className="text-[15px] font-[750] tabular-nums text-white/70 px-1">
-              {waccPct.toFixed(1)}%
-              <span className="text-[10px] text-white/30 ml-1 font-[500]">CAPM</span>
-            </p>
-          )}
-          <div className="text-[10px] leading-relaxed">
-            {!cockpitDiverged ? (
-              <span className="text-emerald-400/80">● Linked to cockpit</span>
-            ) : (
-              <span className="text-amber-400/90">
-                ⚠ Cockpit uses {(cockpitWacc! * 100).toFixed(1)}%
-                <button
-                  onClick={() => onWaccChange(cockpitWacc! * 100)}
-                  className="ml-1.5 underline hover:no-underline"
-                >
-                  Sync
-                </button>
-              </span>
-            )}
-          </div>
-          <p className="text-[10px] text-white/25 leading-relaxed">
-            Required return for investors. Higher rate → lower valuation.
-          </p>
-        </div>
-
-        {/* Revenue Growth */}
-        <div className="bg-white/[0.04] rounded-xl p-3 flex flex-col gap-2">
-          <p className="text-[10px] font-[700] text-white/40 uppercase tracking-widest">Revenue Growth</p>
-          <div className="relative">
-            <select
-              aria-label="Revenue growth mode"
-              value={growthMode}
-              onChange={e => onGrowthModeChange(e.target.value as typeof growthMode)}
-              className={selectCls}
-              style={{ fontSize: '16px' }}
-            >
-              <option value="analyst">Analyst blend</option>
-              <option value="cagr">Flat CAGR</option>
-              <option value="manual">Manual (per-year)</option>
-            </select>
-            <SelectCaret />
-          </div>
-          {growthMode === 'cagr' && (
-            <div className="flex items-center gap-1.5">
-              <span className="text-[10px] text-white/40 shrink-0">CAGR</span>
-              <input
-                type="number"
-                step={0.5}
-                min={-20}
-                max={100}
-                value={displayCagrPct.toFixed(1)}
-                onChange={e => {
-                  const v = parseFloat(e.target.value)
-                  if (!isNaN(v)) onFlatCagrChange(v)
-                }}
-                className="flex-1 min-w-0 bg-[#0d1829] text-[12px] font-[600] text-white/80 rounded-lg px-2 py-1 border border-white/[0.12] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70 focus:border-[#5F790B]/50 tabular-nums"
-                style={{ fontSize: '16px' }}
-              />
-              <span className="text-[10px] text-white/40 shrink-0">%/yr</span>
-            </div>
-          )}
-          <p className="text-[10px] text-white/30 leading-relaxed">
-            {growthMode === 'analyst'
-              ? 'Blends analyst consensus with historical CAGR weighted by company type.'
-              : growthMode === 'cagr'
-                ? 'Applies the same growth rate every projection year from last historical base.'
-                : 'Click any revenue cell in the table to override it for that year.'}
-          </p>
-        </div>
+        )}
+        {growthMode === 'manual' && (
+          <span className="text-[10px] text-[#2563EB] font-[600]">click cells ✎</span>
+        )}
       </div>
 
-      {growthMode === 'manual' && (
-        <p className="mt-3 text-[10px] text-[#2563EB]/70 bg-[#EAF1FF]0/[0.1] rounded-lg px-3 py-2 border border-blue-500/20">
-          Edit mode active — click any revenue cell in the forecast table to set that year&apos;s value directly.
-        </p>
+      {/* Reset — only shown when overrides exist */}
+      {hasOverrides && (
+        <button
+          data-no-min-h
+          onClick={onResetAll}
+          className="ml-auto text-[10px] text-[#D83B3B] hover:text-red-600 transition-colors px-2 py-1 rounded border border-[#F0B8B8] bg-[#FCEAEA] hover:bg-red-50"
+        >
+          Reset
+        </button>
       )}
     </div>
   )
@@ -710,7 +662,7 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData, on
   }, [derivedFV])
 
   return (
-    <div className="bg-[#080F1E] rounded-xl border border-white/10">
+    <div className="bg-white rounded-xl border border-[#E3E1DA]">
       <DataQualityWarnings
         terminalGError={tvUFCF.guardError}
         financialCurrencyNote={baseInput.financialCurrencyNote}
@@ -729,14 +681,14 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData, on
       {delta && (
         <div className={[
           'flex items-center justify-center gap-1.5 py-1.5 text-[12px] font-semibold tabular-nums transition-opacity',
-          delta.amount >= 0 ? 'text-emerald-400 bg-[#11875D]/10' : 'text-red-400 bg-[#D83B3B]/10',
+          delta.amount >= 0 ? 'text-[#11875D] bg-[#E8F7EF]' : 'text-[#D83B3B] bg-[#FCEAEA]',
         ].join(' ')}>
           <span>{delta.amount >= 0 ? '▲' : '▼'}</span>
           <span>Fair Value {delta.amount >= 0 ? '+' : ''}{delta.amount.toFixed(2)}</span>
           <span className="opacity-60">({delta.amount >= 0 ? '+' : ''}{(delta.pct * 100).toFixed(1)}%)</span>
         </div>
       )}
-      <ModellingApproach
+      <DCFSetupBar
         isLfcf={isLfcf}
         onModeChange={setIsLfcf}
         terminalMethod={terminalMethod}
