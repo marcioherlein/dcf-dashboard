@@ -572,12 +572,12 @@ function RatioHistoryRow({
 // SVG bus-and-arrowhead connectors from synthesis box to method cards.
 // Only rendered on xl+ where the grid is guaranteed to be 4-col.
 
-function ArrowConnectors({ count }: { count: number }) {
+function ArrowConnectors({ count, breakpoint }: { count: number; breakpoint: string }) {
   if (count === 0) return null
   const COLOR = '#BFD2A1'
 
   return (
-    <div className="relative hidden xl:block" style={{ height: 40 }} aria-hidden="true">
+    <div className={`relative ${breakpoint}`} style={{ height: 40 }} aria-hidden="true">
       <svg viewBox="0 0 1000 40" preserveAspectRatio="none" className="absolute inset-0 w-full h-full">
         {/* Vertical drop from center of synthesis box */}
         <line x1="500" y1="0" x2="500" y2="16" stroke={COLOR} strokeWidth="2" />
@@ -702,14 +702,23 @@ export default function ValuationMethodCards({
     (m.id === 'forward_pe' || m.id === 'revenue_multiple')
   )
 
-  // Dynamic grid cols: 5 methods → 5 cols, 4 → 4 cols, fewer → 2-col mobile / n-col desktop
+  // Dynamic grid cols: mobile always uses horizontal snap scroll (flex overflow-x-auto)
+  // Desktop breakpoints kick in at sm(640px) and above
   const gridCols = visibleCount >= 5
-    ? 'sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5'
+    ? 'sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5'
     : visibleCount === 4
     ? 'sm:grid-cols-2 lg:grid-cols-4'
     : visibleCount === 3
-    ? 'sm:grid-cols-3'
+    ? 'sm:grid-cols-2 md:grid-cols-3'
     : 'sm:grid-cols-2'
+
+  // ArrowConnectors only render when grid columns match card count exactly
+  // 5 cards → xl (1280px+), 4 cards → lg (1024px+), 3 → md (768px+)
+  const arrowBreakpoint = visibleCount >= 5
+    ? 'hidden xl:block'
+    : visibleCount === 4
+    ? 'hidden lg:block'
+    : 'hidden md:block'
 
   return (
     <div
@@ -764,7 +773,7 @@ export default function ValuationMethodCards({
       )}
 
       {/* ── Arrow connector row → method cards (desktop xl only) ───────────── */}
-      <ArrowConnectors count={visibleCount} />
+      <ArrowConnectors count={visibleCount} breakpoint={arrowBreakpoint} />
 
       {/* ── Cards grid ─────────────────────────────────────────────────────── */}
       <div className={`flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 -mx-1 px-1 sm:grid sm:overflow-visible sm:snap-none sm:pb-0 sm:mx-0 sm:px-0 ${gridCols}`}>

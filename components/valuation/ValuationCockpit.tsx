@@ -199,6 +199,16 @@ function buildHistoricalData(apiData: ApiData): HistoricalData {
 
 // Build FCF margin SparkPoint[] separately (not part of ValuationAssumptions key space)
 function buildFcfMarginSeries(apiData: ApiData): SparkPoint[] {
+  // Financial/fintech companies: freeCashFlowToFirm is contaminated by
+  // deposit flows, loan portfolio changes, and financing activities.
+  // Return empty so the chart doesn't mislead.
+  const companyType: string = apiData.valuationMethods?.companyType ?? 'standard'
+  const FINANCIAL_TYPES = new Set(['financial', 'fintech', 'bdc', 'mreeit', 'alt_asset'])
+  const sector: string = apiData.quote?.sector ?? ''
+  if (FINANCIAL_TYPES.has(companyType) || /financ|bank|insur/i.test(sector)) {
+    return []
+  }
+
   const isQ: Array<{ date: string; revenue: number }> =
     (apiData.incomeStatementQuarterly ?? []).slice().reverse()
   const kmQ: Array<{ date: string; freeCashFlowToFirm: number | null }> =
