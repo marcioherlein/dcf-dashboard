@@ -504,7 +504,7 @@ when the correct values are OCF=3460M, capex=-3570M. Specifically:
 All three zeroed (D&A%, CapEx%, ΔNWC) collapse the UFCF line in `buildProjectedRows`.
 YPF is a capital-intensive energy company with ~$5B/yr capex; projecting it at near-0 capex
 produces a grossly inflated FCF.
-**Root cause hypothesis:** FMP CF data for ARS reporters is returned in ARS thousands (not millions).
+**Root cause confirmed:** In route.ts, the cfProjectedRows construction reads `avgCapexM` from historical CF rows. For YPF, FMP returns CF values in ARS thousands and the conversion to USD millions applies fxRate but NOT the /1e3 that IS rows use, resulting in values 1000× too small. avgCapexM ≈ -3.36 (should be -3360M). The `hasCapex = avgCapexM !== 0` check is True but the value is so small (∼0) that projected capex is effectively null in the Full DCF Table. CONFIRMED: projected CF rows show capex=null/0 for all 5 years, D&A=2-3M (should be ~2000M/yr).
 The `fxRate` conversion divides by 1e3 (to go from thousands→millions) but then multiplies by
 fxRate again, giving fxRate/1000 instead of fxRate. Net effect: values 1000× too small vs IS rows.
 **Expected:** CF row values should be in USD millions, matching IS row scale.
