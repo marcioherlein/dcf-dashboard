@@ -224,7 +224,46 @@ function pct(n, signed = true) {
   return signed ? `${n > 0 ? '+' : ''}${val}%` : `${val}%`
 }
 
+// ─── Module-level singletons & cache ─────────────────────────────────────────
+
+// 1-hour valuation cache — avoids re-fetching the same ticker multiple times/day
+const _valuationCache = new Map()
+const _CACHE_TTL = 3600000
+
+// Supabase singleton — created once, reused across all dedup calls
+let _supabaseClient = null
+async function _getSupabase() {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) return null
+  if (!_supabaseClient) {
+    try {
+      const { createClient } = await import('@supabase/supabase-js')
+      _supabaseClient = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
+    } catch { return null }
+  }
+  return _supabaseClient
+}
+
+// fetchWithRetry — module-level, shared by runMacro and runEconomicResults
+async function fetchWithRetry(fn, params, maxAttempts = 3) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const data = await fetchAlphaVantage(fn, params).catch(() => null)
+    const d = latestTwo(data?.data ?? {})
+    if (d && isFinite(d.latestVal) && isFinite(d.previousVal)) return d
+    if (attempt < maxAttempts) {
+      console.log(`AV data not ready (attempt ${attempt}/${maxAttempts}), waiting 60s...`)
+      await new Promise(r => setTimeout(r, 60000))
+    }
+  }
+  return null
+}
+
 async function fetchValuation(ticker) {
+  // Check cache first
+  const cached = _valuationCache.get(ticker)
+  if (cached && (Date.now() - cached.time) < _CACHE_TTL) {
+    console.log(`Cache hit: ${ticker}`)
+    return cached.data
+  }
   const url = `${APP_URL}/api/financials?ticker=${ticker}`
   console.log(`Fetching: ${url}`)
   const headers = { 'Content-Type': 'application/json' }
@@ -239,7 +278,9 @@ async function fetchValuation(ticker) {
     const body = await res.text().catch(() => '')
     throw new Error(`API returned ${res.status} for ${ticker}: ${body.slice(0, 200)}`)
   }
-  return res.json()
+  const data = await res.json()
+  _valuationCache.set(ticker, { data, time: Date.now() })
+  return data
 }
 
 // Use cockpitFairValue — same number shown in the app verdict card.
@@ -469,7 +510,7 @@ async function runDcf() {
       }
     } catch { /* try next */ }
   }
-  if (!data) throw new Error('No valid DCF data found after attempts')
+  if (!data) { console.warn('No valid DCF data — skipping post'); return }
 
   const price      = data.quote?.price
   const fair       = appFairValue(data)
@@ -734,19 +775,7 @@ async function runMacro() {
     console.log(`Macro event today: ${todayEvent.label}`)
     let lines = []
 
-    // Helper: fetch AV data with up to 3 retries (handles update lag)
-    async function fetchWithRetry(fn, params, maxAttempts = 3) {
-      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-        const data = await fetchAlphaVantage(fn, params).catch(() => null)
-        const d = latestTwo(data?.data ?? {})
-        if (d && isFinite(d.latestVal) && isFinite(d.previousVal)) return d
-        if (attempt < maxAttempts) {
-          console.log(`AV data not ready yet (attempt ${attempt}/${maxAttempts}), waiting 60s...`)
-          await new Promise(r => setTimeout(r, 60000))
-        }
-      }
-      return null
-    }
+    // Uses module-level fetchWithRetry (defined above fetchValuation)
 
     if (todayEvent.type === 'CPI') {
       const d = await fetchWithRetry('CPI', { interval: 'monthly' })
@@ -1296,7 +1325,7 @@ async function runDcfBear() {
       }
     } catch { /* try next */ }
   }
-  if (!data) throw new Error('No valid evening DCF data found after attempts')
+  if (!data) { console.warn('No valid evening DCF data — skipping post'); return }
 
   const price   = data.quote?.price
   const fair    = appFairValue(data)
@@ -1763,13 +1792,12 @@ async function runMorningBrief() {
     }
   }
 
-  // News section removed — RSS feeds mix personal finance with market news,
-  // no reliable filter without LLM. Data-only posts are more credible.
-
   if (tomorrowNote) lines.push(``, tomorrowNote)
 
-  lines.push(``, `${APP_URL}`)
-  lines.push(`#GoodMorning #StockMarket #Investing #WallStreet`)
+  // Process-oriented CTA — unique to a valuation tool
+  lines.push(``, `Before the open: does your model still support your positions at today's prices?`)
+  lines.push(`${APP_URL}`)
+  lines.push(`#GoodMorning #DCF #Investing`)
 
   await post(lines.join('\n'))
 }
@@ -1964,10 +1992,10 @@ async function runMarketClose() {
 
   const weekOfYear = Math.floor((Date.now() / 86400000 + 4) / 7)
   const hooks = [
-    'Tough session or easy one — the model doesn\'t care. What mattered today?',
-    'Markets closed. What stood out?',
-    'One thing today confirmed or changed in your thesis?',
-    'The close tells a story. What\'s yours?',
+    'Did today\'s move change the fundamental case for any position, or just the price?',
+    'One stock moved significantly today. Did the business change, or just the market\'s mood?',
+    'Before tomorrow\'s open: did anything today shift your WACC or growth assumptions?',
+    'The market priced something in today. Was it already in your model?',
   ]
 
   const lines = [
@@ -2023,7 +2051,17 @@ async function runMarketOpen() {
 
   const spChg = sp500?.changePct ?? 0
   const openEmoji = spChg > 0.5 ? '🟢' : spChg < -0.5 ? '🔴' : '🟡'
-  const openLabel = spChg > 1.0 ? 'strong open' : spChg > 0.2 ? 'positive open' : spChg > -0.2 ? 'flat open' : spChg > -1.0 ? 'soft open' : 'risk-off open'
+
+  // Process-oriented insight, not just price reporting
+  const processNote = spChg > 1.0
+    ? 'Strong open. Before you act: did anything change fundamentally, or is this momentum?'
+    : spChg > 0.2
+    ? 'Positive open. Good time to run a quick check: does today\'s move change your thesis on any position?'
+    : spChg > -0.2
+    ? 'Flat open. Low conviction day. Use this time to update your models, not chase noise.'
+    : spChg > -1.0
+    ? 'Soft open. Risk-off tone. If defensives lead, check your WACC assumptions — rate expectations may be shifting.'
+    : 'Risk-off open. Volatility spike likely. The model doesn\'t panic. Do your positions still have margin of safety at today\'s prices?'
 
   const lines = [
     `${openEmoji} NYSE Open — ${dayName}`,
@@ -2033,10 +2071,10 @@ async function runMarketOpen() {
     `Dow:     ${dow?.changePct >= 0 ? '+' : ''}${dow?.changePct.toFixed(2) ?? 'N/A'}%`,
     vix ? `VIX: ${vix.price.toFixed(1)} — ${vixSentiment(vix.price).label}` : null,
     ``,
-    `${openLabel.charAt(0).toUpperCase() + openLabel.slice(1)}. Watch sector rotation in the first 30 minutes — that sets the tone for the session.`,
+    processNote,
     ``,
     `${APP_URL}`,
-    `#NYSE #StockMarket #Investing`,
+    `#NYSE #OpeningBell #Investing`,
   ].filter(Boolean)
 
   await post(lines.join('\n'))
@@ -2055,12 +2093,12 @@ const SECTOR_STOCKS = {
 }
 
 const SECTOR_NARRATIVES = {
-  XLK: 'Technology leading — growth expectations rising or rate pressure easing. Watch the mega-caps.',
-  XLE: 'Energy outperforming — oil/gas prices or supply concerns moving the sector.',
-  XLF: 'Financials in favor — typically signals rising rates or improving credit outlook.',
-  XLV: 'Healthcare defensive bid — investors rotating to safety or specific drug catalysts.',
-  XLU: 'Utilities leading — classic risk-off rotation. Market pricing in rate cuts or economic slowdown.',
-  XLI: 'Industrials up — cyclical strength, infrastructure spending, or global demand optimism.',
+  XLK: 'Tech leading. Watch what\'s driving it — if it\'s rate relief, WACC assumptions across growth stocks need updating. If it\'s earnings momentum, check whether the move is already baked into valuations.',
+  XLE: 'Energy outperforming. Oil supply or geopolitical premium driving this? For integrated majors, check if current crude levels justify the multiple. FCF-heavy names in this environment have real margin of safety.',
+  XLF: 'Financials leading — usually means the market is pricing in a steeper yield curve or improving credit conditions. Higher rates = better NIM for banks, but also higher discount rates for the rest of the market.',
+  XLV: 'Healthcare bid. When defensives lead, the market is hedging. Either growth expectations are being trimmed, or macro risk is rising. Both affect WACC assumptions across your portfolio.',
+  XLU: 'Utilities leading — classic rate-cut signal. The market is pricing in lower rates ahead. If you\'re holding growth stocks, lower WACC means higher fair values. Update your models.',
+  XLI: 'Industrials up — cyclical leadership. Typically confirms GDP growth expectations are stable or rising. Good environment for capex-heavy names. Check ROIC vs WACC spread — it widens in expansion.',
 }
 
 async function runSectorSpotlight() {
@@ -2129,7 +2167,7 @@ async function runDcf2() {
       if (result?.quote?.price && appFairValue(result)) { ticker = candidate; data = result; break }
     } catch { /* try next */ }
   }
-  if (!data) throw new Error('No valid DCF2 data found')
+  if (!data) { console.warn('No valid DCF2 data — skipping post'); return }
 
   const price = data.quote?.price
   const fair  = appFairValue(data)
@@ -2582,20 +2620,18 @@ async function runTheoryOvernight() {
 // Uses Finnhub for EPS actual/estimate/revenue OR falls back to Yahoo earningsSurprises.
 
 async function checkPostedEvent(eventKey) {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) return false
+  const sb = await _getSupabase()
+  if (!sb) return false
   try {
-    const { createClient } = await import('@supabase/supabase-js')
-    const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
     const { data } = await sb.from('posted_tweet_events').select('id').eq('event_key', eventKey).maybeSingle()
     return !!data
   } catch { return false }
 }
 
 async function markPostedEvent(eventKey, tweetType, ticker, eventDate, tweetText) {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) return
+  const sb = await _getSupabase()
+  if (!sb) return
   try {
-    const { createClient } = await import('@supabase/supabase-js')
-    const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
     await sb.from('posted_tweet_events').upsert({ event_key: eventKey, tweet_type: tweetType, ticker, event_date: eventDate, tweet_text: tweetText })
   } catch (e) { console.warn('Could not mark event as posted:', e.message) }
 }
@@ -2674,6 +2710,12 @@ async function runEarningsResults() {
 
   let posted = 0
   for (const c of candidates.slice(0, 3)) {
+    // Guard: skip if essential EPS data is missing — prevents $undefined in tweet
+    if (!c.epsActual || !c.epsEstimate) {
+      console.log(`${c.ticker}: missing EPS actual/estimate — skipping`)
+      continue
+    }
+
     const eventKey = `earnings_results:${c.ticker}:${c.date}`
     if (await checkPostedEvent(eventKey)) {
       console.log(`Already posted ${eventKey} — skipping`)
@@ -2692,18 +2734,28 @@ async function runEarningsResults() {
 
     const surprisePct = c.surprisePercent ??
       (c.epsEstimate && c.epsActual ? ((c.epsActual - c.epsEstimate) / Math.abs(c.epsEstimate) * 100) : null)
-    const beat = surprisePct != null ? (surprisePct >= 0 ? '✅ beat' : '❌ missed') : ''
-    const v = verdictLabel(ahPct != null ? ahPct / 100 : 0)
+    const beatWord = surprisePct != null ? (surprisePct >= 0 ? 'beat' : 'missed') : ''
+    const beatEmoji = surprisePct != null ? (surprisePct >= 0 ? '✅' : '❌') : ''
+
+    // Valuation angle: was the beat/miss priced in?
+    const ahContext = ahPct != null
+      ? Math.abs(ahPct) < 1.0
+        ? 'After-hours reaction was muted — the market may have expected this.'
+        : ahPct > 0
+        ? `After-hours: +${ahPct.toFixed(1)}% — market rewarded the ${beatWord}.`
+        : `After-hours: ${ahPct.toFixed(1)}% — market punished despite the ${beatWord}.`
+      : null
 
     const lines = [
-      `📊 $${c.ticker} earnings results`,
+      `📊 $${c.ticker} earnings`,
       ``,
-      `EPS: $${c.epsActual?.toFixed(2)} vs $${c.epsEstimate?.toFixed(2)} est ${beat ? `(${beat}${surprisePct != null ? `, ${surprisePct > 0 ? '+' : ''}${surprisePct.toFixed(1)}%` : ''})` : ''}`,
+      `EPS: $${c.epsActual?.toFixed(2)} vs $${c.epsEstimate?.toFixed(2)} est ${beatEmoji} ${beatWord}${surprisePct != null ? ` (${surprisePct > 0 ? '+' : ''}${surprisePct.toFixed(1)}%)` : ''}`,
       ...(c.revenueActual != null ? [`Revenue: ${fmt(c.revenueActual)}${c.revenueEstimate != null ? ` vs ${fmt(c.revenueEstimate)} est` : ''}`] : []),
-      ...(ahPct != null ? [`After-hours: ${ahPct >= 0 ? '+' : ''}${ahPct.toFixed(2)}%`] : []),
+      ...(ahContext ? [ahContext] : []),
       ``,
-      `Full model → ${APP_URL}/stock/${c.ticker}`,
-      `#${c.ticker} #Earnings #Investing`,
+      `The real question: did this change the intrinsic value, or just the price?`,
+      `Updated model → ${APP_URL}/stock/${c.ticker}`,
+      `#${c.ticker} #Earnings #DCF`,
     ].filter(Boolean)
 
     const tweetText = lines.join('\n')
@@ -2739,19 +2791,7 @@ async function runEconomicResults() {
 
   console.log(`Fetching ${todayEvent.type} results for ${todayUtc}...`)
 
-  // Fetch macro data with retry
-  async function fetchWithRetry(fn, params, maxAttempts = 3) {
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      const data = await fetchAlphaVantage(fn, params).catch(() => null)
-      const d = latestTwo(data?.data ?? {})
-      if (d && isFinite(d.latestVal) && isFinite(d.previousVal)) return d
-      if (attempt < maxAttempts) {
-        console.log(`AV not ready (attempt ${attempt}/${maxAttempts}), waiting 60s...`)
-        await new Promise(r => setTimeout(r, 60000))
-      }
-    }
-    return null
-  }
+  // Uses module-level fetchWithRetry
 
   let d = null
   const avFnMap = { CPI: ['CPI', { interval: 'monthly' }], NFP: ['NONFARM_PAYROLL', {}], FOMC: ['FEDERAL_FUNDS_RATE', { interval: 'monthly' }] }
