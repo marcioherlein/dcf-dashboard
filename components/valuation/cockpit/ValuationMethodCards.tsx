@@ -615,15 +615,26 @@ export default function ValuationMethodCards({
     .filter(m => m.fairValue != null && m.fairValue > 0)
     .reduce((s, m) => s + m.weight, 0)
 
+  // Only show cards that have a computable fair value
+  const visibleMethods = methods.filter(m => m.fairValue != null && m.fairValue > 0)
+  const visibleCount = visibleMethods.length
+
   function change(key: keyof ValuationAssumptions, val: number) {
     onChange({ ...assumptions, [key]: val })
   }
 
-  const showCAGRPanel = methods.some(m =>
-    (m.id === 'forward_pe' || m.id === 'revenue_multiple') && m.fairValue != null && m.fairValue > 0
+  const showCAGRPanel = visibleMethods.some(m =>
+    (m.id === 'forward_pe' || m.id === 'revenue_multiple')
   )
 
-  const visibleCount = methods.length
+  // Dynamic grid cols: 5 methods → 5 cols, 4 → 4 cols, fewer → 2-col mobile / n-col desktop
+  const gridCols = visibleCount >= 5
+    ? 'sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5'
+    : visibleCount === 4
+    ? 'sm:grid-cols-2 lg:grid-cols-4'
+    : visibleCount === 3
+    ? 'sm:grid-cols-3'
+    : 'sm:grid-cols-2'
 
   return (
     <div
@@ -681,8 +692,8 @@ export default function ValuationMethodCards({
       <ArrowConnectors count={visibleCount} />
 
       {/* ── Cards grid ─────────────────────────────────────────────────────── */}
-      <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 -mx-1 px-1 sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 sm:overflow-visible sm:snap-none sm:pb-0 sm:mx-0 sm:px-0">
-        {methods.map((m, idx) => {
+      <div className={`flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 -mx-1 px-1 sm:grid sm:overflow-visible sm:snap-none sm:pb-0 sm:mx-0 sm:px-0 ${gridCols}`}>
+        {visibleMethods.map((m, idx) => {
           const cfg    = METHOD_CFG[m.id]
           const fields = METHOD_INPUTS[m.id] ?? []
           const hasValue = m.fairValue != null && m.fairValue > 0

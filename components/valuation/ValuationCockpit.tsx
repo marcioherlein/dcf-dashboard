@@ -144,6 +144,49 @@ function buildHistoricalData(apiData: ApiData): HistoricalData {
   if (evRevCurrent != null && evRevCurrent > 0) revFinal.push({ label: 'curr', value: evRevCurrent })
   if (pbCurrent != null && pbCurrent > 0) pbSeries.push({ label: 'curr', value: pbCurrent })
 
+  // FCF margin series — built from FMP keyMetricsQuarterly (freeCashFlowToFirm / revenue)
+  // or from annual cash flow statements as fallback
+  const kmQ: Array<{ date: string; freeCashFlowToFirm: number | null }> =
+    (apiData.keyMetricsQuarterly ?? []).slice().reverse() // oldest-first
+  const fcfMarginPoints: SparkPoint[] = (() => {
+    // Try quarterly: join keyMetricsQuarterly FCFF with quarterly income revenue
+    if (kmQ.length >= 3 && isQ.length >= 3) {
+      const points: SparkPoint[] = []
+      for (const km of kmQ.slice(-12)) {
+        if (km.freeCashFlowToFirm == null) continue
+        // Find matching quarter by date prefix (YYYY-MM)
+        const match = isQ.find(q => q.date?.slice(0, 7) === km.date?.slice(0, 7))
+        if (!match || !match.revenue || match.revenue <= 0) continue
+        const margin = km.freeCashFlowToFirm / 1e6 / match.revenue
+        if (!isFinite(margin) || margin < -1 || margin > 1) continue
+        points.push({ label: quarterLabel(km.date), value: margin })
+      }
+      if (points.length >= 3) return points
+    }
+    // Fallback: annual cash flow statements from financialStatements
+    const cfRows: Array<{ isProjected?: boolean; year: string; freeCashFlow: number | null; revenue?: number | null }> =
+      apiData.financialStatements?.cashFlow ?? []
+    const isRows: Array<{ isProjected?: boolean; year: string; revenue: number | null }> =
+      apiData.financialStatements?.incomeStatement ?? []
+    const annualPoints: SparkPoint[] = cfRows
+      .filter(r => !r.isProjected && r.freeCashFlow != null)
+      .slice(-6)
+      .map(r => {
+        const rev = r.revenue ?? isRows.find(is => !is.isProjected && is.year === r.year)?.revenue
+        if (!rev || rev <= 0 || r.freeCashFlow == null) return null
+        const margin = r.freeCashFlow / rev
+        if (!isFinite(margin) || margin < -1 || margin > 1) return null
+        return { label: String(r.year), value: margin }
+      })
+      .filter((p): p is SparkPoint => p != null)
+    return annualPoints
+  })()
+  // Append TTM FCF margin as 'curr'
+  const fcfMarginTTM = apiData.businessProfile?.fcfMargin ?? null
+  if (fcfMarginTTM != null && isFinite(fcfMarginTTM) && Math.abs(fcfMarginTTM) <= 1) {
+    fcfMarginPoints.push({ label: 'curr', value: fcfMarginTTM })
+  }
+
   return {
     cagr:               cagrPoints.length >= 2 ? cagrPoints.slice(-5) : undefined,
     netMargin:          netMarginPoints.length >= 2 ? netMarginPoints : undefined,
@@ -152,6 +195,54 @@ function buildHistoricalData(apiData: ApiData): HistoricalData {
     revenueMultiple:    revFinal.length >= 1 ? revFinal : undefined,
     priceToBookMultiple: pbSeries.length >= 1 ? pbSeries : undefined,
   }
+}
+
+// Build FCF margin SparkPoint[] separately (not part of ValuationAssumptions key space)
+function buildFcfMarginSeries(apiData: ApiData): SparkPoint[] {
+  const isQ: Array<{ date: string; revenue: number }> =
+    (apiData.incomeStatementQuarterly ?? []).slice().reverse()
+  const kmQ: Array<{ date: string; freeCashFlowToFirm: number | null }> =
+    (apiData.keyMetricsQuarterly ?? []).slice().reverse()
+
+  if (kmQ.length >= 3 && isQ.length >= 3) {
+    const points: SparkPoint[] = []
+    for (const km of kmQ.slice(-12)) {
+      if (km.freeCashFlowToFirm == null) continue
+      const match = isQ.find(q => q.date?.slice(0, 7) === km.date?.slice(0, 7))
+      if (!match || !match.revenue || match.revenue <= 0) continue
+      const margin = km.freeCashFlowToFirm / 1e6 / match.revenue
+      if (!isFinite(margin) || margin < -1 || margin > 1) continue
+      points.push({ label: quarterLabel(km.date), value: margin })
+    }
+    if (points.length >= 3) {
+      const fcfMarginTTM = apiData.businessProfile?.fcfMargin ?? null
+      if (fcfMarginTTM != null && isFinite(fcfMarginTTM) && Math.abs(fcfMarginTTM) <= 1) {
+        points.push({ label: 'curr', value: fcfMarginTTM })
+      }
+      return points
+    }
+  }
+  // Annual fallback
+  const cfRows: Array<{ isProjected?: boolean; year: string; freeCashFlow: number | null; revenue?: number | null }> =
+    apiData.financialStatements?.cashFlow ?? []
+  const isRows: Array<{ isProjected?: boolean; year: string; revenue: number | null }> =
+    apiData.financialStatements?.incomeStatement ?? []
+  const annualPoints: SparkPoint[] = cfRows
+    .filter(r => !r.isProjected && r.freeCashFlow != null)
+    .slice(-6)
+    .map(r => {
+      const rev = r.revenue ?? isRows.find(is => !is.isProjected && is.year === r.year)?.revenue
+      if (!rev || rev <= 0 || r.freeCashFlow == null) return null
+      const margin = r.freeCashFlow / rev
+      if (!isFinite(margin) || margin < -1 || margin > 1) return null
+      return { label: String(r.year), value: margin }
+    })
+    .filter((p): p is SparkPoint => p != null)
+  const fcfMarginTTM = apiData.businessProfile?.fcfMargin ?? null
+  if (fcfMarginTTM != null && isFinite(fcfMarginTTM) && Math.abs(fcfMarginTTM) <= 1) {
+    annualPoints.push({ label: 'curr', value: fcfMarginTTM })
+  }
+  return annualPoints
 }
 
 export default function ValuationCockpit({ apiData, ticker, statementsData, limitedHistory, historyYears, onNavigateToFinancials: _onNavigateToFinancials, onNavigateToConviction: _onNavigateToConviction, onLiveDcfFVChange }: Props) {
@@ -166,9 +257,10 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
       .catch(() => {})
   }, [session?.user?.email])
 
-  const snapshot       = useMemo(() => buildSnapshot(apiData, statementsData), [apiData, statementsData])
-  const defaults       = useMemo(() => seedAssumptions(apiData), [apiData])
-  const historicalData = useMemo(() => buildHistoricalData(apiData), [apiData])
+  const snapshot        = useMemo(() => buildSnapshot(apiData, statementsData), [apiData, statementsData])
+  const defaults        = useMemo(() => seedAssumptions(apiData), [apiData])
+  const historicalData  = useMemo(() => buildHistoricalData(apiData), [apiData])
+  const fcfMarginSeries = useMemo(() => buildFcfMarginSeries(apiData), [apiData])
 
   const [assumptions, setAssumptions] = useState<ValuationAssumptions>(() => seedAssumptions(apiData))
   const [history, setHistory] = useState<ValuationAssumptions[]>([])
@@ -399,6 +491,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
           ttmEbitdaDollars={snapshot.ttmEbitdaDollars}
           assumptions={assumptions}
           historicalData={historicalData}
+          fcfMarginSeries={fcfMarginSeries.length >= 2 ? fcfMarginSeries : undefined}
           onChange={handleAssumptionChange}
           onReset={handleReset}
           onUndo={handleUndo}
