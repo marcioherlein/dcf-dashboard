@@ -213,6 +213,14 @@ export async function GET(req: NextRequest) {
       fcfCapApplied = true
     }
 
+    // Stale-Yahoo guard (F4): when Yahoo fd.freeCashflow is > 10× the most recent
+    // reported FCF, it's returning a pre-capex-surge or stale value (ORCL: -35×,
+    // YPF: 18×, NVDA: 0.48× — these are the extreme cases).
+    // When histFCF is available and the ratio > 10×, prefer histFCF as it reflects
+    // the most recent reported OCF−capex. Skip for financial/fintech types where
+    // NI-based baseFCF is intentionally different from reported OCF.
+    // Also skip if histFCF is zero or negative (those are their own issue categories).
+
     // DCF (FCFF)
     // Terminal growth aligned with Damodaran: should approximate long-run nominal GDP growth.
     // High-growth companies (>15% CAGR) → 2.5% developed, but for EM companies (CRP > 2%)
@@ -223,8 +231,11 @@ export async function GET(req: NextRequest) {
     // Emerging market uplift: when CRP > 2% the company operates in a higher nominal GDP
     // environment — anchoring terminal growth at developed-market 2.5% structurally undervalues it.
     // Proxy: rfRate (risk-free rate, typically US 10Y) + 2% reflects ~4.5–5% nominal EM GDP.
+    // Cap raised from 5.5% to 7%: Argentina CRP=15.4% → floor=rfRate+2%=6.3% which exceeded
+    // the old 5.5% cap. The new cap (7%) allows the floor to be respected for high-CRP markets
+    // while still preventing runaway terminal growth for speculative EM assumptions.
     const terminalG = crp > 0.02
-      ? Math.min(Math.max(_terminalGBase, rfRate + 0.02), 0.055)  // floor at EM-calibrated rate, cap at 5.5%
+      ? Math.min(Math.max(_terminalGBase, rfRate + 0.02), 0.07)  // floor at EM-calibrated rate, cap at 7%
       : _terminalGBase
     // Growth model selection (Damodaran): three-stage when growth >> stable (CAGR > 15% or pre-profit).
     // companyType is detected later; cagr + isNegativeFCF covers all practical cases before that.
@@ -962,9 +973,17 @@ export async function GET(req: NextRequest) {
     // --- Income Statement ---
     const isHistoricalRows = hasFmp
       ? fmpIsSorted.map(s => {
-          const taxRawFmp = (s.incomeTaxExpense != null && s.incomeBeforeIncomeTaxExpense != null && s.incomeBeforeIncomeTaxExpense > 0)
+          // Primary: direct FMP tax fields
+          let taxRawFmp = (s.incomeTaxExpense != null && s.incomeBeforeIncomeTaxExpense != null && s.incomeBeforeIncomeTaxExpense > 0)
             ? Math.abs(s.incomeTaxExpense) / s.incomeBeforeIncomeTaxExpense
             : null
+          // Fallback: derive effective tax rate from (EBIT - NI) / EBIT when direct fields absent.
+          // This approximation captures the combined effect of taxes + minority interest + other below-EBIT items.
+          // Less accurate but far better than the 21% hardcoded fallback for non-US companies.
+          if (taxRawFmp == null && s.operatingIncome != null && s.operatingIncome > 0 && s.netIncome != null) {
+            const impliedTax = (s.operatingIncome - s.netIncome) / s.operatingIncome
+            if (impliedTax > 0.05 && impliedTax < 0.75) taxRawFmp = impliedTax
+          }
           return {
             year: s.fiscalYear,
             revenue: s.revenue > 0 ? s.revenue / 1e6 * fxRate : null,
@@ -974,7 +993,7 @@ export async function GET(req: NextRequest) {
             netIncome: s.netIncome != null ? s.netIncome / 1e6 * fxRate : null,
             eps: s.epsDiluted ?? null,
             operatingMargin: s.revenue > 0 && s.operatingIncome != null ? s.operatingIncome / s.revenue : null,
-            taxRate: taxRawFmp != null ? Math.max(0.05, Math.min(0.40, taxRawFmp)) : null,
+            taxRate: taxRawFmp != null ? Math.max(0.05, Math.min(0.55, taxRawFmp)) : null,
             fiscalDate: s.date ?? s.fiscalYear,
             isProjected: false,
           }
@@ -1071,20 +1090,55 @@ export async function GET(req: NextRequest) {
     const incomeStatement = [...isHistoricalRows, ...isProjectedRows]
 
     // --- Cash Flow ---
+    // ── CF units scale detection ──────────────────────────────────────────────
+    // FMP and Yahoo fundamentalsTimeSeries store income statement values in full
+    // local currency (e.g. 26T ARS for YPF) but may store cash flow values in
+    // local-currency THOUSANDS for some non-USD reporters (confirmed: YPF/ARS).
+    // After / 1e6 * fxRate, CF values end up 1000× too small.
+    // Detection: if the latest CF capex magnitude is < 0.1% of the latest IS revenue
+    // in their raw (pre-conversion) units, the CF rows are in thousands. Scale ×1000.
+    let cfFmpScaleFactor = 1
+    // Try FMP detection first
+    if (hasFmp && fmpCfSorted.length > 0 && fmpIsSorted.length > 0) {
+      const latestCFCapexRaw = Math.abs(fmpCfSorted[fmpCfSorted.length - 1].investmentsInPropertyPlantAndEquipment ?? 0)
+      const latestISRevRaw   = fmpIsSorted[fmpIsSorted.length - 1].revenue ?? 0
+      if (latestISRevRaw > 0 && latestCFCapexRaw > 0 && latestCFCapexRaw / latestISRevRaw < 0.001) {
+        cfFmpScaleFactor = 1000
+      }
+    }
+    // Fallback: detect via Yahoo annualCFRows vs Yahoo IS revenue (covers companies where FMP CF is absent)
+    if (cfFmpScaleFactor === 1 && fxRate < 0.01 && (annualCFRows as any[]).length > 0) {
+      // fxRate < 0.01 means very weak local currency vs USD (ARS, TRY, PKR, etc.)
+      // These are the currencies where the thousands mismatch occurs
+      const lastCFRow = (annualCFRows as any[]).slice(-1)[0]
+      const rawCapexCF = Math.abs(lastCFRow?.capitalExpenditure ?? lastCFRow?.purchaseOfPPE ?? 0)
+      const rawRevIS   = (fin.financialData?.totalRevenue ?? 0) as number
+      if (rawRevIS > 0 && rawCapexCF > 0 && rawCapexCF / rawRevIS < 0.001) {
+        cfFmpScaleFactor = 1000
+      }
+    }
+
     const avgCapexM: number = hasFmp && fmpCfSorted.length > 0
       ? (() => {
           const vals = fmpCfSorted.map(r => r.investmentsInPropertyPlantAndEquipment)
           const nonNull = vals.filter((v): v is number => v != null)
-          return nonNull.length > 0 ? nonNull.reduce((s, v) => s + v / 1e6 * fxRate, 0) / nonNull.length : 0
+          return nonNull.length > 0 ? nonNull.reduce((s, v) => s + v * cfFmpScaleFactor / 1e6 * fxRate, 0) / nonNull.length : 0
         })()
       : (() => {
+          // Prefer fundamentalsTimeSeries annualCFRows (most complete, post-Nov 2024)
+          const cfFromFTS = (annualCFRows as any[]).slice(-4)
+          if (cfFromFTS.length > 0) {
+            const vals = cfFromFTS.map((s: any) => s.capitalExpenditure ?? s.purchaseOfPPE ?? null).filter((v: any) => v != null)
+            if (vals.length > 0) return (vals as number[]).reduce((s, v) => s + v * cfFmpScaleFactor / 1e6 * fxRate, 0) / vals.length
+          }
+          // Fallback: deprecated Yahoo cashflowStatementHistory
           const rawCFHistory: any[] = fin.cashflowStatementHistory?.cashflowStatements ?? []
           const cfHistorical = rawCFHistory.slice(-4).reverse()
-          return cfHistorical.length > 0 ? cfHistorical.reduce((s: number, s2: any) => s + ((s2.capitalExpenditures ?? s2.capitalExpenditure ?? s2.purchaseOfPlantPropertyEquipment ?? 0) as number) / 1e6 * fxRate, 0) / cfHistorical.length : 0
+          return cfHistorical.length > 0 ? cfHistorical.reduce((s: number, s2: any) => s + ((s2.capitalExpenditures ?? s2.capitalExpenditure ?? s2.purchaseOfPlantPropertyEquipment ?? 0) as number) * cfFmpScaleFactor / 1e6 * fxRate, 0) / cfHistorical.length : 0
         })()
 
     const avgDivPaidM: number = hasFmp && fmpCfSorted.length > 0
-      ? fmpCfSorted.reduce((s, r) => s + r.commonDividendsPaid / 1e6 * fxRate, 0) / fmpCfSorted.length  // stored negative in FMP
+      ? fmpCfSorted.reduce((s, r) => s + r.commonDividendsPaid * cfFmpScaleFactor / 1e6 * fxRate, 0) / fmpCfSorted.length  // stored negative in FMP
       : (() => {
           const rawCFHistory: any[] = fin.cashflowStatementHistory?.cashflowStatements ?? []
           const cfHistorical = rawCFHistory.slice(-4).reverse()
@@ -1092,7 +1146,7 @@ export async function GET(req: NextRequest) {
         })()
 
     const avgBuybackM: number = hasFmp && fmpCfSorted.length > 0
-      ? fmpCfSorted.reduce((s, r) => s + Math.abs(r.commonStockRepurchased / 1e6 * fxRate), 0) / fmpCfSorted.length
+      ? fmpCfSorted.reduce((s, r) => s + Math.abs(r.commonStockRepurchased * cfFmpScaleFactor / 1e6 * fxRate), 0) / fmpCfSorted.length
       : (() => {
           const rawCFHistory: any[] = fin.cashflowStatementHistory?.cashflowStatements ?? []
           const cfHistorical = rawCFHistory.slice(-4).reverse()
@@ -1125,11 +1179,11 @@ export async function GET(req: NextRequest) {
       const rawDna   = s.depreciationAmortizationDepletion ?? s.reconciledDepreciation
       const rawOpCF  = s.operatingCashFlow ?? s.cashFlowFromContinuingOperatingActivities
       const rawFcf   = s.freeCashFlow
-      const capexY = rawCapex != null ? (rawCapex as number) / 1e6 * fxRate : null
-      const dnaY   = rawDna   != null ? (rawDna   as number) / 1e6 * fxRate : null
-      const opCFY  = rawOpCF  != null ? (rawOpCF  as number) / 1e6 * fxRate : null
+      const capexY = rawCapex != null ? (rawCapex as number) * cfFmpScaleFactor / 1e6 * fxRate : null
+      const dnaY   = rawDna   != null ? (rawDna   as number) * cfFmpScaleFactor / 1e6 * fxRate : null
+      const opCFY  = rawOpCF  != null ? (rawOpCF  as number) * cfFmpScaleFactor / 1e6 * fxRate : null
       const fcfY   = capexY != null && opCFY != null ? Math.round(opCFY + capexY) : null
-      const fcfDirectY = rawFcf != null ? Math.round((rawFcf as number) / 1e6 * fxRate) : null
+      const fcfDirectY = rawFcf != null ? Math.round((rawFcf as number) * cfFmpScaleFactor / 1e6 * fxRate) : null
       yahooCfByYear[yr] = { capex: capexY, dna: dnaY, opCF: opCFY, fcf: fcfY, fcfDirect: fcfDirectY }
     }
 
@@ -1140,9 +1194,9 @@ export async function GET(req: NextRequest) {
       const rawCapex = s.capitalExpenditures ?? s.capitalExpenditure ?? s.purchaseOfPlantPropertyEquipment
       const rawDna = s.depreciation ?? s.depreciationAndAmortization
       const rawOpCF = s.operatingCashflow ?? s.totalCashFromOperatingActivities
-      const capexY = rawCapex != null ? (rawCapex as number) / 1e6 * fxRate : null
-      const dnaY   = rawDna   != null ? (rawDna   as number) / 1e6 * fxRate : null
-      const opCFY  = rawOpCF  != null ? (rawOpCF  as number) / 1e6 * fxRate : null
+      const capexY = rawCapex != null ? (rawCapex as number) * cfFmpScaleFactor / 1e6 * fxRate : null
+      const dnaY   = rawDna   != null ? (rawDna   as number) * cfFmpScaleFactor / 1e6 * fxRate : null
+      const opCFY  = rawOpCF  != null ? (rawOpCF  as number) * cfFmpScaleFactor / 1e6 * fxRate : null
       const fcfY   = capexY != null && opCFY != null ? Math.round(opCFY + capexY) : null
       yahooCfByYear[yr] = { capex: capexY, dna: dnaY, opCF: opCFY, fcf: fcfY, fcfDirect: null }
     }
@@ -1151,16 +1205,16 @@ export async function GET(req: NextRequest) {
       ? fmpCfSorted.map(s => {
           const yr = s.fiscalYear
           const yhoo = yahooCfByYear[yr] ?? {}
-          const fmpCapex = s.investmentsInPropertyPlantAndEquipment != null ? s.investmentsInPropertyPlantAndEquipment / 1e6 * fxRate : null
-          const fmpDna   = s.depreciationAndAmortization != null ? s.depreciationAndAmortization / 1e6 * fxRate : null
-          const fmpOpCF  = s.netCashProvidedByOperatingActivities != null ? s.netCashProvidedByOperatingActivities / 1e6 * fxRate : null
+          const fmpCapex = s.investmentsInPropertyPlantAndEquipment != null ? s.investmentsInPropertyPlantAndEquipment * cfFmpScaleFactor / 1e6 * fxRate : null
+          const fmpDna   = s.depreciationAndAmortization != null ? s.depreciationAndAmortization * cfFmpScaleFactor / 1e6 * fxRate : null
+          const fmpOpCF  = s.netCashProvidedByOperatingActivities != null ? s.netCashProvidedByOperatingActivities * cfFmpScaleFactor / 1e6 * fxRate : null
           const capex = fmpCapex ?? yhoo.capex ?? null
           const dna   = fmpDna   ?? yhoo.dna   ?? null
           const opCF  = fmpOpCF  ?? yhoo.opCF  ?? null
           // FCF fallback priority: computed (OCF+Capex) → Yahoo FTS direct FCF → FMP FCF
           // yhoo.fcfDirect = Yahoo's own freeCashFlow from fundamentalsTimeSeries (reliable)
           // fmpFcf may equal Net Income for companies where FMP lacks OCF data (data quality bug)
-          const fmpFcf = s.freeCashFlow != null ? Math.round(s.freeCashFlow / 1e6 * fxRate) : null
+          const fmpFcf = s.freeCashFlow != null ? Math.round(s.freeCashFlow * cfFmpScaleFactor / 1e6 * fxRate) : null
           const freeCashFlow = opCF != null && capex != null
             ? Math.round(opCF + capex)
             : (yhoo.fcfDirect ?? yhoo.fcf ?? (fmpCapex != null ? fmpFcf : fmpFcf))
@@ -1169,11 +1223,11 @@ export async function GET(req: NextRequest) {
             operatingCF: opCF,
             capex,
             freeCashFlow,
-            investingCF: s.netCashUsedForInvestingActivites != null ? s.netCashUsedForInvestingActivites / 1e6 * fxRate : null,
-            financingCF: s.netCashUsedProvidedByFinancingActivities != null ? s.netCashUsedProvidedByFinancingActivities / 1e6 * fxRate : null,
+            investingCF: s.netCashUsedForInvestingActivites != null ? s.netCashUsedForInvestingActivites * cfFmpScaleFactor / 1e6 * fxRate : null,
+            financingCF: s.netCashUsedProvidedByFinancingActivities != null ? s.netCashUsedProvidedByFinancingActivities * cfFmpScaleFactor / 1e6 * fxRate : null,
             // dividendsPaid in FMP is negative (outflow); store as negative to match Yahoo convention
-            dividendsPaid: s.commonDividendsPaid != null ? s.commonDividendsPaid / 1e6 * fxRate : null,
-            buybacks: s.commonStockRepurchased != null ? Math.abs(s.commonStockRepurchased / 1e6 * fxRate) : null,
+            dividendsPaid: s.commonDividendsPaid != null ? s.commonDividendsPaid * cfFmpScaleFactor / 1e6 * fxRate : null,
+            buybacks: s.commonStockRepurchased != null ? Math.abs(s.commonStockRepurchased * cfFmpScaleFactor / 1e6 * fxRate) : null,
             dna,
             fiscalDate: s.date ?? s.fiscalYear,
             isProjected: false,
@@ -1477,6 +1531,23 @@ export async function GET(req: NextRequest) {
       .filter((r) => r.freeCashFlow != null && !r.isProjected)
       .slice(-3)
       .map((r) => ({ year: parseInt(r.year), cashFlow: Math.round(r.freeCashFlow!) }))
+
+    // Stale-Yahoo baseFCF correction: apply after historicalFCF is built.
+    // Financial types use NI-based baseFCF intentionally — skip them.
+    // Only correct when histFCF is a valid positive number and the ratio is extreme (>10×).
+    const _financialTypes = new Set(['financial', 'fintech', 'bdc', 'mreeit'])
+    const _companyTypeForFCFGuard = (fin.summaryProfile?.sector ?? '')
+    const _isFinancialForGuard = _financialTypes.has(companyType ?? '') ||
+      /bank|insurance|financ|fintech|payment|credit|lending/i.test(_companyTypeForFCFGuard)
+    const _lastHistFCF = historicalFCF.length > 0 ? historicalFCF[historicalFCF.length - 1].cashFlow : 0
+    if (!_isFinancialForGuard && !fcfCapApplied && _lastHistFCF > 0 && baseFCF > 0) {
+      const _ratio = baseFCF / _lastHistFCF
+      if (_ratio > 10) {
+        // Yahoo fd.freeCashflow is likely pre-capex-surge stale — use most-recent reported FCF
+        baseFCF = _lastHistFCF
+        fcfCapApplied = true
+      }
+    }
 
     // Analyst forward estimates from earningsTrend (EPS + revenue by period)
     const etTrends: any[] = (fin.earningsTrend?.trend ?? []) as any[]
