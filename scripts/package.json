@@ -3,5 +3,8 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.52.0",
     "yahoo-finance2": "^2.13.3"
+  },
+  "devDependencies": {
+    "libsodium-wrappers": "^0.8.4"
   }
 }
