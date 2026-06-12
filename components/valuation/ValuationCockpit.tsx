@@ -384,46 +384,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
       {/* ── 2. COLLAPSIBLE GUIDANCE ──────────────────────────────────────────── */}
       <GuidanceStrip />
 
-      {/* ── 3. ASSUMPTION HEALTH — cross-validates inputs vs independent signals */}
-      {apiData.assumptionAudit && (
-        <AssumptionHealthPanel
-          audit={apiData.assumptionAudit as AssumptionAudit}
-          assumptions={assumptions}
-          onChange={handleAssumptionChange}
-          analystForwardPE={apiData.analystForwardPE ?? null}
-        />
-      )}
-
-      {/* ── 4. WHAT THE MARKET IS PRICING IN ────────────────────────────────── */}
-      <BusinessChecks
-        roic={valueInvestingData.roic}
-        roicSpread={valueInvestingData.roicSpread}
-        wacc={valueInvestingData.wacc}
-        epvGrowthPremiumPct={valueInvestingData.epv.growthPremiumPct}
-        epvPerShare={valueInvestingData.epv.epvPerShare}
-        currentPrice={currentPrice}
-        currency={currency}
-        fcfYield={fcfYield}
-        rfRate={rfRate}
-        marketImpliedGrowth={output.marketImpliedGrowth}
-        marketImpliedText={output.marketImpliedText}
-        marketImpliedInterpretation={output.marketImpliedInterpretation}
-        priceToBook={
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (apiData.valuationMethods?.models?.multiples?.estimates ?? []).find((e: any) => e.multiple === 'P/Book')?.actualValue ?? null
-        }
-        pbSectorMedian={
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (apiData.valuationMethods?.models?.multiples?.estimates ?? []).find((e: any) => e.multiple === 'P/Book')?.sectorMedian ?? null
-        }
-        sector={sector}
-        starRating={starRating}
-        uncertainty={uncertainty}
-        structuralRisk={valueInvestingData.structuralRiskDisclaimer}
-        countryRisk={valueInvestingData.countryRiskDisclaimer}
-      />
-
-      {/* ── 5. VALUATION MODELS — inline assumption editing ──────────────────── */}
+      {/* ── 3. VALUATION MODELS — inline assumption editing ──────────────────── */}
       <div ref={assumptionsPanelRef} id="assumptions-panel">
         {clampNote && (
           <p className="mb-2 text-[11px] text-[#D97706] bg-[#FFFBEB] border border-[#FDE68A] rounded-lg px-3 py-2">
@@ -450,87 +411,108 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
         />
       </div>
 
-      {/* ── 6-7-8. THREE-COLUMN ROW: Independent Checks · Sensitivity · Monte Carlo */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 items-start">
+      {/* ── 4-5-6. THREE-COLUMN EQUAL-HEIGHT ROW: Scorecard · Sensitivity · Monte Carlo */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 items-stretch">
 
-        {/* ── 6. INDEPENDENT CHECKS ──────────────────────────────────────────── */}
-        <div className="w-full rounded-xl border border-[#E5E5E5] bg-white overflow-hidden flex flex-col">
-          <div className="px-4 py-3 border-b border-[#E5E5E5] flex items-center justify-between shrink-0">
-            <div>
-              <p className="text-[11px] font-[700] uppercase tracking-widest text-[#9B9B9B]">Independent Checks</p>
-              <p className="text-[10px] text-[#9B9B9B] mt-0.5">Thesis Scorecard</p>
+        {/* ── 4. THESIS SCORECARD ─────────────────────────────────────────────── */}
+        <div className="rounded-xl border border-[#E5E5E5] bg-white overflow-hidden flex flex-col">
+          <div className="px-4 py-3 border-b border-[#E5E5E5] shrink-0">
+            <p className="text-[10px] font-[700] uppercase tracking-widest text-[#9B9B9B]">Thesis Scorecard</p>
+            <p className="text-[13px] font-[700] text-[#06101F] mt-0.5">Independent Checks</p>
+          </div>
+          <div className="flex-1 flex flex-col justify-between">
+            {/* Score tiles — 2x2 grid */}
+            <div className="grid grid-cols-2 gap-px bg-[#F5F5F5] flex-1">
+              {/* Tile 1: ROIC vs WACC */}
+              {(() => {
+                const pass = (valueInvestingData.roicSpread ?? 0) > 0
+                const na = valueInvestingData.roic == null
+                return (
+                  <div className={`bg-white px-3 py-3 flex flex-col gap-1.5 ${na ? 'opacity-50' : ''}`}>
+                    <p className="text-[10px] text-[#9B9B9B] leading-tight">Economic value creation</p>
+                    <div className={`inline-flex items-center gap-1 text-[10px] font-[700] px-2 py-0.5 rounded-full border self-start ${pass ? 'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D]' : na ? 'bg-[#F5F5F5] border-[#E5E5E5] text-[#9B9B9B]' : 'bg-[#FCEAEA] border-[#F0B8B8] text-[#D83B3B]'}`}>
+                      {!na && (pass
+                        ? <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        : <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                      )}
+                      {na ? 'No data' : pass ? 'Strong' : 'Weak'}
+                    </div>
+                    <p className="text-[11px] font-[650] text-[#111111]">
+                      {valueInvestingData.roic != null ? `ROIC ${(valueInvestingData.roic*100).toFixed(1)}%` : '—'}
+                    </p>
+                    {valueInvestingData.roicSpread != null && (
+                      <p className="text-[10px] text-[#9B9B9B]">{valueInvestingData.roicSpread > 0 ? '+' : ''}{(valueInvestingData.roicSpread*100).toFixed(1)}pp vs WACC</p>
+                    )}
+                  </div>
+                )
+              })()}
+              {/* Tile 2: FCF yield */}
+              {(() => {
+                const pass = fcfYield != null && rfRate != null && fcfYield > rfRate
+                const na = fcfYield == null || rfRate == null
+                return (
+                  <div className={`bg-white px-3 py-3 flex flex-col gap-1.5 ${na ? 'opacity-50' : ''}`}>
+                    <p className="text-[10px] text-[#9B9B9B] leading-tight">Compensation for risk</p>
+                    <div className={`inline-flex items-center gap-1 text-[10px] font-[700] px-2 py-0.5 rounded-full border self-start ${pass ? 'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D]' : na ? 'bg-[#F5F5F5] border-[#E5E5E5] text-[#9B9B9B]' : 'bg-[#FFF4DA] border-[#F3D391] text-[#B56A00]'}`}>
+                      {!na && (pass
+                        ? <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        : <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01"/></svg>
+                      )}
+                      {na ? 'No data' : pass ? 'Adequate' : 'Thin'}
+                    </div>
+                    <p className="text-[11px] font-[650] text-[#111111]">
+                      {fcfYield != null ? `FCF yield ${(fcfYield*100).toFixed(1)}%` : '—'}
+                    </p>
+                    {rfRate != null && <p className="text-[10px] text-[#9B9B9B]">vs {(rfRate*100).toFixed(1)}% risk-free</p>}
+                  </div>
+                )
+              })()}
+              {/* Tile 3: Market-implied growth */}
+              {(() => {
+                const implied = output.marketImpliedGrowth
+                const analyst = snapshot.historicalCAGR
+                const pass = implied != null && analyst != null && implied <= analyst * 1.5
+                const na = implied == null
+                return (
+                  <div className={`bg-white px-3 py-3 flex flex-col gap-1.5 ${na ? 'opacity-50' : ''}`}>
+                    <p className="text-[10px] text-[#9B9B9B] leading-tight">Market expectations</p>
+                    <div className={`inline-flex items-center gap-1 text-[10px] font-[700] px-2 py-0.5 rounded-full border self-start ${na ? 'bg-[#F5F5F5] border-[#E5E5E5] text-[#9B9B9B]' : pass ? 'bg-[#EAF1FF] border-[#BFDBFE] text-[#2563EB]' : 'bg-[#FFF4DA] border-[#F3D391] text-[#B56A00]'}`}>
+                      {na ? 'No data' : pass ? 'Conservative' : 'Aggressive'}
+                    </div>
+                    <p className="text-[11px] font-[650] text-[#111111]">
+                      {implied != null ? `Implied ${(implied*100).toFixed(1)}% CAGR` : '—'}
+                    </p>
+                    {analyst != null && <p className="text-[10px] text-[#9B9B9B]">Historical {(analyst*100).toFixed(1)}%</p>}
+                  </div>
+                )
+              })()}
+              {/* Tile 4: EPV growth premium */}
+              {(() => {
+                const prem = valueInvestingData.epv.growthPremiumPct
+                const na = prem == null
+                const signal = na ? 'slate' : prem < 0.15 ? 'green' : prem < 0.40 ? 'amber' : 'red'
+                const label = na ? 'No data' : prem! < 0.15 ? 'Low premium' : prem! < 0.40 ? 'Moderate' : 'High premium'
+                return (
+                  <div className={`bg-white px-3 py-3 flex flex-col gap-1.5 ${na ? 'opacity-50' : ''}`}>
+                    <p className="text-[10px] text-[#9B9B9B] leading-tight">Growth premium (EPV)</p>
+                    <div className={`inline-flex items-center gap-1 text-[10px] font-[700] px-2 py-0.5 rounded-full border self-start ${signal === 'green' ? 'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D]' : signal === 'amber' ? 'bg-[#FFF4DA] border-[#F3D391] text-[#B56A00]' : signal === 'red' ? 'bg-[#FCEAEA] border-[#F0B8B8] text-[#D83B3B]' : 'bg-[#F5F5F5] border-[#E5E5E5] text-[#9B9B9B]'}`}>
+                      {label}
+                    </div>
+                    <p className="text-[11px] font-[650] text-[#111111]">
+                      {prem != null ? `${(prem*100).toFixed(0)}% of price` : '—'}
+                    </p>
+                    {valueInvestingData.epv.epvPerShare != null && (
+                      <p className="text-[10px] text-[#9B9B9B]">EPV {fmtPrice(valueInvestingData.epv.epvPerShare, currency)}</p>
+                    )}
+                  </div>
+                )
+              })()}
             </div>
+            <p className="px-4 py-2.5 text-[10px] text-[#9B9B9B] italic border-t border-[#F5F5F5]">Signals, not guarantees. Use judgment.</p>
           </div>
-          <div className="px-4 py-3 divide-y divide-[#F5F5F5] flex-1">
-            {/* Structural risk */}
-            {valueInvestingData.structuralRiskDisclaimer && (
-              <div className="py-2.5 flex items-start gap-3">
-                <span className="mt-0.5 w-5 h-5 rounded-full bg-[#FFF4DA] flex items-center justify-center shrink-0 text-[10px] font-bold text-[#B56A00]">!</span>
-                <div>
-                  <p className="text-[12px] font-semibold text-[#111111] mb-0.5">Risk to watch</p>
-                  <p className="text-[11px] text-[#6B6B6B] leading-snug">{valueInvestingData.structuralRiskDisclaimer}</p>
-                </div>
-              </div>
-            )}
-            {/* Country risk */}
-            {valueInvestingData.countryRiskDisclaimer && (
-              <div className="py-2.5 flex items-start gap-3">
-                <span className="mt-0.5 w-5 h-5 rounded-full bg-[#FFF4DA] flex items-center justify-center shrink-0 text-[10px] font-bold text-[#B56A00]">!</span>
-                <div>
-                  <p className="text-[12px] font-semibold text-[#111111] mb-0.5">Country risk</p>
-                  <p className="text-[11px] text-[#6B6B6B] leading-snug">{valueInvestingData.countryRiskDisclaimer}</p>
-                </div>
-              </div>
-            )}
-            {/* ROIC vs WACC */}
-            {valueInvestingData.roic != null && valueInvestingData.roicSpread != null && (
-              <div className="py-2.5 flex items-start gap-3">
-                <span className={`mt-0.5 w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold ${valueInvestingData.roicSpread > 0 ? 'bg-[#E8F7EF] text-[#11875D]' : 'bg-[#FCEAEA] text-[#D83B3B]'}`}>
-                  {valueInvestingData.roicSpread > 0 ? '✓' : '✗'}
-                </span>
-                <div>
-                  <p className="text-[12px] font-semibold text-[#111111] mb-0.5">
-                    Economic value creation
-                  </p>
-                  <p className="text-[11px] text-[#6B6B6B] leading-snug">
-                    ROIC {(valueInvestingData.roic * 100).toFixed(1)}% {valueInvestingData.roicSpread > 0 ? '>' : '<'} WACC {(valueInvestingData.wacc * 100).toFixed(1)}%
-                    {' '}({valueInvestingData.roicSpread > 0 ? '+' : ''}{(valueInvestingData.roicSpread * 100).toFixed(1)}pp spread).
-                  </p>
-                </div>
-              </div>
-            )}
-            {/* FCF yield vs risk-free */}
-            {fcfYield != null && rfRate != null && (
-              <div className="py-2.5 flex items-start gap-3">
-                <span className={`mt-0.5 w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold ${fcfYield > rfRate ? 'bg-[#E8F7EF] text-[#11875D]' : 'bg-[#FCEAEA] text-[#D83B3B]'}`}>
-                  {fcfYield > rfRate ? '✓' : '✗'}
-                </span>
-                <div>
-                  <p className="text-[12px] font-semibold text-[#111111] mb-0.5">Compensation for risk</p>
-                  <p className="text-[11px] text-[#6B6B6B] leading-snug">
-                    FCF yield {(fcfYield * 100).toFixed(1)}% {fcfYield > rfRate ? '>' : '<'} risk-free {(rfRate * 100).toFixed(1)}%
-                    {fcfYield > rfRate ? ' — equity compensates adequately.' : ' — risk premium is thin.'}
-                  </p>
-                </div>
-              </div>
-            )}
-            {/* Market-implied growth (Reverse DCF) */}
-            {output.marketImpliedGrowth != null && (
-              <div className="py-2.5 flex items-start gap-3">
-                <span className="mt-0.5 w-5 h-5 rounded-full bg-[#EAF1FF] flex items-center justify-center shrink-0 text-[10px] font-bold text-[#2563EB]">i</span>
-                <div>
-                  <p className="text-[12px] font-semibold text-[#111111] mb-0.5">What the market prices in</p>
-                  <p className="text-[11px] text-[#6B6B6B] leading-snug">
-                    Implied 5Y revenue CAGR {(output.marketImpliedGrowth * 100).toFixed(1)}%.
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-          <p className="px-4 pb-3 text-[10px] text-[#9B9B9B] italic">Checks are signals, not guarantees. Use judgment.</p>
         </div>
 
-        {/* ── 7. SENSITIVITY MATRIX ────────────────────────────────────────────── */}
+        {/* ── 5. SENSITIVITY MATRIX ────────────────────────────────────────────── */}
         <ProGate featureName="Sensitivity table" isPro={isPro} placeholderHeight="h-40">
           <SensitivityMatrix
             assumptions={assumptions}
@@ -544,7 +526,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
           />
         </ProGate>
 
-        {/* ── 8. MONTE CARLO ───────────────────────────────────────────────────── */}
+        {/* ── 6. MONTE CARLO ───────────────────────────────────────────────────── */}
         <MonteCarloPanel
           assumptions={assumptions}
           snapshot={effectiveSnapshot}
@@ -552,12 +534,12 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
           sensitivity={sensitivity}
           currentPrice={currentPrice}
           currency={currency}
-          defaultExpanded
+          compact
         />
 
       </div>
 
-      {/* ── 9. FULL DCF MODEL (collapsed) — year-by-year projections ─────────── */}
+      {/* ── 7. FULL DCF MODEL (collapsed) — year-by-year projections ─────────── */}
       <details ref={fullDcfRef} className="group" id="full_dcf" open>
         <summary className="flex items-center gap-2 cursor-pointer list-none bg-white rounded-xl border border-[#E5E5E5] shadow-sm px-4 sm:px-5 py-3.5 hover:bg-[#EAF1FF] transition-colors select-none">
           <span className="text-[#2563EB] text-xs group-open:rotate-90 transition-transform inline-block">▶</span>
@@ -585,7 +567,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
         </div>
       </details>
 
-      {/* ── 10. MODEL EVIDENCE (collapsed) ───────────────────────────────────── */}
+      {/* ── 8. MODEL EVIDENCE (collapsed) ───────────────────────────────────── */}
       <details className="group" id="model_evidence">
         <summary className="flex items-center gap-2 cursor-pointer list-none bg-white rounded-xl border border-[#E5E5E5] shadow-sm px-4 sm:px-5 py-3.5 hover:bg-[#F5F5F5] transition-colors select-none">
           <span className="text-[#6B6B6B] text-xs group-open:rotate-90 transition-transform inline-block">▶</span>
@@ -605,6 +587,52 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
             currency={currency}
           />
           <ModelDivergencePanel divergence={output.divergence} />
+        </div>
+      </details>
+
+      {/* ── 9. DEEP ANALYSIS — BusinessChecks + AssumptionHealth ─────────────── */}
+      <details className="group" id="deep_analysis">
+        <summary className="flex items-center gap-2 cursor-pointer list-none bg-white rounded-xl border border-[#E5E5E5] shadow-sm px-4 sm:px-5 py-3.5 hover:bg-[#F5F5F5] transition-colors select-none">
+          <span className="text-[#6B6B6B] text-xs group-open:rotate-90 transition-transform inline-block">▶</span>
+          <span className="text-sm font-[650] text-[#111111]">Detailed Analysis</span>
+          <span className="ml-auto text-xs text-[#9B9B9B] hidden sm:inline">ROIC · FCF yield · EPV · market-implied growth · assumption audit</span>
+        </summary>
+        <div className="mt-2 flex flex-col gap-3">
+          <BusinessChecks
+            roic={valueInvestingData.roic}
+            roicSpread={valueInvestingData.roicSpread}
+            wacc={valueInvestingData.wacc}
+            epvGrowthPremiumPct={valueInvestingData.epv.growthPremiumPct}
+            epvPerShare={valueInvestingData.epv.epvPerShare}
+            currentPrice={currentPrice}
+            currency={currency}
+            fcfYield={fcfYield}
+            rfRate={rfRate}
+            marketImpliedGrowth={output.marketImpliedGrowth}
+            marketImpliedText={output.marketImpliedText}
+            marketImpliedInterpretation={output.marketImpliedInterpretation}
+            priceToBook={
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (apiData.valuationMethods?.models?.multiples?.estimates ?? []).find((e: any) => e.multiple === 'P/Book')?.actualValue ?? null
+            }
+            pbSectorMedian={
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (apiData.valuationMethods?.models?.multiples?.estimates ?? []).find((e: any) => e.multiple === 'P/Book')?.sectorMedian ?? null
+            }
+            sector={sector}
+            starRating={starRating}
+            uncertainty={uncertainty}
+            structuralRisk={valueInvestingData.structuralRiskDisclaimer}
+            countryRisk={valueInvestingData.countryRiskDisclaimer}
+          />
+          {apiData.assumptionAudit && (
+            <AssumptionHealthPanel
+              audit={apiData.assumptionAudit as AssumptionAudit}
+              assumptions={assumptions}
+              onChange={handleAssumptionChange}
+              analystForwardPE={apiData.analystForwardPE ?? null}
+            />
+          )}
         </div>
       </details>
 

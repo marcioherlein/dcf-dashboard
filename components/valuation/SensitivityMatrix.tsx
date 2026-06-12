@@ -388,8 +388,8 @@ function AxisPill({
 
 function ExpandedMatrix({
   assumptions, snapshot, currentPrice, currency, epvPerShare,
-  historicalData, defaultAxisY, defaultAxisX,
-}: Props) {
+  historicalData, defaultAxisY, defaultAxisX, onAxisChange,
+}: Props & { onAxisChange?: (y: keyof ValuationAssumptions, x: keyof ValuationAssumptions) => void }) {
   const [axisY, setAxisY] = useState<keyof ValuationAssumptions>(defaultAxisY)
   const [axisX, setAxisX] = useState<keyof ValuationAssumptions>(defaultAxisX)
   const [displayMode, setDisplayMode] = useState<'upside' | 'fv'>('upside')
@@ -446,14 +446,18 @@ function ExpandedMatrix({
   const histXIdx = isNearHist(xVals, histX)
 
   function pickY(key: keyof ValuationAssumptions) {
-    if (key === axisX) setAxisX(axisY)
+    const newX = key === axisX ? axisY : axisX
+    setAxisX(newX)
     setAxisY(key)
     setSelectedCell(null)
+    onAxisChange?.(key, newX)
   }
   function pickX(key: keyof ValuationAssumptions) {
-    if (key === axisY) setAxisY(axisX)
+    const newY = key === axisY ? axisX : axisY
+    setAxisY(newY)
     setAxisX(key)
     setSelectedCell(null)
+    onAxisChange?.(newY, key)
   }
 
   return (
@@ -681,28 +685,36 @@ export default function SensitivityMatrix({
   historicalData = {}, defaultAxisY, defaultAxisX,
 }: Props) {
   const [modalOpen, setModalOpen] = useState(false)
+  const [activeAxisY, setActiveAxisY] = useState<keyof ValuationAssumptions>(defaultAxisY)
+  const [activeAxisX, setActiveAxisX] = useState<keyof ValuationAssumptions>(defaultAxisX)
   const expandBtnRef = useRef<HTMLButtonElement>(null)
+
+  // Update active axes when parent defaults change
+  useEffect(() => { setActiveAxisY(defaultAxisY) }, [defaultAxisY])
+  useEffect(() => { setActiveAxisX(defaultAxisX) }, [defaultAxisX])
 
   function handleModalClose() {
     setModalOpen(false)
-    // Return focus to expand button after modal closes
     requestAnimationFrame(() => expandBtnRef.current?.focus())
   }
 
+  const activeFieldY = AXIS_FIELDS.find(f => f.key === activeAxisY) ?? AXIS_FIELDS[1]
+  const activeFieldX = AXIS_FIELDS.find(f => f.key === activeAxisX) ?? AXIS_FIELDS[0]
+
   return (
-    <div className="bg-white rounded-[14px] border border-[#E5E5E5] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4 sm:p-5">
+    <div className="bg-white rounded-[14px] border border-[#E5E5E5] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4 sm:p-5 flex flex-col h-full">
 
       {/* Header */}
-      <div className="flex items-start justify-between gap-3 mb-4">
+      <div className="flex items-start justify-between gap-3 mb-4 shrink-0">
         <div>
           <div className="flex items-center gap-1.5">
             <p className="text-[10px] font-[700] tracking-wider uppercase text-[#9B9B9B]">Sensitivity Analysis</p>
-            <InfoTooltip text="How fair value changes when you vary two assumptions simultaneously. The compact view shows WACC vs the selected column axis. Click Expand to choose any row and column axis." />
+            <InfoTooltip text="How fair value changes when you vary two assumptions simultaneously. Click Expand to choose any row and column axis — selections persist when you close." />
           </div>
           <p className="text-[13px] font-[700] text-[#06101F] mt-0.5">
-            {(AXIS_FIELDS.find(f => f.key === defaultAxisY) ?? AXIS_FIELDS[1]).shortLabel}
+            {activeFieldY.shortLabel}
             {' '}&times;{' '}
-            {(AXIS_FIELDS.find(f => f.key === defaultAxisX) ?? AXIS_FIELDS[0]).shortLabel}
+            {activeFieldX.shortLabel}
           </p>
         </div>
 
@@ -717,18 +729,20 @@ export default function SensitivityMatrix({
         </button>
       </div>
 
-      {/* Default compact heat map */}
-      <CompactHeatmap
-        assumptions={assumptions}
-        snapshot={snapshot}
-        currentPrice={currentPrice}
-        currency={currency}
-        axisY={defaultAxisY}
-        axisX={defaultAxisX}
-        onExpand={() => setModalOpen(true)}
-      />
+      {/* Default compact heat map — uses persisted axes */}
+      <div className="flex-1 min-h-0">
+        <CompactHeatmap
+          assumptions={assumptions}
+          snapshot={snapshot}
+          currentPrice={currentPrice}
+          currency={currency}
+          axisY={activeAxisY}
+          axisX={activeAxisX}
+          onExpand={() => setModalOpen(true)}
+        />
+      </div>
 
-      {/* Expand modal — full matrix with axis selectors */}
+      {/* Expand modal — full matrix with axis selectors, axes persist on close */}
       <Dialog open={modalOpen} onOpenChange={(isOpen: boolean) => { if (!isOpen) handleModalClose() }}>
         <DialogContent
           className="max-w-3xl w-full max-h-[90vh] overflow-y-auto p-0"
@@ -758,8 +772,9 @@ export default function SensitivityMatrix({
               currency={currency}
               epvPerShare={epvPerShare}
               historicalData={historicalData}
-              defaultAxisY={defaultAxisY}
-              defaultAxisX={defaultAxisX}
+              defaultAxisY={activeAxisY}
+              defaultAxisX={activeAxisX}
+              onAxisChange={(y, x) => { setActiveAxisY(y); setActiveAxisX(x) }}
             />
           </div>
         </DialogContent>

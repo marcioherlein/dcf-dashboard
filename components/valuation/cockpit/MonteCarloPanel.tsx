@@ -6,6 +6,12 @@ import { fmtPrice } from '@/lib/formatters'
 import { InfoTooltip } from '@/components/ui/info-tooltip'
 import { runMonteCarlo, buildMCInputs, type MCResult, type MCInputs } from '@/lib/valuation/montecarloDCF'
 import type { ValuationAssumptions, CockpitSnapshot } from '@/lib/valuation/cockpit'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 
 interface Props {
   assumptions:  ValuationAssumptions
@@ -16,6 +22,8 @@ interface Props {
   currentPrice: number
   currency:     string
   defaultExpanded?: boolean
+  /** compact=true renders as a fixed-height box with expand dialog, matching Sensitivity Matrix */
+  compact?: boolean
 }
 
 // ── CVaR quality dots ─────────────────────────────────────────────────────────
@@ -232,7 +240,7 @@ function OnboardTooltip({ onDismiss }: { onDismiss: () => void }) {
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function MonteCarloPanel({
-  assumptions, snapshot, apiData, sensitivity, currentPrice, currency, defaultExpanded = false,
+  assumptions, snapshot, apiData, sensitivity, currentPrice, currency, defaultExpanded = false, compact = false,
 }: Props) {
   const [result,    setResult]    = useState<MCResult | null>(null)
   const [running,   setRunning]   = useState(false)
@@ -241,6 +249,8 @@ export default function MonteCarloPanel({
   const [hasRun,    setHasRun]    = useState(false)
   const [showOnboard, setShowOnboard] = useState(false)
   const [nPaths, setNPaths] = useState<5_000 | 10_000 | 50_000>(10_000)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const expandBtnRef = useRef<HTMLButtonElement>(null)
   const runIdRef = useRef(0)
 
   // First-run onboarding check
@@ -286,6 +296,166 @@ export default function MonteCarloPanel({
   const upside    = fairValue != null && currentPrice > 0 ? (fairValue - currentPrice) / currentPrice : null
   const upColor   = upside != null ? (upside >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]') : 'text-[#9B9B9B]'
   const cv        = result ? cvarDots(result.cvarRatio) : null
+
+  // ── COMPACT MODE — fixed-height card matching Sensitivity Matrix ──────────
+  if (compact) {
+    const p10Upside = result && currentPrice > 0 ? (result.p10 - currentPrice) / currentPrice : null
+    const p90Upside = result && currentPrice > 0 ? (result.p90 - currentPrice) / currentPrice : null
+
+    return (
+      <div className="bg-white rounded-[14px] border border-[#E5E5E5] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4 sm:p-5 flex flex-col h-full">
+
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3 mb-4 shrink-0">
+          <div>
+            <div className="flex items-center gap-1.5">
+              <p className="text-[10px] font-[700] tracking-wider uppercase text-[#9B9B9B]">Monte Carlo</p>
+              <span className="px-1.5 py-px text-[9px] font-[700] bg-[#FFF4DA] text-[#B56A00] border border-[#F3D391] rounded-full">Beta</span>
+              <InfoTooltip text="10,000 Markov-regime DCF simulation paths. P50 adjusted for tail risk via CVaR. Shows the distribution of fair value outcomes." />
+            </div>
+            <p className="text-[13px] font-[700] text-[#06101F] mt-0.5">
+              {running ? 'Running simulation…' : fairValue != null ? `P50 ${fmtPrice(fairValue, currency)}` : 'Distribution'}
+            </p>
+          </div>
+          <button
+            ref={expandBtnRef}
+            onClick={() => setDialogOpen(true)}
+            aria-haspopup="dialog"
+            aria-label="Expand Monte Carlo simulation"
+            className="text-[11px] font-[650] text-[#5F790B] bg-[#F6FAEA] border border-[#BFD2A1] px-3 py-2 rounded-lg min-h-[44px] flex items-center hover:bg-[#EEF4DD] transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B]"
+          >
+            Expand ↗
+          </button>
+        </div>
+
+        {/* Mini distribution or loading */}
+        <div className="flex-1 flex flex-col justify-between min-h-0">
+          {running ? (
+            <div className="space-y-2">
+              <div className="h-12 bg-[#F5F5F5] rounded-lg animate-pulse" />
+              <div className="h-6 bg-[#F5F5F5] rounded animate-pulse w-3/4" />
+            </div>
+          ) : noData ? (
+            <div className="flex items-center justify-center py-6 text-center">
+              <p className="text-[11px] text-[#9B9B9B]">Requires positive trailing FCF.</p>
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center py-4 gap-2">
+              <p className="text-[11px] text-[#D83B3B]">Simulation error</p>
+              <button onClick={runSimulation} className="px-3 py-1.5 rounded-lg bg-[#5F790B] text-white text-[10px] font-[650] hover:bg-[#4A6009]">Retry</button>
+            </div>
+          ) : result ? (
+            <>
+              {/* Mini histogram */}
+              <div className="flex items-end gap-px h-12 w-full mb-3" aria-label="Fair value distribution" role="img">
+                {result.histogram.slice(0, 24).map((b, i) => {
+                  const maxPct = Math.max(...result.histogram.slice(0, 24).map(x => x.pct), 0.001)
+                  const h = (b.pct / maxPct) * 100
+                  const isAdjP50 = result.adjustedP50 >= b.lo && result.adjustedP50 < b.hi
+                  const isPrice  = currentPrice >= b.lo && currentPrice < b.hi
+                  const isTailLo = b.hi <= result.p10
+                  return (
+                    <div
+                      key={i}
+                      className="flex-1 rounded-t-[1px] min-w-0"
+                      style={{
+                        height: `${Math.max(4, h)}%`,
+                        backgroundColor: isPrice ? '#2563EB' : isAdjP50 ? '#5F790B' : isTailLo ? 'rgba(216,59,59,0.45)' : 'rgba(95,121,11,0.22)',
+                      }}
+                    />
+                  )
+                })}
+              </div>
+
+              {/* P10 / P50 / P90 strip — 3 columns */}
+              <div className="grid grid-cols-3 gap-px bg-[#F5F5F5] rounded-xl overflow-hidden border border-[#E5E5E5]">
+                {[
+                  { label: 'P10', value: result.p10, upside: p10Upside, color: 'text-[#D83B3B]' },
+                  { label: 'P50', value: result.adjustedP50, upside: upside, color: 'text-[#5F790B]' },
+                  { label: 'P90', value: result.p90, upside: p90Upside, color: 'text-[#11875D]' },
+                ].map(({ label, value, upside: u, color }) => (
+                  <div key={label} className="bg-white px-2 py-2 flex flex-col items-center gap-0.5">
+                    <span className="text-[9px] font-[700] text-[#9B9B9B]">{label}</span>
+                    <span className={`text-[12px] sm:text-[13px] font-[800] tabular-nums leading-tight ${color}`}>
+                      {fmtPrice(value, currency)}
+                    </span>
+                    {u != null && (
+                      <span className={`text-[9px] font-[650] tabular-nums ${u >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
+                        {u >= 0 ? '+' : ''}{(u * 100).toFixed(0)}%
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* CVaR quality */}
+              {cv && (
+                <div className="mt-2 flex items-center gap-1.5">
+                  <div className="flex gap-0.5" aria-hidden="true">
+                    {Array.from({ length: 5 }, (_, i) => (
+                      <div key={i} className={cn('w-1.5 h-1.5 rounded-full', i < cv.dots ? cv.color.replace('text-', 'bg-') : 'bg-[#E3E1DA]')} />
+                    ))}
+                  </div>
+                  <span className={`text-[10px] font-[650] ${cv.color}`}>{cv.label}</span>
+                </div>
+              )}
+            </>
+          ) : null}
+        </div>
+
+        {/* Expand Dialog — full simulation */}
+        <Dialog open={dialogOpen} onOpenChange={(isOpen: boolean) => {
+          if (!isOpen) { setDialogOpen(false); requestAnimationFrame(() => expandBtnRef.current?.focus()) }
+        }}>
+          <DialogContent className="max-w-3xl w-full max-h-[90vh] overflow-y-auto p-0" showCloseButton={false}>
+            <DialogHeader className="px-5 pt-5 pb-3 border-b border-[#E5E5E5] flex-row items-center justify-between">
+              <div>
+                <p className="text-[10px] font-[700] tracking-wider uppercase text-[#9B9B9B]">Monte Carlo DCF</p>
+                <DialogTitle className="text-[15px] font-[700] text-[#06101F] mt-0.5">
+                  Simulation details — {result?.nPaths.toLocaleString() ?? '10,000'} paths
+                </DialogTitle>
+              </div>
+              <button
+                onClick={() => setDialogOpen(false)}
+                aria-label="Close Monte Carlo simulation"
+                className="w-9 h-9 flex items-center justify-center rounded-full bg-[#F5F5F5] hover:bg-[#E3E1DA] text-[#6B6B6B] text-lg transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B]"
+              >×</button>
+            </DialogHeader>
+            <div className="p-4 sm:p-5 space-y-5">
+              {/* Controls */}
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <p className="text-[11px] text-[#6B6B6B] max-w-[480px]">
+                  {result ? buildSummary(result, currentPrice, currency) : 'Running simulation…'}
+                </p>
+                <div className="flex items-center gap-2 shrink-0 ml-auto">
+                  <div className="flex items-center gap-1 rounded-lg border border-[#E5E5E5] p-0.5 bg-[#F5F5F5]">
+                    {([5_000, 10_000, 50_000] as const).map(n => (
+                      <button key={n} onClick={() => setNPaths(n)}
+                        className={cn('text-[10px] font-[650] px-2 py-1 rounded-md transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#5F790B]', nPaths === n ? 'bg-white text-[#111111] shadow-sm' : 'text-[#9B9B9B] hover:text-[#6B6B6B]')}>
+                        {n / 1000}k
+                      </button>
+                    ))}
+                  </div>
+                  <button onClick={runSimulation} disabled={running || noData}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#5F790B] text-white text-[11px] font-[650] hover:bg-[#4A6009] disabled:opacity-50 transition-colors">
+                    {running ? 'Running…' : 'Re-run'}
+                  </button>
+                </div>
+              </div>
+              {result && !running && (
+                <>
+                  <Histogram histogram={result.histogram} p10={result.p10} p25={result.p25} p75={result.p75} p90={result.p90} currentPrice={currentPrice} adjustedP50={result.adjustedP50} currency={currency} />
+                  <PercentileStrip p10={result.p10} p25={result.p25} p75={result.p75} p90={result.p90} adjustedP50={result.adjustedP50} cvarDiscount={result.cvarDiscount} currentPrice={currentPrice} currency={currency} />
+                  <CvarDots ratio={result.cvarRatio} />
+                </>
+              )}
+              {running && <div className="space-y-3"><div className="h-16 bg-[#F5F5F5] rounded-lg animate-pulse"/><div className="h-10 bg-[#F5F5F5] rounded-xl animate-pulse"/></div>}
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    )
+  }
 
   return (
     <div className={cn(
