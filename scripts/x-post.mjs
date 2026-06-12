@@ -22,7 +22,8 @@ const DRY_RUN             = process.env.DRY_RUN             === 'true'
 const BUFFER_API_KEY      = process.env.BUFFER_API_KEY      || ''
 const BUFFER_CHANNEL_ID   = process.env.BUFFER_CHANNEL_ID   || ''
 const AUTOMATION_API_KEY = process.env.AUTOMATION_API_KEY || ''
-const ALPHA_VANTAGE_KEY   = process.env.ALPHA_VANTAGE_KEY   || 'demo'
+const ALPHA_VANTAGE_KEY  = process.env.ALPHA_VANTAGE_KEY  || 'demo'
+const FINNHUB_KEY        = process.env.FINNHUB_KEY        || ''
 
 // ─── Post Validator ───────────────────────────────────────────────────────────
 // Runs before every post. Throws if the content fails quality checks.
@@ -289,9 +290,17 @@ async function runEarnings() {
   console.log('Fetching earnings calendar...')
 
   const todayStr    = new Date().toISOString().split('T')[0]
+  const yesterday   = new Date()
+  yesterday.setDate(yesterday.getDate() - 1)
+  const yesterdayStr = yesterday.toISOString().split('T')[0]
   const tomorrow    = new Date()
   tomorrow.setDate(tomorrow.getDate() + 1)
   const tomorrowStr = tomorrow.toISOString().split('T')[0]
+  // Skip Saturday/Sunday for tomorrowStr — advance to Monday if needed
+  const tomorrowDay = tomorrow.getUTCDay()
+  if (tomorrowDay === 6) { tomorrow.setDate(tomorrow.getDate() + 2) }
+  else if (tomorrowDay === 0) { tomorrow.setDate(tomorrow.getDate() + 1) }
+  const nextTradingDayStr = tomorrow.toISOString().split('T')[0]
 
   // Fetch quotes via Yahoo Finance v7 REST API (no yahoo-finance2 needed)
   async function fetchQuote(ticker) {
@@ -325,12 +334,13 @@ async function runEarnings() {
   const reporting = results.filter(q => {
     if (!q.earningsTimestamp) return false
     const d = new Date(q.earningsTimestamp * 1000).toISOString().split('T')[0]
-    if (d === todayStr || d === tomorrowStr) { q.date = d; return true }
+    // Check yesterday (AH reporters), today (pre-market or AH), and next trading day
+    if (d === yesterdayStr || d === todayStr || d === nextTradingDayStr) { q.date = d; return true }
     return false
   })
 
   if (reporting.length === 0) {
-    console.log(`No earnings found for ${todayStr} or ${tomorrowStr} in sample — skipping post`)
+    console.log(`No earnings found for ${yesterdayStr}/${todayStr}/${nextTradingDayStr} in sample — skipping post`)
     return
   }
 
@@ -386,15 +396,19 @@ async function runEarnings() {
   }
 
   const others = reporting.slice(1, 5).map(q => `$${q.symbol}`)
-  const featuredDate = featured.date ?? tomorrowStr
-  const whenStr = featuredDate === todayStr ? 'today' : 'tomorrow'
+  const featuredDate = featured.date ?? nextTradingDayStr
+  // whenStr and verb are split to avoid "reports reported yesterday" grammar bug
+  const whenStr = featuredDate === yesterdayStr ? 'yesterday (AH)'
+    : featuredDate === todayStr ? 'today'
+    : 'tomorrow'
+  const whenVerb = featuredDate === yesterdayStr ? 'reported' : 'reports'
 
   const lines = [
-    `📊 Earnings — $${ticker} reports ${whenStr}`,
+    `📊 Earnings — $${ticker} ${whenVerb} ${whenStr}`,
     ``,
     dcfBlock || `Run the valuation → ${APP_URL}/stock/${ticker}`,
     ``,
-    ...(others.length > 0 ? [`Also reporting ${whenStr}: ${others.join(' · ')}`, ``] : []),
+    ...(others.length > 0 ? [`Also ${whenVerb} ${whenStr}: ${others.join(' · ')}`, ``] : []),
     `Does the business justify its current price? Run the model before the number drops.`,
     `${APP_URL}/stock/${ticker}`,
     ``,
@@ -713,15 +727,30 @@ async function runMacro() {
   const todayEvent    = MACRO_CALENDAR.find(e => e.date === todayUtc)
   const tomorrowEvent = MACRO_CALENDAR.find(e => e.date === tomorrowUtc)
 
-  // ── RECAP: event is today — fetch live data and post results ──
+  // ── RECAP: event is today — fetch live data with retry ────────────────────
+  // Alpha Vantage typically updates 2-4 hours after official release.
+  // We retry up to 3 times with 10-minute waits to handle AV lag gracefully.
   if (todayEvent) {
     console.log(`Macro event today: ${todayEvent.label}`)
     let lines = []
 
+    // Helper: fetch AV data with up to 3 retries (handles update lag)
+    async function fetchWithRetry(fn, params, maxAttempts = 3) {
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        const data = await fetchAlphaVantage(fn, params).catch(() => null)
+        const d = latestTwo(data?.data ?? {})
+        if (d && isFinite(d.latestVal) && isFinite(d.previousVal)) return d
+        if (attempt < maxAttempts) {
+          console.log(`AV data not ready yet (attempt ${attempt}/${maxAttempts}), waiting 60s...`)
+          await new Promise(r => setTimeout(r, 60000))
+        }
+      }
+      return null
+    }
+
     if (todayEvent.type === 'CPI') {
-      const data = await fetchAlphaVantage('CPI', { interval: 'monthly' })
-      const d = latestTwo(data.data ?? {})
-      if (!d) throw new Error('No CPI data from Alpha Vantage')
+      const d = await fetchWithRetry('CPI', { interval: 'monthly' })
+      if (!d) throw new Error('No CPI data from Alpha Vantage after retries')
       const chg = d.latestVal - d.previousVal
       const emoji = chg > 0.2 ? '🔴' : chg < -0.1 ? '🟢' : '🟡'
       lines = [
@@ -745,9 +774,8 @@ async function runMacro() {
         `#CPI #Inflation #Fed #Macro #Investing`,
       ]
     } else if (todayEvent.type === 'NFP') {
-      const data = await fetchAlphaVantage('NONFARM_PAYROLL')
-      const d = latestTwo(data.data ?? {})
-      if (!d) throw new Error('No NFP data from Alpha Vantage')
+      const d = await fetchWithRetry('NONFARM_PAYROLL', {})
+      if (!d) throw new Error('No NFP data from Alpha Vantage after retries')
       const chgK = Math.round(d.latestVal - d.previousVal)
       const emoji = d.latestVal > 200 ? '🟢' : d.latestVal > 100 ? '🟡' : '🔴'
       lines = [
@@ -770,9 +798,8 @@ async function runMacro() {
         `#NFP #JobsReport #Fed #Macro #Investing`,
       ]
     } else if (todayEvent.type === 'FOMC') {
-      const data = await fetchAlphaVantage('FEDERAL_FUNDS_RATE', { interval: 'monthly' })
-      const d = latestTwo(data.data ?? {})
-      if (!d) throw new Error('No Fed Funds data from Alpha Vantage')
+      const d = await fetchWithRetry('FEDERAL_FUNDS_RATE', { interval: 'monthly' })
+      if (!d) throw new Error('No Fed Funds data from Alpha Vantage after retries')
       const chg = d.latestVal - d.previousVal
       const emoji = chg > 0 ? '🔴' : chg < 0 ? '🟢' : '⚪'
       const action = chg > 0 ? `Hiked +${(chg * 100).toFixed(0)}bps` : chg < 0 ? `Cut ${Math.abs(chg * 100).toFixed(0)}bps` : 'Held rates'
@@ -794,6 +821,8 @@ async function runMacro() {
     }
 
     await post(lines.join('\n'))
+    // Mark as posted so economic_results mode doesn't double-post on the same event day
+    await markPostedEvent(`macro:${todayEvent.type}:${todayUtc}`, 'macro', null, todayUtc, lines.join('\n'))
     return
   }
 
@@ -2547,26 +2576,247 @@ async function runTheoryOvernight() {
   await post(lines.join('\n'))
 }
 
+// ─── Mode: earnings_results ───────────────────────────────────────────────────
+// Fires at 11PM UTC (8PM ART) weekdays — 1.5h after typical AH earnings release.
+// Scans for companies that reported yesterday or today, tweets EPS result + AH reaction.
+// Uses Finnhub for EPS actual/estimate/revenue OR falls back to Yahoo earningsSurprises.
+
+async function checkPostedEvent(eventKey) {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) return false
+  try {
+    const { createClient } = await import('@supabase/supabase-js')
+    const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
+    const { data } = await sb.from('posted_tweet_events').select('id').eq('event_key', eventKey).maybeSingle()
+    return !!data
+  } catch { return false }
+}
+
+async function markPostedEvent(eventKey, tweetType, ticker, eventDate, tweetText) {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) return
+  try {
+    const { createClient } = await import('@supabase/supabase-js')
+    const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
+    await sb.from('posted_tweet_events').upsert({ event_key: eventKey, tweet_type: tweetType, ticker, event_date: eventDate, tweet_text: tweetText })
+  } catch (e) { console.warn('Could not mark event as posted:', e.message) }
+}
+
+async function runEarningsResults() {
+  const todayUtc     = new Date().toISOString().split('T')[0]
+  const yesterday    = new Date()
+  yesterday.setDate(yesterday.getDate() - 1)
+  const yesterdayUtc = yesterday.toISOString().split('T')[0]
+
+  console.log(`Scanning for earnings results on ${yesterdayUtc} or ${todayUtc}...`)
+
+  // Try Finnhub first (has EPS actual + estimate + revenue + AH flag in one call)
+  let finnhubResults = []
+  if (FINNHUB_KEY) {
+    try {
+      const url = `https://finnhub.io/api/v1/calendar/earnings?from=${yesterdayUtc}&to=${todayUtc}&token=${FINNHUB_KEY}`
+      const res = await fetch(url, { signal: AbortSignal.timeout(10000) }).catch(() => null)
+      if (res?.ok) {
+        const json = await res.json().catch(() => null)
+        finnhubResults = (json?.earningsCalendar ?? []).filter(e =>
+          e.epsActual != null && e.epsEstimate != null && SP500_SAMPLE.includes(e.symbol)
+        )
+        console.log(`Finnhub: ${finnhubResults.length} results with actuals`)
+      }
+    } catch (e) { console.warn('Finnhub fetch failed:', e.message) }
+  }
+
+  // Build list of tickers to tweet about
+  const candidates = finnhubResults.length > 0
+    ? finnhubResults.map(e => ({
+        ticker: e.symbol,
+        epsActual: e.epsActual,
+        epsEstimate: e.epsEstimate,
+        revenueActual: e.revenueActual ?? null,
+        revenueEstimate: e.revenueEstimate ?? null,
+        hour: e.hour ?? 'unknown',   // bmo/amc/dmh
+        date: e.date,
+        source: 'finnhub',
+      }))
+    : [] // fallback: scan SP500_SAMPLE via Yahoo earningsSurprises (handled below)
+
+  // Fallback: if no Finnhub key, scan SP500_SAMPLE via Yahoo
+  if (candidates.length === 0) {
+    for (let i = 0; i < SP500_SAMPLE.slice(0, 30).length; i += 5) {
+      const batch = SP500_SAMPLE.slice(i, i + 5)
+      const settled = await Promise.allSettled(batch.map(async t => {
+        const data = await fetchValuation(t).catch(() => null)
+        if (!data?.earningsSurprises?.length) return null
+        const latest = data.earningsSurprises[0]
+        if (!latest?.epsActual || !latest?.date) return null
+        // Only include if the date matches yesterday or today
+        if (latest.date !== yesterdayUtc && latest.date !== todayUtc) return null
+        return {
+          ticker: t,
+          epsActual: latest.epsActual,
+          epsEstimate: latest.epsEstimate,
+          surprisePercent: latest.surprisePercent,
+          date: latest.date,
+          postMarketChangePct: data.quote?.postMarketChangePct ?? null,
+          source: 'yahoo',
+        }
+      }))
+      for (const r of settled) if (r.status === 'fulfilled' && r.value) candidates.push(r.value)
+      await new Promise(r => setTimeout(r, 500))
+    }
+  }
+
+  if (candidates.length === 0) {
+    console.log('No earnings results found for yesterday/today — skipping')
+    return
+  }
+
+  // Sort by market cap (largest first) — use SP500_SAMPLE order as proxy
+  candidates.sort((a, b) => SP500_SAMPLE.indexOf(a.ticker) - SP500_SAMPLE.indexOf(b.ticker))
+
+  let posted = 0
+  for (const c of candidates.slice(0, 3)) {
+    const eventKey = `earnings_results:${c.ticker}:${c.date}`
+    if (await checkPostedEvent(eventKey)) {
+      console.log(`Already posted ${eventKey} — skipping`)
+      continue
+    }
+
+    // Fetch AH price if not from Finnhub
+    let ahPct = null
+    if (c.source === 'finnhub') {
+      // Fetch from Yahoo for AH reaction
+      const data = await fetchValuation(c.ticker).catch(() => null)
+      ahPct = data?.quote?.postMarketChangePct ?? null
+    } else {
+      ahPct = c.postMarketChangePct
+    }
+
+    const surprisePct = c.surprisePercent ??
+      (c.epsEstimate && c.epsActual ? ((c.epsActual - c.epsEstimate) / Math.abs(c.epsEstimate) * 100) : null)
+    const beat = surprisePct != null ? (surprisePct >= 0 ? '✅ beat' : '❌ missed') : ''
+    const v = verdictLabel(ahPct != null ? ahPct / 100 : 0)
+
+    const lines = [
+      `📊 $${c.ticker} earnings results`,
+      ``,
+      `EPS: $${c.epsActual?.toFixed(2)} vs $${c.epsEstimate?.toFixed(2)} est ${beat ? `(${beat}${surprisePct != null ? `, ${surprisePct > 0 ? '+' : ''}${surprisePct.toFixed(1)}%` : ''})` : ''}`,
+      ...(c.revenueActual != null ? [`Revenue: ${fmt(c.revenueActual)}${c.revenueEstimate != null ? ` vs ${fmt(c.revenueEstimate)} est` : ''}`] : []),
+      ...(ahPct != null ? [`After-hours: ${ahPct >= 0 ? '+' : ''}${ahPct.toFixed(2)}%`] : []),
+      ``,
+      `Full model → ${APP_URL}/stock/${c.ticker}`,
+      `#${c.ticker} #Earnings #Investing`,
+    ].filter(Boolean)
+
+    const tweetText = lines.join('\n')
+    await post(tweetText)
+    await markPostedEvent(eventKey, 'earnings_results', c.ticker, c.date, tweetText)
+    posted++
+    if (posted < candidates.length) await new Promise(r => setTimeout(r, 10000))
+  }
+
+  if (posted === 0) console.log('All earnings results already posted — skipping')
+}
+
+// ─── Mode: economic_results ───────────────────────────────────────────────────
+// Fires at 5PM UTC (2PM ART) on macro event days — gives AV 4.5h to update after release.
+// Posts: actual value + change from prior + market reaction. No consensus (not available free).
+
+async function runEconomicResults() {
+  const todayUtc = new Date().toISOString().split('T')[0]
+  const todayEvent = MACRO_CALENDAR.find(e => e.date === todayUtc)
+
+  if (!todayEvent) {
+    console.log(`No macro event today (${todayUtc}) — skipping economic_results`)
+    return
+  }
+
+  const eventKey = `economic_results:${todayEvent.type}:${todayUtc}`
+  // Check both own dedup AND whether macro mode already posted this event today
+  const macroKey  = `macro:${todayEvent.type}:${todayUtc}`
+  if (await checkPostedEvent(eventKey) || await checkPostedEvent(macroKey)) {
+    console.log(`Already posted ${eventKey} or ${macroKey} — skipping`)
+    return
+  }
+
+  console.log(`Fetching ${todayEvent.type} results for ${todayUtc}...`)
+
+  // Fetch macro data with retry
+  async function fetchWithRetry(fn, params, maxAttempts = 3) {
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      const data = await fetchAlphaVantage(fn, params).catch(() => null)
+      const d = latestTwo(data?.data ?? {})
+      if (d && isFinite(d.latestVal) && isFinite(d.previousVal)) return d
+      if (attempt < maxAttempts) {
+        console.log(`AV not ready (attempt ${attempt}/${maxAttempts}), waiting 60s...`)
+        await new Promise(r => setTimeout(r, 60000))
+      }
+    }
+    return null
+  }
+
+  let d = null
+  const avFnMap = { CPI: ['CPI', { interval: 'monthly' }], NFP: ['NONFARM_PAYROLL', {}], FOMC: ['FEDERAL_FUNDS_RATE', { interval: 'monthly' }] }
+  const [fn, params] = avFnMap[todayEvent.type] ?? [null, null]
+  if (fn) d = await fetchWithRetry(fn, params)
+
+  if (!d) {
+    console.log(`${todayEvent.type} data not available from AV after retries — skipping`)
+    return
+  }
+
+  // Fetch market reaction
+  const [sp500, tnx] = await Promise.all([
+    fetchYahooChart('^GSPC').catch(() => null),
+    fetchYahooChart('^TNX').catch(() => null),
+  ])
+
+  const chg = d.latestVal - d.previousVal
+  const chgStr = `${chg >= 0 ? '+' : ''}${chg.toFixed(2)}`
+
+  const typeEmoji = { CPI: '📊', NFP: '💼', FOMC: '🏦' }
+  const unitMap = { CPI: 'index', NFP: 'K jobs', FOMC: '%' }
+  const unit = unitMap[todayEvent.type] ?? ''
+
+  const lines = [
+    `${typeEmoji[todayEvent.type] ?? '📅'} ${todayEvent.label} — Results`,
+    ``,
+    `Actual: ${d.latestVal.toFixed(todayEvent.type === 'FOMC' ? 2 : 1)}${unit ? ' ' + unit : ''}`,
+    `Prior:  ${d.previousVal.toFixed(todayEvent.type === 'FOMC' ? 2 : 1)} (${chgStr} change)`,
+    ``,
+    `Market reaction:`,
+    ...(sp500 ? [`S&P 500: ${sp500.changePct >= 0 ? '+' : ''}${sp500.changePct.toFixed(2)}%`] : []),
+    ...(tnx ? [`10Y Yield: ${tnx.changePct >= 0 ? '+' : ''}${tnx.changePct.toFixed(2)}%`] : []),
+    ``,
+    `${APP_URL}`,
+    `#${todayEvent.type} #Macro #Fed #Investing`,
+  ].filter(Boolean)
+
+  const tweetText = lines.join('\n')
+  await post(tweetText)
+  await markPostedEvent(eventKey, 'economic_results', null, todayUtc, tweetText)
+}
+
 const MODES = {
-  earnings:         runEarnings,
-  dcf:              runDcf,
-  dcf2:             runDcf2,
-  dcf_bear:         runDcfBear,
-  news:             runNews,
-  macro:            runMacro,
-  feature:          runFeature,
-  weekly_wrap:      runWeeklyWrap,
-  question:         runQuestion,
-  etf_pulse:        runEtfPulse,
-  sentiment:        runSentiment,
-  morning_brief:    runMorningBrief,
-  midday_pulse:     runMiddayPulse,
-  market_close:     runMarketClose,
-  market_open:      runMarketOpen,
-  sector_spotlight: runSectorSpotlight,
-  pre_close:        runPreClose,
-  after_hours:      runAfterHours,
-  theory_overnight: runTheoryOvernight,
+  earnings:          runEarnings,
+  dcf:               runDcf,
+  dcf2:              runDcf2,
+  dcf_bear:          runDcfBear,
+  news:              runNews,
+  macro:             runMacro,
+  feature:           runFeature,
+  weekly_wrap:       runWeeklyWrap,
+  question:          runQuestion,
+  etf_pulse:         runEtfPulse,
+  sentiment:         runSentiment,
+  morning_brief:     runMorningBrief,
+  midday_pulse:      runMiddayPulse,
+  market_close:      runMarketClose,
+  market_open:       runMarketOpen,
+  sector_spotlight:  runSectorSpotlight,
+  pre_close:         runPreClose,
+  after_hours:       runAfterHours,
+  theory_overnight:  runTheoryOvernight,
+  earnings_results:  runEarningsResults,
+  economic_results:  runEconomicResults,
 }
 
 if (!MODES[MODE]) {

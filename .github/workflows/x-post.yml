@@ -12,7 +12,7 @@ on:
         required: true
         default: 'dcf'
         type: choice
-        options: [earnings, dcf, dcf2, dcf_bear, macro, news, feature, weekly_wrap, question, etf_pulse, sentiment, morning_brief, midday_pulse, market_close, market_open, sector_spotlight, pre_close, after_hours, theory_overnight]
+        options: [earnings, dcf, dcf2, dcf_bear, macro, news, feature, weekly_wrap, question, etf_pulse, sentiment, morning_brief, midday_pulse, market_close, market_open, sector_spotlight, pre_close, after_hours, theory_overnight, earnings_results, economic_results]
       ticker:
         description: 'Ticker override (dcf / dcf2 / dcf_bear modes only)'
         required: false
@@ -48,4 +48,5 @@ jobs:
           BUFFER_CHANNEL_ID:  ${{ secrets.BUFFER_CHANNEL_ID }}
           ALPHA_VANTAGE_KEY:  ${{ secrets.ALPHA_VANTAGE_KEY }}
           AUTOMATION_API_KEY: ${{ secrets.AUTOMATION_API_KEY }}
+          FINNHUB_KEY:        ${{ secrets.FINNHUB_KEY }}
         run: node scripts/x-post.mjs
