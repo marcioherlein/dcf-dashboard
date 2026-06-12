@@ -501,7 +501,7 @@ function SynthesisBox({
 // Compact "FY22 28× · FY23 24× · TTM 21× · NTM 19×" strip shown inside method
 // cards for P/E, EV/EBITDA, EV/Revenue, and P/Book to give instant trend context.
 
-interface RatioPoint { label: string; value: number }
+interface _RatioPoint { label: string; value: number }
 
 function RatioHistoryRow({
   series, ntm, unit = 'x', color: _color,
@@ -517,7 +517,7 @@ function RatioHistoryRow({
   const historical = series.filter(p => p.label !== 'curr').slice(-2)
   const ttm = series.find(p => p.label === 'curr')
 
-  const points: Array<RatioPoint & { isNTM?: boolean; isTTM?: boolean }> = [
+  const points: Array<_RatioPoint & { isNTM?: boolean; isTTM?: boolean }> = [
     ...historical.map(p => ({ label: p.label, value: p.value })),
     ...(ttm ? [{ label: 'TTM', value: ttm.value, isTTM: true }] : []),
     ...(ntm != null ? [{ label: 'NTM', value: ntm, isNTM: true }] : []),

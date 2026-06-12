@@ -105,6 +105,12 @@ export default function MarketsPage() {
       setCtx(c)
       setLastFetch(Date.now())
       setErr(false)
+
+      // Fetch news lazily after price boxes have data — non-blocking
+      fetch('/api/markets/news')
+        .then(r => r.json())
+        .then(d => { if (d?.news) setMkt(prev => prev ? { ...prev, news: d.news } : prev) })
+        .catch(() => {/* news failure is silent */})
     } finally {
       if (isManual) setRefreshing(false)
     }
