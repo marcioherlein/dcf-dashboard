@@ -355,6 +355,7 @@ Check:
 - **FCF trend**: is FCF ramping, stable, or declining? Does it match baseFCF / historicalFCF?
 - **D&A/Rev%**: stable (SaaS ~2-5%, standard ~5-10%), rising with capex (MSFT 12%+), very high for content (NFLX 37%). Flag anomalies.
 - **CapEx/Rev%**: matches phase of investment cycle? Capital-intensive companies (TSM 35%, NEE 34%) vs asset-light (DDOG 4%).
+- **[Finding 20 — new]** For non-USD reporting companies (ARS, TRY, other EM currencies with large fxRates): verify D&A/Rev% and CapEx/Rev% are in a plausible range. If D&A% < 0.5% for a capital-intensive company (energy, industrials, telecom), OR CapEx% < 0.5% for an energy company, the CF rows likely have a units mismatch — the fxRate conversion may have applied an extra ÷1000 to CF rows but not IS rows. Cross-check: `baseFCF / revenueM` should give a plausible FCF margin (5-30% for energy). If baseFCF looks right but CF row D&A/capex are near 0, the CF rows are 1000× mis-scaled. Confirmed: YPF (ARS reporter) OCF=3.46 should be 3460M; D&A=1.93 should be 1930M. Impact: CapEx, D&A, and ΔNWC projections collapse to near-zero, producing inflated UFCF.
 - **Negative FCF with positive OCF**: capex surge phase (AMZN FY2025: OCF 139B, capex 132B → FCF 7B). Note whether model correctly captures the capex intensity.
 - **Projected CF rows**: do projected FCF = projected OCF − avgCapex? Are D&A projections in the CF projected rows consistent with IS D&A projections?
 

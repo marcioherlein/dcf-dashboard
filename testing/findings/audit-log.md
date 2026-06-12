@@ -488,3 +488,33 @@ diverges by [X%] — likely driven by a data quality issue ([F4 stale FCF / F18 
 Triangulated FV excludes this model." State which models ARE included in the triangulated number.
 
 ---
+
+### Finding 20: CF rows 1000× too small for ARS-reporting companies (FX units mismatch)
+**Agent:** audit-valuation
+**Date:** 2026-06-12
+**Ticker / Context:** YPF (Argentina ADR, ARS→USD fxRate=0.000698)
+**Run count:** 1
+**Status:** new
+
+**Observed:** For YPF (financialCurrency=ARS), the cash flow statement rows are stored at 1/1000 of their
+correct USD value. IS rows are correct (revenue=18139M = $18.1B USD). CF rows show OCF=3.46, capex=-3.57
+when the correct values are OCF=3460M, capex=-3570M. Specifically:
+- D&A: stored as 1.93, actual 1930M → D&A/Rev = 0.013% instead of 13.4%
+- CapEx: stored as 3.57, actual 3570M → CapEx/Rev = 0.020% instead of 19.7%
+All three zeroed (D&A%, CapEx%, ΔNWC) collapse the UFCF line in `buildProjectedRows`.
+YPF is a capital-intensive energy company with ~$5B/yr capex; projecting it at near-0 capex
+produces a grossly inflated FCF.
+**Root cause hypothesis:** FMP CF data for ARS reporters is returned in ARS thousands (not millions).
+The `fxRate` conversion divides by 1e3 (to go from thousands→millions) but then multiplies by
+fxRate again, giving fxRate/1000 instead of fxRate. Net effect: values 1000× too small vs IS rows.
+**Expected:** CF row values should be in USD millions, matching IS row scale.
+**File / location:** `app/api/financials/route.ts` CF row construction (~line 1000); the fxRate
+multiplication for CF rows may be applying an extra /1e3 division not present in IS row construction.
+**Suggested check to add:** In Phase 4B Cash Flow audit: compute `D&A / revenue` and `capex / revenue`
+for each CF row. If D&A% < 0.5% for a non-asset-light company, OR capex% < 0.5% for an energy/industrial
+company, flag a units mismatch. Cross-check: does `baseFCF / revenueM` give a plausible FCF margin (5-30%)?
+If yes but CF row D&A/capex ratios are near 0, the CF rows are mis-scaled.
+For ARS-reporting companies specifically: verify OCF in CF rows ≈ OCF that would be implied by
+OCF/revenue ≈ 15-30% (consistent with energy sector benchmarks).
+
+---
