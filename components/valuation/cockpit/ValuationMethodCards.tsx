@@ -750,14 +750,16 @@ export default function ValuationMethodCards({
               Undo
             </button>
           )}
-          <button
-            onClick={onReset}
-            className="flex items-center gap-1 text-[11px] text-[#6B6B6B] hover:text-[#111111] px-2.5 py-2 min-h-[36px] rounded-lg border border-[#E5E5E5] hover:bg-[#F5F5F5] transition-colors"
-            aria-label="Reset to defaults"
-          >
-            <RotateCcw size={11} />
-            Reset
-          </button>
+          {canUndo && (
+            <button
+              onClick={onReset}
+              className="flex items-center gap-1 text-[11px] text-[#6B6B6B] hover:text-[#111111] px-2.5 py-2 min-h-[36px] rounded-lg border border-[#E5E5E5] hover:bg-[#F5F5F5] transition-colors"
+              aria-label="Reset to defaults"
+            >
+              <RotateCcw size={11} />
+              Reset
+            </button>
+          )}
         </div>
       </div>
 
