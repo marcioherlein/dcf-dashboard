@@ -21,6 +21,49 @@ const APP_URL             = (process.env.APP_URL            || 'https://insic.ap
 const DRY_RUN             = process.env.DRY_RUN             === 'true'
 const BUFFER_API_KEY      = process.env.BUFFER_API_KEY      || ''
 const BUFFER_CHANNEL_ID   = process.env.BUFFER_CHANNEL_ID   || ''
+
+// ─── US Market Holidays ───────────────────────────────────────────────────────
+// NYSE is closed on these dates. Intraday modes (market_open, midday_pulse,
+// sector_spotlight, pre_close, market_close, after_hours, etf_pulse) should
+// not post live market data. Instead they are redirected to holiday_deep_dive.
+// Update annually from: https://www.nyse.com/markets/hours-calendars
+
+const US_MARKET_HOLIDAYS = new Set([
+  // 2026
+  '2026-01-01', // New Year's Day
+  '2026-01-19', // Martin Luther King Jr. Day
+  '2026-02-16', // Presidents' Day
+  '2026-04-03', // Good Friday
+  '2026-05-25', // Memorial Day
+  '2026-07-03', // Independence Day (observed — July 4 falls on Saturday)
+  '2026-09-07', // Labor Day
+  '2026-11-26', // Thanksgiving Day
+  '2026-12-25', // Christmas Day
+  // 2027 (plan ahead)
+  '2027-01-01', // New Year's Day
+  '2027-01-18', // MLK Day
+  '2027-02-15', // Presidents' Day
+  '2027-03-26', // Good Friday
+  '2027-05-31', // Memorial Day
+  '2027-07-05', // Independence Day (observed)
+  '2027-09-06', // Labor Day
+  '2027-11-25', // Thanksgiving
+  '2027-12-24', // Christmas (observed)
+])
+
+function isMarketHoliday(dateStr) {
+  return US_MARKET_HOLIDAYS.has(dateStr)
+}
+
+// Modes that require live intraday data — redirect to holiday content when closed
+const INTRADAY_MODES = new Set([
+  'market_open', 'sector_spotlight', 'midday_pulse', 'etf_pulse',
+  'pre_close', 'market_close', 'after_hours', 'economic_results',
+])
+
+// Modes that are fine on holidays (use historical data or are purely educational)
+// earnings, dcf, dcf2, dcf_bear, macro, feature, theory_overnight,
+// question, weekly_wrap, sentiment, morning_brief, earnings_results
 const AUTOMATION_API_KEY = process.env.AUTOMATION_API_KEY || ''
 const ALPHA_VANTAGE_KEY  = process.env.ALPHA_VANTAGE_KEY  || 'demo'
 const FINNHUB_KEY        = process.env.FINNHUB_KEY        || ''
@@ -2835,6 +2878,231 @@ async function runEconomicResults() {
   await markPostedEvent(eventKey, 'economic_results', null, todayUtc, tweetText)
 }
 
+// ─── Mode: holiday_deep_dive ──────────────────────────────────────────────────
+// Fires instead of intraday modes on US market holidays.
+// Posts richer educational content grounded in academic research — no live data needed.
+
+const HOLIDAY_POSTS = [
+  {
+    title: 'The Equity Risk Premium — the most debated number in finance',
+    lines: [
+      `📚 The Equity Risk Premium — the most debated number in finance`,
+      ``,
+      `The ERP is the extra return investors demand for owning equities over risk-free bonds.`,
+      `It sits inside every WACC calculation. Change it by 1% and fair values shift 15-30%.`,
+      ``,
+      `━━━ WHAT ACADEMICS FOUND ━━━`,
+      `Dimson, Marsh & Staunton (2022): realized ERP ≈ 3.5-4.5% over 120 years across developed markets.`,
+      `Damodaran (2026): implied ERP from S&P 500 prices ≈ 4.0-5.5% in current market.`,
+      `Mehra & Prescott (1985): called it the "equity premium puzzle" — too high to explain with rational risk models alone.`,
+      ``,
+      `━━━ WHY IT MATTERS FOR YOUR MODEL ━━━`,
+      `ERP = 4%: Cost of equity for a beta-1 stock = Rf + 1.0 × 4% = e.g. 8.3%`,
+      `ERP = 5%: Same stock = 9.3%`,
+      `That 1% difference in ERP compresses a growth stock's fair value by ~20%.`,
+      ``,
+      `The ERP is not fixed. It expands in recessions, contracts in bull markets.`,
+      `When you use insic, we use Damodaran's current implied ERP — updated monthly.`,
+      ``,
+      `${APP_URL}`,
+      `#EquityRiskPremium #WACC #Damodaran #ValueInvesting`,
+    ],
+  },
+  {
+    title: 'The Fama-French factors — what actually drives stock returns',
+    lines: [
+      `📚 What actually drives stock returns? (The Fama-French answer)`,
+      ``,
+      `In 1993, Eugene Fama and Kenneth French published a model that changed how academia thinks about equity returns.`,
+      ``,
+      `They found three factors explain most of the variation in stock returns:`,
+      ``,
+      `1. Market risk (beta) — stocks beat bonds on average`,
+      `2. Size — small caps beat large caps historically`,
+      `3. Value — cheap stocks (low P/B) beat expensive ones`,
+      ``,
+      `In 2015, they extended to five factors, adding:`,
+      `4. Profitability — high operating profit stocks beat low ones`,
+      `5. Investment — companies that invest conservatively beat aggressive investors`,
+      ``,
+      `━━━ THE DCF CONNECTION ━━━`,
+      `Factor 3 (value) and 4 (profitability) map directly to DCF.`,
+      `Low P/B = trading below book = margin of safety.`,
+      `High profitability = high ROIC = durable cash flows.`,
+      ``,
+      `DCF formalizes what Fama-French quantified empirically.`,
+      `You're not doing something different from academic finance — you're doing the same thing with more transparency.`,
+      ``,
+      `${APP_URL}`,
+      `#FamaFrench #FactorInvesting #DCF #AcademicFinance`,
+    ],
+  },
+  {
+    title: 'Robert Shiller\'s CAPE ratio — the long-run valuation clock',
+    lines: [
+      `📚 Shiller's CAPE ratio — what 150 years of market data says about valuation`,
+      ``,
+      `Robert Shiller (Nobel 2013) developed the Cyclically Adjusted P/E (CAPE) ratio:`,
+      `Current price ÷ 10-year average real earnings`,
+      ``,
+      `The idea: one year of earnings is noisy. Average over a decade and you get signal.`,
+      ``,
+      `━━━ WHAT THE DATA SAYS ━━━`,
+      `Historical average CAPE: ~16-17×`,
+      `1929 peak: ~33× (preceded the crash)`,
+      `2000 peak: ~44× (dot-com bubble)`,
+      `2009 trough: ~13×`,
+      `Current (2026): ~28-30×`,
+      ``,
+      `High CAPE predicts lower 10-year forward returns. Not useless — just long-horizon.`,
+      ``,
+      `━━━ CRITIQUE AND NUANCE ━━━`,
+      `Jeremy Siegel: accounting changes make modern earnings look smaller → CAPE overstates valuation`,
+      `Damodaran: CAPE says nothing about individual stocks, only the index`,
+      ``,
+      `The right use of CAPE: macro context, not stock-picking.`,
+      `For individual companies, DCF with honest assumptions is more reliable.`,
+      ``,
+      `${APP_URL}`,
+      `#CAPE #Shiller #MarketValuation #ValueInvesting`,
+    ],
+  },
+  {
+    title: 'The Modigliani-Miller theorem — why capital structure (mostly) doesn\'t matter',
+    lines: [
+      `📚 The Modigliani-Miller theorem — the most counterintuitive idea in corporate finance`,
+      ``,
+      `In 1958, Franco Modigliani and Merton Miller proved something shocking:`,
+      `In a perfect market, a firm's value is independent of how it's financed.`,
+      `Debt vs equity? Doesn't matter for total firm value.`,
+      ``,
+      `━━━ THE INTUITION ━━━`,
+      `If debt is cheap, it raises leverage risk. Higher risk = investors demand higher return on equity.`,
+      `The cost savings from cheap debt are exactly offset by the higher cost of equity.`,
+      `Total cost of capital stays the same.`,
+      ``,
+      `━━━ IN PRACTICE (WITH TAXES) ━━━`,
+      `Taxes break the perfect market assumption.`,
+      `Interest is tax-deductible → debt has a tax shield → some debt adds value.`,
+      `This is why WACC includes (1 - tax rate) on the cost of debt in our models.`,
+      ``,
+      `━━━ THE IMPLICATION ━━━`,
+      `Companies can't create value by shuffling debt and equity.`,
+      `Value comes from operations: higher ROIC, better margins, faster growth.`,
+      `Financing is just execution. The DCF is what captures the real value.`,
+      ``,
+      `${APP_URL}`,
+      `#ModiglianiMiller #CorporateFinance #WACC #DCF`,
+    ],
+  },
+  {
+    title: 'Benjamin Graham\'s Mr. Market — the most useful mental model in investing',
+    lines: [
+      `📚 Mr. Market — Benjamin Graham's most useful mental model`,
+      ``,
+      `Graham introduced Mr. Market in The Intelligent Investor (1949).`,
+      `The idea is simple but profound:`,
+      ``,
+      `Imagine you own a share of a business with a partner called Mr. Market.`,
+      `Every day, he offers to buy your share or sell you his.`,
+      `Some days he's euphoric and offers a high price.`,
+      `Some days he's depressed and offers a low price.`,
+      ``,
+      `You are never obligated to trade with him.`,
+      ``,
+      `━━━ THE LESSON ━━━`,
+      `Mr. Market is there to serve you, not to guide you.`,
+      `His price is useful if you want to buy or sell.`,
+      `His price is useless as a measure of business value.`,
+      ``,
+      `The investor's job: know what the business is worth independently.`,
+      `Trade with Mr. Market only when his price is attractive relative to that value.`,
+      ``,
+      `━━━ THE DCF IS YOUR ANCHOR ━━━`,
+      `Without an independent valuation, you have no way to judge Mr. Market's offers.`,
+      `With one, his volatility becomes opportunity rather than anxiety.`,
+      ``,
+      `That's exactly what insic is built for.`,
+      ``,
+      `${APP_URL}`,
+      `#Graham #MrMarket #IntelligentInvestor #ValueInvesting`,
+    ],
+  },
+  {
+    title: 'The Kelly Criterion — how much to bet on your best ideas',
+    lines: [
+      `📚 The Kelly Criterion — the math of position sizing`,
+      ``,
+      `John Kelly (1956) derived a formula for optimal bet sizing:`,
+      `f* = (bp - q) / b`,
+      `Where: b = odds, p = probability of winning, q = probability of losing`,
+      ``,
+      `Applied to investing: f* = edge / odds`,
+      ``,
+      `━━━ WHAT THIS MEANS ━━━`,
+      `The bigger your edge (margin of safety), the more you should allocate.`,
+      `The bigger the uncertainty, the less you should allocate.`,
+      ``,
+      `Kelly maximizes long-run wealth growth. In practice, investors use half-Kelly or quarter-Kelly to reduce volatility.`,
+      ``,
+      `━━━ THE VALUATION CONNECTION ━━━`,
+      `Kelly requires you to know your edge.`,
+      `Edge = (intrinsic value - current price) / intrinsic value = margin of safety`,
+      ``,
+      `You can't apply Kelly without a valuation model.`,
+      `This is why serious investors obsess over DCF — not because the model is perfect, but because sizing requires an estimate.`,
+      ``,
+      `A 30% margin of safety on a reliable business might warrant 5-10% of portfolio.`,
+      `A 5% margin of safety on a speculative one: maybe 1-2%.`,
+      ``,
+      `${APP_URL}`,
+      `#Kelly #PositionSizing #ValueInvesting #RiskManagement`,
+    ],
+  },
+  {
+    title: 'The concept of NOPAT and Economic Profit',
+    lines: [
+      `📚 NOPAT and Economic Profit — why accounting profit misleads investors`,
+      ``,
+      `Net income is what accountants report. It's not what investors should care about.`,
+      ``,
+      `━━━ THE PROBLEM WITH NET INCOME ━━━`,
+      `Net income ignores the cost of equity capital.`,
+      `A company can report positive net income while destroying shareholder value.`,
+      ``,
+      `━━━ THE SOLUTION: ECONOMIC PROFIT ━━━`,
+      `Economic Profit = NOPAT - (Invested Capital × WACC)`,
+      `NOPAT = Net Operating Profit After Tax (strips out financing effects)`,
+      ``,
+      `If Economic Profit > 0: company earns more than its cost of capital → creating value`,
+      `If Economic Profit < 0: company earns less than its cost of capital → destroying value`,
+      ``,
+      `This is mathematically equivalent to ROIC > WACC.`,
+      `And it's exactly what we compute in every insic valuation.`,
+      ``,
+      `━━━ WHY THIS MATTERS ━━━`,
+      `Companies with persistent positive Economic Profit deserve premium valuations.`,
+      `Companies with negative Economic Profit — no matter how "profitable" — are traps.`,
+      ``,
+      `Net income is noise. Economic Profit is signal.`,
+      ``,
+      `${APP_URL}`,
+      `#NOPAT #EconomicProfit #ROIC #Valuation`,
+    ],
+  },
+]
+
+async function runHolidayDeepDive() {
+  const todayUtc  = new Date().toISOString().split('T')[0]
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+
+  // Rotate through HOLIDAY_POSTS using day-of-year so it changes daily
+  const post_content = HOLIDAY_POSTS[dayOfYear % HOLIDAY_POSTS.length]
+
+  const lines = post_content.lines.map(l => l.replace(/\$\{APP_URL\}/g, APP_URL))
+  await post(lines.join('\n'))
+}
+
 const MODES = {
   earnings:          runEarnings,
   dcf:               runDcf,
@@ -2857,11 +3125,28 @@ const MODES = {
   theory_overnight:  runTheoryOvernight,
   earnings_results:  runEarningsResults,
   economic_results:  runEconomicResults,
+  holiday_deep_dive: runHolidayDeepDive,
 }
 
 if (!MODES[MODE]) {
   console.error(`Unknown MODE="${MODE}". Use: ${Object.keys(MODES).join(' | ')}`)
   process.exit(1)
+}
+
+// ─── Holiday redirect ─────────────────────────────────────────────────────────
+// If today is a US market holiday and this mode depends on live intraday data,
+// replace it with a holiday_deep_dive post instead of posting stale/wrong data.
+const todayForHolidayCheck = new Date().toISOString().split('T')[0]
+if (INTRADAY_MODES.has(MODE) && isMarketHoliday(todayForHolidayCheck)) {
+  console.log(`🏖️ Market holiday (${todayForHolidayCheck}): replacing ${MODE} with holiday_deep_dive`)
+  try {
+    await runHolidayDeepDive()
+    console.log(`Done (mode=holiday_deep_dive, original=${MODE})`)
+  } catch (err) {
+    console.error(`Failed (mode=holiday_deep_dive):`, err.message)
+    process.exit(1)
+  }
+  process.exit(0)
 }
 
 try {
