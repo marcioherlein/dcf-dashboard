@@ -1,7 +1,6 @@
 'use client'
 import { useEffect, useState, useCallback, useRef } from 'react'
 import Link from 'next/link'
-import { RefreshCw } from 'lucide-react'
 import { useInView, useReducedMotion } from 'motion/react'
 
 import IndexSnapshotGrid     from '@/components/markets/IndexSnapshotGrid'
@@ -82,7 +81,6 @@ export default function MarketsPage() {
   const [ctx,        setCtx]        = useState<MarketContextPayload | null>(null)
   const [err,        setErr]        = useState(false)
   const [lastFetch,  setLastFetch]  = useState<number>(0)
-  const [refreshing, setRefreshing] = useState(false)
   const [status]                    = useState(getMarketStatus)
   const [activeTab,  setActiveTab]  = useState<MarketTab>('overview')
   const intervalRef                 = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -93,8 +91,7 @@ export default function MarketsPage() {
     return () => clearInterval(t)
   }, [])
 
-  const fetchAll = useCallback(async (isManual = false) => {
-    if (isManual) setRefreshing(true)
+  const fetchAll = useCallback(async () => {
     try {
       const [m, c] = await Promise.all([
         fetch('/api/markets/data').then(r => r.json()).catch(() => null),
@@ -111,9 +108,7 @@ export default function MarketsPage() {
         .then(r => r.json())
         .then(d => { if (d?.news) setMkt(prev => prev ? { ...prev, news: d.news } : prev) })
         .catch(() => {/* news failure is silent */})
-    } finally {
-      if (isManual) setRefreshing(false)
-    }
+    } catch { /* ignore */ }
   }, [])
 
   useEffect(() => {
@@ -160,7 +155,7 @@ export default function MarketsPage() {
           <div className="rounded-xl border border-[#F0B8B8] bg-[#FCEAEA] px-4 py-3 text-[12px] text-[#D83B3B] flex items-center justify-between mb-4">
             <span>Market data could not be loaded. Check API keys and try again.</span>
             <button
-              onClick={() => fetchAll(true)}
+              onClick={() => fetchAll()}
               className="text-[#D83B3B] font-semibold text-[11px] hover:underline ml-4 min-h-[44px]"
             >
               Try again
@@ -169,20 +164,16 @@ export default function MarketsPage() {
         )}
 
         {/* ── Page Header ─────────────────────────────────────────────────── */}
-        <div className="flex items-center gap-2 justify-end mb-4">
+        <div className="flex items-center justify-between gap-2 mb-4">
+          <div>
+            <h1 className="text-[22px] sm:text-[24px] font-bold text-[#111111] leading-tight tracking-tight">Markets</h1>
+            <p className="text-[12px] text-[#6B6B6B] mt-0.5 hidden sm:block">Context and key drivers that influence valuation decisions.</p>
+          </div>
           <div className="flex items-center gap-2 shrink-0">
             <span className="text-[11px] text-[#6B6B6B] hidden md:block">{etDate}, {etTime} ET</span>
             {lastFetch > 0 && (
               <span className="text-[11px] text-[#6B6B6B] hidden lg:block">· Updated {timeAgo(lastFetch)}</span>
             )}
-            <button
-              onClick={() => fetchAll(true)}
-              disabled={refreshing}
-              className="p-2 rounded-lg text-[#6B6B6B] hover:bg-[#F5F5F5] transition-colors disabled:opacity-50 min-h-[44px] min-w-[44px] flex items-center justify-center"
-              title="Refresh"
-            >
-              <RefreshCw size={13} className={refreshing ? 'motion-safe:animate-spin' : ''} />
-            </button>
           </div>
         </div>
 
