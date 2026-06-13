@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { RefreshCw, ChevronDown, ChevronRight, Plus, ArrowUpRight, Trash2 } from 'lucide-react'
+import { RefreshCw, ChevronDown, ChevronRight, Plus, ArrowUpRight, Trash2, Info } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { useSession, signIn } from 'next-auth/react'
@@ -14,8 +14,7 @@ import { Sparkline, SparklineSkeleton } from '@/components/ui/Sparkline'
 import { loadETFWatchlist, deleteETFEntry, saveETFEntry, readLocalWatchlist } from '@/lib/data/etfWatchlistStore'
 import { ALL_TICKERS, SECTOR_META, GEO_META, STYLE_META, ALL_META } from '@/lib/data/etfUniverse'
 import { fmtLarge, fmtPctAbs, fmtMultiple } from '@/lib/formatters'
-import { scoreColor, scoreLabel, scoreBadge, computeETFScore } from '@/lib/data/etfScore'
-import { InfoTooltip } from '@/components/ui/info-tooltip'
+import { scoreColor, scoreLabel, scoreBadge, computeETFScore, explainScore } from '@/lib/data/etfScore'
 import { ChevronUp, ChevronsUpDown, Check } from 'lucide-react'
 import type { ETFMeta, ETFGroup } from '@/lib/data/etfUniverse'
 import type { ETFEntry, ETFBatchItem } from '@/lib/data/etfTypes'
@@ -143,6 +142,28 @@ function Rankings({
               {rows.map(({ meta, item }) => {
                 const score = item?.valueScore ?? null
                 const isWatchlisted = watchlistedTickers.has(meta.ticker)
+
+                // Per-row score breakdown tooltip
+                const scoreTooltip = (() => {
+                  if (!item || score == null) return 'Score = P/E (30 pts) + P/B (25 pts) + Yield (25 pts) − Expense ratio penalty (20 pts).'
+                  const { breakdown } = computeETFScore(item.peRatio, item.pbRatio, item.yield, item.expenseRatio)
+                  const explain = explainScore(breakdown, score, { peRatio: item.peRatio, pbRatio: item.pbRatio, yieldVal: item.yield, expenseRatio: item.expenseRatio })
+                  const lines = [
+                    item.peRatio != null ? `P/E ${item.peRatio.toFixed(1)}× → ${breakdown.pe}/30 pts` : null,
+                    item.pbRatio != null ? `P/B ${item.pbRatio.toFixed(1)}× → ${breakdown.pb}/25 pts` : null,
+                    item.yield != null && item.yield > 0 ? `Yield ${(item.yield * 100).toFixed(1)}% → ${breakdown.yieldPts}/25 pts` : null,
+                    item.expenseRatio != null ? `Expense ${(item.expenseRatio * 100).toFixed(2)}% → −${breakdown.expensePenalty} pts` : null,
+                  ].filter(Boolean).join('\n')
+                  return lines ? `${explain}\n\n${lines}` : explain
+                })()
+
+                // Expense ratio color vs group avg
+                const CATEGORY_AVG: Record<string, number> = { sector: 0.0013, geo: 0.0035, style: 0.0015 }
+                const avg = CATEGORY_AVG[meta.group] ?? 0.002
+                const erColor = item?.expenseRatio == null ? 'text-[#111111]'
+                  : item.expenseRatio <= avg * 0.75 ? 'text-[#11875D]'
+                  : item.expenseRatio > avg * 1.5   ? 'text-[#D83B3B]'
+                  : 'text-[#111111]'
                 return (
                   <tr key={meta.ticker} className="hover:bg-[#F9F8F5] transition-colors group">
                     <td className="pl-4 pr-3 py-2.5 sticky left-0 bg-white group-hover:bg-[#F9F8F5] transition-colors">
@@ -162,8 +183,10 @@ function Rankings({
                     <td className="px-3 py-2.5 text-right tabular-nums text-[12px] text-[#111111]">
                       {item?.pbRatio != null ? fmtMultiple(item.pbRatio) : <span className="text-[#8A95A6]">—</span>}
                     </td>
-                    <td className="px-3 py-2.5 text-right tabular-nums text-[12px] text-[#111111]">
-                      {item?.expenseRatio != null ? (item.expenseRatio * 100).toFixed(2) + '%' : <span className="text-[#8A95A6]">—</span>}
+                    <td className="px-3 py-2.5 text-right tabular-nums text-[12px]">
+                      {item?.expenseRatio != null
+                        ? <span className={erColor}>{(item.expenseRatio * 100).toFixed(2)}%</span>
+                        : <span className="text-[#8A95A6]">—</span>}
                     </td>
                     <td className="px-3 py-2.5 text-right tabular-nums text-[12px] text-[#111111]">
                       {item?.yield != null ? fmtPctAbs(item.yield) : <span className="text-[#8A95A6]">—</span>}
@@ -176,7 +199,15 @@ function Rankings({
                         <div className="inline-flex items-center gap-1 justify-end">
                           <span className={cn('text-[12px] font-[700]', scoreColor(score))}>{score}</span>
                           <span className={cn('text-[10px] font-[600] hidden sm:block', scoreColor(score))}>{scoreLabel(score)}</span>
-                          <InfoTooltip text="Score = P/E (30 pts) + P/B (25 pts) + Yield (25 pts) − Expense ratio penalty (20 pts). 70+ = Deep Value." side="top" />
+                          <button
+                            data-no-min-h
+                            title={scoreTooltip}
+                            className="text-[9px] text-[#9B9B9B] hover:text-olive-700 transition-colors w-4 h-4 flex items-center justify-center"
+                            onClick={(e) => e.preventDefault()}
+                            aria-label="Score breakdown"
+                          >
+                            <Info size={10} />
+                          </button>
                         </div>
                       ) : <span className="text-[#8A95A6]">—</span>}
                     </td>
