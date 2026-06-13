@@ -332,7 +332,7 @@ export default function StockIdentityHeader({
       </div>
 
       {/* ── ROW 2: Price Chart + Market Metrics ─────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row gap-3 items-stretch">
+      <div className="flex flex-col sm:flex-row gap-3 items-start">
 
         {/* Chart — no aria wrapper div that could collapse height */}
         <div className="bg-white border border-[#E5E5E5] rounded-xl overflow-hidden flex flex-col w-full sm:basis-[66%] sm:max-w-[66%]"
