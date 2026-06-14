@@ -62,7 +62,8 @@ const StackedBars = dynamic(
             <Tooltip
               cursor={{ fill: 'rgba(0,0,0,0.04)' }}
               contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid #E5E5E5', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
-              formatter={(value: unknown, name: string) => [value, name.replace(/([A-Z])/g, ' $1').trim()]}
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              formatter={(value: any, name: any) => [String(value), String(name ?? '').replace(/([A-Z])/g, ' $1').trim()] as any}
             />
             {(['strongBuy','buy','hold','sell','strongSell'] as const).map(key => (
               <Bar key={key} dataKey={key} stackId="a" fill={COLORS[key]} radius={key === 'strongSell' ? [4,4,0,0] : undefined} isAnimationActive={false}>
