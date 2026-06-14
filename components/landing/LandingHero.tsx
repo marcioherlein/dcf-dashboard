@@ -4,16 +4,8 @@ import { Play } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import ProductAnimation from './ProductAnimation'
-import AnimatedCounter from './AnimatedCounter'
 
 const EASE = [0.16, 1, 0.3, 1] as const
-
-// Glassmorphism stat shown in the hero — counts up on load
-const HERO_STATS = [
-  { value: 85.1, prefix: '+', suffix: '%', decimals: 1, label: 'avg implied return on undervalued picks' },
-  { value: 5, prefix: '', suffix: ' models', decimals: 0, label: 'blended valuation methods' },
-  { value: 10, prefix: '', suffix: '/mo free', decimals: 0, label: 'analyses, no credit card' },
-]
 
 // ── Main component ───────────────────────────────────────────────────────────
 export default function LandingHero() {
@@ -153,39 +145,6 @@ export default function LandingHero() {
                 <Play size={13} className="text-[#7C9A19]" fill="#7C9A19" />
                 See how it works
               </a>
-            </motion.div>
-
-            {/* Glassmorphism stat pills with counting numbers */}
-            <motion.div
-              initial={reduced ? {} : { opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease: EASE, delay: 0.52 }}
-              className="flex flex-wrap gap-2 mb-5"
-            >
-              {HERO_STATS.map((stat) => (
-                <div
-                  key={stat.label}
-                  className="flex items-center gap-2 px-3.5 py-2 rounded-xl"
-                  style={{
-                    background: 'rgba(255,255,255,0.08)',
-                    backdropFilter: 'blur(12px) saturate(1.4)',
-                    WebkitBackdropFilter: 'blur(12px) saturate(1.4)',
-                    border: '1px solid rgba(255,255,255,0.13)',
-                  }}
-                >
-                  <AnimatedCounter
-                    value={stat.value}
-                    prefix={stat.prefix}
-                    suffix={stat.suffix}
-                    decimals={stat.decimals}
-                    className="text-[14px] font-[800] tabular-nums"
-                    style={{ color: '#7C9A19' }}
-                  />
-                  <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.52)' }}>
-                    {stat.label}
-                  </span>
-                </div>
-              ))}
             </motion.div>
 
             {/* Social proof */}
