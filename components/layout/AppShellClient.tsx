@@ -10,7 +10,7 @@ import FeedbackButton from '@/components/ui/FeedbackButton'
 function AppShellInner({ children }: { children: React.ReactNode }) {
   return (
     <main
-      className="pb-safe-nav lg:pb-6 lg:pl-[240px]"
+      className="pb-safe-nav lg:pb-6 lg:pl-[192px]"
       style={{ paddingTop: 'calc(52px + env(safe-area-inset-top, 0px))' }}
     >
       {children}

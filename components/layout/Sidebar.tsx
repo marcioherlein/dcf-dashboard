@@ -136,7 +136,7 @@ export default function Sidebar() {
   return (
     <aside
       aria-label="Application sidebar"
-      className="fixed left-0 top-0 bottom-0 w-[240px] z-30 hidden lg:flex flex-col overflow-hidden"
+      className="fixed left-0 top-0 bottom-0 w-[192px] z-30 hidden lg:flex flex-col overflow-hidden"
       style={{
         /* Gradient: pure black top → very subtle warm olive tint at bottom */
         background: 'linear-gradient(180deg, #0A0A0A 0%, #0D0F0A 60%, #0F1108 100%)',
