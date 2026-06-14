@@ -242,7 +242,7 @@ function RevenueView({ statementsData, currency }: { statementsData: AnyRecord; 
 
 // ─── Income Flow (Sankey) view ────────────────────────────────────────────────
 
-function IncomeFlowView({ statementsData, currency }: { statementsData: AnyRecord; currency: string }) {
+function _IncomeFlowView({ statementsData, currency }: { statementsData: AnyRecord; currency: string }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [chartWidth, setChartWidth] = useState(0)
   const fin = statementsData?.financialCurrency ?? currency
@@ -488,6 +488,235 @@ function IncomeFlowView({ statementsData, currency }: { statementsData: AnyRecor
   )
 }
 
+// ─── Revenue to Profit (horizontal waterfall) ────────────────────────────────
+
+interface WaterfallPeriod {
+  label: string   // "Annual" or "Quarterly"
+  revenue: number | null
+  cogs: number | null
+  grossProfit: number | null
+  opEx: number | null
+  operatingIncome: number | null
+  taxOther: number | null
+  netIncome: number | null
+}
+
+function buildWaterfallPeriod(row: AnyRecord | null, sym: string): WaterfallPeriod | null {
+  if (!row) return null
+  const revenue = row.totalRevenue ?? row.operatingRevenue ?? null
+  if (!revenue || revenue <= 0) return null
+
+  const rawGP   = row.grossProfit ?? null
+  const rawCOGS = row.costOfRevenue ?? null
+  let grossProfit: number | null = null
+  let cogs: number | null = null
+  if (rawGP != null && rawGP > 0) {
+    grossProfit = Math.min(revenue, rawGP)
+    cogs = revenue - grossProfit
+  } else if (rawCOGS != null && rawCOGS > 0) {
+    cogs = Math.min(revenue, rawCOGS)
+    grossProfit = revenue - cogs
+  }
+
+  const rawOp = row.operatingIncome ?? row.ebit ?? null
+  const operatingIncome = rawOp != null ? rawOp : null
+  const opEx = (grossProfit != null && operatingIncome != null)
+    ? grossProfit - operatingIncome : null
+
+  const netIncome = row.netIncome ?? row.netIncomeCommonStockholders ?? null
+  const taxOther = (operatingIncome != null && operatingIncome > 0 && netIncome != null)
+    ? operatingIncome - Math.min(operatingIncome, netIncome)
+    : null
+
+  return { label: sym, revenue, cogs, grossProfit, opEx, operatingIncome, taxOther, netIncome }
+}
+
+function WaterfallRow({
+  name,
+  value,
+  maxValue,
+  isDeduction,
+  isProfit,
+  isFinal,
+  sym,
+  showDivider,
+}: {
+  name: string
+  value: number | null
+  maxValue: number
+  isDeduction?: boolean
+  isProfit?: boolean
+  isFinal?: boolean
+  sym: string
+  showDivider?: boolean
+}) {
+  if (value == null) return null
+  const barPct = maxValue > 0 ? Math.max(2, Math.min(100, (Math.abs(value) / maxValue) * 100)) : 2
+  const isNeg  = value < 0
+
+  const barColor = isDeduction
+    ? 'bg-[#F4A7B9]'          // pink-red for costs (like the screenshot)
+    : isProfit || isFinal
+      ? value >= 0 ? 'bg-[#34D399]' : 'bg-[#F87171]'  // green profit / red loss
+      : 'bg-[#60A5FA]'        // blue for revenue
+
+  return (
+    <>
+      {showDivider && <div className="my-1.5 border-t border-[#E5E5E5]" />}
+      <div className="flex items-center gap-3 group">
+        {/* Label */}
+        <div className="w-[130px] sm:w-[150px] shrink-0 text-right">
+          <span className={cn(
+            'text-[11.5px] leading-none',
+            isDeduction ? 'text-[#9B9B9B]' : 'text-[#111111]',
+            isFinal && 'font-[700]',
+          )}>
+            {isDeduction && <span className="text-[#D83B3B] font-[600] mr-0.5">−</span>}
+            {name}
+          </span>
+        </div>
+
+        {/* Bar track */}
+        <div className="flex-1 min-w-0 h-[22px] bg-[#F5F5F5] rounded-lg overflow-hidden">
+          <div
+            className={cn('h-full rounded-lg transition-all', barColor)}
+            style={{ width: `${barPct}%` }}
+          />
+        </div>
+
+        {/* Value */}
+        <div className="w-[58px] shrink-0 text-right">
+          <span className={cn(
+            'text-[12px] tabular-nums font-[600]',
+            isDeduction ? 'text-[#9B9B9B]' : isNeg ? 'text-[#D83B3B]' : isProfit || isFinal ? 'text-[#11875D]' : 'text-[#111111]',
+          )}>
+            {isNeg ? '−' : ''}{fmtFlow(Math.abs(value), sym)}
+          </span>
+        </div>
+      </div>
+    </>
+  )
+}
+
+function RevenueToProfitView({
+  statementsData,
+  currency,
+}: {
+  statementsData: AnyRecord
+  currency: string
+}) {
+  const [period, setPeriod] = useState<'annual' | 'quarterly'>('annual')
+  const sym = currSym(statementsData?.financialCurrency ?? currency)
+
+  const data = useMemo<WaterfallPeriod | null>(() => {
+    if (period === 'annual') {
+      const rows: AnyRecord[] = statementsData?.annual?.incomeStatement ?? []
+      const row = rows[rows.length - 1] ?? null
+      return buildWaterfallPeriod(row, sym)
+    } else {
+      const rows: AnyRecord[] = statementsData?.quarterly?.incomeStatement ?? []
+      const row = rows[rows.length - 1] ?? null
+      return buildWaterfallPeriod(row, sym)
+    }
+  }, [statementsData, period, sym])
+
+  if (!data) {
+    return (
+      <div className="px-5 py-10 flex items-center justify-center">
+        <p className="text-[13px] text-[#9B9B9B]">No income data available</p>
+      </div>
+    )
+  }
+
+  // Max value is revenue — everything is relative to it
+  const maxValue = data.revenue ?? 0
+
+  return (
+    <div className="bg-white px-4 sm:px-5 pt-3 pb-4">
+      {/* Period toggle — top right like in the screenshot */}
+      <div className="flex items-center justify-end gap-1 mb-3">
+        <button
+          onClick={() => setPeriod('annual')}
+          className={cn(
+            'px-3 py-1 text-[12px] font-[600] rounded-full transition-colors',
+            period === 'annual'
+              ? 'bg-[#E5E5E5] text-[#111111]'
+              : 'text-[#9B9B9B] hover:text-[#6B6B6B]'
+          )}
+        >
+          Annual
+        </button>
+        <button
+          onClick={() => setPeriod('quarterly')}
+          className={cn(
+            'px-3 py-1 text-[12px] font-[600] rounded-full transition-colors',
+            period === 'quarterly'
+              ? 'bg-[#E5E5E5] text-[#111111]'
+              : 'text-[#9B9B9B] hover:text-[#6B6B6B]'
+          )}
+        >
+          Quarterly
+        </button>
+      </div>
+
+      {/* Waterfall rows */}
+      <div className="flex flex-col gap-1.5">
+        <WaterfallRow
+          name="Revenue"
+          value={data.revenue}
+          maxValue={maxValue}
+          sym={sym}
+        />
+        <WaterfallRow
+          name="Cost of Goods Sold"
+          value={data.cogs}
+          maxValue={maxValue}
+          isDeduction
+          sym={sym}
+        />
+        <WaterfallRow
+          name="Gross Profit"
+          value={data.grossProfit}
+          maxValue={maxValue}
+          isProfit
+          sym={sym}
+          showDivider
+        />
+        <WaterfallRow
+          name="Operating Expenses"
+          value={data.opEx}
+          maxValue={maxValue}
+          isDeduction
+          sym={sym}
+        />
+        <WaterfallRow
+          name="Operating Income"
+          value={data.operatingIncome}
+          maxValue={maxValue}
+          isProfit
+          sym={sym}
+          showDivider
+        />
+        <WaterfallRow
+          name="Taxes & Other"
+          value={data.taxOther}
+          maxValue={maxValue}
+          isDeduction
+          sym={sym}
+        />
+        <WaterfallRow
+          name="Net Income"
+          value={data.netIncome}
+          maxValue={maxValue}
+          isFinal
+          sym={sym}
+          showDivider
+        />
+      </div>
+    </div>
+  )
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 type ViewTab = 'revenue' | 'flow'
@@ -499,7 +728,7 @@ export default function BusinessPerformanceCard({ statementsData, currency = 'US
 
   const tabs: { id: ViewTab; label: string }[] = [
     { id: 'revenue', label: 'Revenue & Earnings' },
-    { id: 'flow',    label: 'Income Breakdown' },
+    { id: 'flow',    label: 'Revenue to Profit' },
   ]
 
   return (
@@ -523,7 +752,7 @@ export default function BusinessPerformanceCard({ statementsData, currency = 'US
             </button>
           ))}
         </div>
-        {/* Legend for revenue view */}
+        {/* Legend */}
         {activeView === 'revenue' && (
           <div className="hidden sm:flex items-center gap-3 shrink-0">
             <span className="flex items-center gap-1.5 text-[10px] text-[#9B9B9B]">
@@ -539,11 +768,11 @@ export default function BusinessPerformanceCard({ statementsData, currency = 'US
         {activeView === 'flow' && (
           <div className="hidden sm:flex items-center gap-3 shrink-0">
             <span className="flex items-center gap-1.5 text-[10px] text-[#9B9B9B]">
-              <span className="inline-block w-2 h-2 rounded-sm bg-[#059669]" />
+              <span className="inline-block w-2 h-2 rounded-sm bg-[#34D399]" />
               Profit
             </span>
             <span className="flex items-center gap-1.5 text-[10px] text-[#9B9B9B]">
-              <span className="inline-block w-2 h-2 rounded-sm bg-[#DC2626]" />
+              <span className="inline-block w-2 h-2 rounded-sm bg-[#F4A7B9]" />
               Cost
             </span>
           </div>
@@ -551,7 +780,7 @@ export default function BusinessPerformanceCard({ statementsData, currency = 'US
       </div>
 
       {activeView === 'revenue' && <RevenueView statementsData={statementsData} currency={currency} />}
-      {activeView === 'flow'    && <IncomeFlowView statementsData={statementsData} currency={currency} />}
+      {activeView === 'flow'    && <RevenueToProfitView statementsData={statementsData} currency={currency} />}
     </div>
   )
 }
