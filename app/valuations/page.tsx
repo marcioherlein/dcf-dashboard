@@ -13,7 +13,7 @@ import type { WatchlistEntry, ListTag } from '@/lib/simplifier/types'
 import { fmtPct } from '@/lib/formatters'
 import { upsideZone } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
-import { ValuationTable, type SortKey } from '@/components/valuations/ValuationTable'
+import { ValuationTable, ColumnPicker, loadSavedCols, type SortKey } from '@/components/valuations/ValuationTable'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -66,7 +66,8 @@ function applyFilters(
 
 function sortEntries(entries: WatchlistEntry[], key: SortKey, dir: 'asc' | 'desc'): WatchlistEntry[] {
   return [...entries].sort((a, b) => {
-    let va: string | number, vb: string | number
+    let va: string | number = -Infinity
+    let vb: string | number = -Infinity
     switch (key) {
       case 'ticker':       va = a.ticker;                           vb = b.ticker;                           break
       case 'upsidePct':    va = a.snapshot.upsidePct ?? -Infinity;  vb = b.snapshot.upsidePct ?? -Infinity;  break
@@ -74,6 +75,11 @@ function sortEntries(entries: WatchlistEntry[], key: SortKey, dir: 'asc' | 'desc
       case 'price':        va = a.snapshot.price ?? -Infinity;      vb = b.snapshot.price ?? -Infinity;      break
       case 'fairValue':    va = a.snapshot.fairValue ?? -Infinity;  vb = b.snapshot.fairValue ?? -Infinity;  break
       case 'updatedAt':    va = a.updatedAt;                        vb = b.updatedAt;                        break
+      default: {
+        const k = key as keyof typeof a.snapshot
+        va = (typeof a.snapshot[k] === 'number' ? a.snapshot[k] : null) ?? -Infinity
+        vb = (typeof b.snapshot[k] === 'number' ? b.snapshot[k] : null) ?? -Infinity
+      }
     }
     if (va < vb) return dir === 'asc' ? -1 : 1
     if (va > vb) return dir === 'asc' ?  1 : -1
@@ -555,6 +561,7 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
   const [currentPage,       setCurrentPage]       = useState(1)
   const [pageSize,          setPageSize]          = useState(10)
   const [pendingGroups,     setPendingGroups]     = useState<string[]>([])
+  const [selectedCols,      setSelectedCols]      = useState<SortKey[]>(() => loadSavedCols())
   // Load data
   useEffect(() => {
     setLoading(true)
@@ -763,6 +770,9 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
               </div>
               <div className="flex items-center gap-2">
                 <SortDropdown current={sortKey} dir={sortDir} onSort={handleSort} />
+                {view === 'table' && (
+                  <ColumnPicker selected={selectedCols} onChange={setSelectedCols} />
+                )}
                 {hasFilters && (
                   <button
                     className="flex items-center gap-1.5 px-3 py-2 text-[12px] font-semibold border rounded-xl transition-colors min-h-[44px] bg-olive-50 border-olive-700 text-olive-700"
@@ -789,6 +799,7 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
               onTagUpdate={handleTagUpdate}
               onGroupUpdate={handleGroupUpdate}
               onNoteSave={handleNoteSave}
+              selectedCols={selectedCols}
             />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

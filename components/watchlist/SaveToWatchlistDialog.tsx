@@ -61,6 +61,20 @@ export interface WatchlistSavePayload {
     inputs: Record<string, number>
     scenarios: { bull: number; base: number; bear: number }
   } | null
+  // Extended live metrics passed at save time
+  liveMetrics?: {
+    peRatio?: number | null
+    pegRatio?: number | null
+    evToEbitda?: number | null
+    dividendYield?: number | null
+    return1y?: number | null
+    return3y?: number | null
+    return5y?: number | null
+    spy1y?: number | null
+    spy3y?: number | null
+    spy5y?: number | null
+    piotroski?: number | null
+  } | null
 }
 
 interface Props {
@@ -87,23 +101,36 @@ export default function SaveToWatchlistDialog({ open, payload, onClose, onReview
     setErrorMsg('')
     try {
       const existing = getWatchlistEntry(payload.ticker)
+      const lm = payload.liveMetrics
+      const now = new Date().toISOString()
       const entry: WatchlistEntry = existing
         ? {
             ...existing,
             listTag,
-            updatedAt: new Date().toISOString(),
+            updatedAt: now,
             snapshot: {
               ...existing.snapshot,
               upsidePct: payload.upsidePct ?? existing.snapshot.upsidePct,
               price: payload.valuationSnapshot?.price_at_save ?? existing.snapshot.price,
               beta: payload.valuationSnapshot?.beta ?? existing.snapshot.beta,
               fairValue: payload.fairValue ?? existing.snapshot.fairValue,
+              bearScenario: payload.valuationSnapshot?.scenarios.bear ?? existing.snapshot.bearScenario,
+              baseScenario: payload.valuationSnapshot?.scenarios.base ?? existing.snapshot.baseScenario,
+              bullScenario: payload.valuationSnapshot?.scenarios.bull ?? existing.snapshot.bullScenario,
+              ...(lm != null ? {
+                peRatio: lm.peRatio, pegRatio: lm.pegRatio, evToEbitda: lm.evToEbitda,
+                dividendYield: lm.dividendYield,
+                return1y: lm.return1y, return3y: lm.return3y, return5y: lm.return5y,
+                spy1y: lm.spy1y, spy3y: lm.spy3y, spy5y: lm.spy5y,
+                piotroski: lm.piotroski,
+                metricsUpdatedAt: now,
+              } : {}),
             },
           }
         : {
             ticker: payload.ticker,
             companyName: payload.name,
-            updatedAt: new Date().toISOString(),
+            updatedAt: now,
             currentPhase: 1,
             answers: {},
             notes: {},
@@ -118,6 +145,15 @@ export default function SaveToWatchlistDialog({ open, payload, onClose, onReview
               price: payload.valuationSnapshot?.price_at_save ?? null,
               marketCap: null,
               fairValue: payload.fairValue ?? null,
+              bearScenario: payload.valuationSnapshot?.scenarios.bear ?? null,
+              baseScenario: payload.valuationSnapshot?.scenarios.base ?? null,
+              bullScenario: payload.valuationSnapshot?.scenarios.bull ?? null,
+              peRatio: lm?.peRatio, pegRatio: lm?.pegRatio, evToEbitda: lm?.evToEbitda,
+              dividendYield: lm?.dividendYield,
+              return1y: lm?.return1y, return3y: lm?.return3y, return5y: lm?.return5y,
+              spy1y: lm?.spy1y, spy3y: lm?.spy3y, spy5y: lm?.spy5y,
+              piotroski: lm?.piotroski,
+              metricsUpdatedAt: lm != null ? now : null,
             },
           }
 

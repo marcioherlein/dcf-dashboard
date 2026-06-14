@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo, useId } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, useReducedMotion } from 'motion/react'
 import {
@@ -182,7 +182,7 @@ function fmtMult(v: number | null): string { return v == null ? '—' : `${v.toF
 
 function SkeletonRow({ index }: { index: number }) {
   return (
-    <tr className="border-b border-[#E5E5E5] animate-pulse" style={{ animationDelay: `${index * 30}ms` }}>
+    <tr className="border-b border-[#E5E5E5] motion-safe:animate-pulse" style={{ animationDelay: `${index * 30}ms` }}>
       <td className="sticky left-0 z-10 bg-white px-4 py-3.5 w-[220px]">
         <div className="flex flex-col gap-1.5">
           <div className="h-3.5 bg-[#E5E5E5] rounded w-14" />
@@ -202,7 +202,7 @@ function SortTh({ label, col, active, dir, onClick, className }: {
 }) {
   return (
     <th
-      className={cn('px-4 py-3 text-right text-[11px] font-semibold text-[#566174] whitespace-nowrap cursor-pointer select-none hover:text-[#06101F] transition-colors', className)}
+      className={cn('px-4 py-3 text-right text-[11px] font-semibold text-[#6B6B6B] whitespace-nowrap cursor-pointer select-none hover:text-[#06101F] transition-colors', className)}
       onClick={() => onClick(col)}
       aria-sort={active ? (dir === 'desc' ? 'descending' : 'ascending') : 'none'}
     >
@@ -224,7 +224,7 @@ const SECTOR_COLORS: Record<string, string> = {
   'Consumer Cyclical':      'bg-orange-50 text-orange-700',
   'Consumer Defensive':     'bg-[#FFF4DA] text-[#B56A00]',
   'Communication Services': 'bg-cyan-50 text-cyan-700',
-  'Industrials':            'bg-[#F4F3EF] text-[#566174]',
+  'Industrials':            'bg-[#F4F3EF] text-[#6B6B6B]',
   'Energy':                 'bg-[#FFF4DA] text-[#B56A00]',
   'Basic Materials':        'bg-lime-50 text-lime-700',
   'Real Estate':            'bg-rose-50 text-rose-700',
@@ -234,7 +234,7 @@ const SECTOR_COLORS: Record<string, string> = {
 function SectorBadge({ sector }: { sector: string | null }) {
   if (!sector) return <span className="text-[#6B6B6B] text-[11px]">—</span>
   return (
-    <span className={cn('inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full', SECTOR_COLORS[sector] ?? 'bg-[#F4F3EF] text-[#566174]')}>
+    <span className={cn('inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full', SECTOR_COLORS[sector] ?? 'bg-[#F4F3EF] text-[#6B6B6B]')}>
       {sector}
     </span>
   )
@@ -246,20 +246,22 @@ function FilterSelect({
 }: {
   label: string; value: string; opts: string[][]; onChange: (v: string) => void; active: boolean
 }) {
+  const id = useId()
   return (
     <div className="flex flex-col gap-1">
-      <span className={cn('text-[10px] font-[600] leading-none', active ? 'text-olive-700' : 'text-[#6B6B6B]')}>
+      <label htmlFor={id} className={cn('text-[10px] font-[600] leading-none cursor-pointer', active ? 'text-olive-700' : 'text-[#6B6B6B]')}>
         {label}
-      </span>
+      </label>
       <div className="relative">
         <select
+          id={id}
           value={value}
           onChange={e => onChange(e.target.value)}
           className={cn(
             'appearance-none pl-2.5 pr-6 py-1.5 text-[12px] rounded-lg border cursor-pointer min-h-[44px] transition-colors focus:outline-none focus:ring-2 focus:ring-[rgba(95,121,11,0.25)]',
             active
               ? 'border-olive-700 bg-olive-50 text-olive-700 font-[600]'
-              : 'border-[#E5E5E5] bg-white text-[#566174] hover:border-[#CDD1C8]',
+              : 'border-[#E5E5E5] bg-white text-[#6B6B6B] hover:border-[#CDD1C8]',
           )}
         >
           {opts.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
@@ -418,7 +420,7 @@ export default function ScreenerPage() {
   function toggleGroup(id: string) {
     setOpenGroups(prev => {
       const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
+      if (next.has(id)) { next.delete(id) } else { next.add(id) }
       return next
     })
   }
@@ -447,11 +449,11 @@ export default function ScreenerPage() {
             </div>
 
             {/* Exchange pills */}
-            <div className="flex rounded-lg overflow-hidden border border-[#E5E5E5] shrink-0">
+            <div role="group" aria-label="Exchange" className="flex rounded-lg overflow-hidden border border-[#E5E5E5] shrink-0">
               {EXCHANGES.map(ex => (
                 <button key={ex.id} onClick={() => setFilter('exchange', ex.id)}
                   className={cn('px-3 py-2 text-[12px] font-[500] border-r border-[#E5E5E5] last:border-r-0 transition-colors min-h-[44px]',
-                    filters.exchange === ex.id ? 'bg-olive-50 text-olive-700 font-[600]' : 'text-[#566174] hover:bg-[#F4F3EF]'
+                    filters.exchange === ex.id ? 'bg-olive-50 text-olive-700 font-[600]' : 'text-[#6B6B6B] hover:bg-[#F4F3EF]'
                   )}>
                   {ex.label}
                 </button>
@@ -459,11 +461,11 @@ export default function ScreenerPage() {
             </div>
 
             {/* Cap tier pills */}
-            <div className="flex rounded-lg overflow-hidden border border-[#E5E5E5] shrink-0">
+            <div role="group" aria-label="Market cap tier" className="flex rounded-lg overflow-hidden border border-[#E5E5E5] shrink-0">
               {CAP_TIERS.map(t => (
                 <button key={t.id} onClick={() => setFilter('capTier', t.id)} title={t.sub || undefined}
                   className={cn('px-3 py-2 text-[12px] font-[500] border-r border-[#E5E5E5] last:border-r-0 transition-colors min-h-[44px] whitespace-nowrap',
-                    filters.capTier === t.id ? 'bg-olive-50 text-olive-700 font-[600]' : 'text-[#566174] hover:bg-[#F4F3EF]'
+                    filters.capTier === t.id ? 'bg-olive-50 text-olive-700 font-[600]' : 'text-[#6B6B6B] hover:bg-[#F4F3EF]'
                   )}>
                   {t.label}
                   {t.sub && <span className="hidden md:inline text-[9px] opacity-60 ml-0.5">{t.sub}</span>}
@@ -474,9 +476,10 @@ export default function ScreenerPage() {
             {/* Sector select */}
             <div className="relative shrink-0">
               <select value={filters.sector} onChange={e => setFilter('sector', e.target.value)}
+                aria-label="Filter by sector"
                 className={cn(
                   'appearance-none pl-2.5 pr-7 py-2 text-[12px] border rounded-lg bg-white cursor-pointer min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[rgba(95,121,11,0.25)] transition-colors',
-                  filters.sector !== 'All Sectors' ? 'border-olive-700 bg-olive-50 text-olive-700 font-[600]' : 'border-[#E5E5E5] text-[#566174]'
+                  filters.sector !== 'All Sectors' ? 'border-olive-700 bg-olive-50 text-olive-700 font-[600]' : 'border-[#E5E5E5] text-[#6B6B6B]'
                 )}>
                 {SECTORS.map(s => <option key={s}>{s}</option>)}
               </select>
@@ -486,23 +489,26 @@ export default function ScreenerPage() {
             {/* Dividends toggle */}
             <button
               onClick={() => setFilter('dividendsOnly', !filters.dividendsOnly)}
+              aria-pressed={filters.dividendsOnly}
+              aria-label="Show only dividend-paying stocks"
               className={cn('flex items-center gap-1.5 px-3 py-2 rounded-lg border text-[12px] font-[500] transition-colors min-h-[44px] shrink-0',
-                filters.dividendsOnly ? 'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D] font-[600]' : 'bg-white border-[#E5E5E5] text-[#566174] hover:border-[#CDD1C8]'
-              )}
-              aria-pressed={filters.dividendsOnly}>
+                filters.dividendsOnly ? 'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D] font-[600]' : 'bg-white border-[#E5E5E5] text-[#6B6B6B] hover:border-[#CDD1C8]'
+              )}>
               Dividends
             </button>
 
-            {/* Advanced filter toggle */}
+            {/* More filters toggle */}
             <button
               onClick={() => setPanelOpen(v => !v)}
+              aria-expanded={panelOpen}
+              aria-controls="advanced-filter-panel"
               className={cn('flex items-center gap-1.5 px-3 py-2 rounded-lg border text-[12px] font-[500] transition-colors min-h-[44px] shrink-0',
                 panelOpen || activeAdvanced.length > 0
                   ? 'bg-olive-50 border-olive-700 text-olive-700 font-[600]'
-                  : 'bg-white border-[#E5E5E5] text-[#566174] hover:border-[#CDD1C8]'
+                  : 'bg-white border-[#E5E5E5] text-[#6B6B6B] hover:border-[#CDD1C8]'
               )}>
               <SlidersHorizontal size={12} />
-              Filters
+              More filters
               {activeAdvanced.length > 0 && (
                 <span className="ml-0.5 bg-olive-700 text-white text-[10px] font-[700] rounded-full w-4 h-4 flex items-center justify-center leading-none">
                   {activeAdvanced.length}
@@ -547,7 +553,7 @@ export default function ScreenerPage() {
 
           {/* ── Advanced filter panel ─────────────────────────────────────── */}
           {panelOpen && (
-            <div className="mt-3 pt-3 border-t border-[#E5E5E5]">
+            <div id="advanced-filter-panel" className="mt-3 pt-3 border-t border-[#E5E5E5]">
               <div className="space-y-2">
                 {FILTER_GROUPS.map(group => {
                   const groupActive = group.fields.some(f => ((filters as unknown) as Record<string, string>)[f.key] !== 'any')
@@ -560,7 +566,7 @@ export default function ScreenerPage() {
                         aria-controls={`filter-group-${group.id}`}
                         className="w-full flex items-center justify-between px-3 py-2 text-left min-h-[44px]"
                       >
-                        <span className={cn('text-[12px] font-[600]', groupActive ? 'text-olive-700' : 'text-[#566174]')}>
+                        <span className={cn('text-[12px] font-[600]', groupActive ? 'text-olive-700' : 'text-[#6B6B6B]')}>
                           {group.label}
                           {groupActive && <span className="ml-1.5 text-[10px] text-olive-700 opacity-70">
                             ({group.fields.filter(f => ((filters as unknown) as Record<string, string>)[f.key] !== 'any').length} active)
@@ -623,9 +629,9 @@ export default function ScreenerPage() {
           <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm">
 
             {error && (
-              <div className="px-5 py-12 text-center">
+              <div role="alert" aria-live="assertive" aria-atomic="true" className="px-5 py-12 text-center">
                 <p className="text-[14px] font-medium text-[#06101F] mb-1">Screener unavailable</p>
-                <p className="text-[13px] text-[#566174] mb-4">{error}</p>
+                <p className="text-[13px] text-[#6B6B6B] mb-4">{error}</p>
                 <button onClick={() => fetchStocks(filters)}
                   className="px-4 py-2 text-[13px] font-semibold rounded-lg bg-olive-700 text-white hover:bg-olive-600 transition-colors">
                   Try again
@@ -639,8 +645,9 @@ export default function ScreenerPage() {
                   <thead>
                     <tr className="border-b border-[#E5E5E5] bg-[#F4F3EF]/60">
                       <th
-                        className="sticky left-0 z-10 bg-[#F4F3EF] px-4 py-3 text-left text-[11px] font-semibold text-[#566174] w-[220px] min-w-[200px] cursor-pointer select-none hover:text-[#06101F] transition-colors"
+                        className="sticky left-0 z-10 bg-[#F4F3EF] px-4 py-3 text-left text-[11px] font-semibold text-[#6B6B6B] w-[220px] min-w-[200px] cursor-pointer select-none hover:text-[#06101F] transition-colors"
                         onClick={() => toggleSort('name')}
+                        aria-sort={sortKey === 'name' ? (sortDir === 'desc' ? 'descending' : 'ascending') : 'none'}
                       >
                         <span className="inline-flex items-center gap-1">
                           Company
@@ -649,9 +656,9 @@ export default function ScreenerPage() {
                             : <ArrowUpDown size={10} className="text-[#6B6B6B]" />}
                         </span>
                       </th>
+                      <SortTh label="P/E"        col="trailingPE"   active={sortKey === 'trailingPE'}   dir={sortDir} onClick={toggleSort} className="hidden sm:table-cell" />
                       <SortTh label="Mkt Cap"    col="marketCap"    active={sortKey === 'marketCap'}    dir={sortDir} onClick={toggleSort} />
                       <SortTh label="Price"      col="price"        active={sortKey === 'price'}        dir={sortDir} onClick={toggleSort} className="hidden sm:table-cell" />
-                      <SortTh label="P/E"        col="trailingPE"   active={sortKey === 'trailingPE'}   dir={sortDir} onClick={toggleSort} className="hidden sm:table-cell" />
                       <SortTh label="Beta"       col="beta"         active={sortKey === 'beta'}         dir={sortDir} onClick={toggleSort} className="hidden md:table-cell" />
                       <SortTh label="Div. Yield" col="dividendYield" active={sortKey === 'dividendYield'} dir={sortDir} onClick={toggleSort} className="hidden md:table-cell" />
                       <SortTh label="Sector"     col="sector"       active={sortKey === 'sector'}       dir={sortDir} onClick={toggleSort} className="hidden lg:table-cell text-left" />
@@ -664,7 +671,7 @@ export default function ScreenerPage() {
                       <tr>
                         <td colSpan={7} className="px-5 py-14 text-center">
                           <p className="text-[14px] font-medium text-[#06101F] mb-1">No stocks match your filters</p>
-                          <p className="text-[13px] text-[#566174] mb-4">Try broadening or removing some filters.</p>
+                          <p className="text-[13px] text-[#6B6B6B] mb-4">Try broadening or removing some filters.</p>
                           <button onClick={resetFilters} className="text-[13px] font-semibold text-olive-700 hover:underline">
                             Reset all filters
                           </button>
@@ -693,7 +700,7 @@ export default function ScreenerPage() {
                             <span className="text-[13px] font-bold text-[#06101F] font-mono tracking-tight group-hover:text-olive-700 transition-colors">
                               {stock.ticker}
                             </span>
-                            <span className="text-[11.5px] text-[#566174] truncate max-w-[170px]">{stock.name}</span>
+                            <span className="text-[12px] text-[#6B6B6B] truncate max-w-[170px]">{stock.name}</span>
                           </div>
                         </td>
                         <td className="px-4 py-3.5 text-right">
@@ -739,10 +746,10 @@ export default function ScreenerPage() {
 
             {!loading && !error && displayed.length > 0 && (
               <div className="px-4 py-2.5 border-t border-[#E5E5E5] flex items-center justify-between">
-                <p className="text-[11px] text-[#566174]">
+                <p className="text-[11px] text-[#6B6B6B]">
                   {displayed.length.toLocaleString()} result{displayed.length !== 1 ? 's' : ''} · Click any row to open the full analysis
                 </p>
-                <p className="text-[11px] text-[#566174]">Source: Yahoo Finance · Refreshed every 15 min</p>
+                <p className="text-[11px] text-[#6B6B6B]">Source: Yahoo Finance · Refreshed every 15 min</p>
               </div>
             )}
           </div>

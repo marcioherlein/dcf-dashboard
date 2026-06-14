@@ -78,6 +78,11 @@ export default function SimplifierTickerPage() {
       upsidePct:    (data as any).fairValue?.upsidePct ?? null,
       price:        (data as any).quote?.price ?? null,
       marketCap:    (data as any).quote?.marketCap ?? null,
+      peRatio: undefined, pegRatio: undefined, evToEbitda: undefined, dividendYield: undefined,
+      return1y: undefined, return3y: undefined, return5y: undefined,
+      spy1y: undefined, spy3y: undefined, spy5y: undefined,
+      bearScenario: undefined, baseScenario: undefined, bullScenario: undefined,
+      piotroski: undefined, metricsUpdatedAt: undefined,
     }
 
     const entry: WatchlistEntry = {

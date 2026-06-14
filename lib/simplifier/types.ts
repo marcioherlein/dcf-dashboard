@@ -47,6 +47,22 @@ export interface FinancialSnapshot {
   price:          number | null
   marketCap:      number | null
   fairValue:      number | null
+  // Extended live metrics — stored at save time, refreshable
+  peRatio:        number | null | undefined
+  pegRatio:       number | null | undefined
+  evToEbitda:     number | null | undefined
+  dividendYield:  number | null | undefined
+  return1y:       number | null | undefined
+  return3y:       number | null | undefined
+  return5y:       number | null | undefined
+  spy1y:          number | null | undefined
+  spy3y:          number | null | undefined
+  spy5y:          number | null | undefined
+  bearScenario:   number | null | undefined
+  baseScenario:   number | null | undefined
+  bullScenario:   number | null | undefined
+  piotroski:      number | null | undefined
+  metricsUpdatedAt: string | null | undefined  // ISO date — used for staleness indicator
 }
 
 export interface WatchlistEntry {

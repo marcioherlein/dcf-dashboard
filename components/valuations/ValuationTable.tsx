@@ -10,7 +10,168 @@ import { cn } from '@/lib/utils'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-export type SortKey = 'ticker' | 'upsidePct' | 'overallScore' | 'updatedAt' | 'price' | 'fairValue'
+export type SortKey =
+  | 'ticker' | 'upsidePct' | 'overallScore' | 'updatedAt' | 'price' | 'fairValue'
+  | 'peRatio' | 'pegRatio' | 'evToEbitda' | 'dividendYield'
+  | 'return1y' | 'return3y' | 'return5y'
+  | 'bearScenario' | 'baseScenario' | 'bullScenario'
+  | 'piotroski'
+
+// ── Optional column definitions ───────────────────────────────────────────────
+
+export interface ColDef {
+  id:       SortKey
+  label:    string
+  group:    'Valuation' | 'Returns' | 'Fundamentals' | 'Scenarios'
+  format:   'pct' | 'multiple' | 'int' | 'price' | 'pct_return'
+  hint?:    string
+}
+
+export const OPTIONAL_COLUMNS: ColDef[] = [
+  { id: 'peRatio',      label: 'P/E (TTM)',   group: 'Fundamentals', format: 'multiple', hint: 'Trailing price-to-earnings ratio' },
+  { id: 'pegRatio',     label: 'PEG',         group: 'Fundamentals', format: 'multiple', hint: 'P/E relative to earnings growth' },
+  { id: 'evToEbitda',   label: 'EV/EBITDA',   group: 'Fundamentals', format: 'multiple', hint: 'Enterprise value to EBITDA' },
+  { id: 'dividendYield',label: 'Div. Yield',  group: 'Fundamentals', format: 'pct',      hint: 'Trailing dividend yield' },
+  { id: 'piotroski',    label: 'F-Score',     group: 'Fundamentals', format: 'int',      hint: 'Piotroski F-Score (0–9). 7+ = strong.' },
+  { id: 'return1y',     label: 'Return 1Y',   group: 'Returns',      format: 'pct_return' },
+  { id: 'return3y',     label: 'Return 3Y',   group: 'Returns',      format: 'pct_return' },
+  { id: 'return5y',     label: 'Return 5Y',   group: 'Returns',      format: 'pct_return' },
+  { id: 'bearScenario', label: 'Bear',        group: 'Scenarios',    format: 'price',    hint: 'Bear case fair value' },
+  { id: 'baseScenario', label: 'Base',        group: 'Scenarios',    format: 'price',    hint: 'Base case fair value' },
+  { id: 'bullScenario', label: 'Bull',        group: 'Scenarios',    format: 'price',    hint: 'Bull case fair value' },
+]
+
+const STORAGE_KEY = 'insic_valuation_cols_v1'
+const DEFAULT_COLS: SortKey[] = []  // no extra columns by default
+
+export function loadSavedCols(): SortKey[] {
+  if (typeof window === 'undefined') return DEFAULT_COLS
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (!raw) return DEFAULT_COLS
+    return JSON.parse(raw) as SortKey[]
+  } catch { return DEFAULT_COLS }
+}
+
+export function saveCols(cols: SortKey[]): void {
+  if (typeof window === 'undefined') return
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(cols)) } catch { /* ignore */ }
+}
+
+function formatColValue(val: number | null | undefined, format: ColDef['format']): string {
+  if (val == null) return '—'
+  switch (format) {
+    case 'pct':        return (val * 100).toFixed(2) + '%'
+    case 'pct_return': return (val >= 0 ? '+' : '') + (val * 100).toFixed(1) + '%'
+    case 'multiple':   return val.toFixed(2) + '×'
+    case 'int':        return String(Math.round(val))
+    case 'price':      return '$' + val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  }
+}
+
+function colValueClass(val: number | null | undefined, format: ColDef['format'], id: SortKey): string {
+  if (val == null) return 'text-[#9B9B9B]'
+  if (format === 'pct_return') return val >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'
+  if (id === 'peRatio')     return val > 50 ? 'text-[#D83B3B]' : val < 15 ? 'text-[#11875D]' : 'text-[#111111]'
+  if (id === 'pegRatio')    return val > 2   ? 'text-[#D83B3B]' : val < 1  ? 'text-[#11875D]' : 'text-[#111111]'
+  if (id === 'piotroski')   return val >= 7  ? 'text-[#11875D]' : val <= 3  ? 'text-[#D83B3B]' : 'text-[#111111]'
+  if (id === 'dividendYield') return val > 0 ? 'text-[#11875D]' : 'text-[#9B9B9B]'
+  return 'text-[#111111]'
+}
+
+// ── Column Picker ─────────────────────────────────────────────────────────────
+
+export function ColumnPicker({
+  selected,
+  onChange,
+}: {
+  selected: SortKey[]
+  onChange: (cols: SortKey[]) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const h = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', h)
+    return () => document.removeEventListener('mousedown', h)
+  }, [open])
+
+  const toggle = (id: SortKey) => {
+    const next = selected.includes(id) ? selected.filter(c => c !== id) : [...selected, id]
+    onChange(next)
+    saveCols(next)
+  }
+
+  const groups = ['Fundamentals', 'Returns', 'Scenarios'] as const
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen(v => !v)}
+        className={cn(
+          'flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px] font-semibold transition-all',
+          selected.length > 0
+            ? 'border-[#5F790B] text-[#5F790B] bg-[#F6FAEA]'
+            : 'border-[#E5E5E5] text-[#6B6B6B] bg-white hover:border-[#BFD2A1] hover:text-[#5F790B]',
+        )}
+      >
+        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7" />
+        </svg>
+        Columns
+        {selected.length > 0 && (
+          <span className="bg-[#5F790B] text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+            {selected.length}
+          </span>
+        )}
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-full mt-1 z-50 bg-white border border-[#E5E5E5] rounded-xl shadow-lg w-64 p-3">
+          <p className="text-[10px] font-bold text-[#9B9B9B] uppercase tracking-wider mb-2">Add columns</p>
+          {groups.map(group => (
+            <div key={group} className="mb-3">
+              <p className="text-[10px] font-semibold text-[#6B6B6B] mb-1.5">{group}</p>
+              <div className="flex flex-wrap gap-1.5">
+                {OPTIONAL_COLUMNS.filter(c => c.group === group).map(col => {
+                  const active = selected.includes(col.id)
+                  return (
+                    <button
+                      key={col.id}
+                      onClick={() => toggle(col.id)}
+                      title={col.hint}
+                      className={cn(
+                        'px-2 py-1 rounded-md border text-[11px] font-semibold transition-all',
+                        active
+                          ? 'bg-[#5F790B] border-[#5F790B] text-white'
+                          : 'bg-white border-[#E5E5E5] text-[#6B6B6B] hover:border-[#BFD2A1] hover:text-[#5F790B]',
+                      )}
+                    >
+                      {col.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
+          {selected.length > 0 && (
+            <button
+              onClick={() => { onChange([]); saveCols([]) }}
+              className="text-[11px] text-[#D83B3B] hover:text-[#B02A2A] mt-1 transition-colors"
+            >
+              Clear all
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 
 export interface ValuationTableProps {
   entries:        WatchlistEntry[]
@@ -23,6 +184,7 @@ export interface ValuationTableProps {
   onTagUpdate:    (ticker: string, tag: ListTag) => void
   onGroupUpdate:  (ticker: string, groupName: string | null) => void
   onNoteSave:     (ticker: string, note: string) => Promise<void>
+  selectedCols?:  SortKey[]
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -497,13 +659,30 @@ function NoteEditorMobile({ entry, onNoteSave }: {
 
 // ── Main Table ─────────────────────────────────────────────────────────────────
 
-export function ValuationTable({ entries, sparklines, groups, sortKey, sortDir, onSort, onDelete, onTagUpdate, onGroupUpdate, onNoteSave }: ValuationTableProps) {
+export function ValuationTable({ entries, sparklines, groups, sortKey, sortDir, onSort, onDelete, onTagUpdate, onGroupUpdate, onNoteSave, selectedCols = [] }: ValuationTableProps) {
   const [expandedTicker, setExpandedTicker] = useState<string | null>(null)
+  const activeCols = OPTIONAL_COLUMNS.filter(c => selectedCols.includes(c.id))
 
   const handleSort = (key: SortKey) => { onSort(key) }
 
   const sorted = [...entries].sort((a, b) => {
     let va: string | number, vb: string | number
+    const snap = (e: WatchlistEntry, k: SortKey): number => {
+      switch (k) {
+        case 'peRatio':      return e.snapshot.peRatio      ?? -Infinity
+        case 'pegRatio':     return e.snapshot.pegRatio     ?? -Infinity
+        case 'evToEbitda':   return e.snapshot.evToEbitda   ?? -Infinity
+        case 'dividendYield':return e.snapshot.dividendYield ?? -Infinity
+        case 'return1y':     return e.snapshot.return1y     ?? -Infinity
+        case 'return3y':     return e.snapshot.return3y     ?? -Infinity
+        case 'return5y':     return e.snapshot.return5y     ?? -Infinity
+        case 'bearScenario': return e.snapshot.bearScenario ?? -Infinity
+        case 'baseScenario': return e.snapshot.baseScenario ?? -Infinity
+        case 'bullScenario': return e.snapshot.bullScenario ?? -Infinity
+        case 'piotroski':    return e.snapshot.piotroski    ?? -Infinity
+        default: return -Infinity
+      }
+    }
     switch (sortKey) {
       case 'ticker':       va = a.ticker;                            vb = b.ticker;                            break
       case 'upsidePct':    va = a.snapshot.upsidePct ?? -Infinity;   vb = b.snapshot.upsidePct ?? -Infinity;   break
@@ -511,6 +690,7 @@ export function ValuationTable({ entries, sparklines, groups, sortKey, sortDir, 
       case 'price':        va = a.snapshot.price ?? -Infinity;       vb = b.snapshot.price ?? -Infinity;       break
       case 'fairValue':    va = a.snapshot.fairValue ?? -Infinity;   vb = b.snapshot.fairValue ?? -Infinity;   break
       case 'updatedAt':    va = a.updatedAt;                         vb = b.updatedAt;                         break
+      default:             va = snap(a, sortKey);                    vb = snap(b, sortKey);                    break
     }
     if (va < vb) return sortDir === 'asc' ? -1 : 1
     if (va > vb) return sortDir === 'asc' ?  1 : -1
@@ -553,6 +733,10 @@ export function ValuationTable({ entries, sparklines, groups, sortKey, sortDir, 
                 <th className="px-3 py-2 text-[10px] font-semibold text-[#6B6B6B] text-right whitespace-nowrap">Verdict</th>
                 <Th label="Confidence" sortKey="overallScore" current={sortKey} dir={sortDir} onSort={handleSort} />
                 <th className="hidden lg:table-cell px-3 py-2 text-[10px] font-semibold text-[#6B6B6B] text-right whitespace-nowrap">Since Save</th>
+                {/* Dynamic optional columns */}
+                {activeCols.map(col => (
+                  <Th key={col.id} label={col.label} sortKey={col.id} current={sortKey} dir={sortDir} onSort={handleSort} />
+                ))}
                 <Th label="Updated"    sortKey="updatedAt"    current={sortKey} dir={sortDir} onSort={handleSort} />
                 <th className="px-2 py-2 w-10" />
               </tr>
@@ -720,6 +904,22 @@ export function ValuationTable({ entries, sparklines, groups, sortKey, sortDir, 
                           <span className="text-[#9B9B9B] text-[11px]">—</span>
                         )}
                       </td>
+
+                      {/* Dynamic optional columns */}
+                      {activeCols.map(col => {
+                        const rawVal = entry.snapshot[col.id as keyof typeof entry.snapshot] as number | null | undefined
+                        const val = typeof rawVal === 'number' ? rawVal : null
+                        const text = formatColValue(val, col.format)
+                        const cls  = colValueClass(val, col.format, col.id)
+                        const isStale = entry.snapshot.metricsUpdatedAt == null
+                        return (
+                          <td key={col.id} className="px-3 py-1.5 text-right whitespace-nowrap" title={isStale && val == null ? 'Re-save this stock to populate this column' : undefined}>
+                            <span className={cn('text-[12px] font-semibold tabular-nums', cls, isStale && val == null ? 'opacity-40' : '')}>
+                              {text}
+                            </span>
+                          </td>
+                        )
+                      })}
 
                       {/* Updated */}
                       <td className="px-3 py-1.5 text-right whitespace-nowrap">

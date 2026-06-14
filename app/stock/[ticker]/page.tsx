@@ -423,6 +423,20 @@ function StockPageBody() {
                   bear: cockpitOutput.scenarios.bear.fairValue ?? 0,
                 },
               } : null,
+              // Live metrics stored at save time (hybrid approach — refreshable later)
+              liveMetrics: !isETF ? {
+                peRatio:      data?.quote?.peRatio ?? null,
+                pegRatio:     data?.quote?.pegRatio ?? null,
+                evToEbitda:   (data?.businessProfile as unknown as Record<string, unknown>)?.evToEbitda as number | null ?? null,
+                dividendYield:(data?.quote as unknown as Record<string, unknown>)?.dividendYield as number | null ?? null,
+                return1y:     data?.holdingReturns?.stock1y ?? null,
+                return3y:     data?.holdingReturns?.stock3y ?? null,
+                return5y:     data?.holdingReturns?.stock5y ?? null,
+                spy1y:        data?.holdingReturns?.spy1y ?? null,
+                spy3y:        data?.holdingReturns?.spy3y ?? null,
+                spy5y:        data?.holdingReturns?.spy5y ?? null,
+                piotroski:    (computedScores ?? data?.scores)?.piotroski?.score ?? null,
+              } : null,
             })
             setSaveDialogOpen(true)
           }}
