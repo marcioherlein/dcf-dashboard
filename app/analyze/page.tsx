@@ -166,28 +166,34 @@ function SearchHero() {
 
   return (
     <div
+      className="relative overflow-hidden rounded-2xl"
       style={{
-        background: 'rgba(255,255,255,0.07)',
-        backdropFilter: 'blur(20px) saturate(1.3)',
-        WebkitBackdropFilter: 'blur(20px) saturate(1.3)',
-        border: '1px solid rgba(255,255,255,0.12)',
-        borderRadius: '16px',
+        background: 'linear-gradient(160deg, #1e293b 0%, #334155 55%, #475569 100%)',
       }}
     >
-      {/* Search input */}
-      <div className="p-3 sm:p-4">
-      <div className="relative" ref={searchRef}>
-        <div className={cn(
-          'flex items-center gap-2.5 rounded-lg border px-3.5 py-2.5 transition-all bg-white/95',
-          open || query
-            ? 'border-olive-600 ring-2 ring-olive-700/20'
-            : 'border-white/30 hover:border-white/50',
-        )}>
-          {loading ? (
-            <div className="h-4 w-4 motion-safe:animate-spin rounded-full border-2 border-[#E5E5E5] border-t-olive-700 shrink-0" />
-          ) : (
-            <Search size={15} className="text-[#6B6B6B] shrink-0" />
-          )}
+      {/* Olive ambient glow — top-right */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 pointer-events-none rounded-2xl"
+        style={{
+          backgroundImage: 'radial-gradient(ellipse 60% 100% at 100% -20%, rgba(95,121,11,0.22) 0%, transparent 55%)',
+        }}
+      />
+
+      <div className="relative p-4 sm:p-5">
+        {/* Search input */}
+        <div className="relative" ref={searchRef}>
+          <div className={cn(
+            'flex items-center gap-2.5 rounded-xl border px-3.5 py-2.5 transition-all bg-white',
+            open || query
+              ? 'border-olive-600 ring-2 ring-olive-700/20'
+              : 'border-transparent shadow-[0_1px_4px_rgba(0,0,0,0.12)]',
+          )}>
+            {loading ? (
+              <div className="h-4 w-4 motion-safe:animate-spin rounded-full border-2 border-[#E5E5E5] border-t-olive-700 shrink-0" />
+            ) : (
+              <Search size={15} className="text-[#9B9B9B] shrink-0" />
+            )}
           <input
             ref={inputRef}
             id="analyze-search-input"
@@ -278,73 +284,73 @@ function SearchHero() {
         </AnimatePresence>
       </div>
 
-      {/* Popular chips + explainer toggle */}
-      <div className="mt-2.5 flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-0.5">
-        <span className="text-[11px] font-[600] text-white/50 shrink-0 mr-0.5">Popular:</span>
-        {POPULAR_CHIPS.map((t) => (
+        {/* Popular chips + explainer toggle */}
+        <div className="mt-3 flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-0.5">
+          <span className="text-[11px] font-[600] text-white/50 shrink-0 mr-0.5">Popular:</span>
+          {POPULAR_CHIPS.map((t) => (
+            <Link
+              key={t}
+              href={`/stock/${t}`}
+              className="text-[12px] font-[600] text-white/85 bg-white/10 hover:bg-white/18 border border-white/15 rounded-full px-3 py-1 transition-colors whitespace-nowrap shrink-0 min-h-[32px] flex items-center"
+            >
+              {t}
+            </Link>
+          ))}
+          <span className="text-white/20 shrink-0 mx-0.5">|</span>
           <Link
-            key={t}
-            href={`/stock/${t}`}
-            className="text-[12px] font-[600] text-white/90 bg-white/10 hover:bg-white/20 border border-white/20 rounded-full px-3 py-1 transition-colors whitespace-nowrap shrink-0 min-h-[32px] flex items-center"
+            href="/screener"
+            className="text-[12px] font-[600] text-white/55 hover:text-white/85 bg-white/10 hover:bg-white/15 border border-white/15 rounded-full px-3 py-1 transition-colors whitespace-nowrap shrink-0 min-h-[32px] flex items-center gap-1.5"
           >
-            {t}
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 4.5h14.25M3 9h9.75M3 13.5h5.25m5.25-.75L17.25 9m0 0L21 12.75M17.25 9v12" />
+            </svg>
+            Screener
           </Link>
-        ))}
-        <span className="text-white/20 shrink-0 mx-0.5">|</span>
-        <Link
-          href="/screener"
-          className="text-[12px] font-[600] text-white/60 hover:text-white/90 bg-white/10 hover:bg-white/15 border border-white/20 rounded-full px-3 py-1 transition-colors whitespace-nowrap shrink-0 min-h-[32px] flex items-center gap-1.5"
-        >
-          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 4.5h14.25M3 9h9.75M3 13.5h5.25m5.25-.75L17.25 9m0 0L21 12.75M17.25 9v12" />
-          </svg>
-          Screener
-        </Link>
-        <button
-          type="button"
-          onClick={() => setShowExplainer(v => !v)}
-          aria-expanded={showExplainer}
-          className="shrink-0 ml-auto text-[11px] text-white/50 hover:text-white/80 transition-colors whitespace-nowrap min-h-[32px] flex items-center gap-1"
-        >
-          {showExplainer ? 'Hide guide' : 'How to read this →'}
-        </button>
-      </div>
-
-      {/* Inline explainer — collapsed by default */}
-      <AnimatePresence>
-        {showExplainer && (
-          <motion.div
-            key="concept-explainer"
-            initial={reduced ? {} : { opacity: 0, height: 0 }}
-            animate={reduced ? {} : { opacity: 1, height: 'auto' }}
-            exit={reduced ? {} : { opacity: 0, height: 0 }}
-            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-            className="overflow-hidden"
+          <button
+            type="button"
+            onClick={() => setShowExplainer(v => !v)}
+            aria-expanded={showExplainer}
+            className="shrink-0 ml-auto text-[11px] text-white/45 hover:text-white/75 transition-colors whitespace-nowrap min-h-[32px] flex items-center gap-1"
           >
-            <div className="mt-3 rounded-xl bg-white/10 border border-white/15 p-4 text-[12px] leading-relaxed text-white/80">
-              <p className="font-semibold text-[13px] text-white mb-2">What insic measures</p>
-              <p>Every stock price implies a 5-year revenue growth rate the market is betting on. insic calls this the <strong className="text-white">implied CAGR</strong> and compares it to the company&apos;s 3-year historical growth rate.</p>
-              <div className="mt-3 space-y-2">
-                <p className="font-semibold text-white mb-1">Expectation labels:</p>
-                <div className="flex items-start gap-2.5">
-                  <span className="shrink-0 mt-0.5 inline-flex items-center rounded-full px-2 py-0.5 border text-[10px] font-semibold bg-olive-50 text-olive-700 border-[#BFD2A1]">Conservative</span>
-                  <span>Implied growth is well below historical. Market is pricing in a slowdown.</span>
+            {showExplainer ? 'Hide guide' : 'How to read this →'}
+          </button>
+        </div>
+
+        {/* Inline explainer */}
+        <AnimatePresence>
+          {showExplainer && (
+            <motion.div
+              key="concept-explainer"
+              initial={reduced ? {} : { opacity: 0, height: 0 }}
+              animate={reduced ? {} : { opacity: 1, height: 'auto' }}
+              exit={reduced ? {} : { opacity: 0, height: 0 }}
+              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+              className="overflow-hidden"
+            >
+              <div className="mt-3 rounded-xl bg-white/8 border border-white/12 p-4 text-[12px] leading-relaxed text-white/70">
+                <p className="font-semibold text-[13px] text-white mb-2">What insic measures</p>
+                <p>Every stock price implies a 5-year revenue growth rate the market is betting on. insic calls this the <strong className="text-white/90">implied CAGR</strong> and compares it to the company&apos;s 3-year historical growth rate.</p>
+                <div className="mt-3 space-y-2">
+                  <p className="font-semibold text-white mb-1">Expectation labels:</p>
+                  <div className="flex items-start gap-2.5">
+                    <span className="shrink-0 mt-0.5 inline-flex items-center rounded-full px-2 py-0.5 border text-[10px] font-semibold bg-olive-50 text-olive-700 border-[#BFD2A1]">Conservative</span>
+                    <span>Implied growth is well below historical. Market is pricing in a slowdown.</span>
+                  </div>
+                  <div className="flex items-start gap-2.5">
+                    <span className="shrink-0 mt-0.5 inline-flex items-center rounded-full px-2 py-0.5 border text-[10px] font-semibold bg-[#FFF4DA] text-[#B56A00] border-[#F3D391]">Moderate</span>
+                    <span>Implied growth roughly matches historical. Expectations are in line.</span>
+                  </div>
+                  <div className="flex items-start gap-2.5">
+                    <span className="shrink-0 mt-0.5 inline-flex items-center rounded-full px-2 py-0.5 border text-[10px] font-semibold bg-[#FCEAEA] text-[#D83B3B] border-[#F0B8B8]">Aggressive</span>
+                    <span>Implied growth far exceeds historical. Market is betting on a major acceleration.</span>
+                  </div>
                 </div>
-                <div className="flex items-start gap-2.5">
-                  <span className="shrink-0 mt-0.5 inline-flex items-center rounded-full px-2 py-0.5 border text-[10px] font-semibold bg-[#FFF4DA] text-[#B56A00] border-[#F3D391]">Moderate</span>
-                  <span>Implied growth roughly matches historical. Expectations are in line.</span>
-                </div>
-                <div className="flex items-start gap-2.5">
-                  <span className="shrink-0 mt-0.5 inline-flex items-center rounded-full px-2 py-0.5 border text-[10px] font-semibold bg-[#FCEAEA] text-[#D83B3B] border-[#F0B8B8]">Aggressive</span>
-                  <span>Implied growth far exceeds historical. Market is betting on a major acceleration.</span>
-                </div>
+                <p className="mt-3 text-[11px] text-white/40">Intrinsic value is a DCF-based model estimate. Not financial advice.</p>
               </div>
-              <p className="mt-3 text-[11px] text-white/50">Intrinsic value is a DCF-based model estimate. Not financial advice.</p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      </div>{/* /p-3 sm:p-4 */}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>{/* /relative p-4 sm:p-5 */}
     </div>
   )
 }
@@ -949,55 +955,18 @@ function AnalyzePageInner() {
         </div>
       )}
 
-      {/* ── Slate hero zone — search + popular analyses on dark ── */}
-      <div className="relative overflow-hidden">
-        {/* Slate gradient background */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: 'linear-gradient(160deg, #1e293b 0%, #334155 55%, #475569 100%)',
-          }}
-        />
-        {/* Olive ambient glow top-right */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            backgroundImage: 'radial-gradient(ellipse 50% 80% at 90% -10%, rgba(95,121,11,0.18) 0%, transparent 60%)',
-          }}
-        />
-        {/* Bottom fade — starts at 70% height so it clears the cards completely */}
-        <div
-          aria-hidden="true"
-          className="absolute bottom-0 left-0 right-0 pointer-events-none"
-          style={{
-            height: '160px',
-            background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.6) 60%, #ffffff 100%)',
-          }}
-        />
+      {/* ── White page, no hero zone ── */}
+      <div id="main-content" className="p-4 lg:p-6 max-w-[960px] mx-auto space-y-6" tabIndex={-1}>
 
-        <div className="relative px-4 sm:px-6 lg:px-8 pt-8 pb-10 max-w-[960px] mx-auto space-y-8">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-          >
-            <SearchHero />
-          </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <SearchHero />
+        </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1], delay: 0.08 }}
-          >
-            <PopularAnalysesSection quotes={quotes} dataStale={dataStale} dark />
-          </motion.div>
-        </div>
-      </div>
-
-      {/* ── Content below hero — white background ── */}
-      <div id="main-content" className="px-4 sm:px-6 lg:px-8 pb-8 max-w-[960px] mx-auto space-y-6" tabIndex={-1}>
+        <PopularAnalysesSection quotes={quotes} dataStale={dataStale} />
         <MarketPricingLeaderboard quotes={quotes} />
         <QuickActions />
         <RecentlyViewed />
