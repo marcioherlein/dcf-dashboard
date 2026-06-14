@@ -18,7 +18,7 @@ export default function LandingNavbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 12)
+    const onScroll = () => setScrolled(window.scrollY > 48)
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
@@ -30,6 +30,8 @@ export default function LandingNavbar() {
     return () => document.removeEventListener('keydown', close)
   }, [mobileOpen])
 
+  const atTop = !scrolled
+
   return (
     <>
       {/* ── Floating navbar ───────────────────────────────────────────────── */}
@@ -40,20 +42,24 @@ export default function LandingNavbar() {
             className="grid items-center h-14 sm:h-[72px] px-4 sm:px-6 rounded-2xl"
             style={{
               gridTemplateColumns: '1fr auto 1fr',
-              background: 'rgba(255,255,255,0.97)',
+              background: atTop
+                ? 'rgba(15,23,42,0.30)'
+                : 'rgba(255,255,255,0.97)',
               backdropFilter: 'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)',
-              border: '1px solid rgba(0,0,0,0.10)',
-              boxShadow: scrolled
-                ? '0 8px 32px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.06)'
-                : '0 4px 24px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.05)',
-              transition: 'box-shadow 0.3s ease',
+              border: atTop
+                ? '1px solid rgba(255,255,255,0.10)'
+                : '1px solid rgba(0,0,0,0.10)',
+              boxShadow: atTop
+                ? 'none'
+                : '0 8px 32px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.06)',
+              transition: 'background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease',
             }}
           >
             {/* ── Col 1: Logo — left edge ── */}
             <div className="flex items-center">
               <Link href="/" onClick={() => setMobileOpen(false)} aria-label="insic home" className="flex items-center" style={{ lineHeight: 0 }}>
-                <InsicLogoLockup size="lg" />
+                <InsicLogoLockup size="lg" on={atTop ? 'dark' : 'light'} />
               </Link>
             </div>
 
@@ -63,7 +69,18 @@ export default function LandingNavbar() {
                 <Link
                   key={link.label}
                   href={link.href}
-                  className="px-4 py-2 rounded-lg text-[14.5px] font-medium text-[#6B6B6B] hover:text-[#111111] hover:bg-[#F5F5F5] transition-all duration-150 whitespace-nowrap min-h-[44px] flex items-center"
+                  className="px-4 py-2 rounded-lg text-[14.5px] font-medium transition-all duration-150 whitespace-nowrap min-h-[44px] flex items-center"
+                  style={{
+                    color: atTop ? 'rgba(255,255,255,0.80)' : '#6B6B6B',
+                  }}
+                  onMouseEnter={e => {
+                    (e.currentTarget as HTMLElement).style.backgroundColor = atTop ? 'rgba(255,255,255,0.10)' : '#F5F5F5'
+                    ;(e.currentTarget as HTMLElement).style.color = atTop ? 'rgba(255,255,255,1)' : '#111111'
+                  }}
+                  onMouseLeave={e => {
+                    (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'
+                    ;(e.currentTarget as HTMLElement).style.color = atTop ? 'rgba(255,255,255,0.80)' : '#6B6B6B'
+                  }}
                 >
                   {link.label}
                 </Link>
@@ -81,7 +98,8 @@ export default function LandingNavbar() {
               </Link>
               <button
                 onClick={() => setMobileOpen(v => !v)}
-                className="lg:hidden flex items-center justify-center w-11 h-11 rounded-lg text-[#6B6B6B] hover:bg-[#F5F5F5] hover:text-[#111111] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-offset-2"
+                className="lg:hidden flex items-center justify-center w-11 h-11 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-offset-2"
+                style={{ color: atTop ? 'rgba(255,255,255,0.80)' : '#6B6B6B' }}
                 aria-label="Toggle menu"
                 aria-expanded={mobileOpen}
                 aria-controls="mobile-nav-menu"
