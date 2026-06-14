@@ -3,19 +3,10 @@ import "./globals.css";
 import Providers from "./providers";
 import AppShell from "@/components/layout/AppShell";
 import CookieNotice from "@/components/layout/CookieNotice";
-import { Inter, DM_Mono } from "next/font/google";
+import { DM_Mono } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { TooltipProvider } from "@/components/ui/tooltip"
 
-// Inter is the primary UI font for all app and dashboard surfaces.
-// Space Grotesk is intentionally removed — Inter provides the editorial
-// clarity needed without the "SaaS template" associations.
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-sans',
-  display: 'swap',
-  preload: true,
-});
 const dmMono = DM_Mono({
   subsets: ['latin'],
   variable: '--font-mono',
@@ -52,7 +43,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={cn("font-sans", inter.variable, dmMono.variable)}>
+    <html lang="en" className={cn("font-sans", dmMono.variable)}>
       <head>
         {/* Theme color matches --color-bg warm off-white */}
         <meta name="theme-color" content="#FAF9F6" />

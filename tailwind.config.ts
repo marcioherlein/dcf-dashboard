@@ -93,12 +93,12 @@ const config: Config = {
       },
 
       fontFamily: {
-        // Inter is the primary UI font across all app surfaces
-        display:  ["var(--font-sans)", "Inter", "system-ui", "sans-serif"],
-        headline: ["var(--font-sans)", "Inter", "system-ui", "sans-serif"],
-        body:     ["var(--font-sans)", "Inter", "system-ui", "sans-serif"],
-        label:    ["var(--font-sans)", "Inter", "system-ui", "sans-serif"],
-        sans:     ["var(--font-sans)", "Inter", "system-ui", "sans-serif"],
+        // System font stack — SF Pro on Apple, Segoe UI on Windows, Roboto on Android
+        display:  ["-apple-system", "BlinkMacSystemFont", "Segoe UI", "system-ui", "sans-serif"],
+        headline: ["-apple-system", "BlinkMacSystemFont", "Segoe UI", "system-ui", "sans-serif"],
+        body:     ["-apple-system", "BlinkMacSystemFont", "Segoe UI", "system-ui", "sans-serif"],
+        label:    ["-apple-system", "BlinkMacSystemFont", "Segoe UI", "system-ui", "sans-serif"],
+        sans:     ["-apple-system", "BlinkMacSystemFont", "Segoe UI", "system-ui", "sans-serif"],
         mono:     ["var(--font-mono)", "DM Mono", "IBM Plex Mono", "Courier New", "monospace"],
         // Serif — only for landing hero headline if desired
         serif:    ["Georgia", "Times New Roman", "serif"],
