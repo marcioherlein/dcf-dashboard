@@ -182,10 +182,10 @@ function fmtMult(v: number | null): string { return v == null ? '—' : `${v.toF
 
 function SkeletonRow({ index }: { index: number }) {
   return (
-    <tr className="border-b border-[#E3E1DA] animate-pulse" style={{ animationDelay: `${index * 30}ms` }}>
+    <tr className="border-b border-[#E5E5E5] animate-pulse" style={{ animationDelay: `${index * 30}ms` }}>
       <td className="sticky left-0 z-10 bg-white px-4 py-3.5 w-[220px]">
         <div className="flex flex-col gap-1.5">
-          <div className="h-3.5 bg-[#E3E1DA] rounded w-14" />
+          <div className="h-3.5 bg-[#E5E5E5] rounded w-14" />
           <div className="h-3 bg-[#F4F3EF] rounded w-28" />
         </div>
       </td>
@@ -204,13 +204,14 @@ function SortTh({ label, col, active, dir, onClick, className }: {
     <th
       className={cn('px-4 py-3 text-right text-[11px] font-semibold text-[#566174] whitespace-nowrap cursor-pointer select-none hover:text-[#06101F] transition-colors', className)}
       onClick={() => onClick(col)}
+      aria-sort={active ? (dir === 'desc' ? 'descending' : 'ascending') : 'none'}
     >
       <span className="inline-flex items-center justify-end gap-1">
         {label}
         {active
           ? dir === 'desc' ? <ArrowDown size={11} className="text-olive-700 shrink-0" />
                            : <ArrowUp   size={11} className="text-olive-700 shrink-0" />
-          : <ArrowUpDown size={10} className="text-[#8A95A6] shrink-0" />}
+          : <ArrowUpDown size={10} className="text-[#6B6B6B] shrink-0" />}
       </span>
     </th>
   )
@@ -231,7 +232,7 @@ const SECTOR_COLORS: Record<string, string> = {
 }
 
 function SectorBadge({ sector }: { sector: string | null }) {
-  if (!sector) return <span className="text-[#8A95A6] text-[11px]">—</span>
+  if (!sector) return <span className="text-[#6B6B6B] text-[11px]">—</span>
   return (
     <span className={cn('inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full', SECTOR_COLORS[sector] ?? 'bg-[#F4F3EF] text-[#566174]')}>
       {sector}
@@ -247,7 +248,7 @@ function FilterSelect({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <span className={cn('text-[10px] font-[600] leading-none', active ? 'text-olive-700' : 'text-[#8A95A6]')}>
+      <span className={cn('text-[10px] font-[600] leading-none', active ? 'text-olive-700' : 'text-[#6B6B6B]')}>
         {label}
       </span>
       <div className="relative">
@@ -255,15 +256,15 @@ function FilterSelect({
           value={value}
           onChange={e => onChange(e.target.value)}
           className={cn(
-            'appearance-none pl-2.5 pr-6 py-1.5 text-[12px] rounded-lg border cursor-pointer min-h-[36px] transition-colors focus:outline-none focus:ring-2 focus:ring-[rgba(95,121,11,0.25)]',
+            'appearance-none pl-2.5 pr-6 py-1.5 text-[12px] rounded-lg border cursor-pointer min-h-[44px] transition-colors focus:outline-none focus:ring-2 focus:ring-[rgba(95,121,11,0.25)]',
             active
               ? 'border-olive-700 bg-olive-50 text-olive-700 font-[600]'
-              : 'border-[#E3E1DA] bg-white text-[#566174] hover:border-[#CDD1C8]',
+              : 'border-[#E5E5E5] bg-white text-[#566174] hover:border-[#CDD1C8]',
           )}
         >
           {opts.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
         </select>
-        <ChevronDown size={10} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-[#8A95A6]" />
+        <ChevronDown size={10} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-[#6B6B6B]" />
       </div>
     </div>
   )
@@ -423,16 +424,16 @@ export default function ScreenerPage() {
   }
 
   return (
-    <div className="min-h-dvh" style={{ background: '#F4F3EF' }}>
+    <div className="min-h-dvh bg-[#F5F5F5]">
 
       {/* ── Sticky filter bar ──────────────────────────────────────────────── */}
-      <div className="bg-white border-b border-[#E3E1DA] sticky top-[52px] z-30">
+      <div className="bg-white border-b border-[#E5E5E5] sticky top-[52px] z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex items-center gap-2 flex-wrap">
 
             {/* Search */}
             <div className="relative flex-1 min-w-[160px] max-w-[260px]">
-              <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8A95A6] pointer-events-none" />
+              <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6B6B6B] pointer-events-none" />
               <input
                 type="text"
                 value={searchQ}
@@ -441,15 +442,15 @@ export default function ScreenerPage() {
                 aria-label="Search by ticker or company name"
                 autoCapitalize="characters"
                 autoCorrect="off"
-                className="w-full pl-8 pr-3 py-2 text-[16px] sm:text-[13px] border border-[#E3E1DA] rounded-lg bg-white text-[#06101F] placeholder-[#8A95A6] focus:outline-none focus:ring-2 focus:ring-[rgba(95,121,11,0.25)] focus:border-transparent transition-shadow"
+                className="w-full pl-8 pr-3 py-2 text-[16px] sm:text-[13px] border border-[#E5E5E5] rounded-lg bg-white text-[#06101F] placeholder-[#6B6B6B] focus:outline-none focus:ring-2 focus:ring-[rgba(95,121,11,0.25)] focus:border-transparent transition-shadow"
               />
             </div>
 
             {/* Exchange pills */}
-            <div className="flex rounded-lg overflow-hidden border border-[#E3E1DA] shrink-0">
+            <div className="flex rounded-lg overflow-hidden border border-[#E5E5E5] shrink-0">
               {EXCHANGES.map(ex => (
                 <button key={ex.id} onClick={() => setFilter('exchange', ex.id)}
-                  className={cn('px-3 py-2 text-[12px] font-[500] border-r border-[#E3E1DA] last:border-r-0 transition-colors min-h-[36px]',
+                  className={cn('px-3 py-2 text-[12px] font-[500] border-r border-[#E5E5E5] last:border-r-0 transition-colors min-h-[44px]',
                     filters.exchange === ex.id ? 'bg-olive-50 text-olive-700 font-[600]' : 'text-[#566174] hover:bg-[#F4F3EF]'
                   )}>
                   {ex.label}
@@ -458,10 +459,10 @@ export default function ScreenerPage() {
             </div>
 
             {/* Cap tier pills */}
-            <div className="flex rounded-lg overflow-hidden border border-[#E3E1DA] shrink-0">
+            <div className="flex rounded-lg overflow-hidden border border-[#E5E5E5] shrink-0">
               {CAP_TIERS.map(t => (
                 <button key={t.id} onClick={() => setFilter('capTier', t.id)} title={t.sub || undefined}
-                  className={cn('px-3 py-2 text-[12px] font-[500] border-r border-[#E3E1DA] last:border-r-0 transition-colors min-h-[36px] whitespace-nowrap',
+                  className={cn('px-3 py-2 text-[12px] font-[500] border-r border-[#E5E5E5] last:border-r-0 transition-colors min-h-[44px] whitespace-nowrap',
                     filters.capTier === t.id ? 'bg-olive-50 text-olive-700 font-[600]' : 'text-[#566174] hover:bg-[#F4F3EF]'
                   )}>
                   {t.label}
@@ -474,19 +475,19 @@ export default function ScreenerPage() {
             <div className="relative shrink-0">
               <select value={filters.sector} onChange={e => setFilter('sector', e.target.value)}
                 className={cn(
-                  'appearance-none pl-2.5 pr-7 py-2 text-[12px] border rounded-lg bg-white cursor-pointer min-h-[36px] focus:outline-none focus:ring-2 focus:ring-[rgba(95,121,11,0.25)] transition-colors',
-                  filters.sector !== 'All Sectors' ? 'border-olive-700 bg-olive-50 text-olive-700 font-[600]' : 'border-[#E3E1DA] text-[#566174]'
+                  'appearance-none pl-2.5 pr-7 py-2 text-[12px] border rounded-lg bg-white cursor-pointer min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[rgba(95,121,11,0.25)] transition-colors',
+                  filters.sector !== 'All Sectors' ? 'border-olive-700 bg-olive-50 text-olive-700 font-[600]' : 'border-[#E5E5E5] text-[#566174]'
                 )}>
                 {SECTORS.map(s => <option key={s}>{s}</option>)}
               </select>
-              <ChevronDown size={10} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-[#8A95A6]" />
+              <ChevronDown size={10} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-[#6B6B6B]" />
             </div>
 
             {/* Dividends toggle */}
             <button
               onClick={() => setFilter('dividendsOnly', !filters.dividendsOnly)}
-              className={cn('flex items-center gap-1.5 px-3 py-2 rounded-lg border text-[12px] font-[500] transition-colors min-h-[36px] shrink-0',
-                filters.dividendsOnly ? 'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D] font-[600]' : 'bg-white border-[#E3E1DA] text-[#566174] hover:border-[#CDD1C8]'
+              className={cn('flex items-center gap-1.5 px-3 py-2 rounded-lg border text-[12px] font-[500] transition-colors min-h-[44px] shrink-0',
+                filters.dividendsOnly ? 'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D] font-[600]' : 'bg-white border-[#E5E5E5] text-[#566174] hover:border-[#CDD1C8]'
               )}
               aria-pressed={filters.dividendsOnly}>
               Dividends
@@ -495,10 +496,10 @@ export default function ScreenerPage() {
             {/* Advanced filter toggle */}
             <button
               onClick={() => setPanelOpen(v => !v)}
-              className={cn('flex items-center gap-1.5 px-3 py-2 rounded-lg border text-[12px] font-[500] transition-colors min-h-[36px] shrink-0',
+              className={cn('flex items-center gap-1.5 px-3 py-2 rounded-lg border text-[12px] font-[500] transition-colors min-h-[44px] shrink-0',
                 panelOpen || activeAdvanced.length > 0
                   ? 'bg-olive-50 border-olive-700 text-olive-700 font-[600]'
-                  : 'bg-white border-[#E3E1DA] text-[#566174] hover:border-[#CDD1C8]'
+                  : 'bg-white border-[#E5E5E5] text-[#566174] hover:border-[#CDD1C8]'
               )}>
               <SlidersHorizontal size={12} />
               Filters
@@ -512,7 +513,8 @@ export default function ScreenerPage() {
             {/* Reset */}
             {(totalActive > 0 || searchQ) && (
               <button onClick={resetFilters}
-                className="flex items-center gap-1 text-[11px] text-[#8A95A6] hover:text-[#D83B3B] transition-colors shrink-0">
+                aria-label="Reset all screener filters"
+                className="flex items-center gap-1 text-[11px] text-[#6B6B6B] hover:text-[#D83B3B] transition-colors shrink-0 min-h-[44px] px-2">
                 <RotateCcw size={11} />
                 Reset
               </button>
@@ -520,7 +522,7 @@ export default function ScreenerPage() {
 
             {/* Result count */}
             {!loading && !error && (
-              <span className="ml-auto text-[11px] text-[#8A95A6] shrink-0 tabular-nums">
+              <span className="ml-auto text-[11px] text-[#6B6B6B] shrink-0 tabular-nums">
                 <TrendingUp size={11} className="inline mr-1 mb-px" />
                 {displayed.length.toLocaleString()} stocks
               </span>
@@ -545,16 +547,18 @@ export default function ScreenerPage() {
 
           {/* ── Advanced filter panel ─────────────────────────────────────── */}
           {panelOpen && (
-            <div className="mt-3 pt-3 border-t border-[#E3E1DA]">
+            <div className="mt-3 pt-3 border-t border-[#E5E5E5]">
               <div className="space-y-2">
                 {FILTER_GROUPS.map(group => {
                   const groupActive = group.fields.some(f => ((filters as unknown) as Record<string, string>)[f.key] !== 'any')
                   const isOpen = openGroups.has(group.id)
                   return (
-                    <div key={group.id} className="rounded-lg border border-[#E3E1DA] bg-[#FAFAF8] overflow-hidden">
+                    <div key={group.id} className="rounded-lg border border-[#E5E5E5] bg-[#FAFAF8] overflow-hidden">
                       <button
                         onClick={() => toggleGroup(group.id)}
-                        className="w-full flex items-center justify-between px-3 py-2 text-left"
+                        aria-expanded={isOpen}
+                        aria-controls={`filter-group-${group.id}`}
+                        className="w-full flex items-center justify-between px-3 py-2 text-left min-h-[44px]"
                       >
                         <span className={cn('text-[12px] font-[600]', groupActive ? 'text-olive-700' : 'text-[#566174]')}>
                           {group.label}
@@ -562,10 +566,10 @@ export default function ScreenerPage() {
                             ({group.fields.filter(f => ((filters as unknown) as Record<string, string>)[f.key] !== 'any').length} active)
                           </span>}
                         </span>
-                        {isOpen ? <ChevronUp size={13} className="text-[#8A95A6]" /> : <ChevronDown size={13} className="text-[#8A95A6]" />}
+                        {isOpen ? <ChevronUp size={13} className="text-[#6B6B6B]" /> : <ChevronDown size={13} className="text-[#6B6B6B]" />}
                       </button>
                       {isOpen && (
-                        <div className="px-3 pb-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5">
+                        <div id={`filter-group-${group.id}`} className="px-3 pb-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5">
                           {group.fields.map(field => (
                             <FilterSelect
                               key={field.key}
@@ -616,7 +620,7 @@ export default function ScreenerPage() {
 
         {/* Table view */}
         {(view === 'table' || loading || error) && (
-          <div className="bg-white rounded-xl border border-[#E3E1DA] shadow-sm">
+          <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm">
 
             {error && (
               <div className="px-5 py-12 text-center">
@@ -633,7 +637,7 @@ export default function ScreenerPage() {
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[720px]">
                   <thead>
-                    <tr className="border-b border-[#E3E1DA] bg-[#F4F3EF]/60">
+                    <tr className="border-b border-[#E5E5E5] bg-[#F4F3EF]/60">
                       <th
                         className="sticky left-0 z-10 bg-[#F4F3EF] px-4 py-3 text-left text-[11px] font-semibold text-[#566174] w-[220px] min-w-[200px] cursor-pointer select-none hover:text-[#06101F] transition-colors"
                         onClick={() => toggleSort('name')}
@@ -642,7 +646,7 @@ export default function ScreenerPage() {
                           Company
                           {sortKey === 'name'
                             ? sortDir === 'desc' ? <ArrowDown size={11} className="text-olive-700" /> : <ArrowUp size={11} className="text-olive-700" />
-                            : <ArrowUpDown size={10} className="text-[#8A95A6]" />}
+                            : <ArrowUpDown size={10} className="text-[#6B6B6B]" />}
                         </span>
                       </th>
                       <SortTh label="Mkt Cap"    col="marketCap"    active={sortKey === 'marketCap'}    dir={sortDir} onClick={toggleSort} />
@@ -675,7 +679,7 @@ export default function ScreenerPage() {
                         animate={{ opacity: 1 }}
                         transition={{ duration: 0.15, delay: Math.min(i * 0.012, 0.18) }}
                         className={cn(
-                          'border-b border-[#E3E1DA] hover:bg-olive-50/60 cursor-pointer transition-colors group',
+                          'border-b border-[#E5E5E5] hover:bg-olive-50/60 cursor-pointer transition-colors group',
                           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-olive-700',
                           i % 2 === 1 && 'bg-[#F4F3EF]/40',
                         )}
@@ -700,7 +704,7 @@ export default function ScreenerPage() {
                         </td>
                         <td className="px-4 py-3.5 text-right hidden sm:table-cell">
                           <span className={cn('text-[13px] font-mono tabular-nums',
-                            stock.trailingPE == null ? 'text-[#8A95A6]' :
+                            stock.trailingPE == null ? 'text-[#6B6B6B]' :
                             stock.trailingPE > 40 ? 'text-orange-600' :
                             stock.trailingPE < 15 ? 'text-[#11875D]' : 'text-[#06101F]'
                           )}>
@@ -709,7 +713,7 @@ export default function ScreenerPage() {
                         </td>
                         <td className="px-4 py-3.5 text-right hidden md:table-cell">
                           <span className={cn('text-[13px] font-mono tabular-nums',
-                            stock.beta == null ? 'text-[#8A95A6]' :
+                            stock.beta == null ? 'text-[#6B6B6B]' :
                             stock.beta > 1.5 ? 'text-orange-600' :
                             stock.beta < 0.7 ? 'text-[#11875D]' : 'text-[#06101F]'
                           )}>
@@ -718,7 +722,7 @@ export default function ScreenerPage() {
                         </td>
                         <td className="px-4 py-3.5 text-right hidden md:table-cell">
                           <span className={cn('text-[13px] font-mono tabular-nums',
-                            stock.dividendYield != null && stock.dividendYield > 0 ? 'text-[#11875D] font-semibold' : 'text-[#8A95A6]'
+                            stock.dividendYield != null && stock.dividendYield > 0 ? 'text-[#11875D] font-semibold' : 'text-[#6B6B6B]'
                           )}>
                             {stock.dividendYield != null && stock.dividendYield > 0 ? fmtPct(stock.dividendYield, 2) : '—'}
                           </span>
@@ -734,7 +738,7 @@ export default function ScreenerPage() {
             )}
 
             {!loading && !error && displayed.length > 0 && (
-              <div className="px-4 py-2.5 border-t border-[#E3E1DA] flex items-center justify-between">
+              <div className="px-4 py-2.5 border-t border-[#E5E5E5] flex items-center justify-between">
                 <p className="text-[11px] text-[#566174]">
                   {displayed.length.toLocaleString()} result{displayed.length !== 1 ? 's' : ''} · Click any row to open the full analysis
                 </p>
