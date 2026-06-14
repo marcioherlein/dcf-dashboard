@@ -1470,9 +1470,9 @@ export default function FinancialsHub({ statementsData, financialsData, currency
         const hasAnalystCoverage = rawRec !== '' || (q.analystTargetMean > 0) || (ca.numAnalysts > 0)
         const isBuy  = rawRec.includes('buy') || rawRec === 'strong_buy' || rawRec === 'strongbuy'
         const isSell = rawRec.includes('sell') || rawRec.includes('underperform') || rawRec.includes('underweight')
-        const recLabel = isBuy ? 'Buy' : isSell ? 'Sell' : 'Hold'
-        const recBg    = isBuy ? 'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D]' : isSell ? 'bg-[#FCEAEA] border-[#F0B8B8] text-[#D83B3B]' : 'bg-[#FFF4DA] border-[#F3D391] text-[#B56A00]'
-        const targetUpside = q.analystTargetMean > 0 && q.price > 0 ? (q.analystTargetMean - q.price) / q.price : null
+        const _recLabel = isBuy ? 'Buy' : isSell ? 'Sell' : 'Hold'
+        const _recBg    = isBuy ? 'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D]' : isSell ? 'bg-[#FCEAEA] border-[#F0B8B8] text-[#D83B3B]' : 'bg-[#FFF4DA] border-[#F3D391] text-[#B56A00]'
+        const _targetUpside = q.analystTargetMean > 0 && q.price > 0 ? (q.analystTargetMean - q.price) / q.price : null
         return (
           <div className="px-4 sm:px-5 py-5 space-y-5">
 
