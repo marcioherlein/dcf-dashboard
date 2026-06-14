@@ -319,12 +319,18 @@ h3 {
 
   /* ── Header / TopBar ─────────────────────────────────────────────────────── */
   .glass-toolbar {
-    background: rgba(250, 249, 246, 0.92);
+    background: rgba(250, 249, 246, 0.96);
+    /* will-change:transform forces a compositing layer on Android Chrome,
+       preventing the backdrop-filter black-rectangle bug on fixed elements */
+    will-change: transform;
     backdrop-filter: blur(24px) saturate(180%);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
     border-bottom: 1px solid #E3E1DA;
     box-shadow: 0 1px 0 #E3E1DA;
     padding-top: env(safe-area-inset-top, 0px);
+    /* Contain paint to prevent content from bleeding through */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
   }
 
   /* Dark/hero navigation (landing page only) */
@@ -356,6 +362,9 @@ h3 {
   /* Mobile bottom nav */
   .glass-bottom-nav {
     background: rgba(250, 249, 246, 0.96);
+    will-change: transform;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
     backdrop-filter: blur(32px) saturate(180%);
     -webkit-backdrop-filter: blur(32px) saturate(180%);
     border-top: 1px solid #E3E1DA;
@@ -412,11 +421,11 @@ h3 {
 
 /* ── Glass accessibility fallbacks ──────────────────────────────────────────── */
 @supports not (backdrop-filter: blur(1px)) {
-  .glass-toolbar          { background: rgba(255, 255, 255, 0.98); }
+  .glass-toolbar          { background: #FAF9F6; will-change: auto; transform: none; -webkit-transform: none; }
   .glass-panel            { background: var(--color-surface-subtle); }
   .glass-card-light       { background: #ffffff; }
   .glass-accordion-header { background: #ffffff; }
-  .glass-bottom-nav       { background: rgba(255, 255, 255, 0.99); }
+  .glass-bottom-nav       { background: #FAF9F6; will-change: auto; transform: none; -webkit-transform: none; }
 }
 
 @media (prefers-reduced-transparency: reduce) {

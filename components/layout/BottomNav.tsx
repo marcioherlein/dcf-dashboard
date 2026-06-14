@@ -62,11 +62,8 @@ export default function BottomNav() {
   const isMoreActive = MORE_ITEMS.some((item) => pathname.startsWith(item.href.split('?')[0]))
   const isCenterActive = pathname === '/' || pathname.startsWith('/stock') || pathname.startsWith('/analyze')
 
-  // Auto-expand drawer when deep-linked to a "More" item (L8)
-  useEffect(() => {
-    const isInMore = MORE_ITEMS.some(item => pathname.startsWith(item.href.split('?')[0]))
-    if (isInMore) setMoreOpen(true)
-  }, [pathname])
+  // Close drawer on navigation
+  useEffect(() => { setMoreOpen(false) }, [pathname])
 
   // Focus trap + Escape key handler (H5)
   useEffect(() => {
@@ -94,6 +91,7 @@ export default function BottomNav() {
       <Link
         href={href}
         className="flex flex-col items-center justify-center gap-0.5 flex-1 py-2 active:scale-95 transition-transform min-w-[60px]"
+        style={{ minHeight: '56px' }}
       >
         {icon(active)}
         <span className={cn(
@@ -169,26 +167,27 @@ export default function BottomNav() {
       {/* Bottom nav bar */}
       <nav
         className="fixed bottom-0 left-0 right-0 z-50 lg:hidden glass-bottom-nav"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
-        <div className="flex items-end justify-around min-h-[56px]">
+        <div className="flex items-center justify-around min-h-[56px]">
 
           {LEFT_NAV.map((item) => (
             <NavItem key={item.href} {...item} />
           ))}
 
-          {/* Center: Analyze — olive accent */}
+          {/* Center: Analyze — olive accent FAB */}
           <Link
             href="/analyze"
-            className="flex flex-col items-center justify-end gap-1 flex-1 pb-2 active:scale-95 transition-transform min-w-[60px]"
+            className="flex flex-col items-center justify-center gap-0.5 flex-1 min-w-[60px] relative"
+            style={{ minHeight: '56px' }}
           >
             <div className={cn(
-              'w-12 h-12 rounded-full flex items-center justify-center -mt-5 ring-4 ring-white shadow-card',
+              'w-11 h-11 rounded-full flex items-center justify-center ring-2 ring-white shadow-md -mt-4',
               isCenterActive
                 ? 'bg-[#5F790B]'
                 : 'bg-[#5F790B] opacity-90',
             )}>
-              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <svg className="w-[18px] h-[18px] text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M16.65 16.65A7.5 7.5 0 114.5 4.5a7.5 7.5 0 0112.15 12.15z" />
               </svg>
             </div>
@@ -208,6 +207,7 @@ export default function BottomNav() {
           <button
             onClick={() => setMoreOpen((v) => !v)}
             className="flex flex-col items-center justify-center gap-0.5 flex-1 py-2 active:scale-95 transition-transform min-w-[60px]"
+            style={{ minHeight: '56px' }}
           >
             <svg
               className={cn('w-5 h-5', isMoreActive || moreOpen ? 'text-[#5F790B]' : 'text-[#9B9B9B]')}
