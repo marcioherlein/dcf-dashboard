@@ -1,19 +1,36 @@
 'use client'
 import { signIn, useSession } from 'next-auth/react'
-import { motion, useReducedMotion } from 'motion/react'
+import { motion, useReducedMotion, useScroll, useTransform } from 'motion/react'
 import { Play } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import ProductAnimation from './ProductAnimation'
+import AnimatedCounter from './AnimatedCounter'
 
 const EASE = [0.16, 1, 0.3, 1] as const
+
+// Glassmorphism stat shown in the hero — counts up on load
+const HERO_STATS = [
+  { value: 85.1, prefix: '+', suffix: '%', decimals: 1, label: 'avg implied return on undervalued picks' },
+  { value: 5, prefix: '', suffix: ' models', decimals: 0, label: 'blended valuation methods' },
+  { value: 10, prefix: '', suffix: '/mo free', decimals: 0, label: 'analyses, no credit card' },
+]
 
 // ── Main component ───────────────────────────────────────────────────────────
 export default function LandingHero() {
   const { data: session } = useSession()
   const reduced = useReducedMotion()
   const cardRef = useRef<HTMLDivElement>(null)
+  const sectionRef = useRef<HTMLElement>(null)
   const [cardInView, setCardInView] = useState(false)
+
+  // Parallax: product card drifts up slightly as user scrolls past hero
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start start', 'end start'],
+  })
+  const cardY = useTransform(scrollYProgress, [0, 1], [0, reduced ? 0 : -40])
+  const cardOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0.6])
 
   useEffect(() => {
     const el = cardRef.current
@@ -27,6 +44,7 @@ export default function LandingHero() {
 
   return (
     <section
+      ref={sectionRef}
       className="overflow-x-hidden relative"
       style={{
         paddingTop: 'max(96px, calc(80px + 2vh))',
@@ -49,6 +67,16 @@ export default function LandingHero() {
         className="absolute inset-0 pointer-events-none"
         style={{
           backgroundImage: 'radial-gradient(ellipse at 70% 0%, rgba(148,163,184,0.10) 0%, transparent 55%)',
+          zIndex: 1,
+        }}
+      />
+
+      {/* Olive ambient glow behind product card */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: 'radial-gradient(ellipse 40% 40% at 78% 55%, rgba(95,121,11,0.09) 0%, transparent 65%)',
           zIndex: 1,
         }}
       />
@@ -155,11 +183,44 @@ export default function LandingHero() {
               </a>
             </motion.div>
 
+            {/* Glassmorphism stat pills with counting numbers */}
+            <motion.div
+              initial={reduced ? {} : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: EASE, delay: 0.52 }}
+              className="flex flex-wrap gap-2 mb-5"
+            >
+              {HERO_STATS.map((stat) => (
+                <div
+                  key={stat.label}
+                  className="flex items-center gap-2 px-3.5 py-2 rounded-xl"
+                  style={{
+                    background: 'rgba(255,255,255,0.08)',
+                    backdropFilter: 'blur(12px) saturate(1.4)',
+                    WebkitBackdropFilter: 'blur(12px) saturate(1.4)',
+                    border: '1px solid rgba(255,255,255,0.13)',
+                  }}
+                >
+                  <AnimatedCounter
+                    value={stat.value}
+                    prefix={stat.prefix}
+                    suffix={stat.suffix}
+                    decimals={stat.decimals}
+                    className="text-[14px] font-[800] tabular-nums"
+                    style={{ color: '#7C9A19' }}
+                  />
+                  <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.52)' }}>
+                    {stat.label}
+                  </span>
+                </div>
+              ))}
+            </motion.div>
+
             {/* Social proof */}
             <motion.div
               initial={reduced ? {} : { opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.56 }}
+              transition={{ duration: 0.5, delay: 0.64 }}
               className="flex items-center gap-3"
             >
               <div className="flex -space-x-2">
@@ -184,9 +245,10 @@ export default function LandingHero() {
             </motion.div>
           </div>
 
-          {/* ── Right: Product card ── */}
+          {/* ── Right: Product card with parallax ── */}
           <motion.div
             ref={cardRef}
+            style={{ y: cardY, opacity: cardOpacity }}
             initial={reduced ? {} : { opacity: 0, x: 28, y: 6 }}
             animate={{ opacity: 1, x: 0, y: 0 }}
             transition={{ type: 'spring', stiffness: 55, damping: 20, delay: 0.2 }}

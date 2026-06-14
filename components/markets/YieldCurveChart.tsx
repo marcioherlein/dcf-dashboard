@@ -49,7 +49,7 @@ export default function YieldCurveChart({ points }: Props) {
         </div>
         {inverted ? (
           <span className="shrink-0 text-[10px] font-[700] px-2 py-0.5 rounded-full bg-[#FCEAEA] text-[#D83B3B] border border-[#F0B8B8]">
-            ⚠ Inverted
+            Inverted
           </span>
         ) : (
           <span className="shrink-0 text-[10px] font-[700] px-2 py-0.5 rounded-full bg-[#EAF1FF] text-[#2563EB] border border-[#C7D9FC]">
@@ -83,10 +83,13 @@ export default function YieldCurveChart({ points }: Props) {
 
       {/* Key yields + spread */}
       <div className="px-4 py-2.5 border-t border-[#E5E5E5] flex items-center gap-4 flex-wrap">
-        {[y2 != null ? { label: '2Y', value: y2 } : null,
+        {([
+          y2  != null ? { label: '2Y',  value: y2  } : null,
           y10 != null ? { label: '10Y', value: y10 } : null,
-          valid.find(p => p.tenor === '30Y') ? { label: '30Y', value: valid.find(p => p.tenor === '30Y')!.yield as number } : null,
-        ].filter(Boolean).map(item => item && (
+          valid.find(p => p.tenor === '30Y')?.yield != null
+            ? { label: '30Y', value: valid.find(p => p.tenor === '30Y')!.yield as number }
+            : null,
+        ] as ({ label: string; value: number } | null)[]).filter((x): x is { label: string; value: number } => x !== null).map(item => (
           <div key={item.label} className="flex items-baseline gap-1">
             <span className="text-[10px] text-[#6B6B6B]">{item.label}</span>
             <span className="text-[12px] font-[750] tabular-nums text-[#111111]">{item.value.toFixed(2)}%</span>

@@ -24,15 +24,15 @@ function toneBadgeClass(tone: MacroSignalTile['tone']): string {
 function iconForSignal(label: string): { icon: React.ReactNode; bg: string } {
   const l = label.toLowerCase()
   if (l.includes('vix'))
-    return { icon: <Activity size={14} className="text-rose-600" />, bg: 'bg-rose-50' }
+    return { icon: <Activity size={14} className="text-[#D83B3B]" />, bg: 'bg-[#FCEAEA]' }
   if (l.includes('10y') || l.includes('10-year') || (l.includes('treasury') && !l.includes('2y')))
     return { icon: <Landmark size={14} className="text-[#B56A00]" />, bg: 'bg-[#FFF4DA]' }
   if (l.includes('2y') || l.includes('2-year'))
     return { icon: <TrendingDown size={14} className="text-[#2563EB]" />, bg: 'bg-[#EAF1FF]' }
   if (l.includes('yield curve'))
-    return { icon: <BarChart2 size={14} className="text-indigo-600" />, bg: 'bg-indigo-50' }
+    return { icon: <BarChart2 size={14} className="text-[#2563EB]" />, bg: 'bg-[#EAF1FF]' }
   if (l.includes('spread') || l.includes('hy') || l.includes('credit'))
-    return { icon: <AlertTriangle size={14} className="text-orange-600" />, bg: 'bg-orange-50' }
+    return { icon: <AlertTriangle size={14} className="text-[#B56A00]" />, bg: 'bg-[#FFF4DA]' }
   if (l.includes('usd') || l.includes('dollar') || l.includes('dxy'))
     return { icon: <DollarSign size={14} className="text-[#11875D]" />, bg: 'bg-[#E8F7EF]' }
   return { icon: <Percent size={14} className="text-[#6B6B6B]" />, bg: 'bg-[#E3E1DA]' }

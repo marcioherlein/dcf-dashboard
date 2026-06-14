@@ -12,10 +12,10 @@ const PERIODS = ['5D', '1M', '3M', '6M', 'YTD', '1Y', '3Y', '5Y'] as const
 type Period = typeof PERIODS[number]
 
 const DEFAULT_SERIES = [
-  { symbol: '^NDX',  label: 'Nasdaq 100', color: '#6366f1' },
-  { symbol: '^GSPC', label: 'S&P 500',    color: '#3b82f6' },
-  { symbol: '^DJI',  label: 'Dow Jones',  color: '#f59e0b' },
-  { symbol: '^VIX',  label: 'CBOE VIX',   color: '#8b5cf6' },
+  { symbol: '^NDX',  label: 'Nasdaq 100', color: '#2563EB' },
+  { symbol: '^GSPC', label: 'S&P 500',    color: '#111111' },
+  { symbol: '^DJI',  label: 'Dow Jones',  color: '#B56A00' },
+  { symbol: '^VIX',  label: 'CBOE VIX',   color: '#D83B3B' },
   { symbol: 'FXI',   label: 'China',      color: '#ef4444' },
 ]
 

@@ -31,11 +31,11 @@ function vixLabel(vix: number): string {
 }
 
 function gaugeColor(score: number): string {
-  if (score >= 75) return '#059669'
-  if (score >= 60) return '#16a34a'
-  if (score >= 40) return '#d97706'
-  if (score >= 25) return '#ea580c'
-  return '#dc2626'
+  if (score >= 75) return '#11875D'
+  if (score >= 60) return '#11875D'
+  if (score >= 40) return '#B56A00'
+  if (score >= 25) return '#B56A00'
+  return '#D83B3B'
 }
 
 function gaugeLabel(score: number): string {
@@ -82,10 +82,10 @@ function SentimentGauge({ score }: { score: number }) {
 
 function StatBadge({ label, value, valueClass, sub }: { label: string; value: string; valueClass: string; sub?: string }) {
   return (
-    <div className="flex-1 rounded-xl bg-[#F5F5F5] border border-[#E5E5E5] px-3 py-2.5 text-center">
-      <p className="text-[11px] font-bold text-[#6B6B6B] mb-1">{label}</p>
-      <p className={cn('text-[14px] font-bold tabular-nums leading-none', valueClass)}>{value}</p>
-      {sub && <p className="text-[11px] text-[#6B6B6B] mt-0.5">{sub}</p>}
+    <div className="flex-1 rounded-lg bg-[#F5F5F5] border border-[#E5E5E5] px-2.5 py-2 text-center">
+      <p className="text-[10px] font-[700] text-[#6B6B6B] mb-1 uppercase tracking-wide leading-none">{label}</p>
+      <p className={cn('text-[15px] font-[750] tabular-nums leading-none', valueClass)}>{value}</p>
+      {sub && <p className="text-[10px] text-[#9B9B9B] mt-1 leading-none">{sub}</p>}
     </div>
   )
 }

@@ -19,7 +19,7 @@ function SparklineSkeleton() {
   return <div className="h-8 w-full rounded-lg bg-[#F5F5F5] motion-safe:animate-pulse" />
 }
 
-function Sparkline({ values, positive }: { values: number[]; positive: boolean }) {
+function Sparkline({ values, positive, id }: { values: number[]; positive: boolean; id: string }) {
   if (values.length < 2) return null
   const min = Math.min(...values)
   const max = Math.max(...values)
@@ -36,14 +36,14 @@ function Sparkline({ values, positive }: { values: number[]; positive: boolean }
     `L ${coords[coords.length - 1].x},${H}`,
     'Z',
   ].join(' ')
-  const color  = positive ? '#16a34a' : '#dc2626'
-  const fillId = `sf-${positive ? 'g' : 'r'}`
+  const color  = positive ? '#11875D' : '#D83B3B'
+  const fillId = `spark-fill-${id}`
   const last   = coords[coords.length - 1]
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="overflow-visible w-full">
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="overflow-visible w-full" aria-hidden="true">
       <defs>
         <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%"   stopColor={color} stopOpacity="0.15" />
+          <stop offset="0%"   stopColor={color} stopOpacity="0.12" />
           <stop offset="100%" stopColor={color} stopOpacity="0" />
         </linearGradient>
       </defs>
@@ -135,32 +135,33 @@ interface CardProps {
 function IndexCard({ label, value, changePct, sparklineValues, sparkLoading, interpretation, icon, iconBg, rateMode, href, note }: CardProps) {
   const positive  = rateMode ? (changePct ?? 0) < 0 : (changePct ?? 0) >= 0
   const changeCls = rateMode ? rateCls(changePct) : equityCls(changePct)
+  const sparkId   = label.replace(/[^a-z0-9]/gi, '-').toLowerCase()
 
   const inner = (
-    <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-card px-3 pt-3 pb-2 flex flex-col h-full transition-all hover:shadow-card-md hover:border-[#E5E5E5] cursor-pointer">
+    <div className="bg-white rounded-xl border border-[#E5E5E5] px-3 pt-3 pb-2 flex flex-col h-full transition-all duration-150 hover:border-[#C8C8C8] hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] cursor-pointer">
       {/* Icon + label */}
       <div className="flex items-center gap-2">
         <div className={cn('w-6 h-6 rounded-lg flex items-center justify-center shrink-0', iconBg)}>
           {icon}
         </div>
-        <p className="text-[11px] font-[600] text-[#566174] leading-tight">{label}</p>
+        <p className="text-[11px] font-[600] text-[#566174] leading-tight truncate">{label}</p>
       </div>
       {/* Value */}
-      <p className="text-[20px] font-bold tabular-nums text-[#111111] leading-none mt-2">{value}</p>
+      <p className="text-[20px] font-[700] tabular-nums text-[#111111] leading-none mt-2 tracking-tight">{value}</p>
       {/* Change + chip */}
-      <div className="flex items-center gap-1.5 mt-1">
-        <span className={cn('text-[11px] font-semibold tabular-nums', changeCls)}>
+      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+        <span className={cn('text-[11px] font-[600] tabular-nums', changeCls)}>
           {pct(changePct)}
         </span>
-        <span className="text-[10px] text-[#6B6B6B]">Today</span>
+        <span className="text-[10px] text-[#9B9B9B]">today</span>
         <div className="ml-auto">{interpretation}</div>
       </div>
-      {note && <p className="text-[10px] text-[#6B6B6B] mt-0.5">{note}</p>}
-      {/* Sparkline — pinned to bottom */}
+      {note && <p className="text-[10px] text-[#9B9B9B] mt-0.5">{note}</p>}
+      {/* Sparkline */}
       <div className="mt-auto pt-2.5 h-9 flex items-end">
         {sparkLoading
           ? <SparklineSkeleton />
-          : <Sparkline values={sparklineValues} positive={positive} />
+          : <Sparkline values={sparklineValues} positive={positive} id={sparkId} />
         }
       </div>
     </div>
@@ -217,8 +218,8 @@ export default function IndexSnapshotGrid({ spx, ndx, dji, vix, tnx, dxy }: Prop
       sparklineValues: sparklines?.['^NDX'] ?? [],
       sparkLoading,
       interpretation: spxChip(ndx?.changePct ?? null),
-      icon: <BarChart3 size={14} className="text-indigo-600" />,
-      iconBg: 'bg-indigo-50',
+      icon: <BarChart3 size={14} className="text-[#2563EB]" />,
+      iconBg: 'bg-[#EAF1FF]',
       href: ndx ? `/markets/${encodeURIComponent(ndx.symbol)}` : undefined,
     },
     {
@@ -228,8 +229,8 @@ export default function IndexSnapshotGrid({ spx, ndx, dji, vix, tnx, dxy }: Prop
       sparklineValues: sparklines?.['^DJI'] ?? [],
       sparkLoading,
       interpretation: spxChip(dji?.changePct ?? null),
-      icon: <TrendingUp size={14} className="text-teal-600" />,
-      iconBg: 'bg-teal-50',
+      icon: <TrendingUp size={14} className="text-[#6B6B6B]" />,
+      iconBg: 'bg-[#F5F5F5]',
       href: dji ? `/markets/${encodeURIComponent(dji.symbol)}` : undefined,
     },
     {
@@ -239,8 +240,8 @@ export default function IndexSnapshotGrid({ spx, ndx, dji, vix, tnx, dxy }: Prop
       sparklineValues: sparklines?.['^VIX'] ?? [],
       sparkLoading,
       interpretation: vixChip(vix?.price ?? null),
-      icon: <Activity size={14} className="text-rose-600" />,
-      iconBg: 'bg-rose-50',
+      icon: <Activity size={14} className="text-[#D83B3B]" />,
+      iconBg: 'bg-[#FCEAEA]',
       rateMode: true,
       note: 'Volatility',
     },

@@ -8,8 +8,8 @@ interface Props {
 }
 
 function barColor(tone: SectorBar['tone']): string {
-  if (tone === 'positive') return '#10b981'
-  if (tone === 'negative') return '#ef4444'
+  if (tone === 'positive') return '#11875D'
+  if (tone === 'negative') return '#D83B3B'
   return '#9B9B9B'
 }
 

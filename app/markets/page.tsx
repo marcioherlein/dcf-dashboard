@@ -241,31 +241,42 @@ export default function MarketsPage() {
                 const valid     = mkt.sectors.filter(s => s.changePct != null)
                 const advancing = valid.filter(s => (s.changePct ?? 0) > 0).length
                 const declining = valid.filter(s => (s.changePct ?? 0) < 0).length
+                const unchanged = valid.length - advancing - declining
                 const total     = valid.length || 1
                 const advPct    = Math.round((advancing / total) * 100)
                 const decPct    = Math.round((declining / total) * 100)
-                const tone = advPct > 65 ? 'green' : advPct >= 45 ? 'amber' : 'red'
-                const toneLabel = advPct > 65 ? 'Broad advance' : advPct >= 45 ? 'Mixed breadth' : 'Broad decline'
-                const toneColor = tone === 'green' ? 'text-[#11875D]' : tone === 'amber' ? 'text-[#B56A00]' : 'text-[#D83B3B]'
-                const toneBg    = tone === 'green' ? 'bg-[#E8F7EF]' : tone === 'amber' ? 'bg-[#FFF4DA]' : 'bg-[#FCEAEA]'
+                const unchPct   = 100 - advPct - decPct
+                const isHealthy = advPct > 65
+                const isMixed   = advPct >= 45 && !isHealthy
+                const toneLabel = isHealthy ? 'Broad advance' : isMixed ? 'Mixed breadth' : 'Broad decline'
+                const toneCls   = isHealthy
+                  ? 'bg-[#E8F7EF] text-[#11875D] border-[#A3D9BE]'
+                  : isMixed
+                  ? 'bg-[#FFF4DA] text-[#B56A00] border-[#F3D391]'
+                  : 'bg-[#FCEAEA] text-[#D83B3B] border-[#F0B8B8]'
                 return (
-                  <div className="flex flex-wrap items-center gap-3 sm:gap-5 rounded-xl border border-[#E5E5E5] bg-white px-4 py-2.5 mb-4 text-[11px]">
-                    <span className={`shrink-0 font-[700] text-[10px] px-2 py-0.5 rounded-full ${toneBg} ${toneColor}`}>{toneLabel}</span>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <span className="text-[#6B6B6B]">Advancing</span>
-                      <span className="font-[750] tabular-nums text-[#11875D]">{advPct}%</span>
-                      <span className="text-[#9B9B9B] text-[10px]">({advancing} of {total})</span>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-[#E5E5E5] bg-white px-4 py-3 mb-4">
+                    <span className={`shrink-0 text-[10px] font-[700] px-2 py-0.5 rounded-full border ${toneCls}`}>{toneLabel}</span>
+                    <div className="flex items-center gap-4 flex-wrap flex-1">
+                      <span className="text-[11px] text-[#6B6B6B]">
+                        Advancing <strong className="font-[750] tabular-nums text-[#11875D]">{advPct}%</strong>
+                        <span className="text-[10px] text-[#9B9B9B] ml-1">({advancing}/{total})</span>
+                      </span>
+                      <span className="text-[11px] text-[#6B6B6B]">
+                        Declining <strong className="font-[750] tabular-nums text-[#D83B3B]">{decPct}%</strong>
+                        <span className="text-[10px] text-[#9B9B9B] ml-1">({declining}/{total})</span>
+                      </span>
+                      {unchanged > 0 && (
+                        <span className="text-[11px] text-[#9B9B9B]">
+                          Flat <strong className="font-[650] tabular-nums">{unchPct}%</strong>
+                        </span>
+                      )}
                     </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <span className="text-[#6B6B6B]">Declining</span>
-                      <span className="font-[750] tabular-nums text-[#D83B3B]">{decPct}%</span>
-                      <span className="text-[#9B9B9B] text-[10px]">({declining} of {total})</span>
-                    </div>
-                    <div className="hidden sm:flex items-center gap-1.5 flex-1 min-w-[120px] max-w-[200px]">
-                      <div className="h-1.5 flex flex-1 rounded-full overflow-hidden">
-                        <div className="bg-[#11875D] h-full" style={{ width: `${advPct}%` }} />
-                        <div className="bg-[#E3E1DA] h-full" style={{ width: `${100 - advPct - decPct}%` }} />
-                        <div className="bg-[#D83B3B] h-full" style={{ width: `${decPct}%` }} />
+                    <div className="hidden sm:flex items-center min-w-[140px] max-w-[200px] flex-1">
+                      <div className="h-1.5 flex w-full rounded-full overflow-hidden">
+                        <div className="bg-[#11875D] h-full transition-all" style={{ width: `${advPct}%` }} />
+                        <div className="bg-[#E3E1DA] h-full transition-all" style={{ width: `${unchPct}%` }} />
+                        <div className="bg-[#D83B3B] h-full transition-all" style={{ width: `${decPct}%` }} />
                       </div>
                     </div>
                   </div>

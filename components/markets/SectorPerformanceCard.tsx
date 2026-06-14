@@ -32,7 +32,7 @@ export default function SectorPerformanceCard({ sectors }: Props) {
   const visible = showAll ? sorted : sorted.slice(0, 6)
 
   return (
-    <div className="bg-white rounded-2xl border border-[#E5E5E5] shadow-sm overflow-hidden h-full flex flex-col">
+    <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm overflow-hidden h-full flex flex-col">
       <div className="px-4 py-2.5 border-b border-[#E5E5E5]">
         <span className="text-[13px] font-[700] text-[#111111] leading-tight">Sector Performance</span>
         <p className="text-[10px] text-[#6B6B6B] mt-0.5">Daily change · S&P 500 sectors</p>
