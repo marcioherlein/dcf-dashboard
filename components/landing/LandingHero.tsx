@@ -1,5 +1,4 @@
 'use client'
-import { signIn, useSession } from 'next-auth/react'
 import { motion, useReducedMotion, useScroll, useTransform } from 'motion/react'
 import { Play } from 'lucide-react'
 import Link from 'next/link'
@@ -18,7 +17,6 @@ const HERO_STATS = [
 
 // ── Main component ───────────────────────────────────────────────────────────
 export default function LandingHero() {
-  const { data: session } = useSession()
   const reduced = useReducedMotion()
   const cardRef = useRef<HTMLDivElement>(null)
   const sectionRef = useRef<HTMLElement>(null)
@@ -140,26 +138,13 @@ export default function LandingHero() {
               transition={{ duration: 0.4, ease: EASE, delay: 0.42 }}
               className="flex flex-col sm:flex-row gap-3 mb-5"
             >
-              {session ? (
-                <Link
-                  href="/analyze"
-                  className="inline-flex items-center justify-center rounded-md px-6 py-3.5 text-[15px] font-semibold text-white transition-all hover:-translate-y-px active:scale-95"
-                  style={{ background: '#5F790B', boxShadow: '0 4px 16px rgba(95,121,11,0.28)', minHeight: '52px' }}
-                >
-                  Analyze for free
-                </Link>
-              ) : (
-                <motion.button
-                  onClick={() => signIn('google')}
-                  className="inline-flex items-center justify-center rounded-md px-6 py-3.5 text-[15px] font-semibold text-white transition-all active:scale-95"
-                  style={{ background: '#5F790B', minHeight: '52px' }}
-                  whileHover={reduced ? {} : { y: -2, boxShadow: '0 8px 24px rgba(95,121,11,0.38)' }}
-                  transition={{ duration: 0.2 }}
-                  initial={{ boxShadow: '0 4px 16px rgba(95,121,11,0.28)' }}
-                >
-                  Analyze for free
-                </motion.button>
-              )}
+              <Link
+                href="/analyze"
+                className="inline-flex items-center justify-center rounded-md px-6 py-3.5 text-[15px] font-semibold text-white transition-all hover:-translate-y-px active:scale-95"
+                style={{ background: '#5F790B', boxShadow: '0 4px 16px rgba(95,121,11,0.28)', minHeight: '52px' }}
+              >
+                Analyze for free
+              </Link>
               <a
                 href="#how-it-works"
                 className="inline-flex items-center justify-center gap-2 rounded-md border border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.06)] px-6 py-3.5 text-[15px] font-semibold text-white hover:bg-[rgba(255,255,255,0.12)] hover:border-[rgba(255,255,255,0.28)] transition-colors"
