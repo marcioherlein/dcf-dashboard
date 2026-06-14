@@ -33,26 +33,22 @@ export default function LandingHero() {
         paddingBottom: 'clamp(52px, 6vh, 80px)',
       }}
     >
-      {/* Photo background */}
+      {/* Greyscale gradient background */}
       <div
         aria-hidden="true"
         className="absolute inset-0 pointer-events-none"
         style={{
-          backgroundImage: 'url(/hero-bg.jpg)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center 40%',
+          background: 'linear-gradient(135deg, #1e293b 0%, #334155 55%, #475569 100%)',
           zIndex: 0,
         }}
       />
 
-      {/* Dark overlay + subtle blur scrim so text stays readable */}
+      {/* Subtle texture grain overlay */}
       <div
         aria-hidden="true"
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: 'linear-gradient(135deg, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.55) 60%, rgba(0,0,0,0.45) 100%)',
-          backdropFilter: 'blur(1px)',
-          WebkitBackdropFilter: 'blur(1px)',
+          backgroundImage: 'radial-gradient(ellipse at 70% 0%, rgba(148,163,184,0.12) 0%, transparent 60%)',
           zIndex: 1,
         }}
       />
@@ -66,10 +62,10 @@ export default function LandingHero() {
             {/* iOS-glass copy block */}
             <div
               style={{
-                background: 'rgba(255,255,255,0.06)',
-                backdropFilter: 'blur(18px) saturate(1.4)',
-                WebkitBackdropFilter: 'blur(18px) saturate(1.4)',
-                border: '1px solid rgba(255,255,255,0.10)',
+                background: 'rgba(255,255,255,0.07)',
+                backdropFilter: 'blur(20px) saturate(1.3)',
+                WebkitBackdropFilter: 'blur(20px) saturate(1.3)',
+                border: '1px solid rgba(255,255,255,0.12)',
                 borderRadius: '20px',
                 padding: 'clamp(20px, 3vw, 32px)',
                 marginBottom: '20px',
