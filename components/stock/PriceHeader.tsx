@@ -23,9 +23,9 @@ interface Props {
 
 function StatBox({ label, value, className }: { label: string; value: React.ReactNode; className?: string }) {
   return (
-    <div className={cn('rounded-xl bg-[#F4F3EF] border border-[#E3E1DA] px-4 py-3', className)}>
-      <p className="text-[11px] font-medium text-[#566174] uppercase tracking-wide">{label}</p>
-      <p className="mt-0.5 text-sm font-semibold font-mono text-[#06101F]">{value}</p>
+    <div className={cn('rounded-xl bg-[#F1F5F9] border border-[#E2E8F0] px-4 py-3', className)}>
+      <p className="text-[11px] font-[600] text-[#475569] uppercase tracking-wide">{label}</p>
+      <p className="mt-0.5 text-sm font-semibold font-mono text-[#0F172A]">{value}</p>
     </div>
   )
 }

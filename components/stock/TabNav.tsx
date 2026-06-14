@@ -50,7 +50,13 @@ export default function TabNav({ activeTab, onChange, isAuthed = true }: Props) 
     <div
       role="tablist"
       aria-label="Stock sections"
-      className="sticky z-20 glass-toolbar" style={{ top: "calc(52px + env(safe-area-inset-top, 0px))" }}
+      className="sticky z-20 glass-toolbar"
+      style={{
+        top: "calc(52px + env(safe-area-inset-top, 0px))",
+        background: 'rgba(26, 37, 52, 0.82)',
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        boxShadow: '0 1px 0 rgba(255,255,255,0.04)',
+      }}
       onKeyDown={handleKeyDown}
     >
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
@@ -69,12 +75,12 @@ export default function TabNav({ activeTab, onChange, isAuthed = true }: Props) 
                 tabIndex={active ? 0 : -1}
                 onClick={() => onChange(id)}
                 className={cn(
-                  'group relative flex items-center gap-1.5 px-4 py-3.5 whitespace-nowrap transition-colors border-b-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(95,121,11,0.55)] focus-visible:ring-offset-2',
+                  'group relative flex items-center gap-1.5 px-4 py-3.5 whitespace-nowrap transition-colors border-b-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(95,121,11,0.7)] focus-visible:ring-offset-0',
                   primary ? 'text-[13px] font-medium' : 'text-[12px] font-normal',
-                  isFirstSecondary ? 'ml-2 pl-5 border-l border-[#E5E5E5]' : '',
+                  isFirstSecondary ? 'ml-2 pl-5 border-l border-white/10' : '',
                   active
-                    ? 'border-transparent text-[#5F790B] bg-[#F6FAEA]'
-                    : 'border-transparent text-[#6B6B6B] hover:text-[#111111] hover:border-[#C8C8C8]',
+                    ? 'border-transparent text-white bg-white/8'
+                    : 'border-transparent text-white/50 hover:text-white/85 hover:border-white/20',
                 )}
               >
                 {/* Step number */}
@@ -82,8 +88,8 @@ export default function TabNav({ activeTab, onChange, isAuthed = true }: Props) 
                   className={cn(
                     'text-[8px] font-bold tabular-nums transition-opacity leading-none',
                     active
-                      ? 'text-[#5F790B] opacity-100'
-                      : 'text-[#9B9B9B] opacity-60 group-hover:opacity-80',
+                      ? 'text-[#7CB518] opacity-100'
+                      : 'text-white/30 opacity-80 group-hover:opacity-60',
                   )}
                   aria-hidden="true"
                 >
@@ -92,13 +98,13 @@ export default function TabNav({ activeTab, onChange, isAuthed = true }: Props) 
 
                 <Icon
                   size={primary ? 14 : 13}
-                  className={cn('shrink-0', active ? 'text-[#5F790B]' : 'text-[#9B9B9B]')}
+                  className={cn('shrink-0', active ? 'text-[#7CB518]' : 'text-white/40')}
                 />
                 {label}
                 {showLock && (
                   <Lock
                     size={10}
-                    className="ml-0.5 text-[#C4C4C4] shrink-0"
+                    className="ml-0.5 text-white/25 shrink-0"
                     aria-label="requires sign in"
                   />
                 )}
@@ -106,7 +112,7 @@ export default function TabNav({ activeTab, onChange, isAuthed = true }: Props) 
                 {active && (
                   <motion.span
                     layoutId="tab-indicator"
-                    className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#5F790B] rounded-full"
+                    className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#7CB518] rounded-full"
                     transition={reduced ? { duration: 0 } : { type: 'spring', duration: 0.35, bounce: 0.15 }}
                   />
                 )}
