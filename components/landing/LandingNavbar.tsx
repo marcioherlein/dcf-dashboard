@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useSession, signIn } from 'next-auth/react'
+import { useSession } from 'next-auth/react'
 import { Menu, X } from 'lucide-react'
 import { InsicLogoLockup } from '@/components/ui/InsicLogo'
 import { motion, AnimatePresence } from 'motion/react'
@@ -72,25 +72,13 @@ export default function LandingNavbar() {
 
             {/* ── Col 3: CTA — right edge ── */}
             <div className="flex items-center justify-end gap-3">
-              {session ? (
-                <Link
-                  href="/analyze"
-                  className="hidden sm:inline-flex items-center justify-center rounded-md px-6 py-2.5 text-[14px] font-semibold text-white transition-all hover:-translate-y-px active:scale-95 whitespace-nowrap"
-                  style={{ background: '#5F790B', boxShadow: '0 4px 12px rgba(95,121,11,0.25)', minHeight: '44px' }}
-                >
-                  Go to app
-                </Link>
-              ) : (
-                <>
-                  <button
-                    onClick={() => signIn('google')}
-                    className="hidden sm:inline-flex items-center justify-center rounded-md px-7 text-[14px] font-semibold text-white transition-all hover:-translate-y-px active:scale-95 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-offset-2"
-                    style={{ background: '#5F790B', boxShadow: '0 4px 12px rgba(95,121,11,0.25)', minHeight: '44px' }}
-                  >
-                    Analyze for free
-                  </button>
-                </>
-              )}
+              <Link
+                href="/analyze"
+                className="hidden sm:inline-flex items-center justify-center rounded-md px-6 py-2.5 text-[14px] font-semibold text-white transition-all hover:-translate-y-px active:scale-95 whitespace-nowrap"
+                style={{ background: '#5F790B', boxShadow: '0 4px 12px rgba(95,121,11,0.25)', minHeight: '44px' }}
+              >
+                {session ? 'Go to app' : 'Analyze for free'}
+              </Link>
               <button
                 onClick={() => setMobileOpen(v => !v)}
                 className="lg:hidden flex items-center justify-center w-11 h-11 rounded-lg text-[#6B6B6B] hover:bg-[#F5F5F5] hover:text-[#111111] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-offset-2"
@@ -131,33 +119,14 @@ export default function LandingNavbar() {
               ))}
             </nav>
             <div className="px-3 pb-3 flex flex-col gap-2.5">
-              {session ? (
-                <Link
-                  href="/analyze"
-                  onClick={() => setMobileOpen(false)}
-                  className="w-full text-center rounded-md py-3.5 text-[15px] font-semibold text-white flex items-center justify-center"
-                  style={{ background: '#5F790B', minHeight: '48px' }}
-                >
-                  Go to app
-                </Link>
-              ) : (
-                <>
-                  <button
-                    onClick={() => { setMobileOpen(false); signIn('google') }}
-                    className="w-full rounded-md py-3.5 text-[15px] font-semibold text-white"
-                    style={{ background: '#5F790B', minHeight: '48px' }}
-                  >
-                    Analyze for free
-                  </button>
-                  <button
-                    onClick={() => { setMobileOpen(false); signIn('google') }}
-                    className="w-full rounded-md py-3.5 text-[15px] font-semibold text-[#6B6B6B] border border-[#E5E5E5] hover:bg-[#F5F5F5] transition-colors"
-                    style={{ minHeight: '48px' }}
-                  >
-                    Sign in
-                  </button>
-                </>
-              )}
+              <Link
+                href="/analyze"
+                onClick={() => setMobileOpen(false)}
+                className="w-full text-center rounded-md py-3.5 text-[15px] font-semibold text-white flex items-center justify-center"
+                style={{ background: '#5F790B', minHeight: '48px' }}
+              >
+                {session ? 'Go to app' : 'Analyze for free'}
+              </Link>
             </div>
           </motion.div>
         )}
