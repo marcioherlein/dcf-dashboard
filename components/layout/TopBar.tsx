@@ -171,7 +171,7 @@ export default function TopBar() {
   }
 
   return (
-    <header className="fixed top-0 left-0 lg:left-[240px] right-0 z-40 glass-toolbar" data-topbar>
+    <header className="fixed top-0 left-0 lg:left-[192px] right-0 z-40 glass-toolbar" data-topbar>
 
       {/* ── Mobile page-title search overlay ── */}
       {pageTitle && !stockNav && mobileSearchOpen && (

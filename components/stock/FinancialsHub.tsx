@@ -4,6 +4,8 @@ import YahooFinancials from './YahooFinancials'
 import FinancialCharts from './FinancialCharts'
 import InsiderTransactionsWidget from './InsiderTransactionsWidget'
 import InfoTooltip from '@/components/ui/InfoTooltip'
+import EpsBeatMissChart from './EpsBeatMissChart'
+import AnalystRecommendationsChart from './AnalystRecommendationsChart'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyRow = Record<string, any>
@@ -1581,7 +1583,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
               )
             })()}
 
-            {/* A3: show empty state when no coverage */}
+            {/* A3: Analyst Recommendations + Price Targets */}
             {!hasAnalystCoverage ? (
               <div className="py-8 text-center">
                 <p className="text-sm text-[#8A95A6]">No analyst coverage available for this stock.</p>
@@ -1589,127 +1591,17 @@ export default function FinancialsHub({ statementsData, financialsData, currency
               </div>
             ) : (
               <>
-                <div>
-                  <p className="text-[13px] font-semibold text-[#06101F] mb-3">Consensus Rating</p>
-                  <div className="flex items-center gap-3 mb-2">
-                    {rawRec !== '' && <span className={`text-sm font-bold px-4 py-1.5 rounded-full border ${recBg}`}>{recLabel}</span>}
-                    {ca.numAnalysts > 0 && <span className="text-[12px] text-[#8A95A6]">{ca.numAnalysts} analysts covering this stock</span>}
-                  </div>
-                  {/* Rating breakdown stacked bar */}
-                  {(() => {
-                    const trend: Array<{ period: string; strongBuy: number; buy: number; hold: number; sell: number; strongSell: number }> =
-                      financialsData?.analystRatingTrend ?? []
-                    const latest = trend[0]
-                    if (!latest) return null
-                    const total = latest.strongBuy + latest.buy + latest.hold + latest.sell + latest.strongSell
-                    if (total === 0) return null
-                    const segments = [
-                      { label: 'Strong Buy', count: latest.strongBuy,  color: 'bg-emerald-600' },
-                      { label: 'Buy',        count: latest.buy,        color: 'bg-[#11875D]' },
-                      { label: 'Hold',       count: latest.hold,       color: 'bg-[#B56A00]'   },
-                      { label: 'Sell',       count: latest.sell,       color: 'bg-[#D83B3B]'     },
-                      { label: 'Strong Sell',count: latest.strongSell, color: 'bg-red-600'     },
-                    ].filter(s => s.count > 0)
-                    return (
-                      <div className="mt-3">
-                        <div className="flex rounded-full overflow-hidden h-3 gap-px">
-                          {segments.map(s => (
-                            <div
-                              key={s.label}
-                              className={`${s.color} transition-all`}
-                              style={{ width: `${(s.count / total) * 100}%` }}
-                              title={`${s.label}: ${s.count}`}
-                            />
-                          ))}
-                        </div>
-                        <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
-                          {segments.map(s => (
-                            <span key={s.label} className="flex items-center gap-1 text-[10px] text-[#566174]">
-                              <span className={`inline-block w-2 h-2 rounded-sm ${s.color}`} />
-                              {s.label} ({s.count})
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )
-                  })()}
-                </div>
-                {/* EPS Growth Estimates */}
-                {(analystEst1y != null || analystEst2y != null) && (
-                  <div>
-                    <p className="text-[13px] font-semibold text-[#06101F] mb-3">EPS Growth Estimates</p>
-                    <div className="rounded-xl border border-[#E3E1DA] overflow-hidden">
-                      {analystEst1y != null && (
-                        <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-[#E3E1DA]">
-                          <span className="text-[13px] text-[#566174]">Next Year</span>
-                          <span className={`text-[15px] font-bold tabular-nums ${analystEst1y >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
-                            {analystEst1y >= 0 ? '+' : ''}{(analystEst1y * 100).toFixed(1)}%
-                          </span>
-                        </div>
-                      )}
-                      {analystEst2y != null && (
-                        <div className="flex items-center justify-between px-4 py-3 bg-white">
-                          <span className="text-[13px] text-[#566174]">2-Year Forward</span>
-                          <span className={`text-[15px] font-bold tabular-nums ${analystEst2y >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
-                            {analystEst2y >= 0 ? '+' : ''}{(analystEst2y * 100).toFixed(1)}%
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-                {q.analystTargetMean > 0 && (
-                  <div>
-                    <p className="text-[13px] font-semibold text-[#06101F] mb-3">Price Targets</p>
-                    <div className="divide-y divide-[#E3E1DA] rounded-xl border border-[#E3E1DA] overflow-hidden">
-                      {[
-                        { label: 'Average Target', val: q.analystTargetMean, upside: targetUpside, highlight: true },
-                        { label: 'Low Target',      val: q.analystTargetLow,  upside: q.analystTargetLow  != null && q.price > 0 ? (q.analystTargetLow  - q.price) / q.price : null, highlight: false },
-                        { label: 'High Target',     val: q.analystTargetHigh, upside: q.analystTargetHigh != null && q.price > 0 ? (q.analystTargetHigh - q.price) / q.price : null, highlight: false },
-                        { label: 'Current Price',   val: q.price,             upside: null, highlight: false },
-                      ].filter(r => r.val != null && r.val > 0).map(r => (
-                        <div key={r.label} className={`flex items-center justify-between px-4 py-3 ${r.highlight ? 'bg-[#EAF1FF]' : 'bg-white'}`}>
-                          <span className={`text-[13px] ${r.highlight ? 'font-semibold text-[#06101F]' : 'text-[#566174]'}`}>{r.label}</span>
-                          <div className="flex items-center gap-2 tabular-nums">
-                            <span className={`text-[13px] font-bold ${r.highlight ? 'text-[#06101F]' : 'text-[#06101F]'}`}>
-                              {sym}{(r.val as number).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </span>
-                            {r.upside != null && (
-                              <span className={`text-[11px] font-semibold ${r.upside >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
-                                {r.upside >= 0 ? '+' : ''}{(r.upside * 100).toFixed(1)}%
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    {/* A2: guard div-by-zero when low === high */}
-                    {q.analystTargetLow != null && q.analystTargetHigh != null && q.analystTargetMean > 0 && (() => {
-                      const lo = q.analystTargetLow as number
-                      const hi = q.analystTargetHigh as number
-                      const avg = q.analystTargetMean as number
-                      const span = hi - lo
-                      if (span <= 0) return null
-                      const avgPct   = Math.max(2, Math.min(98, ((avg     - lo) / span) * 100))
-                      const pricePct = Math.max(2, Math.min(98, ((q.price - lo) / span) * 100))
-                      return (
-                        <div className="mt-4">
-                          <p className="text-[12px] font-semibold text-[#566174] mb-2">Target Range</p>
-                          <div className="relative h-2 rounded-full bg-[#F4F3EF] overflow-hidden mb-1">
-                            <div className="absolute inset-0 bg-gradient-to-r from-slate-300 to-blue-300" />
-                            <div className="absolute top-1/2 -translate-y-1/2 w-0.5 h-full bg-blue-600 z-10" style={{ left: `${avgPct}%` }} />
-                            <div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-slate-800 border-2 border-white shadow z-20" style={{ left: `calc(${pricePct}% - 6px)` }} />
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-[10px] text-[#8A95A6] tabular-nums">{sym}{lo.toFixed(2)} Low</span>
-                            <span className="text-[10px] text-[#2563EB] tabular-nums">Avg {sym}{avg.toFixed(2)}</span>
-                            <span className="text-[10px] text-[#8A95A6] tabular-nums">High {sym}{hi.toFixed(2)}</span>
-                          </div>
-                        </div>
-                      )
-                    })()}
-                  </div>
-                )}
+                {/* New visual charts */}
+                <AnalystRecommendationsChart
+                  trend={financialsData?.analystRatingTrend ?? []}
+                  numAnalysts={ca.numAnalysts > 0 ? ca.numAnalysts : null}
+                  currentPrice={q.price}
+                  targetMean={q.analystTargetMean > 0 ? q.analystTargetMean : null}
+                  targetLow={q.analystTargetLow ?? null}
+                  targetHigh={q.analystTargetHigh ?? null}
+                  currency={financialsData?.quote?.currency ?? 'USD'}
+                />
+                {/* A6: data source disclosure */}
                 {/* Revenue Forecast Bar Chart */}
                 {(() => {
                   const annual: any[] = statementsData?.annual?.incomeStatement ?? []
@@ -1854,57 +1746,28 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                   )
                 })()}
 
-                {/* EPS Surprise History */}
+                {/* EPS Beat / Miss Chart */}
                 {(() => {
-                  const surprises: Array<{
-                    quarter: string | null; date: string | null
-                    epsActual: number | null; epsEstimate: number | null
-                    epsDifference: number | null; surprisePercent: number | null
-                  }> = financialsData?.earningsSurprises ?? []
-                  if (surprises.length === 0) return null
+                  const surprises = financialsData?.earningsSurprises ?? []
+                  if (!surprises || surprises.length === 0) return null
+                  // Derive YoY growth from financial statements
+                  const is: any[] = financialsData?.financialStatements?.incomeStatement ?? []
+                  const actuals = is.filter((r: any) => !r.isProjected)
+                  const last2 = actuals.slice(-2)
+                  const revGrowth = last2.length === 2 && last2[0].revenue > 0
+                    ? (last2[1].revenue - last2[0].revenue) / last2[0].revenue : null
+                  const niGrowth  = last2.length === 2 && last2[0].netIncome != null && last2[0].netIncome > 0
+                    ? (last2[1].netIncome - last2[0].netIncome) / last2[0].netIncome : null
+                  const epsGrowth = last2.length === 2 && last2[0].eps != null && last2[0].eps > 0
+                    ? (last2[1].eps - last2[0].eps) / last2[0].eps : null
                   return (
-                    <div>
-                      <p className="text-[13px] font-semibold text-[#06101F] mb-3">EPS Surprise History</p>
-                      <div className="rounded-xl border border-[#E3E1DA] overflow-hidden">
-                        <table className="w-full text-[12px]">
-                          <thead>
-                            <tr className="bg-[#F4F3EF] border-b border-[#E3E1DA]">
-                              <th className="px-4 py-2 text-left font-semibold text-[#8A95A6] text-[10px] uppercase tracking-wide">Quarter</th>
-                              <th className="px-4 py-2 text-right font-semibold text-[#8A95A6] text-[10px] uppercase tracking-wide">Estimated</th>
-                              <th className="px-4 py-2 text-right font-semibold text-[#8A95A6] text-[10px] uppercase tracking-wide">Actual</th>
-                              <th className="px-3 py-2 text-right font-semibold text-[#8A95A6] text-[10px] uppercase tracking-wide">Surprise</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-[#E3E1DA] bg-white">
-                            {[...surprises].reverse().map((row, idx) => {
-                              const beat = row.surprisePercent != null && row.surprisePercent > 0
-                              const miss = row.surprisePercent != null && row.surprisePercent < 0
-                              const qLabel = row.date
-                                ? new Date(row.date).toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
-                                : (row.quarter ?? '—')
-                              return (
-                                <tr key={idx} className="hover:bg-[#F4F3EF]/60 transition-colors">
-                                  <td className="px-4 py-3 font-medium text-[#06101F]">{qLabel}</td>
-                                  <td className="px-4 py-3 text-right tabular-nums text-[#566174]">
-                                    {row.epsEstimate != null ? `${sym}${row.epsEstimate.toFixed(2)}` : '—'}
-                                  </td>
-                                  <td className={`px-4 py-3 text-right tabular-nums font-semibold ${beat ? 'text-[#11875D]' : miss ? 'text-[#D83B3B]' : 'text-[#06101F]'}`}>
-                                    {row.epsActual != null ? `${sym}${row.epsActual.toFixed(2)}` : '—'}
-                                  </td>
-                                  <td className="px-3 py-3 text-right tabular-nums">
-                                    {row.surprisePercent != null ? (
-                                      <span className={`inline-flex items-center justify-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${beat ? 'bg-[#E8F7EF] text-[#11875D]' : miss ? 'bg-[#FCEAEA] text-[#D83B3B]' : 'bg-[#F4F3EF] text-[#566174]'}`}>
-                                        {beat ? '+' : ''}{row.surprisePercent.toFixed(1)}%
-                                      </span>
-                                    ) : '—'}
-                                  </td>
-                                </tr>
-                              )
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
+                    <EpsBeatMissChart
+                      surprises={surprises}
+                      currency={financialsData?.quote?.currency ?? 'USD'}
+                      revenueGrowthYoy={revGrowth}
+                      netIncomeGrowthYoy={niGrowth}
+                      epsGrowthYoy={epsGrowth}
+                    />
                   )
                 })()}
 

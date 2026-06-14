@@ -502,9 +502,11 @@ function StockAnalysisCard({ q, index }: { q: FeaturedQuote; index: number }) {
 function PopularAnalysesSection({
   quotes,
   dataStale,
+  dark = false,
 }: {
   quotes: FeaturedQuote[]
   dataStale: boolean
+  dark?: boolean
 }) {
   const reduced  = useReducedMotion()
   const featured = quotes.slice(0, 3)
@@ -513,8 +515,12 @@ function PopularAnalysesSection({
     <section>
       <div className="flex items-start justify-between gap-3 mb-4 flex-wrap">
         <div className="min-w-0">
-          <h2 className="text-[15px] font-bold text-ink-900">Popular analyses</h2>
-          <p className="text-[12px] text-[#6B6B6B] mt-0.5">Top holdings from SPY · QQQ · DIA — no duplicates</p>
+          <h2 className={dark ? 'text-[15px] font-bold text-white' : 'text-[15px] font-bold text-ink-900'}>
+            Popular analyses
+          </h2>
+          <p className={dark ? 'text-[12px] text-white/55 mt-0.5' : 'text-[12px] text-[#6B6B6B] mt-0.5'}>
+            Top holdings from SPY · QQQ · DIA — no duplicates
+          </p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
           {dataStale && (
@@ -522,7 +528,13 @@ function PopularAnalysesSection({
               Cached · live prices unavailable
             </span>
           )}
-          <Link href="/markets" className="text-[12px] font-medium text-[#5F790B] hover:text-[#526A08] flex items-center gap-1 whitespace-nowrap">
+          <Link
+            href="/markets"
+            className={dark
+              ? 'text-[12px] font-medium text-white/70 hover:text-white flex items-center gap-1 whitespace-nowrap transition-colors'
+              : 'text-[12px] font-medium text-[#5F790B] hover:text-[#526A08] flex items-center gap-1 whitespace-nowrap'
+            }
+          >
             View all <ChevronRight size={13} />
           </Link>
         </div>
@@ -937,7 +949,7 @@ function AnalyzePageInner() {
         </div>
       )}
 
-      {/* ── Slate hero zone — contains search only ── */}
+      {/* ── Slate hero zone — search + popular analyses on dark ── */}
       <div className="relative overflow-hidden">
         {/* Slate gradient background */}
         <div
@@ -955,14 +967,17 @@ function AnalyzePageInner() {
             backgroundImage: 'radial-gradient(ellipse 50% 80% at 90% -10%, rgba(95,121,11,0.18) 0%, transparent 60%)',
           }}
         />
-        {/* Bottom fade to white */}
+        {/* Bottom fade — starts at 70% height so it clears the cards completely */}
         <div
           aria-hidden="true"
-          className="absolute bottom-0 left-0 right-0 pointer-events-none h-24"
-          style={{ background: 'linear-gradient(to bottom, transparent, #ffffff)' }}
+          className="absolute bottom-0 left-0 right-0 pointer-events-none"
+          style={{
+            height: '160px',
+            background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.6) 60%, #ffffff 100%)',
+          }}
         />
 
-        <div className="relative px-4 sm:px-6 lg:px-8 pt-8 pb-16 max-w-[960px] mx-auto">
+        <div className="relative px-4 sm:px-6 lg:px-8 pt-8 pb-10 max-w-[960px] mx-auto space-y-8">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -970,12 +985,19 @@ function AnalyzePageInner() {
           >
             <SearchHero />
           </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1], delay: 0.08 }}
+          >
+            <PopularAnalysesSection quotes={quotes} dataStale={dataStale} dark />
+          </motion.div>
         </div>
       </div>
 
       {/* ── Content below hero — white background ── */}
-      <div id="main-content" className="px-4 sm:px-6 lg:px-8 pb-8 max-w-[960px] mx-auto space-y-6 -mt-2" tabIndex={-1}>
-        <PopularAnalysesSection quotes={quotes} dataStale={dataStale} />
+      <div id="main-content" className="px-4 sm:px-6 lg:px-8 pb-8 max-w-[960px] mx-auto space-y-6" tabIndex={-1}>
         <MarketPricingLeaderboard quotes={quotes} />
         <QuickActions />
         <RecentlyViewed />
