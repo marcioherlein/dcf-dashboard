@@ -87,7 +87,7 @@ export default function ConvictionScoreSection() {
             </p>
 
             <p className="text-[15px] text-[#6B6B6B] leading-relaxed mb-8">
-              We run seven independent checks — from the business&apos;s financial health to what analysts
+              We run six independent checks — from the business&apos;s financial health to what analysts
               and insiders think — and compress them into a single 0–100 score with a plain-English verdict.
               No jargon. No black boxes.
             </p>

@@ -106,6 +106,7 @@ export default function ReverseDCFSection() {
 
           {/* Right: stock cards — staggered scale zoom */}
           <div className="flex flex-col gap-4">
+            <p className="text-[11px] text-[#9B9B9B] text-right">Illustrative data — not live prices</p>
             {STOCKS.map((stock, i) => (
               <motion.div
                 key={stock.ticker}

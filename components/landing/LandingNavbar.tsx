@@ -23,6 +23,13 @@ export default function LandingNavbar() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
+  useEffect(() => {
+    if (!mobileOpen) return
+    const close = (e: KeyboardEvent) => { if (e.key === 'Escape') setMobileOpen(false) }
+    document.addEventListener('keydown', close)
+    return () => document.removeEventListener('keydown', close)
+  }, [mobileOpen])
+
   return (
     <>
       {/* ── Floating navbar ───────────────────────────────────────────────── */}

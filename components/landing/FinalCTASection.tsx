@@ -101,7 +101,7 @@ export default function FinalCTASection() {
       ref={sectionRef}
       className="overflow-x-hidden"
       style={{
-        background: '#000000',
+        background: '#111111',
         paddingBottom: 'max(64px, calc(64px + env(safe-area-inset-bottom, 0px)))',
       }}
     >
@@ -112,7 +112,7 @@ export default function FinalCTASection() {
           animate={inView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
           transition={{ duration: 0.65, ease: EASE }}
           style={{
-            background: '#111111',
+            background: '#1a1a1a',
             border: '1px solid rgba(255,255,255,0.07)',
             boxShadow: '0 0 0 1px rgba(95,121,11,0.08), 0 16px 48px rgba(0,0,0,0.4)',
           }}

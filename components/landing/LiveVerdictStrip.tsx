@@ -65,7 +65,10 @@ function ErrorCard({ ticker }: { ticker: string }) {
 
 function VerdictCard({ data }: { data: VerdictData }) {
   return (
-    <div className="bg-white border border-[#E5E5E5] rounded-xl p-5 shadow-sm flex flex-col gap-2">
+    <Link
+      href={`/stock/${data.ticker}`}
+      className="block bg-white border border-[#E5E5E5] rounded-xl p-5 shadow-sm flex flex-col gap-2 hover:-translate-y-0.5 hover:shadow-md transition-all active:scale-95"
+    >
       <span className="inline-flex w-fit items-center bg-[#EEF3D8] text-[#5F790B] text-[11px] font-bold px-2 py-0.5 rounded-full">
         {data.ticker}
       </span>
@@ -86,7 +89,7 @@ function VerdictCard({ data }: { data: VerdictData }) {
           {data.verdict}
         </span>
       )}
-    </div>
+    </Link>
   )
 }
 

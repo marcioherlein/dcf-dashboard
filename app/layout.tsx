@@ -27,6 +27,17 @@ export const metadata: Metadata = {
   title: "insic — Invest with a process, not a story",
   description: "Fair value estimates, market-implied expectations, and transparent assumptions — so you can understand what has to be true before you invest. Free.",
   appleWebApp: { capable: true, statusBarStyle: 'default', title: 'insic' },
+  openGraph: {
+    title: "insic — Invest with a process, not a story",
+    description: "Fair value estimates and transparent assumptions for any stock. Free.",
+    siteName: "insic",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "insic — Invest with a process, not a story",
+    description: "Fair value estimates and transparent assumptions for any stock. Free.",
+  },
 };
 
 export const viewport = {
