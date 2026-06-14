@@ -154,7 +154,7 @@ function PercentileStrip({
     { label: 'P90',  value: p90,          color: 'text-[#11875D]', sub: 'Best 10%'     },
   ]
   return (
-    <div className="grid grid-cols-5 gap-px bg-[#F5F5F5] rounded-xl overflow-hidden border border-[#E5E5E5]">
+    <div className="grid grid-cols-5 gap-px bg-[#F5F5F5] rounded-xl overflow-hidden border border-[#E3E1DA]">
       {items.map(({ label, value, color, sub }) => {
         const upside = currentPrice > 0 ? (value - currentPrice) / currentPrice : null
         return (
@@ -303,7 +303,7 @@ export default function MonteCarloPanel({
     const p90Upside = result && currentPrice > 0 ? (result.p90 - currentPrice) / currentPrice : null
 
     return (
-      <div className="bg-white rounded-[14px] border border-[#E5E5E5] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4 sm:p-5 flex flex-col h-full">
+      <div className="bg-white rounded-[14px] border border-[#E3E1DA] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4 sm:p-5 flex flex-col h-full">
 
         {/* Header */}
         <div className="flex items-start justify-between gap-3 mb-4 shrink-0">
@@ -368,7 +368,7 @@ export default function MonteCarloPanel({
               </div>
 
               {/* P10 / P50 / P90 strip — 3 columns */}
-              <div className="grid grid-cols-3 gap-px bg-[#F5F5F5] rounded-xl overflow-hidden border border-[#E5E5E5]">
+              <div className="grid grid-cols-3 gap-px bg-[#F5F5F5] rounded-xl overflow-hidden border border-[#E3E1DA]">
                 {[
                   { label: 'P10', value: result.p10, upside: p10Upside, color: 'text-[#D83B3B]' },
                   { label: 'P50', value: result.adjustedP50, upside: upside, color: 'text-[#5F790B]' },
@@ -408,7 +408,7 @@ export default function MonteCarloPanel({
           if (!isOpen) { setDialogOpen(false); requestAnimationFrame(() => expandBtnRef.current?.focus()) }
         }}>
           <DialogContent className="max-w-3xl w-full max-h-[90vh] overflow-y-auto p-0" showCloseButton={false}>
-            <DialogHeader className="px-5 pt-5 pb-3 border-b border-[#E5E5E5] flex-row items-center justify-between">
+            <DialogHeader className="px-5 pt-5 pb-3 border-b border-[#E3E1DA] flex-row items-center justify-between">
               <div>
                 <p className="text-[10px] font-[700] tracking-wider uppercase text-[#9B9B9B]">Monte Carlo DCF</p>
                 <DialogTitle className="text-[15px] font-[700] text-[#06101F] mt-0.5">
@@ -428,7 +428,7 @@ export default function MonteCarloPanel({
                   {result ? buildSummary(result, currentPrice, currency) : 'Running simulation…'}
                 </p>
                 <div className="flex items-center gap-2 shrink-0 ml-auto">
-                  <div className="flex items-center gap-1 rounded-lg border border-[#E5E5E5] p-0.5 bg-[#F5F5F5]">
+                  <div className="flex items-center gap-1 rounded-lg border border-[#E3E1DA] p-0.5 bg-[#F5F5F5]">
                     {([5_000, 10_000, 50_000] as const).map(n => (
                       <button key={n} onClick={() => setNPaths(n)}
                         className={cn('text-[10px] font-[650] px-2 py-1 rounded-md transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#5F790B]', nPaths === n ? 'bg-white text-[#111111] shadow-sm' : 'text-[#9B9B9B] hover:text-[#6B6B6B]')}>
@@ -460,7 +460,7 @@ export default function MonteCarloPanel({
   return (
     <div className={cn(
       'bg-white rounded-[14px] border shadow-[0_1px_2px_rgba(15,23,42,0.04)] overflow-hidden transition-colors',
-      expanded ? 'border-[#BFD2A1]' : 'border-[#E5E5E5]'
+      expanded ? 'border-[#BFD2A1]' : 'border-[#E3E1DA]'
     )}>
 
       {/* ── Method card header — matches ValuationMethodCards style ── */}
@@ -527,7 +527,7 @@ export default function MonteCarloPanel({
 
       {/* ── Expanded content ── */}
       {expanded && (
-        <div className="px-3 sm:px-5 pb-3 sm:pb-5 space-y-5 border-t border-[#E5E5E5]">
+        <div className="px-3 sm:px-5 pb-3 sm:pb-5 space-y-5 border-t border-[#E3E1DA]">
 
           {/* Onboarding tooltip — first time only */}
           {showOnboard && (
@@ -544,7 +544,7 @@ export default function MonteCarloPanel({
               </p>
             )}
             <div className="flex items-center gap-2 shrink-0 ml-auto">
-              <div className="flex items-center gap-1 rounded-lg border border-[#E5E5E5] p-0.5 bg-[#F5F5F5]">
+              <div className="flex items-center gap-1 rounded-lg border border-[#E3E1DA] p-0.5 bg-[#F5F5F5]">
                 {([5_000, 10_000, 50_000] as const).map(n => (
                   <button
                     key={n}
@@ -577,7 +577,7 @@ export default function MonteCarloPanel({
           </div>
 
           {noData ? (
-            <div className="py-8 text-center rounded-xl border border-[#E5E5E5] bg-[#F5F5F5]">
+            <div className="py-8 text-center rounded-xl border border-[#E3E1DA] bg-[#F5F5F5]">
               <p className="text-[12px] font-[650] text-[#6B6B6B]">Insufficient data</p>
               <p className="text-[11px] text-[#9B9B9B] mt-1">Requires positive trailing FCF and diluted share count.</p>
             </div>
@@ -625,7 +625,7 @@ export default function MonteCarloPanel({
               {/* CVaR + regime row */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* CVaR */}
-                <div className="rounded-xl border border-[#E5E5E5] bg-[#F5F5F5] px-4 py-3 space-y-2">
+                <div className="rounded-xl border border-[#E3E1DA] bg-[#F5F5F5] px-4 py-3 space-y-2">
                   <div className="flex items-center gap-1.5">
                     <p className="text-[10px] font-[650] text-[#6B6B6B]">Tail risk quality</p>
                     <InfoTooltip
@@ -643,7 +643,7 @@ export default function MonteCarloPanel({
                 </div>
 
                 {/* Regime bar */}
-                <div className="rounded-xl border border-[#E5E5E5] bg-[#F5F5F5] px-4 py-3">
+                <div className="rounded-xl border border-[#E3E1DA] bg-[#F5F5F5] px-4 py-3">
                   <RegimeBar probs={result.regimeProbabilities} />
                 </div>
               </div>
@@ -651,7 +651,7 @@ export default function MonteCarloPanel({
               {/* Real options */}
               {(result.abandonmentOptionValue > 0.001 || result.expansionOptionValue > 0.001) && (
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-xl border border-[#E5E5E5] bg-[#F5F5F5] px-3 py-2.5">
+                  <div className="rounded-xl border border-[#E3E1DA] bg-[#F5F5F5] px-3 py-2.5">
                     <p className="text-[11px] font-[650] text-[#9B9B9B] mb-1">
                       Abandonment option
                       <InfoTooltip text="Value of the right to liquidate the firm at cash value if cumulative FCF turns deeply negative. Computed via Longstaff-Schwartz backward induction." side="top" />
@@ -663,7 +663,7 @@ export default function MonteCarloPanel({
                     </p>
                     <p className="text-[11px] text-[#9B9B9B] mt-0.5">per share</p>
                   </div>
-                  <div className="rounded-xl border border-[#E5E5E5] bg-[#F5F5F5] px-3 py-2.5">
+                  <div className="rounded-xl border border-[#E3E1DA] bg-[#F5F5F5] px-3 py-2.5">
                     <p className="text-[11px] font-[650] text-[#9B9B9B] mb-1">
                       Expansion option
                       <InfoTooltip text="Value of deploying additional capex for 2 extra FCF years when year-3+ CAGR beats the historical P75. Captures compounder optionality." side="top" />
@@ -695,7 +695,7 @@ export default function MonteCarloPanel({
                     { label: 'Liq. floor',      value: result.inputs.liquidationPerShare != null ? fmtPrice(result.inputs.liquidationPerShare, currency) : 'none' },
                     { label: 'Std deviation',   value: fmtPrice(result.stdDev, currency) },
                   ].map(({ label, value }) => (
-                    <div key={label} className="rounded-lg border border-[#E5E5E5] bg-white px-2.5 py-1.5">
+                    <div key={label} className="rounded-lg border border-[#E3E1DA] bg-white px-2.5 py-1.5">
                       <p className="text-[11px] text-[#9B9B9B]">{label}</p>
                       <p className="text-[11px] font-[650] text-[#6B6B6B] mt-0.5 tabular-nums">{value}</p>
                     </div>
@@ -703,7 +703,7 @@ export default function MonteCarloPanel({
                 </div>
               </details>
 
-              <p className="text-[11px] text-[#9B9B9B] leading-relaxed border-t border-[#E5E5E5] pt-3">
+              <p className="text-[11px] text-[#9B9B9B] leading-relaxed border-t border-[#E3E1DA] pt-3">
                 Beta model — exploratory analysis only. P50 is CVaR-adjusted and shown as this method&apos;s fair value estimate. Real option values are informational; they are not added to the point estimate. Not financial advice.
               </p>
             </>

@@ -62,10 +62,10 @@ const SIGNAL_STYLES: Record<Signal, { border: string; verdict: string; badge: st
     badgeBg: 'bg-[#FCEAEA] border-[#F0B8B8]',
   },
   slate: {
-    border: 'border-[#E5E5E5]',
+    border: 'border-[#E3E1DA]',
     verdict: 'text-[#6B6B6B]',
     badge: 'text-[#6B6B6B]',
-    badgeBg: 'bg-[#F5F5F5] border-[#E5E5E5]',
+    badgeBg: 'bg-[#F5F5F5] border-[#E3E1DA]',
   },
 }
 
@@ -99,7 +99,7 @@ function CheckCard({
       </div>
       <p className={`text-[12px] font-[650] leading-snug ${s.verdict}`}>{verdict}</p>
       {metrics.length > 0 && (
-        <div className="flex flex-wrap gap-x-4 gap-y-1 pt-0.5 border-t border-[#E5E5E5]">
+        <div className="flex flex-wrap gap-x-4 gap-y-1 pt-0.5 border-t border-[#E3E1DA]">
           {metrics.map(m => (
             <div key={m.label}>
               <p className="text-[11px] text-[#9B9B9B] leading-none mb-0.5">{m.label}</p>
@@ -379,7 +379,7 @@ export default function BusinessChecks({
     : 'grid-cols-2 lg:grid-cols-4'
 
   return (
-    <div className="bg-white rounded-[20px] border border-[#E5E5E5] shadow-[0_1px_2px_rgba(15,23,42,0.04)] px-5 py-4">
+    <div className="bg-white rounded-[20px] border border-[#E3E1DA] shadow-[0_1px_2px_rgba(15,23,42,0.04)] px-5 py-4">
 
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-3 flex-wrap">

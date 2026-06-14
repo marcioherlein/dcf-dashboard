@@ -119,7 +119,7 @@ function CompactHeatmap({
 
   if (currentPrice <= 0) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-[#F9F9F7] rounded-lg border border-[#E5E5E5] py-8">
+      <div className="flex-1 flex items-center justify-center bg-[#F9F9F7] rounded-lg border border-[#E3E1DA] py-8">
         <p className="text-[11px] text-[#9B9B9B]">Price unavailable</p>
       </div>
     )
@@ -253,7 +253,7 @@ function CellDetail({
   useEffect(() => { closeRef.current?.focus() }, [])
 
   return (
-    <div className="mt-3 rounded-xl border border-[#E5E5E5] bg-[#F5F5F5]/80 p-4 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-1 duration-150">
+    <div className="mt-3 rounded-xl border border-[#E3E1DA] bg-[#F5F5F5]/80 p-4 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-1 duration-150">
 
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-3">
@@ -280,7 +280,7 @@ function CellDetail({
       </div>
 
       {/* Key metrics */}
-      <div className="flex items-end gap-5 mb-4 pb-3 border-b border-[#E5E5E5]">
+      <div className="flex items-end gap-5 mb-4 pb-3 border-b border-[#E3E1DA]">
         <div>
           <p className="text-[10px] text-[#9B9B9B] mb-0.5">Fair Value</p>
           <p className="text-[22px] font-[800] tabular-nums leading-none text-[#111111]">
@@ -322,7 +322,7 @@ function CellDetail({
                 'rounded-lg p-2.5 flex flex-col gap-0.5',
                 isVaried
                   ? 'bg-[#F6FAEA] border border-[#BFD2A1]'
-                  : 'bg-white border border-[#E5E5E5]',
+                  : 'bg-white border border-[#E3E1DA]',
               )}
             >
               <p className="text-[11px] text-[#9B9B9B] leading-tight">{f.shortLabel}</p>
@@ -360,8 +360,8 @@ function AxisPill({
     ? 'bg-[#5F790B] border-[#5F790B] text-white shadow-sm'
     : 'bg-[#3D5207] border-[#3D5207] text-white shadow-sm'
   const hoverClass = role === 'row'
-    ? 'bg-white border-[#E5E5E5] text-[#6B6B6B] hover:border-[#BFD2A1] hover:text-[#5F790B]'
-    : 'bg-white border-[#E5E5E5] text-[#6B6B6B] hover:border-[#9DB870] hover:text-[#3D5207]'
+    ? 'bg-white border-[#E3E1DA] text-[#6B6B6B] hover:border-[#BFD2A1] hover:text-[#5F790B]'
+    : 'bg-white border-[#E3E1DA] text-[#6B6B6B] hover:border-[#9DB870] hover:text-[#3D5207]'
 
   return (
     <button
@@ -467,7 +467,7 @@ function ExpandedMatrix({
         <p className="text-[11px] text-[#9B9B9B]">
           Click a cell to inspect the scenario — all other assumptions stay at base
         </p>
-        <div className="flex items-center gap-1 rounded-lg border border-[#E5E5E5] p-0.5 bg-[#F5F5F5] shrink-0 self-start sm:self-auto">
+        <div className="flex items-center gap-1 rounded-lg border border-[#E3E1DA] p-0.5 bg-[#F5F5F5] shrink-0 self-start sm:self-auto">
           <button
             onClick={() => setDisplayMode('upside')}
             aria-pressed={displayMode === 'upside'}
@@ -492,7 +492,7 @@ function ExpandedMatrix({
       </div>
 
       {currentPrice <= 0 ? (
-        <div className="py-8 text-center rounded-xl border border-[#E5E5E5] bg-[#F5F5F5]">
+        <div className="py-8 text-center rounded-xl border border-[#E3E1DA] bg-[#F5F5F5]">
           <p className="text-[12px] font-semibold text-[#6B6B6B]">Price unavailable</p>
           <p className="text-[11px] text-[#9B9B9B] mt-1">Upside calculations require a current market price.</p>
         </div>
@@ -667,7 +667,7 @@ function ExpandedMatrix({
         </div>
 
         {epvPerShare != null && epvPerShare > 0 && (
-          <div className="text-[10px] text-[#6B6B6B] bg-[#F5F5F5] rounded-lg px-3 py-1.5 border border-[#E5E5E5]">
+          <div className="text-[10px] text-[#6B6B6B] bg-[#F5F5F5] rounded-lg px-3 py-1.5 border border-[#E3E1DA]">
             <span className="font-[600]">No-growth floor (EPV):</span>{' '}
             <span className="font-[750] tabular-nums text-[#111111]">{fmtPrice(epvPerShare, currency)}</span>
             <span className="text-[#9B9B9B] ml-1">— value if growth stops</span>
@@ -702,7 +702,7 @@ export default function SensitivityMatrix({
   const activeFieldX = AXIS_FIELDS.find(f => f.key === activeAxisX) ?? AXIS_FIELDS[0]
 
   return (
-    <div className="bg-white rounded-[14px] border border-[#E5E5E5] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4 sm:p-5 flex flex-col h-full">
+    <div className="bg-white rounded-[14px] border border-[#E3E1DA] shadow-[0_1px_2px_rgba(15,23,42,0.04)] p-4 sm:p-5 flex flex-col h-full">
 
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-4 shrink-0">
@@ -748,7 +748,7 @@ export default function SensitivityMatrix({
           className="max-w-3xl w-full max-h-[90vh] overflow-y-auto p-0"
           showCloseButton={false}
         >
-          <DialogHeader className="px-5 pt-5 pb-3 border-b border-[#E5E5E5] flex-row items-center justify-between">
+          <DialogHeader className="px-5 pt-5 pb-3 border-b border-[#E3E1DA] flex-row items-center justify-between">
             <div>
               <p className="text-[10px] font-[700] tracking-wider uppercase text-[#9B9B9B]">Sensitivity Analysis</p>
               <DialogTitle className="text-[15px] font-[700] text-[#06101F] mt-0.5">

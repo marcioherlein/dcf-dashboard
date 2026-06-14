@@ -137,7 +137,7 @@ export default function VerdictHero({
     : 'text-[#9B9B9B]'
 
   return (
-    <div className="bg-white rounded-[14px] border border-[#E5E5E5] shadow-[0_4px_16px_rgba(0,0,0,0.06)] overflow-hidden">
+    <div className="bg-white rounded-[14px] border border-[#E3E1DA] shadow-[0_4px_16px_rgba(0,0,0,0.06)] overflow-hidden">
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_1px_360px]">
 
         {/* ── Left: Verdict + metrics ── */}
@@ -149,7 +149,7 @@ export default function VerdictHero({
             <button
               onClick={() => setShareOpen(true)}
               aria-label="Share valuation card"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#E5E5E5] text-[11px] font-[650] text-[#6B6B6B] hover:border-[#5F790B] hover:text-[#5F790B] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#E3E1DA] text-[11px] font-[650] text-[#6B6B6B] hover:border-[#5F790B] hover:text-[#5F790B] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1"
             >
               <Share2 size={11} />
               Share
@@ -195,7 +195,7 @@ export default function VerdictHero({
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-0 border border-[#E5E5E5] rounded-xl overflow-hidden">
+          <div className="grid grid-cols-3 gap-0 border border-[#E3E1DA] rounded-xl overflow-hidden">
             {/* Fair Value */}
             <div className="px-3 py-3 flex flex-col gap-0.5">
               <p className="text-[10px] font-[650] text-[#6B6B6B] leading-tight">
@@ -209,7 +209,7 @@ export default function VerdictHero({
             </div>
 
             {/* Divider */}
-            <div className="border-l border-r border-[#E5E5E5] px-3 py-3 flex flex-col gap-0.5">
+            <div className="border-l border-r border-[#E3E1DA] px-3 py-3 flex flex-col gap-0.5">
               <p className="text-[10px] font-[650] text-[#6B6B6B] leading-tight">
                 Current price
                 {changePct != null && (
@@ -238,7 +238,7 @@ export default function VerdictHero({
 
           {/* Efficiency metric */}
           {efficiency != null && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#FAFAFA] border border-[#E5E5E5]">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#FAFAFA] border border-[#E3E1DA]">
               <svg className="w-3.5 h-3.5 text-[#9B9B9B] shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -274,7 +274,7 @@ export default function VerdictHero({
         <div className="hidden lg:block bg-[#E5E5E5]" />
 
         {/* ── Right: Scenario range ── */}
-        <div className="px-6 py-5 flex flex-col justify-center gap-4 border-t border-[#E5E5E5] lg:border-t-0">
+        <div className="px-6 py-5 flex flex-col justify-center gap-4 border-t border-[#E3E1DA] lg:border-t-0">
           <div className="flex items-center gap-1.5">
             <p className="text-[11px] font-[650] text-[#6B6B6B]">Scenario range</p>
             <InfoTooltip text="Bear, Base, and Bull cases re-run all four valuation methods at stressed assumptions (±2pp WACC, ±4pp CAGR)." />

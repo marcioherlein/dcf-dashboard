@@ -182,7 +182,7 @@ export function TinyLineChart({
   if (chartData.length < 2) return (
     <div className="flex flex-col" role="img" aria-label={`${title}: no data`}>
       <p className="text-[10px] font-[600] text-[#6B6B6B] mb-2">{title}</p>
-      <div className="flex items-center justify-center rounded-lg bg-[#F5F5F5] border border-[#E5E5E5]" style={{ height: 120 }}>
+      <div className="flex items-center justify-center rounded-lg bg-[#F5F5F5] border border-[#E3E1DA]" style={{ height: 120 }}>
         <p className="text-[10px] text-[#9B9B9B]">No data</p>
       </div>
     </div>
@@ -298,8 +298,8 @@ export function FieldStepper({
         >
           <span className={`w-6 h-6 rounded-full border flex items-center justify-center text-[13px] font-bold shadow-sm select-none transition-colors ${
             atMin
-              ? 'border-[#E5E5E5] bg-[#F5F5F5] text-[#9B9B9B]'
-              : 'border-[#E5E5E5] bg-white text-[#6B6B6B] hover:bg-[#F5F5F5]'
+              ? 'border-[#E3E1DA] bg-[#F5F5F5] text-[#9B9B9B]'
+              : 'border-[#E3E1DA] bg-white text-[#6B6B6B] hover:bg-[#F5F5F5]'
           }`}>
             −
           </span>
@@ -318,8 +318,8 @@ export function FieldStepper({
         >
           <span className={`w-6 h-6 rounded-full border flex items-center justify-center text-[13px] font-bold shadow-sm select-none transition-colors ${
             atMax
-              ? 'border-[#E5E5E5] bg-[#F5F5F5] text-[#9B9B9B]'
-              : 'border-[#E5E5E5] bg-white text-[#6B6B6B] hover:bg-[#F5F5F5]'
+              ? 'border-[#E3E1DA] bg-[#F5F5F5] text-[#9B9B9B]'
+              : 'border-[#E3E1DA] bg-white text-[#6B6B6B] hover:bg-[#F5F5F5]'
           }`}>
             +
           </span>
@@ -352,7 +352,7 @@ export function SharedCAGRPanel({
   const hint = historicalHint(cagrSeries, '%')
 
   return (
-    <div className="rounded-xl border border-[#E5E5E5] bg-[#FAFAFA] px-5 py-3.5 mb-3">
+    <div className="rounded-xl border border-[#E3E1DA] bg-[#FAFAFA] px-5 py-3.5 mb-3">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="min-w-0">
           <p className="text-[12px] font-[650] text-[#111111]">Revenue CAGR</p>
@@ -425,7 +425,7 @@ function SynthesisBox({
   const validMethods = methods.filter(m => m.fairValue != null && m.fairValue > 0)
 
   return (
-    <div className="rounded-xl border border-[#E5E5E5] bg-white px-5 py-4 shadow-sm">
+    <div className="rounded-xl border border-[#E3E1DA] bg-white px-5 py-4 shadow-sm">
       <div className="flex flex-col sm:flex-row sm:items-start gap-4">
 
         {/* Left: blended FV */}
@@ -628,7 +628,7 @@ function KeyAssumptionsSection({
   if (!hasAny) return null
 
   return (
-    <div className="mt-5 rounded-xl border border-[#E5E5E5] bg-[#FAFAF8] px-5 py-4">
+    <div className="mt-5 rounded-xl border border-[#E3E1DA] bg-[#FAFAF8] px-5 py-4">
       {/* Section header */}
       <div className="mb-4">
         <p className="text-[10px] font-[700] tracking-widest uppercase text-[#9B9B9B]">Historical Trends / Key Assumptions</p>
@@ -722,7 +722,7 @@ export default function ValuationMethodCards({
 
   return (
     <div
-      className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm px-5 py-5"
+      className="bg-white rounded-xl border border-[#E3E1DA] shadow-card px-5 py-5"
       role="region"
       aria-label="Valuation models"
     >
@@ -743,7 +743,7 @@ export default function ValuationMethodCards({
           {canUndo && (
             <button
               onClick={onUndo}
-              className="flex items-center gap-1 text-[11px] text-[#6B6B6B] hover:text-[#111111] px-2.5 py-2 min-h-[36px] rounded-lg border border-[#E5E5E5] hover:bg-[#F5F5F5] transition-colors"
+              className="flex items-center gap-1 text-[11px] text-[#6B6B6B] hover:text-[#111111] px-2.5 py-2 min-h-[36px] rounded-lg border border-[#E3E1DA] hover:bg-[#F5F5F5] transition-colors"
               aria-label="Undo last change"
             >
               <Undo2 size={11} />
@@ -753,7 +753,7 @@ export default function ValuationMethodCards({
           {canUndo && (
             <button
               onClick={onReset}
-              className="flex items-center gap-1 text-[11px] text-[#6B6B6B] hover:text-[#111111] px-2.5 py-2 min-h-[36px] rounded-lg border border-[#E5E5E5] hover:bg-[#F5F5F5] transition-colors"
+              className="flex items-center gap-1 text-[11px] text-[#6B6B6B] hover:text-[#111111] px-2.5 py-2 min-h-[36px] rounded-lg border border-[#E3E1DA] hover:bg-[#F5F5F5] transition-colors"
               aria-label="Reset to defaults"
             >
               <RotateCcw size={11} />
@@ -800,7 +800,7 @@ export default function ValuationMethodCards({
             <div
               key={m.id}
               className={`relative rounded-xl border flex flex-col min-w-[240px] sm:min-w-0 snap-start flex-shrink-0 sm:flex-shrink overflow-hidden ${
-                hasValue ? 'border-[#E5E5E5] bg-white' : 'border-[#E5E5E5] bg-[#F5F5F5]/50'
+                hasValue ? 'border-[#E3E1DA] bg-white' : 'border-[#E3E1DA] bg-[#F5F5F5]/50'
               }`}
               role="article"
               aria-label={`${m.method} valuation model`}
@@ -837,7 +837,7 @@ export default function ValuationMethodCards({
                       {conf.label}
                     </span>
                   ) : (
-                    <span className="flex items-center gap-0.5 text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0 bg-[#F5F5F5] border-[#E5E5E5] text-[#9B9B9B]">
+                    <span className="flex items-center gap-0.5 text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0 bg-[#F5F5F5] border-[#E3E1DA] text-[#9B9B9B]">
                       Unavailable
                       <InfoTooltip content={m.errors[0] ?? 'Insufficient data to compute this model.'} />
                     </span>
@@ -897,7 +897,7 @@ export default function ValuationMethodCards({
 
                 {/* Inputs — editable method cards (not Core DCF, not EPV) */}
                 {hasValue && !isCoreDCF && !isEPV && fields.length > 0 && (
-                  <div className="space-y-1 pt-1 border-t border-[#E5E5E5]">
+                  <div className="space-y-1 pt-1 border-t border-[#E3E1DA]">
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-[10px] font-[600] text-[#9B9B9B]">Assumptions</p>
                       {fields.some(f => ['exitPE', 'exitMultiple', 'revenueMultiple', 'priceToBookMultiple'].includes(String(f.key))) && (
@@ -928,7 +928,7 @@ export default function ValuationMethodCards({
 
                 {/* Core DCF card — link to full model */}
                 {isCoreDCF && hasValue && (
-                  <div className="pt-1 border-t border-[#E5E5E5] space-y-2">
+                  <div className="pt-1 border-t border-[#E3E1DA] space-y-2">
                     <p className="text-[10px] text-[#6B6B6B] leading-relaxed">
                       Uses WACC, CAGR, terminal growth, and net margin. Edit these in the Full DCF Model below.
                     </p>
@@ -944,7 +944,7 @@ export default function ValuationMethodCards({
 
                 {/* EPV card — read-only data display */}
                 {isEPV && hasValue && (
-                  <div className="pt-1 border-t border-[#E5E5E5] space-y-2.5">
+                  <div className="pt-1 border-t border-[#E3E1DA] space-y-2.5">
                     {/* NOPAT display */}
                     {epvMeta?.effectiveNopatM != null && epvMeta.effectiveNopatM > 0 && (
                       <div className="flex items-center justify-between">
@@ -991,7 +991,7 @@ export default function ValuationMethodCards({
                 {hasValue && <div className="flex-1" />}
 
                 {/* Blend weight bar */}
-                <div className="pt-3 border-t border-[#E5E5E5]">
+                <div className="pt-3 border-t border-[#E3E1DA]">
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="text-[10px] text-[#9B9B9B]">Effective Blend Weight</span>
                     <span className={`text-[11px] font-bold tabular-nums ${

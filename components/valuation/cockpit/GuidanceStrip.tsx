@@ -35,7 +35,7 @@ export default function GuidanceStrip() {
         type="button"
         aria-expanded={open}
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center gap-2 bg-white rounded-[14px] border border-[#E5E5E5] shadow-sm px-4 py-3 hover:bg-[#F5F5F5] transition-colors select-none flex-wrap text-left"
+        className="w-full flex items-center gap-2 bg-white rounded-[14px] border border-[#E3E1DA] shadow-sm px-4 py-3 hover:bg-[#F5F5F5] transition-colors select-none flex-wrap text-left"
       >
         <span
           aria-hidden="true"
@@ -56,7 +56,7 @@ export default function GuidanceStrip() {
         style={{ gridTemplateRows: open ? '1fr' : '0fr' }}
       >
         <div className="overflow-hidden">
-          <div className="mt-2 bg-white rounded-[14px] border border-[#E5E5E5] shadow-sm px-5 py-4">
+          <div className="mt-2 bg-white rounded-[14px] border border-[#E3E1DA] shadow-sm px-5 py-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {STEPS.map(s => (
                 <div key={s.num} className="flex gap-3">

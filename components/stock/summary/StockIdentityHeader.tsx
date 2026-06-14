@@ -172,7 +172,7 @@ export default function StockIdentityHeader({
     <div className="flex flex-col gap-3">
 
       {/* ── ROW 1: Identity + Valuation narrative ───────────────────────────── */}
-      <div className="bg-white border border-[#E5E5E5] rounded-xl p-5 flex flex-col sm:flex-row gap-5"
+      <div className="bg-white border border-[#E3E1DA] rounded-xl p-5 flex flex-col sm:flex-row gap-5"
         style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
 
         {/* Left — Identity */}
@@ -181,10 +181,10 @@ export default function StockIdentityHeader({
             {/* Logo */}
             {!logoError ? (
               <img src={logoSrc} alt={companyName} onError={() => setLogoError(true)}
-                className="flex-shrink-0 w-12 h-12 rounded-xl object-cover border border-[#E5E5E5]" />
+                className="flex-shrink-0 w-12 h-12 rounded-xl object-cover border border-[#E3E1DA]" />
             ) : (
               <div role="img" aria-label={companyName + ' logo'}
-                className="flex-shrink-0 flex items-center justify-center rounded-xl bg-[#F5F5F5] border border-[#E5E5E5] text-[#6B6B6B] font-bold select-none w-12 h-12 text-base">
+                className="flex-shrink-0 flex items-center justify-center rounded-xl bg-[#F5F5F5] border border-[#E3E1DA] text-[#6B6B6B] font-bold select-none w-12 h-12 text-base">
                 {initials(companyName)}
               </div>
             )}
@@ -200,7 +200,7 @@ export default function StockIdentityHeader({
               {(tags.length > 0 || earningsInfo) && (
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {tags.map(tag => (
-                    <span key={tag} className="rounded-full border border-[#E5E5E5] bg-white px-2.5 py-0.5 text-[11px] font-[600] text-[#6B6B6B]">
+                    <span key={tag} className="rounded-full border border-[#E3E1DA] bg-white px-2.5 py-0.5 text-[11px] font-[600] text-[#6B6B6B]">
                       {tag}
                     </span>
                   ))}
@@ -335,7 +335,7 @@ export default function StockIdentityHeader({
       <div className="flex flex-col sm:flex-row gap-3 items-start">
 
         {/* Chart — no aria wrapper div that could collapse height */}
-        <div className="bg-white border border-[#E5E5E5] rounded-xl overflow-hidden flex flex-col w-full sm:basis-[66%] sm:max-w-[66%]"
+        <div className="bg-white border border-[#E3E1DA] rounded-xl overflow-hidden flex flex-col w-full sm:basis-[66%] sm:max-w-[66%]"
           style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
           <PriceChart
             ticker={ticker}
@@ -370,7 +370,7 @@ export default function StockIdentityHeader({
         </div>
 
         {/* Metrics */}
-        <div className="bg-white border border-[#E5E5E5] rounded-xl flex flex-col w-full sm:basis-[34%] sm:max-w-[34%] sm:min-w-[200px]"
+        <div className="bg-white border border-[#E3E1DA] rounded-xl flex flex-col w-full sm:basis-[34%] sm:max-w-[34%] sm:min-w-[200px]"
           style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
           <div className="px-4 pt-4 pb-2 flex-1">
             <MetricRow label="Market Cap"       value={fmtLargeCurrency(marketCap ?? null, currency)} />

@@ -68,7 +68,7 @@ function AuditRow({
   }
 
   return (
-    <div className={`rounded-lg border ${result.severity !== 'ok' ? 'border-[#E5E5E5]' : 'border-transparent'} ${cfg.rowBg} overflow-hidden`}>
+    <div className={`rounded-lg border ${result.severity !== 'ok' ? 'border-[#E3E1DA]' : 'border-transparent'} ${cfg.rowBg} overflow-hidden`}>
       <div className="flex items-start gap-2.5 px-3 py-2.5">
         {/* Icon */}
         <Icon size={14} className={`${cfg.color} mt-0.5 shrink-0`} />
@@ -146,7 +146,7 @@ export default function AssumptionHealthPanel({ audit, assumptions, onChange, an
   }
 
   return (
-    <div className="rounded-xl border border-[#E5E5E5] bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] overflow-hidden mb-4">
+    <div className="rounded-xl border border-[#E3E1DA] bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] overflow-hidden mb-4">
 
       {/* Header */}
       <button
@@ -212,7 +212,7 @@ export default function AssumptionHealthPanel({ audit, assumptions, onChange, an
 
           {/* Apply all button — only if there are suggestions */}
           {issues.some(r => r.suggestedValue != null && r.key !== 'quality') && (
-            <div className="pt-1 border-t border-[#E5E5E5] mt-2">
+            <div className="pt-1 border-t border-[#E3E1DA] mt-2">
               <button
                 onClick={applyAll}
                 className="min-h-[44px] flex items-center px-2 text-[11px] font-semibold text-[#2563EB] hover:text-[#2563EB] transition-colors"

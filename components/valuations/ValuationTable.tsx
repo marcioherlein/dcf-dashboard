@@ -720,7 +720,7 @@ function MobileValuationRow({ entry, sparklines, onDelete, onTagUpdate, onGroupU
 
 // ── Mobile Valuation Card (legacy — kept for reference, replaced by Row) ───────
 
-function MobileValuationCard({ entry, sparklines, onDelete, onTagUpdate, onGroupUpdate, onNoteSave, groups }: {
+function _MobileValuationCard({ entry, sparklines, onDelete, onTagUpdate, onGroupUpdate, onNoteSave, groups }: {
   entry:         WatchlistEntry
   sparklines:    Record<string, number[] | null>
   groups:        string[]

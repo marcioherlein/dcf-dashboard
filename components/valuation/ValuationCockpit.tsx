@@ -532,8 +532,8 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 items-stretch">
 
         {/* ── 4. THESIS SCORECARD ─────────────────────────────────────────────── */}
-        <div className="rounded-xl border border-[#E5E5E5] bg-white overflow-hidden flex flex-col">
-          <div className="px-4 py-3 border-b border-[#E5E5E5] shrink-0">
+        <div className="rounded-xl border border-[#E3E1DA] bg-white overflow-hidden flex flex-col">
+          <div className="px-4 py-3 border-b border-[#E3E1DA] shrink-0">
             <p className="text-[10px] font-[700] uppercase tracking-widest text-[#9B9B9B]">Thesis Scorecard</p>
             <p className="text-[13px] font-[700] text-[#06101F] mt-0.5">Independent Checks</p>
           </div>
@@ -547,7 +547,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
                 return (
                   <div className={`bg-white px-3 py-3 flex flex-col gap-1.5 ${na ? 'opacity-50' : ''}`}>
                     <p className="text-[10px] text-[#9B9B9B] leading-tight">Economic value creation</p>
-                    <div className={`inline-flex items-center gap-1 text-[10px] font-[700] px-2 py-0.5 rounded-full border self-start ${pass ? 'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D]' : na ? 'bg-[#F5F5F5] border-[#E5E5E5] text-[#9B9B9B]' : 'bg-[#FCEAEA] border-[#F0B8B8] text-[#D83B3B]'}`}>
+                    <div className={`inline-flex items-center gap-1 text-[10px] font-[700] px-2 py-0.5 rounded-full border self-start ${pass ? 'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D]' : na ? 'bg-[#F5F5F5] border-[#E3E1DA] text-[#9B9B9B]' : 'bg-[#FCEAEA] border-[#F0B8B8] text-[#D83B3B]'}`}>
                       {!na && (pass
                         ? <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
                         : <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -570,7 +570,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
                 return (
                   <div className={`bg-white px-3 py-3 flex flex-col gap-1.5 ${na ? 'opacity-50' : ''}`}>
                     <p className="text-[10px] text-[#9B9B9B] leading-tight">Compensation for risk</p>
-                    <div className={`inline-flex items-center gap-1 text-[10px] font-[700] px-2 py-0.5 rounded-full border self-start ${pass ? 'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D]' : na ? 'bg-[#F5F5F5] border-[#E5E5E5] text-[#9B9B9B]' : 'bg-[#FFF4DA] border-[#F3D391] text-[#B56A00]'}`}>
+                    <div className={`inline-flex items-center gap-1 text-[10px] font-[700] px-2 py-0.5 rounded-full border self-start ${pass ? 'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D]' : na ? 'bg-[#F5F5F5] border-[#E3E1DA] text-[#9B9B9B]' : 'bg-[#FFF4DA] border-[#F3D391] text-[#B56A00]'}`}>
                       {!na && (pass
                         ? <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
                         : <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01"/></svg>
@@ -593,7 +593,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
                 return (
                   <div className={`bg-white px-3 py-3 flex flex-col gap-1.5 ${na ? 'opacity-50' : ''}`}>
                     <p className="text-[10px] text-[#9B9B9B] leading-tight">Market expectations</p>
-                    <div className={`inline-flex items-center gap-1 text-[10px] font-[700] px-2 py-0.5 rounded-full border self-start ${na ? 'bg-[#F5F5F5] border-[#E5E5E5] text-[#9B9B9B]' : pass ? 'bg-[#EAF1FF] border-[#BFDBFE] text-[#2563EB]' : 'bg-[#FFF4DA] border-[#F3D391] text-[#B56A00]'}`}>
+                    <div className={`inline-flex items-center gap-1 text-[10px] font-[700] px-2 py-0.5 rounded-full border self-start ${na ? 'bg-[#F5F5F5] border-[#E3E1DA] text-[#9B9B9B]' : pass ? 'bg-[#EAF1FF] border-[#BFDBFE] text-[#2563EB]' : 'bg-[#FFF4DA] border-[#F3D391] text-[#B56A00]'}`}>
                       {na ? 'No data' : pass ? 'Conservative' : 'Aggressive'}
                     </div>
                     <p className="text-[11px] font-[650] text-[#111111]">
@@ -612,7 +612,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
                 return (
                   <div className={`bg-white px-3 py-3 flex flex-col gap-1.5 ${na ? 'opacity-50' : ''}`}>
                     <p className="text-[10px] text-[#9B9B9B] leading-tight">Growth premium (EPV)</p>
-                    <div className={`inline-flex items-center gap-1 text-[10px] font-[700] px-2 py-0.5 rounded-full border self-start ${signal === 'green' ? 'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D]' : signal === 'amber' ? 'bg-[#FFF4DA] border-[#F3D391] text-[#B56A00]' : signal === 'red' ? 'bg-[#FCEAEA] border-[#F0B8B8] text-[#D83B3B]' : 'bg-[#F5F5F5] border-[#E5E5E5] text-[#9B9B9B]'}`}>
+                    <div className={`inline-flex items-center gap-1 text-[10px] font-[700] px-2 py-0.5 rounded-full border self-start ${signal === 'green' ? 'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D]' : signal === 'amber' ? 'bg-[#FFF4DA] border-[#F3D391] text-[#B56A00]' : signal === 'red' ? 'bg-[#FCEAEA] border-[#F0B8B8] text-[#D83B3B]' : 'bg-[#F5F5F5] border-[#E3E1DA] text-[#9B9B9B]'}`}>
                       {label}
                     </div>
                     <p className="text-[11px] font-[650] text-[#111111]">
@@ -658,7 +658,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
 
       {/* ── 7. FULL DCF MODEL (collapsed) — year-by-year projections ─────────── */}
       <details ref={fullDcfRef} className="group" id="full_dcf" open>
-        <summary className="flex items-center gap-2 cursor-pointer list-none bg-white rounded-xl border border-[#E5E5E5] shadow-sm px-4 sm:px-5 py-3.5 hover:bg-[#EAF1FF] transition-colors select-none">
+        <summary className="flex items-center gap-2 cursor-pointer list-none bg-white rounded-xl border border-[#E3E1DA] shadow-card px-4 sm:px-5 py-3.5 hover:bg-[#EAF1FF] transition-colors select-none">
           <span className="text-[#2563EB] text-xs group-open:rotate-90 transition-transform inline-block">▶</span>
           <span className="text-sm font-[650] text-[#2563EB]">
             Full DCF Model — Year-by-Year Projections
@@ -686,7 +686,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
 
       {/* ── 8. MODEL EVIDENCE (collapsed) ───────────────────────────────────── */}
       <details className="group" id="model_evidence">
-        <summary className="flex items-center gap-2 cursor-pointer list-none bg-white rounded-xl border border-[#E5E5E5] shadow-sm px-4 sm:px-5 py-3.5 hover:bg-[#F5F5F5] transition-colors select-none">
+        <summary className="flex items-center gap-2 cursor-pointer list-none bg-white rounded-xl border border-[#E3E1DA] shadow-card px-4 sm:px-5 py-3.5 hover:bg-[#F5F5F5] transition-colors select-none">
           <span className="text-[#6B6B6B] text-xs group-open:rotate-90 transition-transform inline-block">▶</span>
           <span className="text-sm font-[650] text-[#111111]">Model Evidence</span>
           <span className="ml-auto text-xs text-[#9B9B9B] hidden sm:inline">Fair value chart · divergence analysis · value investing metrics</span>
@@ -709,7 +709,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
 
       {/* ── 9. DEEP ANALYSIS — BusinessChecks + AssumptionHealth ─────────────── */}
       <details className="group" id="deep_analysis">
-        <summary className="flex items-center gap-2 cursor-pointer list-none bg-white rounded-xl border border-[#E5E5E5] shadow-sm px-4 sm:px-5 py-3.5 hover:bg-[#F5F5F5] transition-colors select-none">
+        <summary className="flex items-center gap-2 cursor-pointer list-none bg-white rounded-xl border border-[#E3E1DA] shadow-card px-4 sm:px-5 py-3.5 hover:bg-[#F5F5F5] transition-colors select-none">
           <span className="text-[#6B6B6B] text-xs group-open:rotate-90 transition-transform inline-block">▶</span>
           <span className="text-sm font-[650] text-[#111111]">Detailed Analysis</span>
           <span className="ml-auto text-xs text-[#9B9B9B] hidden sm:inline">ROIC · FCF yield · EPV · market-implied growth · assumption audit</span>
