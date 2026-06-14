@@ -242,7 +242,8 @@ function RevenueView({ statementsData, currency }: { statementsData: AnyRecord; 
 
 // ─── Income Flow (Sankey) view ────────────────────────────────────────────────
 
-function _IncomeFlowView({ statementsData, currency }: { statementsData: AnyRecord; currency: string }) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function IncomeFlowView({ statementsData, currency }: { statementsData: AnyRecord; currency: string }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [chartWidth, setChartWidth] = useState(0)
   const fin = statementsData?.financialCurrency ?? currency
