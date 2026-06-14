@@ -154,7 +154,7 @@ const FILTER_GROUPS = [
     ],
   },
   {
-    id: 'other', label: 'Income & Analyst',
+    id: 'other', label: 'Dividends & Analyst',
     fields: [
       { key: 'divYield', label: 'Dividend Yield', opts: DIV_OPTS    },
       { key: 'analyst',  label: 'Analyst Rating', opts: ANALYST_OPTS },
@@ -679,35 +679,31 @@ export default function ScreenerPage() {
                       </tr>
                     )}
 
-                    {!loading && displayed.map((stock, i) => (
+                    {!loading && displayed.map((stock, _i) => (
                       <motion.tr
                         key={stock.ticker}
                         initial={reduced ? false : { opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        transition={{ duration: 0.15, delay: Math.min(i * 0.012, 0.18) }}
+                        transition={{ duration: 0.15 }}
                         className={cn(
                           'border-b border-[#E5E5E5] hover:bg-olive-50/60 cursor-pointer transition-colors group',
                           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-olive-700',
-                          i % 2 === 1 && 'bg-[#F4F3EF]/40',
                         )}
                         onClick={() => router.push(`/stock/${stock.ticker}`)}
                         role="button" tabIndex={0}
                         onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); router.push(`/stock/${stock.ticker}`) } }}
-                        aria-label={`${stock.ticker}: ${stock.name}`}
+                        aria-label={`${stock.ticker}: ${stock.name} — open analysis`}
                       >
-                        <td className="sticky left-0 z-10 bg-inherit group-hover:bg-olive-50/60 transition-colors px-4 py-3.5">
-                          <div className="flex flex-col gap-0.5">
-                            <span className="text-[13px] font-bold text-[#06101F] font-mono tracking-tight group-hover:text-olive-700 transition-colors">
-                              {stock.ticker}
-                            </span>
-                            <span className="text-[12px] text-[#6B6B6B] truncate max-w-[170px]">{stock.name}</span>
+                        <td className="sticky left-0 z-10 bg-white group-hover:bg-olive-50/60 transition-colors px-4 py-3.5">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex flex-col gap-0.5 min-w-0">
+                              <span className="text-[13px] font-bold text-[#06101F] font-mono tracking-tight group-hover:text-olive-700 transition-colors">
+                                {stock.ticker}
+                              </span>
+                              <span className="text-[12px] text-[#6B6B6B] truncate max-w-[150px]">{stock.name}</span>
+                            </div>
+                            <ArrowUp size={11} className="text-[#6B6B6B]/0 group-hover:text-olive-700/50 transition-colors rotate-45 shrink-0" aria-hidden="true" />
                           </div>
-                        </td>
-                        <td className="px-4 py-3.5 text-right">
-                          <span className="text-[13px] font-mono text-[#06101F] tabular-nums">{fmtCap(stock.marketCap)}</span>
-                        </td>
-                        <td className="px-4 py-3.5 text-right hidden sm:table-cell">
-                          <span className="text-[13px] font-mono text-[#06101F] tabular-nums">{fmtPrice(stock.price)}</span>
                         </td>
                         <td className="px-4 py-3.5 text-right hidden sm:table-cell">
                           <span className={cn('text-[13px] font-mono tabular-nums',
@@ -717,6 +713,12 @@ export default function ScreenerPage() {
                           )}>
                             {stock.trailingPE != null ? fmtMult(stock.trailingPE) : '—'}
                           </span>
+                        </td>
+                        <td className="px-4 py-3.5 text-right">
+                          <span className="text-[13px] font-mono text-[#06101F] tabular-nums">{fmtCap(stock.marketCap)}</span>
+                        </td>
+                        <td className="px-4 py-3.5 text-right hidden sm:table-cell">
+                          <span className="text-[13px] font-mono text-[#06101F] tabular-nums">{fmtPrice(stock.price)}</span>
                         </td>
                         <td className="px-4 py-3.5 text-right hidden md:table-cell">
                           <span className={cn('text-[13px] font-mono tabular-nums',
