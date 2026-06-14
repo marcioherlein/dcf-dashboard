@@ -523,7 +523,202 @@ function Th({ label, sortKey, current, dir, onSort, align = 'right' }: {
   )
 }
 
-// ── Mobile Valuation Card ──────────────────────────────────────────────────────
+// ── Company Logo (FMP with initials fallback) ─────────────────────────────────
+
+function CompanyLogo({ ticker }: { ticker: string }) {
+  const [failed, setFailed] = useState(false)
+  const colors = ['#5F790B','#2563EB','#B56A00','#11875D','#D83B3B','#6D28D9','#0891B2']
+  const color  = colors[ticker.charCodeAt(0) % colors.length]
+
+  if (failed) {
+    return (
+      <div
+        className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-white text-[11px] font-bold"
+        style={{ background: color }}
+      >
+        {ticker.slice(0, 2)}
+      </div>
+    )
+  }
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={`https://financialmodelingprep.com/image-stock/${ticker}.png`}
+      alt={ticker}
+      onError={() => setFailed(true)}
+      className="w-9 h-9 rounded-xl object-cover border border-[#E5E5E5] shrink-0"
+    />
+  )
+}
+
+// ── Mobile Row (Koyfin-style compact row with tap-to-expand) ──────────────────
+
+function MobileValuationRow({ entry, sparklines, onDelete, onTagUpdate, onGroupUpdate, onNoteSave, groups, selectedCols }: {
+  entry:         WatchlistEntry
+  sparklines:    Record<string, number[] | null>
+  groups:        string[]
+  selectedCols:  SortKey[]
+  onDelete:      () => void
+  onTagUpdate:   (tag: ListTag) => void
+  onGroupUpdate: (groupName: string | null) => void
+  onNoteSave:    (ticker: string, note: string) => Promise<void>
+}) {
+  const [expanded, setExpanded] = useState(false)
+  const prices     = sparklines[entry.ticker]
+  const upside     = entry.snapshot.upsidePct
+  const verdict    = getVerdict(entry)
+  const vtInfo     = verdictInfo(verdict)
+  const tInfo      = tagInfo(entry.listTag)
+  const activeCols = OPTIONAL_COLUMNS.filter(c => selectedCols.includes(c.id))
+
+  // Since-save delta
+  const currentPrice = prices?.[prices.length - 1] ?? null
+  const savedPrice   = entry.snapshot.price
+  const priceDelta   = currentPrice != null && savedPrice != null && savedPrice > 0
+    ? (currentPrice - savedPrice) / savedPrice : null
+
+  return (
+    <div className="bg-white border-b border-[#F0F0F0] last:border-b-0">
+      {/* ── Collapsed row ── */}
+      <button
+        onClick={() => setExpanded(v => !v)}
+        className="w-full flex items-center gap-3 px-4 py-3 text-left active:bg-[#F8F8F8] transition-colors"
+      >
+        {/* Logo */}
+        <CompanyLogo ticker={entry.ticker} />
+
+        {/* Name + conviction */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[14px] font-bold text-[#111111] tracking-tight">{entry.ticker}</span>
+            {tInfo && (
+              <span className={cn('inline-flex items-center gap-0.5 text-[9px] font-bold rounded-full px-1.5 py-0.5 border leading-none', tInfo.cls)}>
+                <span className={cn('w-1 h-1 rounded-full', tInfo.dot)} />
+                {tInfo.label}
+              </span>
+            )}
+          </div>
+          <p className="text-[12px] text-[#9B9B9B] truncate mt-0.5 leading-none">
+            {entry.companyName.length > 28 ? entry.companyName.slice(0, 26) + '…' : entry.companyName}
+          </p>
+        </div>
+
+        {/* Price + upside */}
+        <div className="flex flex-col items-end gap-0.5 shrink-0">
+          {entry.snapshot.price != null && (
+            <span className="text-[14px] font-semibold text-[#111111] tabular-nums leading-none">
+              {fmtPrice(entry.snapshot.price, 'USD')}
+            </span>
+          )}
+          {upside != null && (
+            <span className={cn('text-[11px] font-bold tabular-nums leading-none', upside >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
+              {upside >= 0 ? '+' : ''}{(upside * 100).toFixed(1)}%
+            </span>
+          )}
+        </div>
+
+        {/* Chevron */}
+        <svg
+          className={cn('w-4 h-4 text-[#9B9B9B] shrink-0 transition-transform', expanded && 'rotate-180')}
+          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {/* ── Expanded detail ── */}
+      {expanded && (
+        <div className="border-t border-[#F0F0F0] bg-[#FAFAFA] px-4 py-4">
+          {/* Core metrics row */}
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            <div>
+              <p className="text-[10px] text-[#9B9B9B] font-semibold uppercase tracking-wide mb-0.5">Fair Value</p>
+              <p className="text-[13px] font-semibold text-[#111111] tabular-nums">
+                {entry.snapshot.fairValue != null ? fmtPrice(entry.snapshot.fairValue, 'USD') : '—'}
+              </p>
+            </div>
+            <div>
+              <p className="text-[10px] text-[#9B9B9B] font-semibold uppercase tracking-wide mb-0.5">Verdict</p>
+              <span className={cn('inline-block text-[10px] font-bold rounded-full px-2 py-0.5 border', vtInfo.cls)}>
+                {verdict}
+              </span>
+            </div>
+            <div>
+              <p className="text-[10px] text-[#9B9B9B] font-semibold uppercase tracking-wide mb-0.5">Since Save</p>
+              <p className={cn('text-[13px] font-semibold tabular-nums', priceDelta == null ? 'text-[#9B9B9B]' : priceDelta >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
+                {priceDelta != null ? `${priceDelta >= 0 ? '+' : ''}${(priceDelta * 100).toFixed(1)}%` : '—'}
+              </p>
+            </div>
+          </div>
+
+          {/* Scenarios */}
+          {(entry.snapshot.bearScenario != null || entry.snapshot.baseScenario != null || entry.snapshot.bullScenario != null) && (
+            <div className="grid grid-cols-3 gap-2 mb-4 bg-white rounded-xl border border-[#E5E5E5] p-2.5">
+              {[
+                { label: 'Bear', val: entry.snapshot.bearScenario, cls: 'text-[#D83B3B]' },
+                { label: 'Base', val: entry.snapshot.baseScenario, cls: 'text-[#2563EB]' },
+                { label: 'Bull', val: entry.snapshot.bullScenario, cls: 'text-[#11875D]' },
+              ].map(({ label, val, cls }) => (
+                <div key={label} className="text-center">
+                  <p className="text-[9px] font-bold uppercase tracking-wide text-[#9B9B9B] mb-0.5">{label}</p>
+                  <p className={cn('text-[12px] font-bold tabular-nums', cls)}>
+                    {val != null ? fmtPrice(val, 'USD') : '—'}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Optional columns */}
+          {activeCols.length > 0 && (
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              {activeCols.map(col => {
+                const rawVal = entry.snapshot[col.id as keyof typeof entry.snapshot] as number | null | undefined
+                const val = typeof rawVal === 'number' ? rawVal : null
+                return (
+                  <div key={col.id}>
+                    <p className="text-[10px] text-[#9B9B9B] font-semibold uppercase tracking-wide mb-0.5">{col.label}</p>
+                    <p className={cn('text-[13px] font-semibold tabular-nums', colValueClass(val, col.format, col.id))}>
+                      {formatColValue(val, col.format)}
+                    </p>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {/* Bottom actions */}
+          <div className="flex items-center gap-3 pt-3 border-t border-[#E5E5E5]">
+            <Link
+              href={`/stock/${entry.ticker}`}
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-[#5F790B] text-white text-[12px] font-semibold transition-colors active:bg-[#526A08]"
+            >
+              View full analysis
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+            <ActionsMenu
+              entry={entry}
+              groups={groups}
+              onDelete={onDelete}
+              onTagUpdate={onTagUpdate}
+              onGroupUpdate={onGroupUpdate}
+            />
+          </div>
+
+          {/* Note */}
+          <div className="mt-3">
+            <NoteEditorMobile entry={entry} onNoteSave={onNoteSave} />
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Mobile Valuation Card (legacy — kept for reference, replaced by Row) ───────
 
 function MobileValuationCard({ entry, sparklines, onDelete, onTagUpdate, onGroupUpdate, onNoteSave, groups }: {
   entry:         WatchlistEntry
@@ -534,81 +729,17 @@ function MobileValuationCard({ entry, sparklines, onDelete, onTagUpdate, onGroup
   onGroupUpdate: (groupName: string | null) => void
   onNoteSave:    (ticker: string, note: string) => Promise<void>
 }) {
-  const [expanded, setExpanded] = useState(false)
-  const prices   = sparklines[entry.ticker]
-  const _up      = prices && prices.length >= 2 ? prices[prices.length - 1] >= prices[0] : true
-  const upside   = entry.snapshot.upsidePct
-  const verdict  = getVerdict(entry)
-  const vtInfo   = verdictInfo(verdict)
-  const tInfo    = tagInfo(entry.listTag)
-
   return (
-    <div className="bg-white border border-[#E5E5E5] rounded-xl overflow-hidden">
-      <div className="px-3 py-3">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-2 min-w-0">
-            <TickerAvatar ticker={entry.ticker} />
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <Link href={`/stock/${entry.ticker}`} className="text-[13px] font-semibold text-[#111111] font-mono hover:text-olive-700 transition-colors">
-                  {entry.ticker}
-                </Link>
-                {tInfo && (
-                  <span className={cn('inline-flex items-center gap-1 text-[10px] font-bold rounded-full px-1.5 py-0.5 border', tInfo.cls)}>
-                    <span className={cn('w-1.5 h-1.5 rounded-full', tInfo.dot)} />
-                    {tInfo.label}
-                  </span>
-                )}
-              </div>
-              <p className="text-[11px] text-[#6B6B6B] mt-0.5 truncate">{entry.companyName}</p>
-            </div>
-          </div>
-          <ActionsMenu
-            entry={entry}
-            groups={groups}
-            onDelete={onDelete}
-            onTagUpdate={onTagUpdate}
-            onGroupUpdate={onGroupUpdate}
-          />
-        </div>
-
-        <div className="grid grid-cols-3 gap-2 mt-3">
-          <div>
-            <p className="text-[10px] text-[#6B6B6B] font-semibold mb-0.5">Price</p>
-            <p className="text-[12px] font-medium text-[#111111] tabular-nums">{fmtPrice(entry.snapshot.price, 'USD')}</p>
-          </div>
-          <div>
-            <p className="text-[10px] text-[#6B6B6B] font-semibold mb-0.5">Fair Value</p>
-            <p className="text-[12px] font-medium text-[#6B6B6B] tabular-nums">{fmtPrice(entry.snapshot.fairValue, 'USD')}</p>
-          </div>
-          <div>
-            <p className="text-[10px] text-[#6B6B6B] font-semibold mb-0.5">Upside</p>
-            <p className={cn('text-[12px] font-semibold tabular-nums', upside == null ? 'text-[#9B9B9B]' : upside >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
-              {upside != null ? `${upside >= 0 ? '+' : ''}${(upside * 100).toFixed(1)}%` : '—'}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between mt-2 pt-2 border-t border-[#E3E1DA]">
-          <span className={cn('text-[10px] font-semibold rounded-full px-1.5 py-0.5 border', vtInfo.cls)}>
-            {verdict}
-          </span>
-          <span className="text-[11px] text-[#9B9B9B]">{relativeDate(entry.updatedAt)}</span>
-          <button
-            onClick={() => setExpanded((v) => !v)}
-            className="text-[11px] font-semibold text-olive-700 hover:text-[#2563EB] transition-colors"
-          >
-            {expanded ? 'Hide note' : 'Show note'}
-          </button>
-        </div>
-      </div>
-
-      {expanded && (
-        <div className="bg-[#F0F7FF] border-t border-[#93B4F5] px-3 py-3">
-          <NoteEditorMobile entry={entry} onNoteSave={onNoteSave} />
-        </div>
-      )}
-    </div>
+    <MobileValuationRow
+      entry={entry}
+      sparklines={sparklines}
+      groups={groups}
+      onDelete={onDelete}
+      onTagUpdate={onTagUpdate}
+      onGroupUpdate={onGroupUpdate}
+      onNoteSave={onNoteSave}
+      selectedCols={[]}
+    />
   )
 }
 
@@ -960,14 +1091,15 @@ export function ValuationTable({ entries, sparklines, groups, sortKey, sortDir, 
         </div>
       </div>
 
-      {/* Mobile card list */}
-      <div className="sm:hidden space-y-2">
+      {/* Mobile row list — Koyfin-style compact rows */}
+      <div className="sm:hidden bg-white border border-[#E5E5E5] rounded-2xl overflow-hidden">
         {sorted.map((entry) => (
-          <MobileValuationCard
+          <MobileValuationRow
             key={entry.ticker}
             entry={entry}
             sparklines={sparklines}
             groups={groups}
+            selectedCols={selectedCols}
             onDelete={() => onDelete(entry.ticker)}
             onTagUpdate={(tag) => onTagUpdate(entry.ticker, tag)}
             onGroupUpdate={(g) => onGroupUpdate(entry.ticker, g)}
