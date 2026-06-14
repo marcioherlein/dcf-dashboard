@@ -155,6 +155,7 @@ export default function ValuationContext({ valuation }: Props) {
                 </div>
               </div>
               <p className="text-[11px] text-[#6B6B6B] mt-2">ERP = 1 / Forward P/E − 10Y yield. Positive = stocks offer premium vs bonds.</p>
+              <p className="text-[10px] text-[#9B9B9B] mt-1">Methodology: Earnings yield minus risk-free rate. Damodaran FCFE model uses {'>'}3.5% as attractive threshold.</p>
             </>
           ) : (
             <>

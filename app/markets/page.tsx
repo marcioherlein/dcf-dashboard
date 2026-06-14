@@ -17,6 +17,7 @@ import PortfolioExposure     from '@/components/markets/PortfolioExposure'
 import MarketNewsSection     from '@/components/markets/MarketNewsSection'
 import MarketsTabNav         from '@/components/markets/MarketsTabNav'
 import CalendarTab           from '@/components/markets/CalendarTab'
+import YieldCurveChart       from '@/components/markets/YieldCurveChart'
 import type { MarketTab }    from '@/components/markets/MarketsTabNav'
 
 import type { MarketsData }          from '@/app/api/markets/data/route'
@@ -234,6 +235,43 @@ export default function MarketsPage() {
           {/* ── OVERVIEW TAB ─────────────────────────────────────────────── */}
           {activeTab === 'overview' && (
             <div id="markets-panel-overview" role="tabpanel" aria-labelledby="markets-tab-overview">
+
+              {/* Breadth strip — first-class metric above everything else */}
+              {mkt && (() => {
+                const valid     = mkt.sectors.filter(s => s.changePct != null)
+                const advancing = valid.filter(s => (s.changePct ?? 0) > 0).length
+                const declining = valid.filter(s => (s.changePct ?? 0) < 0).length
+                const total     = valid.length || 1
+                const advPct    = Math.round((advancing / total) * 100)
+                const decPct    = Math.round((declining / total) * 100)
+                const tone = advPct > 65 ? 'green' : advPct >= 45 ? 'amber' : 'red'
+                const toneLabel = advPct > 65 ? 'Broad advance' : advPct >= 45 ? 'Mixed breadth' : 'Broad decline'
+                const toneColor = tone === 'green' ? 'text-[#11875D]' : tone === 'amber' ? 'text-[#B56A00]' : 'text-[#D83B3B]'
+                const toneBg    = tone === 'green' ? 'bg-[#E8F7EF]' : tone === 'amber' ? 'bg-[#FFF4DA]' : 'bg-[#FCEAEA]'
+                return (
+                  <div className="flex flex-wrap items-center gap-3 sm:gap-5 rounded-xl border border-[#E5E5E5] bg-white px-4 py-2.5 mb-4 text-[11px]">
+                    <span className={`shrink-0 font-[700] text-[10px] px-2 py-0.5 rounded-full ${toneBg} ${toneColor}`}>{toneLabel}</span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="text-[#6B6B6B]">Advancing</span>
+                      <span className="font-[750] tabular-nums text-[#11875D]">{advPct}%</span>
+                      <span className="text-[#9B9B9B] text-[10px]">({advancing} of {total})</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="text-[#6B6B6B]">Declining</span>
+                      <span className="font-[750] tabular-nums text-[#D83B3B]">{decPct}%</span>
+                      <span className="text-[#9B9B9B] text-[10px]">({declining} of {total})</span>
+                    </div>
+                    <div className="hidden sm:flex items-center gap-1.5 flex-1 min-w-[120px] max-w-[200px]">
+                      <div className="h-1.5 flex flex-1 rounded-full overflow-hidden">
+                        <div className="bg-[#11875D] h-full" style={{ width: `${advPct}%` }} />
+                        <div className="bg-[#E3E1DA] h-full" style={{ width: `${100 - advPct - decPct}%` }} />
+                        <div className="bg-[#D83B3B] h-full" style={{ width: `${decPct}%` }} />
+                      </div>
+                    </div>
+                  </div>
+                )
+              })()}
+
               {/* Market Snapshot */}
               <div>
                 <SectionHeader
@@ -340,6 +378,12 @@ export default function MarketsPage() {
                   <Sk h="h-56" />
                 )}
               </div>
+              {/* Yield Curve — full width below valuation panels */}
+              {mkt && mkt.yieldCurve.length > 0 && (
+                <div className="mt-4">
+                  <YieldCurveChart points={mkt.yieldCurve} />
+                </div>
+              )}
             </div>
           )}
 
