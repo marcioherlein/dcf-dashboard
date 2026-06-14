@@ -3103,6 +3103,130 @@ async function runHolidayDeepDive() {
   await post(lines.join('\n'))
 }
 
+// ─── Mode: sector_scan ────────────────────────────────────────────────────────
+// Weekend deep scan — picks a sector, fetches 8-10 stocks, builds a valuation
+// league table with Fwd P/E, EV/EBITDA, Revenue Growth, ROIC spread, and our
+// model verdict. Rotates through 6 sectors weekly.
+
+const SECTOR_SCANS = [
+  {
+    name: 'AI & Cloud',
+    emoji: '🤖',
+    tickers: ['NVDA', 'MSFT', 'GOOGL', 'META', 'AMZN', 'CRM', 'NOW', 'ORCL'],
+    context: 'AI infrastructure spending is reshaping capex cycles. These are the platforms everything else runs on — but the valuations carry optimistic assumptions. Which ones still have margin of safety?',
+    hashtags: '#AI #CloudStocks #TechValuation',
+  },
+  {
+    name: 'Mega-Cap Tech',
+    emoji: '💻',
+    tickers: ['AAPL', 'MSFT', 'GOOGL', 'META', 'AMZN', 'NVDA', 'NFLX', 'ADBE'],
+    context: 'The eight most watched stocks on earth. Each one prices in years of high growth. The question isn\'t whether they\'re great businesses — it\'s whether great is already in the price.',
+    hashtags: '#BigTech #MegaCap #StockValuation',
+  },
+  {
+    name: 'Big Pharma & Biotech',
+    emoji: '💊',
+    tickers: ['LLY', 'MRK', 'ABBV', 'BMY', 'AMGN', 'GILD', 'JNJ', 'PFE'],
+    context: 'Pharma is a tale of two cities: blockbuster drugs at premium multiples vs. mature pipelines with discount valuations. FCF margins are high — the question is duration.',
+    hashtags: '#Pharma #Biotech #Healthcare #DCF',
+  },
+  {
+    name: 'Financials & Payments',
+    emoji: '🏦',
+    tickers: ['JPM', 'BAC', 'GS', 'V', 'MA', 'BLK', 'BX', 'AXP'],
+    context: 'Banks benefit from higher rates (better NIM), but growth stocks in payments face different dynamics. ROIC spread vs WACC is the key metric here — not P/E.',
+    hashtags: '#Financials #Banks #PaymentStocks',
+  },
+  {
+    name: 'Consumer & Retail',
+    emoji: '🛒',
+    tickers: ['WMT', 'COST', 'AMZN', 'HD', 'MCD', 'SBUX', 'NKE', 'CMG'],
+    context: 'Consumer names look "safe" but many carry premium multiples on stable earnings. The margin of safety question: how much growth is priced in at current levels?',
+    hashtags: '#Consumer #Retail #ValueInvesting',
+  },
+  {
+    name: 'Semiconductors',
+    emoji: '🔬',
+    tickers: ['NVDA', 'AMD', 'INTC', 'QCOM', 'AVGO', 'TXN', 'MU', 'AMAT'],
+    context: 'The cyclicality of semis makes standard P/E useless — FCF margins and ROIC during upcycles are what matter. AI demand has structurally lifted some names. Which still have upside?',
+    hashtags: '#Semiconductors #Chips #TechStocks',
+  },
+]
+
+async function runSectorScan() {
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+  const weekOfYear = Math.floor(dayOfYear / 7)
+  const scan = SECTOR_SCANS[weekOfYear % SECTOR_SCANS.length]
+  const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+
+  console.log(`Sector scan: ${scan.name} (${scan.tickers.length} tickers)`)
+
+  // Fetch all in parallel — uses cache if same tickers appeared earlier today
+  const results = await Promise.allSettled(scan.tickers.map(t => fetchValuation(t)))
+
+  const rows = []
+  for (let i = 0; i < results.length; i++) {
+    const r = results[i]
+    if (r.status !== 'fulfilled') continue
+    const d = r.value
+    const ticker     = scan.tickers[i]
+    const price      = d.quote?.price
+    const fwdPE      = d.analystForwardPE          // Forward P/E — primary multiple
+    const evEbitda   = d.businessProfile?.evToEbitda ?? null
+    const revGrowth  = d.cagrAnalysis?.analystEstimate1y ?? null
+    const roicSpread = d.scores?.roic?.spread ?? null
+    const fair       = appFairValue(d)
+    const upside     = appUpside(d)
+
+    if (!price || !fwdPE) continue
+
+    const v = verdictLabel(upside ?? 0)
+    rows.push({ ticker, price, fwdPE, evEbitda, revGrowth, roicSpread, fair, upside, v })
+  }
+
+  if (rows.length === 0) throw new Error('No sector scan data returned')
+
+  // Sort by Forward P/E ascending (cheapest first on this metric)
+  rows.sort((a, b) => (a.fwdPE ?? 999) - (b.fwdPE ?? 999))
+
+  const cheapest  = rows[0]
+  const richest   = rows[rows.length - 1]
+  const bestROIC  = [...rows].sort((a, b) => (b.roicSpread ?? -99) - (a.roicSpread ?? -99))[0]
+  const bestGrowth = [...rows].filter(r => r.revGrowth != null).sort((a, b) => b.revGrowth - a.revGrowth)[0]
+
+  // Build the league table
+  const tableLines = rows.map(r => {
+    const fwdPEStr    = r.fwdPE   != null ? `${r.fwdPE.toFixed(0)}×` : 'N/A'
+    const evEbStr     = r.evEbitda != null ? `${r.evEbitda.toFixed(0)}×` : '—'
+    const growthStr   = r.revGrowth != null ? `+${(r.revGrowth * 100).toFixed(0)}%` : '—'
+    return `${r.v.emoji} $${r.ticker.padEnd(5)} Fwd P/E ${fwdPEStr.padStart(4)} · EV/EBITDA ${evEbStr.padStart(4)} · Rev ${growthStr.padStart(5)} · ${r.v.short}`
+  })
+
+  const insightLines = [
+    cheapest  ? `Lowest Fwd P/E:  $${cheapest.ticker} at ${cheapest.fwdPE?.toFixed(0)}×` : null,
+    richest   ? `Richest valuation: $${richest.ticker} at ${richest.fwdPE?.toFixed(0)}×` : null,
+    bestROIC  && bestROIC.roicSpread != null ? `Widest ROIC spread: $${bestROIC.ticker} (+${(bestROIC.roicSpread * 100).toFixed(0)}% vs WACC)` : null,
+    bestGrowth ? `Fastest grower: $${bestGrowth.ticker} at +${(bestGrowth.revGrowth * 100).toFixed(0)}%/yr analyst est` : null,
+  ].filter(Boolean)
+
+  const lines = [
+    `${scan.emoji} ${scan.name} — Valuation Scan`,
+    `${dateStr}`,
+    ``,
+    `━━━ Fwd P/E · EV/EBITDA · Rev Growth · Model ━━━`,
+    ...tableLines,
+    ``,
+    scan.context,
+    ``,
+    ...insightLines,
+    ``,
+    `Full DCF models → ${APP_URL}`,
+    scan.hashtags,
+  ].filter(Boolean)
+
+  await post(lines.join('\n'))
+}
+
 const MODES = {
   earnings:          runEarnings,
   dcf:               runDcf,
@@ -3126,6 +3250,7 @@ const MODES = {
   earnings_results:  runEarningsResults,
   economic_results:  runEconomicResults,
   holiday_deep_dive: runHolidayDeepDive,
+  sector_scan:       runSectorScan,
 }
 
 if (!MODES[MODE]) {

@@ -21,11 +21,13 @@
     { "path": "/api/cron/x-post?mode=etf_pulse",                "schedule": "0 13 * * 6"    },
     { "path": "/api/cron/x-post?mode=feature",                  "schedule": "0 14 * * 6"    },
     { "path": "/api/cron/x-post?mode=weekly_wrap",              "schedule": "0 15 * * 6"    },
-    { "path": "/api/cron/x-post?mode=dcf",                      "schedule": "0 16 * * 6"    },
-    { "path": "/api/cron/x-post?mode=sentiment",                "schedule": "0 17 * * 6"    },
+    { "path": "/api/cron/x-post?mode=sector_scan",              "schedule": "0 16 * * 6"    },
+    { "path": "/api/cron/x-post?mode=dcf",                      "schedule": "0 17 * * 6"    },
+    { "path": "/api/cron/x-post?mode=sentiment",                "schedule": "0 18 * * 6"    },
     { "path": "/api/cron/x-post?mode=theory_overnight",         "schedule": "0 2 * * 6"     },
     { "path": "/api/cron/x-post?mode=sentiment",                "schedule": "0 13 * * 0"    },
     { "path": "/api/cron/x-post?mode=question",                 "schedule": "0 14 * * 0"    },
+    { "path": "/api/cron/x-post?mode=sector_scan",              "schedule": "0 15 * * 0"    },
     { "path": "/api/cron/x-post?mode=etf_pulse",                "schedule": "0 16 * * 0"    },
     { "path": "/api/cron/x-post?mode=theory_overnight",         "schedule": "0 2 * * 0"     }
   ]
