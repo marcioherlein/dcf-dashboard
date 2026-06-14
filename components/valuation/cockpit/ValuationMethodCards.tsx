@@ -778,7 +778,7 @@ export default function ValuationMethodCards({
       <ArrowConnectors count={visibleCount} breakpoint={arrowBreakpoint} />
 
       {/* ── Cards grid ─────────────────────────────────────────────────────── */}
-      <div className={`flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 -mx-1 px-1 sm:grid sm:overflow-visible sm:snap-none sm:pb-0 sm:mx-0 sm:px-0 ${gridCols}`}>
+      <div className={`flex gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-1 -mx-4 px-4 sm:grid sm:overflow-visible sm:snap-none sm:pb-0 sm:mx-0 sm:px-0 ${gridCols}`}>
         {visibleMethods.map((m, idx) => {
           const cfg    = METHOD_CFG[m.id]
           const fields = METHOD_INPUTS[m.id] ?? []
@@ -1022,6 +1022,8 @@ export default function ValuationMethodCards({
             </div>
           )
         })}
+        {/* Trailing spacer — ensures last card has breathing room in mobile carousel */}
+        <div className="shrink-0 w-4 sm:hidden" aria-hidden="true" />
       </div>
 
       {/* ── Key Assumptions — Historical Trends ─────────────────────────────── */}

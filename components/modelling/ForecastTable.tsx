@@ -1269,7 +1269,7 @@ export default function ForecastTable({
       </div>
 
       {/* Scrollable table */}
-      <div className="overflow-x-auto" role="region" aria-label="DCF projection table" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <div className="overflow-x-auto scrollbar-hide" role="region" aria-label="DCF projection table" style={{ WebkitOverflowScrolling: 'touch' }}>
         <table className="w-full min-w-max border-collapse">
           <thead className="sticky top-0 z-20">
             {/* Row 1: Column group labels */}

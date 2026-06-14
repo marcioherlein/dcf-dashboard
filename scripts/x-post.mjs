@@ -1627,13 +1627,132 @@ const SENTIMENT_POSTS = [
 ]
 
 async function runSentiment() {
-  const spy = await fetchEtfQuote('SPY')
-  await new Promise(r => setTimeout(r, 1500))
-  const vix = await fetchEtfQuote('VIX').catch(() => null)
+  const todayUtc = new Date().toISOString().split('T')[0]
+  const dayOfWeek = new Date().getUTCDay() // 0=Sun, 6=Sat
 
-  const weekOfYear = Math.floor((Date.now() / 86400000 + 4) / 7)
-  const template = SENTIMENT_POSTS[weekOfYear % SENTIMENT_POSTS.length]
-  const lines = template(spy, vix)
+  // Build next 5 trading days date list (Mon–Fri of coming week)
+  const nextMonday = new Date()
+  const daysUntilMonday = dayOfWeek === 0 ? 1 : 8 - dayOfWeek
+  nextMonday.setUTCDate(nextMonday.getUTCDate() + daysUntilMonday)
+  nextMonday.setUTCHours(0, 0, 0, 0)
+  const weekDates = Array.from({ length: 5 }, (_, i) => {
+    const d = new Date(nextMonday)
+    d.setUTCDate(nextMonday.getUTCDate() + i)
+    return d.toISOString().split('T')[0]
+  })
+  const weekDatesSet = new Set(weekDates)
+
+  // 1. Fetch weekly S&P + VIX via Yahoo (live, not stale AV data)
+  const [spyChart, vixAV] = await Promise.all([
+    fetchYahooChart('SPY').catch(() => null),
+    fetchEtfQuote('VIX').catch(() => null),
+  ])
+
+  // Weekly S&P change: use 5-day range from Yahoo for actual week performance
+  const spyWeekly = await (async () => {
+    try {
+      const res = await fetch(
+        'https://query1.finance.yahoo.com/v8/finance/chart/SPY?interval=1d&range=7d',
+        { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(8000) }
+      ).catch(() => null)
+      if (!res?.ok) return null
+      const json = await res.json().catch(() => null)
+      const closes = json?.chart?.result?.[0]?.indicators?.quote?.[0]?.close?.filter(v => v != null)
+      if (!closes || closes.length < 2) return null
+      const weekChg = ((closes[closes.length - 1] - closes[0]) / closes[0]) * 100
+      return { price: closes[closes.length - 1], weekChangePct: weekChg }
+    } catch { return null }
+  })()
+
+  // 2. Scan for earnings NEXT week from SP500_SAMPLE
+  const nextWeekEarners = []
+  for (let i = 0; i < SP500_SAMPLE.length; i += 8) {
+    const batch = SP500_SAMPLE.slice(i, i + 8)
+    const settled = await Promise.allSettled(batch.map(async t => {
+      const res = await fetch(
+        `https://query1.finance.yahoo.com/v8/finance/chart/${t}?interval=1d&range=1d`,
+        { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(6000) }
+      ).catch(() => null)
+      if (!res?.ok) return null
+      const json = await res.json().catch(() => null)
+      const meta = json?.chart?.result?.[0]?.meta
+      if (!meta?.earningsTimestampStart) return null
+      if ((meta.marketCap ?? 0) < 10_000_000_000) return null
+      const d = new Date(meta.earningsTimestampStart * 1000).toISOString().split('T')[0]
+      return weekDatesSet.has(d) ? { symbol: t, marketCap: meta.marketCap, date: d } : null
+    }))
+    for (const r of settled) if (r.status === 'fulfilled' && r.value) nextWeekEarners.push(r.value)
+    if (i + 8 < SP500_SAMPLE.length) await new Promise(r => setTimeout(r, 300))
+  }
+  nextWeekEarners.sort((a, b) => a.date.localeCompare(b.date) || b.marketCap - a.marketCap)
+
+  // Group by day
+  const earnersByDay = {}
+  for (const e of nextWeekEarners) {
+    if (!earnersByDay[e.date]) earnersByDay[e.date] = []
+    earnersByDay[e.date].push(e.symbol)
+  }
+
+  // 3. Macro events next week
+  const macroNextWeek = MACRO_CALENDAR.filter(e => weekDatesSet.has(e.date))
+
+  // ── Build post ─────────────────────────────────────────────────────────────
+  const weekRange = `${new Date(weekDates[0]).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${new Date(weekDates[4]).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+
+  const spyWeekStr = spyWeekly
+    ? `S&P 500 this week: ${spyWeekly.weekChangePct >= 0 ? '+' : ''}${spyWeekly.weekChangePct.toFixed(2)}% (closed at ${spyWeekly.price.toFixed(0)})`
+    : spyChart
+    ? `S&P 500: ${spyChart.changePct >= 0 ? '+' : ''}${spyChart.changePct.toFixed(2)}% last session (${spyChart.price.toFixed(0)})`
+    : null
+
+  const vixStr = vixAV
+    ? `VIX: ${vixAV.price.toFixed(1)} — ${vixSentiment(vixAV.price).label}`
+    : null
+
+  const weekContextLine = (() => {
+    const chg = spyWeekly?.weekChangePct ?? spyChart?.changePct ?? 0
+    if (chg > 2) return `Strong week for equities. The question heading into next week: was this fundamental or sentiment-driven? If sentiment, it can reverse. If fundamental — check whether fair values moved with it.`
+    if (chg < -2) return `Tough week. Selloffs create noise. Before Monday, ask which positions are down on price only vs. down on deteriorating fundamentals. Those are very different situations.`
+    return `Quiet week. Low-volatility periods are when serious investors do their best work — before the catalysts arrive.`
+  })()
+
+  const lines = [
+    `🔭 What to Watch — Week of ${weekRange}`,
+    ``,
+    ...(spyWeekStr ? [spyWeekStr] : []),
+    ...(vixStr ? [vixStr] : []),
+    ``,
+    weekContextLine,
+  ]
+
+  // Macro events
+  if (macroNextWeek.length > 0) {
+    lines.push(``, `━━━ MACRO CALENDAR ━━━`)
+    for (const e of macroNextWeek) {
+      const dayLabel = new Date(e.date + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+      const impact = {
+        FOMC: 'Rate decision → WACC shifts across every model in your watchlist.',
+        CPI:  'Inflation print → hot = higher rates, cool = rate relief. Update WACC assumptions.',
+        NFP:  'Jobs report → strong = Fed on hold, weak = cuts ahead. Discount rates at stake.',
+      }
+      lines.push(`📅 ${e.label} (${dayLabel}) — ${impact[e.type] ?? ''}`)
+    }
+  } else {
+    lines.push(``, `No major macro events next week. Good week to focus on individual company models.`)
+  }
+
+  // Earnings next week
+  if (Object.keys(earnersByDay).length > 0) {
+    lines.push(``, `━━━ EARNINGS NEXT WEEK ━━━`)
+    for (const [date, tickers] of Object.entries(earnersByDay)) {
+      const dayLabel = new Date(date + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+      lines.push(`${dayLabel}: ${tickers.slice(0, 4).map(t => `$${t}`).join(' · ')}`)
+    }
+    lines.push(``, `Before earnings: run the model. The pre-earnings DCF tells you whether a stock needs to beat just to be fairly valued — or can miss and still be cheap.`)
+  }
+
+  lines.push(``, `${APP_URL}`, `#WeekAhead #Investing #DCF #StockMarket`)
+
   await post(lines.join('\n'))
 }
 

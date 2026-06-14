@@ -72,9 +72,9 @@ export default function DataQualityWarnings({
     info: 'ℹ',
   }
   const colors = {
-    error:   { bg: 'bg-[#FCEAEA]0/10',    border: 'border-red-500/30',   text: 'text-red-300',   icon: 'text-red-400' },
-    warning: { bg: 'bg-[#FFF4DA]0/10',  border: 'border-amber-500/30', text: 'text-amber-300', icon: 'text-amber-400' },
-    info:    { bg: 'bg-[#EAF1FF]0/10',   border: 'border-blue-500/30',  text: 'text-[#93B4F5]',  icon: 'text-[#2563EB]' },
+    error:   { bg: 'bg-[#FCEAEA]',  border: 'border-[#F0B8B8]', text: 'text-[#D83B3B]', icon: 'text-[#D83B3B]' },
+    warning: { bg: 'bg-[#FFF4DA]',  border: 'border-[#F3D391]', text: 'text-[#B56A00]', icon: 'text-[#B56A00]' },
+    info:    { bg: 'bg-[#EAF1FF]',  border: 'border-[#93B4F5]', text: 'text-[#2563EB]', icon: 'text-[#2563EB]' },
   }
 
   return (
@@ -82,8 +82,8 @@ export default function DataQualityWarnings({
       {warnings.map((w, i) => {
         const c = colors[w.type]
         return (
-          <div key={i} className={`flex gap-2.5 rounded-lg border px-3.5 py-2.5 text-xs ${c.bg} ${c.border} ${c.text}`}>
-            <span className={`mt-0.5 shrink-0 font-bold ${c.icon}`}>{icon[w.type]}</span>
+          <div key={i} className={`flex gap-2.5 rounded-lg border px-3.5 py-2.5 text-[12px] leading-snug ${c.bg} ${c.border} ${c.text}`}>
+            <span className={`mt-0.5 shrink-0 font-bold text-[11px] ${c.icon}`}>{icon[w.type]}</span>
             <span>{w.message}</span>
           </div>
         )
