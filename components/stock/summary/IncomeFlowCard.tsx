@@ -1,49 +1,26 @@
 'use client'
 
-import { useMemo, useRef, useState, useEffect } from 'react'
-import dynamic from 'next/dynamic'
-
-const SankeyChart = dynamic(() => import('recharts').then(m => m.Sankey), { ssr: false })
+import { useState, useMemo } from 'react'
+import { cn } from '@/lib/utils'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function fmtFlow(v: number, curr = 'USD'): string {
+function currSym(c: string): string {
+  if (c === 'USD') return '$'
+  if (c === 'EUR') return '€'
+  if (c === 'GBP') return '£'
+  if (c === 'JPY') return '¥'
+  if (c === 'CNY') return '¥'
+  return c + ' '
+}
+
+function fmtVal(v: number, sym: string): string {
   const abs = Math.abs(v)
-  const sym =
-    curr === 'USD' ? '$'
-    : curr === 'EUR' ? '€'
-    : curr === 'GBP' ? '£'
-    : curr === 'JPY' ? '¥'
-    : curr === 'CNY' ? '¥'
-    : `${curr} `
   if (abs >= 1e12) return `${sym}${(abs / 1e12).toFixed(1)}T`
   if (abs >= 1e9)  return `${sym}${(abs / 1e9).toFixed(1)}B`
   if (abs >= 1e6)  return `${sym}${(abs / 1e6).toFixed(0)}M`
   return `${sym}${Math.round(abs / 1e3)}K`
 }
-
-// ─── Design tokens ────────────────────────────────────────────────────────────
-
-const NODE_FILL: Record<string, string> = {
-  'Revenue':             '#2563EB',
-  'Cost of Revenue':     '#DC2626',
-  'Gross Profit':        '#059669',
-  'Operating Expenses':  '#DC2626',
-  'Operating Income':    '#059669',
-  'Tax & Other':         '#8A95A6',
-  'Net Income':          '#059669',
-}
-
-const LINK_FILL: Record<string, string> = {
-  'Cost of Revenue':    'rgba(220,38,38,0.11)',
-  'Gross Profit':       'rgba(5,150,105,0.10)',
-  'Operating Expenses': 'rgba(220,38,38,0.11)',
-  'Operating Income':   'rgba(5,150,105,0.10)',
-  'Tax & Other':        'rgba(148,163,184,0.14)',
-  'Net Income':         'rgba(5,150,105,0.16)',
-}
-
-const PROFIT_NODES = new Set(['Gross Profit', 'Operating Income', 'Net Income'])
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -55,216 +32,180 @@ interface IncomeFlowCardProps {
   currency?: string
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
+interface WaterfallRow {
+  name: string
+  value: number | null
+  isDeduction?: boolean
+  isProfit?: boolean
+  isFinal?: boolean
+  showDivider?: boolean
+}
 
-export default function IncomeFlowCard({ statementsData, currency = 'USD' }: IncomeFlowCardProps) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const [chartWidth, setChartWidth] = useState(640)
+// ─── Row component ────────────────────────────────────────────────────────────
 
-  useEffect(() => {
-    const el = containerRef.current
-    if (!el) return
-    const obs = new ResizeObserver(([entry]) => {
-      setChartWidth(entry.contentRect.width)
-    })
-    obs.observe(el)
-    return () => obs.disconnect()
-  }, [])
+function Row({
+  name, value, maxValue, isDeduction, isProfit, isFinal, showDivider, sym,
+}: WaterfallRow & { maxValue: number; sym: string }) {
+  if (value == null) return null
+  const barPct  = maxValue > 0 ? Math.max(2, Math.min(100, (Math.abs(value) / maxValue) * 100)) : 2
+  const isNeg   = value < 0
 
-  const fin = statementsData?.financialCurrency ?? currency
-  const ttm: AnyRecord | null = statementsData?.ttm?.incomeStatement ?? null
-
-  const { nodes, links, revenue } = useMemo(() => {
-    if (!ttm) return { nodes: [], links: [], revenue: 0 }
-
-    const revenue = Math.max(0, ttm.totalRevenue ?? 0)
-    if (!revenue) return { nodes: [], links: [], revenue: 0 }
-
-    const grossProfit    = Math.min(revenue, Math.max(0, ttm.grossProfit ?? 0))
-    const cogs           = revenue - grossProfit
-    const opIncome       = Math.max(0, Math.min(grossProfit, ttm.operatingIncome ?? 0))
-    const opEx           = grossProfit - opIncome
-    const clampedNI      = Math.max(0, Math.min(opIncome, ttm.netIncome ?? 0))
-    const taxOther       = opIncome - clampedNI
-
-    const nodes: { name: string }[]                              = [{ name: 'Revenue' }]
-    const links: { source: number; target: number; value: number }[] = []
-    const revIdx = 0
-
-    if (cogs > 0) {
-      links.push({ source: revIdx, target: nodes.length, value: cogs })
-      nodes.push({ name: 'Cost of Revenue' })
-    }
-
-    if (grossProfit > 0) {
-      const gpIdx = nodes.length
-      links.push({ source: revIdx, target: gpIdx, value: grossProfit })
-      nodes.push({ name: 'Gross Profit' })
-
-      if (opEx > 0) {
-        links.push({ source: gpIdx, target: nodes.length, value: opEx })
-        nodes.push({ name: 'Operating Expenses' })
-      }
-
-      if (opIncome > 0) {
-        const opIncIdx = nodes.length
-        links.push({ source: gpIdx, target: opIncIdx, value: opIncome })
-        nodes.push({ name: 'Operating Income' })
-
-        if (taxOther > 0) {
-          links.push({ source: opIncIdx, target: nodes.length, value: taxOther })
-          nodes.push({ name: 'Tax & Other' })
-        }
-
-        if (clampedNI > 0) {
-          links.push({ source: opIncIdx, target: nodes.length, value: clampedNI })
-          nodes.push({ name: 'Net Income' })
-        }
-      }
-    }
-
-    return { nodes, links, revenue }
-  }, [ttm])
-
-  // leaf nodes have no outgoing links — these always get full labels
-  const leafSet = useMemo(() => {
-    const hasOut = new Set(links.map(l => l.source))
-    return new Set(nodes.map((_, i) => i).filter(i => !hasOut.has(i)))
-  }, [nodes, links])
-
-  if (!nodes.length || !revenue) return null
-
-  const isNarrow = chartWidth < 540
-
-  // ── Custom renderers ──────────────────────────────────────────────────────
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const CustomNode = ({ x, y, width, height, index, payload }: any) => {
-    const name: string  = payload?.name  ?? ''
-    const value: number = payload?.value ?? 0
-    if (!name || value <= 0) return null
-
-    const fill       = NODE_FILL[name]  ?? '#566174'
-    const isRevenue  = name === 'Revenue'
-    const isLeaf     = leafSet.has(index as number)
-    // on narrow screens, only show full labels for Revenue and leaf nodes
-    const fullLabel  = !isNarrow || isRevenue || isLeaf
-    const pct        = Math.round((value / revenue) * 100)
-    const isProfit   = PROFIT_NODES.has(name)
-    const pctLabel   = isRevenue ? null : isProfit ? `${pct}% margin` : `${pct}% of rev`
-    const gap        = 10
-    const labelX     = isRevenue ? x - gap : x + width + gap
-    const anchor     = isRevenue ? 'end'   : 'start'
-    // on narrow screens, hide labels entirely for intermediate nodes to prevent overlap
-    const showName   = height >= 14 && (!isNarrow || isRevenue || isLeaf)
-    const showValue  = fullLabel && height >= 26
-    const showPct    = fullLabel && height >= 38
-
-    return (
-      <g>
-        <rect x={x} y={y} width={width} height={Math.max(height, 2)} rx={3} ry={3} fill={fill} />
-
-        {showName && (
-          <text
-            x={labelX}
-            y={y + height / 2 - (showValue ? 9 : 0)}
-            textAnchor={anchor}
-            dominantBaseline="middle"
-            fontFamily="Inter, system-ui, sans-serif"
-            fontSize={11}
-            fontWeight={600}
-            fill="#566174"
-          >
-            {name}
-          </text>
-        )}
-
-        {showValue && (
-          <text
-            x={labelX}
-            y={y + height / 2 + (showPct ? 4 : 5)}
-            textAnchor={anchor}
-            dominantBaseline="middle"
-            fontFamily="DM Mono, IBM Plex Mono, monospace"
-            fontSize={11}
-            fill="#06101F"
-          >
-            {fmtFlow(value, fin)}
-          </text>
-        )}
-
-        {showPct && pctLabel && (
-          <text
-            x={labelX}
-            y={y + height / 2 + 18}
-            textAnchor={anchor}
-            dominantBaseline="middle"
-            fontFamily="Inter, system-ui, sans-serif"
-            fontSize={10}
-            fill="#566174"
-          >
-            {pctLabel}
-          </text>
-        )}
-      </g>
-    )
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const CustomLink = ({ sourceX, sourceControlX, targetX, targetControlX, sourceRelativeY, targetRelativeY, linkWidth, payload }: any) => {
-    const tgtName: string = payload?.target?.name ?? ''
-    const fill = LINK_FILL[tgtName] ?? 'rgba(148,163,184,0.14)'
-
-    const sy0 = sourceRelativeY
-    const ty0 = targetRelativeY
-    const sy1 = sourceRelativeY + linkWidth
-    const ty1 = targetRelativeY + linkWidth
-
-    const d = [
-      `M${sourceX},${sy0}`,
-      `C${sourceControlX},${sy0} ${targetControlX},${ty0} ${targetX},${ty0}`,
-      `L${targetX},${ty1}`,
-      `C${targetControlX},${ty1} ${sourceControlX},${sy1} ${sourceX},${sy1}`,
-      'Z',
-    ].join(' ')
-
-    return <path d={d} fill={fill} stroke="none" />
-  }
-
-  const margin      = isNarrow
-    ? { top: 20, right: 120, bottom: 20, left: 120 }
-    : { top: 24, right: 152, bottom: 24, left: 152 }
-  const chartHeight = isNarrow ? 260 : 300
+  const barColor = isDeduction
+    ? 'bg-[#F4A7B9]'
+    : isFinal || isProfit
+      ? isNeg ? 'bg-[#F87171]' : 'bg-[#34D399]'
+      : 'bg-[#60A5FA]'
 
   return (
-    <div className="rounded-2xl overflow-hidden border border-[#E3E1DA] shadow-card">
-      <div className="px-5 py-3 bg-white border-b border-[#E3E1DA] flex items-center justify-between">
-        <p className="text-[13px] font-[700] text-[#111111] leading-tight">Income breakdown · TTM</p>
-        <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1.5 text-[11px] text-[#8A95A6]">
-            <span className="inline-block w-2 h-2 rounded-sm bg-[#059669]" />
-            Profit
+    <>
+      {showDivider && <div className="my-1 border-t border-[#E5E5E5]" />}
+      <div className="flex items-center gap-3">
+        {/* Label — right-aligned, fixed width */}
+        <div className="w-[140px] sm:w-[160px] shrink-0 text-right">
+          <span className={cn(
+            'text-[12px] leading-none',
+            isDeduction ? 'text-[#9B9B9B]' : 'text-[#111111]',
+            isFinal && 'font-[700]',
+          )}>
+            {isDeduction && <span className="text-[#D83B3B] font-[600] mr-0.5">−</span>}
+            {name}
           </span>
-          <span className="flex items-center gap-1.5 text-[11px] text-[#8A95A6]">
-            <span className="inline-block w-2 h-2 rounded-sm bg-[#DC2626]" />
-            Cost
+        </div>
+
+        {/* Bar track */}
+        <div className="flex-1 min-w-0 h-[22px] bg-[#F0F0F0] rounded-lg overflow-hidden">
+          <div
+            className={cn('h-full rounded-lg transition-all duration-500', barColor)}
+            style={{ width: `${barPct}%` }}
+          />
+        </div>
+
+        {/* Value — right-aligned */}
+        <div className="w-[60px] shrink-0 text-right">
+          <span className={cn(
+            'text-[12px] font-[600] tabular-nums',
+            isDeduction ? 'text-[#9B9B9B]' : isNeg ? 'text-[#D83B3B]' : isProfit || isFinal ? 'text-[#11875D]' : 'text-[#111111]',
+          )}>
+            {isNeg ? '−' : ''}{fmtVal(Math.abs(value), sym)}
           </span>
         </div>
       </div>
-      <div className="bg-white" ref={containerRef} role="img" aria-label="Income breakdown Sankey chart — TTM">
-        {chartWidth > 0 && (
-          <SankeyChart
-            width={chartWidth}
-            height={chartHeight}
-            data={{ nodes, links }}
-            nodePadding={isNarrow ? 18 : 24}
-            nodeWidth={8}
-            margin={margin}
-            node={CustomNode}
-            link={CustomLink}
-            iterations={64}
-          />
-        )}
+    </>
+  )
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
+
+export default function IncomeFlowCard({ statementsData, currency = 'USD' }: IncomeFlowCardProps) {
+  const [period, setPeriod] = useState<'annual' | 'quarterly'>('annual')
+
+  const sym = currSym(statementsData?.financialCurrency ?? currency)
+
+  const rows = useMemo<WaterfallRow[]>(() => {
+    if (!statementsData) return []
+
+    let row: AnyRecord | null = null
+    if (period === 'annual') {
+      const annual: AnyRecord[] = statementsData?.annual?.incomeStatement ?? []
+      row = annual[annual.length - 1] ?? null
+    } else {
+      const quarterly: AnyRecord[] = statementsData?.quarterly?.incomeStatement ?? []
+      row = quarterly[quarterly.length - 1] ?? null
+    }
+    // fallback to TTM
+    if (!row) row = statementsData?.ttm?.incomeStatement ?? null
+    if (!row) return []
+
+    const revenue = row.totalRevenue ?? row.operatingRevenue ?? null
+    if (!revenue || revenue <= 0) return []
+
+    const rawGP   = row.grossProfit ?? null
+    const rawCOGS = row.costOfRevenue ?? null
+    let grossProfit: number | null = null
+    let cogs: number | null = null
+    if (rawGP != null && rawGP > 0) {
+      grossProfit = Math.min(revenue, rawGP)
+      cogs = revenue - grossProfit
+    } else if (rawCOGS != null && rawCOGS > 0) {
+      cogs = Math.min(revenue, rawCOGS)
+      grossProfit = revenue - cogs
+    }
+
+    const rawOp = row.operatingIncome ?? row.ebit ?? null
+    const operatingIncome: number | null = rawOp != null ? rawOp : null
+    const opEx: number | null = (grossProfit != null && operatingIncome != null)
+      ? grossProfit - operatingIncome : null
+
+    const netIncome: number | null = row.netIncome ?? row.netIncomeCommonStockholders ?? null
+    const taxOther: number | null = (operatingIncome != null && operatingIncome > 0 && netIncome != null)
+      ? operatingIncome - Math.min(operatingIncome, Math.max(0, netIncome))
+      : null
+
+    return [
+      { name: 'Revenue',            value: revenue,          showDivider: false },
+      { name: 'Cost of Goods Sold', value: cogs,             isDeduction: true  },
+      { name: 'Gross Profit',       value: grossProfit,      isProfit: true,    showDivider: true },
+      { name: 'Operating Expenses', value: opEx,             isDeduction: true  },
+      { name: 'Operating Income',   value: operatingIncome,  isProfit: true,    showDivider: true },
+      { name: 'Taxes & Other',      value: taxOther && taxOther > 0 ? taxOther : null, isDeduction: true },
+      { name: 'Net Income',         value: netIncome,        isFinal: true,     showDivider: true },
+    ]
+  }, [statementsData, period])
+
+  const maxValue = (rows.find(r => r.name === 'Revenue')?.value) ?? 0
+
+  const periodLabel = period === 'annual'
+    ? (() => {
+        const annual: AnyRecord[] = statementsData?.annual?.incomeStatement ?? []
+        const row = annual[annual.length - 1]
+        const year = row?.endDate ? String(row.endDate).slice(0, 4) : null
+        return year ? `Annual · FY${year}` : 'Annual'
+      })()
+    : (() => {
+        const quarterly: AnyRecord[] = statementsData?.quarterly?.incomeStatement ?? []
+        const row = quarterly[quarterly.length - 1]
+        const date = row?.endDate ? String(row.endDate).slice(0, 7) : null
+        return date ? `Quarterly · ${date}` : 'Quarterly'
+      })()
+
+  if (!statementsData || rows.length === 0) return null
+
+  return (
+    <div className="rounded-2xl border border-[#E5E5E5] bg-white overflow-hidden">
+      {/* Header */}
+      <div className="px-4 sm:px-5 py-2.5 border-b border-[#E5E5E5] flex items-center justify-between gap-3">
+        <div className="flex items-baseline gap-2">
+          <p className="text-[13px] font-[700] text-[#111111] leading-tight">Revenue to Profit</p>
+          <span className="text-[11px] text-[#9B9B9B]">{periodLabel}</span>
+        </div>
+        {/* Period toggle */}
+        <div className="flex items-center gap-1 bg-[#F5F5F5] rounded-lg p-0.5">
+          <button
+            onClick={() => setPeriod('annual')}
+            className={cn(
+              'px-3 py-1 text-[11px] font-[600] rounded-md transition-colors',
+              period === 'annual' ? 'bg-white text-[#111111] shadow-sm' : 'text-[#6B6B6B] hover:text-[#111111]',
+            )}
+          >
+            Annual
+          </button>
+          <button
+            onClick={() => setPeriod('quarterly')}
+            className={cn(
+              'px-3 py-1 text-[11px] font-[600] rounded-md transition-colors',
+              period === 'quarterly' ? 'bg-white text-[#111111] shadow-sm' : 'text-[#6B6B6B] hover:text-[#111111]',
+            )}
+          >
+            Quarterly
+          </button>
+        </div>
+      </div>
+
+      {/* Waterfall rows */}
+      <div className="px-4 sm:px-5 py-4 flex flex-col gap-1.5">
+        {rows.map((row) => (
+          <Row key={row.name} {...row} maxValue={maxValue} sym={sym} />
+        ))}
       </div>
     </div>
   )
