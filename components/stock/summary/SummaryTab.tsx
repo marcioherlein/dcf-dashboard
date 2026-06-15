@@ -15,6 +15,7 @@ import HoldingReturns from '@/components/stock/HoldingReturns'
 import IncomeFlowCard from './IncomeFlowCard'
 import InvestmentVerdict from '@/components/stock/InvestmentVerdict'
 import ReverseDCFCompactCard from './ReverseDCFCompactCard'
+import EpsBeatMissChart, { type EpsSurprise } from '@/components/stock/EpsBeatMissChart'
 import { computeConvictionScore } from '@/lib/stock/computeConvictionScore'
 import { computeVerdict } from '@/lib/verdict/computeVerdict'
 
@@ -116,6 +117,7 @@ interface SummaryTabProps {
   roe?: number | null
   roic?: number | null
   ownership?: { insiderPct: number | null; shortPct: number | null } | null
+  earningsSurprises?: EpsSurprise[]
 }
 
 // ─── Section heading ──────────────────────────────────────────────────────────
@@ -151,7 +153,7 @@ export default function SummaryTab({
   nextEarningsDate: _nextEarningsDate,
   onViewValuation, onViewFinancials: _onViewFinancials, onViewConviction,
   onViewAssumptions: _onViewAssumptions, analystRecommendation,
-  analystForwardEstimates, roe, roic, ownership,
+  analystForwardEstimates, roe, roic, ownership, earningsSurprises,
 }: SummaryTabProps) {
 
   const isFinancialSector = ['Financial Services', 'Banks', 'Insurance', 'Financial'].includes(sector)
@@ -314,6 +316,15 @@ export default function SummaryTab({
           <HoldingReturns returns={holdingReturns} ticker={ticker} />
         )}
       </div>
+
+      {/* ── 5b. EPS Beat/Miss chart (full width when data available) ────────── */}
+      {earningsSurprises && earningsSurprises.length > 0 && (
+        <EpsBeatMissChart
+          surprises={earningsSurprises}
+          currency={currency}
+          epsGrowthYoy={cagrAnalysis?.epsGrowthYoy ?? null}
+        />
+      )}
 
       {/* ── 6. INCOME FLOW CARD (Sankey, full width) ────────────────────────── */}
       {statementsData && (
