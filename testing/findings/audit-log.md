@@ -518,3 +518,18 @@ For ARS-reporting companies specifically: verify OCF in CF rows ≈ OCF that wou
 OCF/revenue ≈ 15-30% (consistent with energy sector benchmarks).
 
 ---
+
+### Finding 21: EV/EBITDA < 3× for profitable companies = Yahoo mixed-currency units contamination
+**Agent:** audit-valuation
+**Date:** 2026-06-15
+**Ticker / Context:** BABA — evToEbitda=1.4× instead of actual ~9.6×; implied FV=$1,982 (17× price)
+**Run count:** 1
+**Status:** new
+
+**Observed:** Yahoo computes `evToEbitda` as EV_USD ÷ EBITDA_CNY_billions for Chinese ADRs.
+BABA: EV=$264.8B USD, EBITDA=¥186B CNY (= $27.6B USD). Yahoo returns 264.8/186 = 1.42 (mixing USD billions and CNY billions). The model uses this 1.42 as the denominator in `(price × sectorMedian) / actual = (112.55 × 25) / 1.42 = $1,982/sh`. The multiples blended FV = $812 (average of P/E=$210, EV/EBITDA=$1,982, P/B=$768, EV/Rev=$289). At 30% triangulation weight this adds ~$244 to the $290 triangulated FV.
+**Expected:** When `evToEbitda < 3` for a non-distressed profitable company, the ratio is contaminated. EV/EBITDA should be marked not applicable. Cross-check from IS rows: `(marketCap + netDebt) / IS_EBITDA_last_year` gives the real ratio.
+**File / location:** `lib/dcf/calculateMultiples.ts` `makeEstimate` function — now fixed with sanity gate (EV/EBITDA < 3 → not applicable). Also added 20× price cap on any impliedFairValue.
+**Suggested check to add:** Phase 2C: check `multiples.EV/EBITDA.actualValue`. If < 3× for profitable company, flag as mixed-currency contamination. Compute ground-truth EV/EBITDA from IS data. Also check `multiples.blendedFairValue > currentPrice × 5` as a general contamination signal (any method with astronomical implied FV will inflate the blend).
+
+---

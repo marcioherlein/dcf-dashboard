@@ -159,6 +159,7 @@ State the actual value for each assumption, then evaluate.
 - EBITDA negative → method excluded (`ttmEbitdaDollars ≤ 0`). Verify in `assumptionAudit` that the method is not silently given zero weight.
 - For financial/fintech: EV/EBITDA is typically excluded or unreliable. P/B replaces it as adaptive method.
 - Is the exit multiple sensible for a 5-10 year terminal value horizon?
+- **[Finding 21 — new]** Check `multiples.EV/EBITDA.actualValue`. If it is below 3× for a non-distressed, profitable company (net margin > 5%, positive revenue): Yahoo's `evToEbitda` is almost certainly contaminated by mixed-currency units. Common pattern for Chinese ADRs (BABA, JD, PDD): Yahoo computes EV_USD ÷ EBITDA_CNY_billions = e.g. $264B ÷ ¥186B = 1.4× instead of the correct ~9.6×. When the model applies sectorMedian (25×) to this distorted actual, the implied FV explodes by ~7×. Fix: `calculateMultiples.ts` now marks EV/EBITDA as not applicable when `actual < 3`. Check: verify `multiples.EV/EBITDA.applicable = false` and `note` contains "mixed-currency units" for such companies. Cross-check actual EV/EBITDA = `(marketCap + netDebt) / ttmEBITDA_from_IS_rows` — if this differs from Yahoo's `evToEbitda` by >3×, flag the mismatch.
 
 ### 2D. EV/Revenue (revenueMultiple)
 
