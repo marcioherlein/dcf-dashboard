@@ -224,34 +224,35 @@ export default function ProfitabilityChartCard({
   )
 
   return (
-    <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 sm:p-5" aria-label="Profitability margins chart">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-3">
+    <div className="border border-[#E2E8F0] rounded-xl overflow-hidden flex flex-col" aria-label="Profitability margins chart">
+      {/* Slate header */}
+      <div
+        className="px-4 py-3 flex items-center justify-between gap-2 shrink-0"
+        style={{ background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)' }}
+      >
         <div className="flex items-center gap-1.5">
-          <span className="text-[13px] font-[700] text-[#111111] leading-tight">
-            Profitability Chart
-          </span>
+          <span className="text-[13px] font-[700] text-white leading-tight">Profitability</span>
           <InfoTooltip text="Gross, EBIT and Net profit margins as a % of revenue. Quarterly (last 12Q) or annual (last 8Y) data." />
         </div>
-
-        {/* Legend */}
         <div className="flex items-center gap-3 flex-wrap justify-end">
-          <LegendItem label="Gross Margin" color="#5F790B" style="solid" />
-          <LegendItem label="EBIT Margin"  color="#B56A00" style="dashed" />
-          <LegendItem label="Net Margin"   color="#6B6B6B" style="dotted" />
+          <LegendItem label="Gross" color="#7CB518" style="solid" />
+          <LegendItem label="EBIT"  color="#FCD34D" style="dashed" />
+          <LegendItem label="Net"   color="#94A3B8" style="dotted" />
         </div>
       </div>
 
       {/* Chart */}
-      {points.length === 0 ? (
-        <div className="h-[200px] flex items-center justify-center">
-          <span className="text-[12px] text-[#9B9B9B]">No margin data available</span>
-        </div>
-      ) : (
-        <div role="img" aria-label="Profitability margins over time line chart">
-          <ChartBody points={points} />
-        </div>
-      )}
+      <div className="bg-white flex-1 p-4">
+        {points.length === 0 ? (
+          <div className="h-[200px] flex items-center justify-center">
+            <span className="text-[12px] text-[#9B9B9B]">No margin data available</span>
+          </div>
+        ) : (
+          <div role="img" aria-label="Profitability margins over time line chart">
+            <ChartBody points={points} />
+          </div>
+        )}
+      </div>
     </div>
   )
 }

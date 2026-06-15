@@ -35,7 +35,7 @@ interface SummaryHeroCardProps {
 
 // ─── Confidence chip ──────────────────────────────────────────────────────────
 
-function confidenceChip(confidence: 'High' | 'Medium' | 'Low'): string {
+function _confidenceChip(confidence: 'High' | 'Medium' | 'Low'): string {
   if (confidence === 'High')   return 'bg-[#E8F7EF] text-[#11875D] border-[#A3D9BE]'
   if (confidence === 'Medium') return 'bg-[#FFF4DA] text-[#B56A00] border-[#F3D391]'
   return 'bg-[#FCEAEA] text-[#D83B3B] border-[#F0B8B8]'
@@ -87,21 +87,39 @@ export default function SummaryHeroCard({
 
   return (
     <div
-      className={cn('border rounded-xl p-4 sm:p-5 overflow-hidden shadow-card', verdict.borderClass)}
-      style={{ background: verdict.bgStyle }}
+      className="rounded-xl overflow-hidden relative"
+      style={{
+        background: 'linear-gradient(160deg, #1e293b 0%, #334155 55%, #475569 100%)',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.16)',
+      }}
     >
-      <div className="flex flex-col gap-4">
+      {/* Olive ambient glow */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: 'radial-gradient(ellipse 55% 70% at 95% -5%, rgba(95,121,11,0.15) 0%, transparent 55%)',
+        }}
+      />
+      <div className="relative flex flex-col gap-4 p-4 sm:p-5">
 
         {/* ── Headline block ── */}
         <div className="flex flex-col gap-1.5">
-          <p className="text-[32px] sm:text-[30px] font-[800] text-ink-900 leading-tight tracking-tight [text-wrap:balance] break-words">
+          <p className="text-[32px] sm:text-[30px] font-[800] text-white leading-tight tracking-tight [text-wrap:balance] break-words">
             {ticker.length > 8 ? ticker.slice(0, 8) + '…' : ticker} looks{' '}
-            <span className={verdict.headingClass}>{verdict.word}</span>
+            <span className={cn(
+              verdict.word === 'Attractive' || verdict.word === 'Undervalued' ? 'text-[#7CB518]' :
+              verdict.word === 'Expensive' || verdict.word === 'Overvalued' ? 'text-[#F87171]' :
+              verdict.word === 'Fairly Priced' || verdict.word === 'Fair' ? 'text-[#60A5FA]' :
+              'text-white/60'
+            )}>{verdict.word}</span>
           </p>
           {confidence && (
             <span className={cn(
               'self-start text-[12px] font-[600] px-[10px] py-[4px] rounded-full border',
-              confidenceChip(confidence),
+              confidence === 'High'   ? 'bg-white/10 border-white/20 text-[#4ADE80]' :
+              confidence === 'Medium' ? 'bg-white/10 border-white/20 text-[#FCD34D]' :
+                                        'bg-white/10 border-white/20 text-[#F87171]'
             )}>
               {confidence} Confidence · {modelCount}/{totalModels} models
             </span>
@@ -109,30 +127,33 @@ export default function SummaryHeroCard({
         </div>
 
         {/* ── Description ── */}
-        <p className="text-[14px] text-[#6B6B6B] leading-relaxed">
+        <p className="text-[14px] text-white/60 leading-relaxed">
           {description}
         </p>
 
         {/* ── Primary metrics ── */}
         <div className="flex flex-wrap items-end gap-5 sm:gap-5">
           <div>
-            <p className="text-[11px] font-[600] text-[#566174] mb-0.5">Fair value</p>
-            <p className="text-[36px] sm:text-[26px] font-[750] text-ink-900 tabular-nums leading-none">
+            <p className="text-[11px] font-[600] text-white/45 mb-0.5">Fair value</p>
+            <p className="text-[36px] sm:text-[26px] font-[750] text-white tabular-nums leading-none">
               {fairValue != null ? fmtPrice(fairValue, currency) : '—'}
             </p>
           </div>
-          <div className="w-px h-7 bg-[#E5E5E5] self-end mb-0.5 shrink-0" />
+          <div className="w-px h-7 bg-white/15 self-end mb-0.5 shrink-0" />
           <div>
-            <p className="text-[11px] font-[600] text-[#566174] mb-0.5">vs current price</p>
-            <p className={cn('text-[36px] sm:text-[26px] font-[750] leading-none tabular-nums', verdict.upsideClass)}>
+            <p className="text-[11px] font-[600] text-white/45 mb-0.5">vs current price</p>
+            <p className={cn('text-[36px] sm:text-[26px] font-[750] leading-none tabular-nums',
+              upsidePct == null ? 'text-white/50' :
+              upsidePct >= 0 ? 'text-[#4ADE80]' : 'text-[#F87171]'
+            )}>
               {upsideDisplay}
             </p>
           </div>
         </div>
         {ratio != null && (
-          <p className="text-[12px] text-[#6B6B6B]">
+          <p className="text-[12px] text-white/50">
             You pay{' '}
-            <span className={cn('font-[700]', ratio < 1 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
+            <span className={cn('font-[700]', ratio < 1 ? 'text-[#4ADE80]' : 'text-[#F87171]')}>
               ${ratio.toFixed(2)}
             </span>
             {' '}per $1 of estimated value
@@ -149,20 +170,20 @@ export default function SummaryHeroCard({
                 : r.includes('hold') || r.includes('neutral') ? 'Hold'
                 : r.includes('sell') ? 'Sell'
                 : analystRecommendation
-              const recColor = recLabel === 'Strong Buy' || recLabel === 'Buy' ? 'text-[#11875D]'
-                : recLabel === 'Hold' ? 'text-[#B56A00]'
-                : recLabel === 'Sell' ? 'text-[#D83B3B]'
-                : 'text-[#6B6B6B]'
+              const recColor = recLabel === 'Strong Buy' || recLabel === 'Buy' ? 'text-[#4ADE80]'
+                : recLabel === 'Hold' ? 'text-[#FCD34D]'
+                : recLabel === 'Sell' ? 'text-[#F87171]'
+                : 'text-white/50'
               return (
-                <span className="text-[11px] text-[#9B9B9B]">
+                <span className="text-[11px] text-white/40">
                   Analysts: <span className={cn('font-[700]', recColor)}>{recLabel}</span>
                 </span>
               )
             })()}
             {analystTargetMean != null && analystTargetMean > 0 && (
-              <span className="text-[11px] text-[#9B9B9B]">
+              <span className="text-[11px] text-white/40">
                 · target{' '}
-                <span className="font-[700] text-[#6B6B6B] tabular-nums">
+                <span className="font-[700] text-white/65 tabular-nums">
                   {fmtPrice(analystTargetMean, currency)}
                 </span>
               </span>
@@ -185,13 +206,13 @@ export default function SummaryHeroCard({
         {/* ── Key strengths ── */}
         {badgeDrivers.length > 0 && (
           <div>
-            <p className="text-[11px] font-[600] text-[#566174] mb-2">Key strengths</p>
+            <p className="text-[11px] font-[600] text-white/40 mb-2">Key strengths</p>
             <div className="flex flex-wrap gap-1.5">
               {badgeDrivers.map((label, i) => (
                 <span
                   key={i}
                   title={drivers.filter(d => POSITIVE_RE.test(d))[i]}
-                  className="text-[12px] font-[600] text-ink-900 bg-white border border-[#E5E5E5] rounded-full px-3 py-1 leading-tight max-w-[200px] truncate"
+                  className="text-[12px] font-[600] text-white/80 bg-white/8 border border-white/15 rounded-full px-3 py-1 leading-tight max-w-[200px] truncate"
                 >
                   {label}
                 </span>

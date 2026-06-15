@@ -208,30 +208,29 @@ export default function RevenueChartCard({
   // ── Pill toggle styles ───────────────────────────────────────────────────────
   function pillCls(active: boolean) {
     return [
-      'text-[11px] font-[600] min-w-[44px] min-h-[44px] px-2 rounded-md transition-colors',
-      'focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-offset-1 focus-visible:outline-none',
+      'text-[11px] font-[600] min-w-[28px] min-h-[28px] px-2 rounded-md transition-colors',
+      'focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-0 focus-visible:outline-none',
       active
-        ? 'bg-white text-[#111111] shadow-sm'
-        : 'text-[#6B6B6B] hover:text-[#111111] active:bg-white/60',
+        ? 'bg-white/20 text-white shadow-sm'
+        : 'text-white/45 hover:text-white/75',
     ].join(' ')
   }
 
   return (
-    <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 sm:p-5">
-      {/* ── Header ── */}
-      <div className="flex items-start justify-between mb-3 gap-2">
+    <div className="border border-[#E2E8F0] rounded-xl overflow-hidden flex flex-col">
+      {/* ── Slate header ── */}
+      <div
+        className="flex items-center justify-between px-4 py-3 gap-2 shrink-0"
+        style={{ background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)' }}
+      >
         <div>
-          <p className="text-[13px] font-[700] text-[#111111] leading-tight">
-            Revenue
-          </p>
-          <p className="text-[11px] text-[#566174] mt-0.5 leading-none">{unitLabel}</p>
+          <p className="text-[13px] font-[700] text-white leading-tight">Revenue</p>
+          <p className="text-[11px] text-white/45 mt-0.5 leading-none">{unitLabel}</p>
         </div>
-
-        {/* Toggle pills — segmented control matching FCF card */}
         <div
           role="group"
           aria-label="Display period"
-          className="flex items-center gap-0.5 bg-[#F5F5F5] rounded-lg p-0.5 shrink-0"
+          className="flex items-center gap-0.5 bg-white/10 rounded-lg p-0.5 shrink-0"
         >
           <button
             type="button"
@@ -255,21 +254,20 @@ export default function RevenueChartCard({
       </div>
 
       {/* ── Chart ── */}
-      {hasData ? (
-        <div
-          className="mt-2"
-          role="img"
-          aria-label={`Revenue bar chart, ${view} view, values in ${unitLabel}`}
-        >
-          <BarChartComponents data={chartData} unit={unit} periodMode={view} />
-        </div>
-      ) : (
-        <div role="status" aria-live="polite">
-          <div className="flex items-center justify-center h-[180px]">
+      <div className="bg-white flex-1 p-4">
+        {hasData ? (
+          <div
+            role="img"
+            aria-label={`Revenue bar chart, ${view} view, values in ${unitLabel}`}
+          >
+            <BarChartComponents data={chartData} unit={unit} periodMode={view} />
+          </div>
+        ) : (
+          <div role="status" aria-live="polite" className="flex items-center justify-center h-[180px]">
             <p className="text-[11px] text-[#8A95A6]">No data available</p>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }

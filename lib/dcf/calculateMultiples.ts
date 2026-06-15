@@ -361,14 +361,44 @@ export function calculateMultiples(input: {
     note: string,
   ): MultipleEstimate {
     const bench = getBenchmark(metricKey, staticMedian)
+
+    // Sanity gate: detect mixed-units or distorted multiples.
+    // A common failure for Chinese ADRs (BABA, JD, PDD): Yahoo computes EV/EBITDA
+    // as EV_USD / EBITDA_CNY_billions, yielding a ratio like 1.4 instead of ~9.6.
+    // When this contaminated actual is used as the denominator in (price * sector) / actual,
+    // the implied FV explodes by ~7× (the CNY billions → USD millions unit factor).
+    // Guard: EV/EBITDA < 3 for a non-distressed company is almost certainly contaminated.
+    // P/E < 1 is similarly impossible for a profitable company.
+    // P/Book < 0.1 signals balance-sheet data issues.
+    let sanitizedActual = actual
+    if (actual !== null) {
+      if (multiple === 'EV/EBITDA' && actual < 3 && actual > 0) {
+        // EV/EBITDA below 3× for a non-distressed company = mixed-units contamination.
+        // Mark as not applicable rather than inflating the implied FV 7-10×.
+        sanitizedActual = null
+      }
+      if (multiple === 'P/E' && actual < 1 && actual > 0) {
+        sanitizedActual = null
+      }
+      if (multiple === 'P/Book' && actual < 0.1 && actual > 0) {
+        sanitizedActual = null
+      }
+    }
+
     const applicable =
       applyFor.includes(companyType) &&
-      actual !== null &&
-      actual > 0 &&
-      isFinite(actual) &&
-      actual < 10000
-    const fv = applicable ? (currentPrice * bench.value) / actual! : 0
-    const upside = applicable && currentPrice > 0 ? (fv - currentPrice) / currentPrice : 0
+      sanitizedActual !== null &&
+      sanitizedActual > 0 &&
+      isFinite(sanitizedActual) &&
+      sanitizedActual < 10000
+    const fv = applicable ? (currentPrice * bench.value) / sanitizedActual! : 0
+    const _upside = applicable && currentPrice > 0 ? (fv - currentPrice) / currentPrice : 0
+
+    // Secondary sanity gate: cap impliedFairValue at 20× current price.
+    // When fv > 20× price, a data-quality issue is almost certainly the cause
+    // (e.g. sector median applied to a near-zero distorted actual). Mark not applicable.
+    const fvCapped = applicable && fv > currentPrice * 20 ? 0 : fv
+    const applicableFinal = applicable && fvCapped > 0
 
     const sourceLabel =
       bench.source === 'live-peers'
@@ -383,13 +413,17 @@ export function calculateMultiples(input: {
       sectorMedian: Math.round(bench.value * 100) / 100,
       benchmarkSource: bench.source,
       peerTickers: bench.tickers,
-      impliedFairValue: Math.round(fv * 100) / 100,
-      upsidePct: Math.round(upside * 1000) / 1000,
-      applicable,
-      note: applicable
+      impliedFairValue: Math.round(fvCapped * 100) / 100,
+      upsidePct: applicableFinal && currentPrice > 0 ? Math.round((fvCapped - currentPrice) / currentPrice * 1000) / 1000 : 0,
+      applicable: applicableFinal,
+      note: applicableFinal
         ? `${note} (${sourceLabel}: ${bench.value.toFixed(1)}x)`
+        : sanitizedActual === null && actual !== null && actual < 3 && multiple === 'EV/EBITDA'
+        ? 'Excluded — EV/EBITDA < 3× signals mixed-currency units (e.g. EV in USD vs EBITDA in CNY)'
         : actual === null
         ? 'N/A — data unavailable'
+        : fvCapped === 0 && applicable
+        ? 'Excluded — implied FV > 20× current price (data quality issue)'
         : 'Not applicable for this company type',
     }
   }

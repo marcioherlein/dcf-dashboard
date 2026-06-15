@@ -302,46 +302,54 @@ export default function ValuationRatiosCard({
   }
 
   return (
-    <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 sm:p-5 flex flex-col h-full">
-      <p className="text-[13px] font-[700] text-[#111111] mb-3">Valuation Ratios</p>
+    <div className="border border-[#E2E8F0] rounded-xl overflow-hidden flex flex-col h-full">
+      {/* Slate header */}
+      <div
+        className="px-4 py-3 shrink-0"
+        style={{ background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)' }}
+      >
+        <p className="text-[13px] font-[700] text-white">Valuation Ratios</p>
+      </div>
 
-      <PEGBlock peg={pegRatio} />
+      <div className="bg-white flex-1 p-4 sm:p-5 flex flex-col">
+        <PEGBlock peg={pegRatio} />
 
-      <div className="my-3 border-t border-[#E5E5E5]" />
+        <div className="my-3 border-t border-[#E5E5E5]" />
 
-      {applicable.length === 0 ? (
-        <div>
-          {['P/E', 'EV/EBITDA', 'P/Book', 'P/Sales', 'EV/Revenue'].map((name, i, arr) => (
-            <div key={name} className={cn('py-3 flex items-center justify-between', i < arr.length - 1 && 'border-b border-[#E5E5E5]')}>
-              <span className="text-[12px] font-[600] text-[#111111] min-w-[64px] w-20 shrink-0">{name}</span>
-              <span className="text-[13px] font-[700] text-[#6B6B6B] tabular-nums font-mono flex-1 text-center">—</span>
-              <span className="inline-block rounded-full px-2.5 py-0.5 text-[11px] font-[600] bg-[#F5F5F5] text-[#6B6B6B] shrink-0">No data</span>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div>
-          {applicable.map((est, i) => (
-            <RatioRow
-              key={est.multiple}
-              name={est.multiple}
-              actual={est.actualValue}
-              median={est.sectorMedian}
-              isLast={i === applicable.length - 1}
-              chartPoints={chartSeries[est.multiple as keyof typeof chartSeries] ?? []}
-              chartColor={rowChartColor(est.actualValue, est.sectorMedian)}
-            />
-          ))}
-        </div>
-      )}
+        {applicable.length === 0 ? (
+          <div>
+            {['P/E', 'EV/EBITDA', 'P/Book', 'P/Sales', 'EV/Revenue'].map((name, i, arr) => (
+              <div key={name} className={cn('py-3 flex items-center justify-between', i < arr.length - 1 && 'border-b border-[#E5E5E5]')}>
+                <span className="text-[12px] font-[600] text-[#111111] min-w-[64px] w-20 shrink-0">{name}</span>
+                <span className="text-[13px] font-[700] text-[#6B6B6B] tabular-nums font-mono flex-1 text-center">—</span>
+                <span className="inline-block rounded-full px-2.5 py-0.5 text-[11px] font-[600] bg-[#F5F5F5] text-[#6B6B6B] shrink-0">No data</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div>
+            {applicable.map((est, i) => (
+              <RatioRow
+                key={est.multiple}
+                name={est.multiple}
+                actual={est.actualValue}
+                median={est.sectorMedian}
+                isLast={i === applicable.length - 1}
+                chartPoints={chartSeries[est.multiple as keyof typeof chartSeries] ?? []}
+                chartColor={rowChartColor(est.actualValue, est.sectorMedian)}
+              />
+            ))}
+          </div>
+        )}
 
-      {(benchmarkSource || sector) && (
-        <p className="mt-3 text-[11px] text-[#6B6B6B] leading-snug">
-          {benchmarkSource ? `(${benchmarkSource})` : null}
-          {benchmarkSource && sector ? ' · ' : null}
-          {sector ?? null}
-        </p>
-      )}
+        {(benchmarkSource || sector) && (
+          <p className="mt-3 text-[11px] text-[#6B6B6B] leading-snug">
+            {benchmarkSource ? `(${benchmarkSource})` : null}
+            {benchmarkSource && sector ? ' · ' : null}
+            {sector ?? null}
+          </p>
+        )}
+      </div>{/* /bg-white flex flex-col */}
     </div>
   )
 }
