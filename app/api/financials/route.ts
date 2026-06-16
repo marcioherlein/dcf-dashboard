@@ -1502,9 +1502,10 @@ export async function GET(req: NextRequest) {
     const historicalMultiplesYahoo = isHistoricalRows
       .filter(r => !r.isProjected && r.year && r.year.length === 4)
       .map(r => {
-        const price = priceOnDate(r.fiscalDate ?? `${r.year}-12-31`)
-        const eps   = (r.eps ?? null) as number | null
-        const revM  = (r.revenue ?? null) as number | null
+        const price  = priceOnDate(r.fiscalDate ?? `${r.year}-12-31`)
+        const eps    = (r.eps    ?? null) as number | null
+        const revM   = (r.revenue ?? null) as number | null
+        const ebitdaM = (r.ebitda ?? null) as number | null
 
         const pe = (price != null && eps != null && eps > 0)
           ? clamp(price / eps, 1, 500)
@@ -1515,9 +1516,14 @@ export async function GET(req: NextRequest) {
           ? clamp((price * sharesForRatio) / revM, 0.1, 100)
           : null
 
-        return { fiscalYear: r.year, date: r.fiscalDate ?? `${r.year}-12-31`, pe, evEbitda: null as number | null, evRevenue, ps: null as number | null }
+        // EV/EBITDA ≈ market cap / EBITDA (simplified)
+        const evEbitda = (price != null && sharesForRatio != null && ebitdaM != null && ebitdaM > 0)
+          ? clamp((price * sharesForRatio) / ebitdaM, 1, 150)
+          : null
+
+        return { fiscalYear: r.year, date: r.fiscalDate ?? `${r.year}-12-31`, pe, evEbitda, evRevenue, ps: null as number | null }
       })
-      .filter(r => r.pe != null || r.evRevenue != null)
+      .filter(r => r.pe != null || r.evRevenue != null || r.evEbitda != null)
 
     // Merge: FMP rows take precedence (more accurate); fill gaps from Yahoo-derived rows
     const fmpFYSet = new Set(historicalMultiples.map(r => r.fiscalYear))

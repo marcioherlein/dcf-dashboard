@@ -130,6 +130,60 @@ function buildHistoricalData(apiData: ApiData): HistoricalData {
   const ebitdaFinal = ebitdaSeries.length >= 2 ? ebitdaSeries : histMult.filter(h => h.evEbitda != null).slice(-5).map(h => ({ label: String(h.fiscalYear), value: h.evEbitda! }))
   const revFinal = revSeries.length >= 2 ? revSeries : histMult.filter(h => h.evRevenue != null).slice(-5).map(h => ({ label: String(h.fiscalYear), value: h.evRevenue! }))
 
+  // Tier-3 fallback: synthesise from annual income statements + market cap when both tiers above are empty.
+  // financialStatements.incomeStatement always arrives from Yahoo and contains revenue/netIncome/ebitda.
+  // We derive market cap per year using the current price × shares (crude but directionally correct for
+  // trend charts), then blend with the current-period values from quote/multiples.
+  const annualIS: Array<{ year?: string; endDate?: string; totalRevenue?: number | null; netIncome?: number | null; ebitda?: number | null }> =
+    apiData.financialStatements?.incomeStatement ?? []
+  const mktCapNow: number = apiData.quote?.marketCap ?? 0  // full USD
+  const priceNow: number  = apiData.quote?.price ?? 0
+  const sharesNow: number = priceNow > 0 && mktCapNow > 0 ? mktCapNow / priceNow : 0  // shares
+
+  if (peFinal.length < 2) {
+    // Build from annual IS: netIncome in millions → full USD; marketCap approximated
+    const fromIS: SparkPoint[] = annualIS
+      .filter(r => r.netIncome != null && (r.netIncome as number) > 0 && mktCapNow > 0)
+      .slice(-5)
+      .map(r => {
+        const year = String(r.year ?? r.endDate ?? '').slice(0, 4)
+        const ni   = (r.netIncome as number) * 1e6
+        const pe   = clamp(mktCapNow / ni, 1, 500)
+        return pe != null ? { label: year, value: pe } : null
+      })
+      .filter((p): p is SparkPoint => p != null && p.label !== '')
+    peFinal.push(...fromIS.filter(p => !peFinal.some(e => e.label === p.label)))
+  }
+
+  if (ebitdaFinal.length < 2) {
+    const fromIS: SparkPoint[] = annualIS
+      .filter(r => r.ebitda != null && (r.ebitda as number) > 0 && mktCapNow > 0)
+      .slice(-5)
+      .map(r => {
+        const year   = String(r.year ?? r.endDate ?? '').slice(0, 4)
+        const ebitda = (r.ebitda as number) * 1e6
+        const ev     = mktCapNow  // simplified: skip net debt for trend chart
+        const mult   = clamp(ev / ebitda, 1, 150)
+        return mult != null ? { label: year, value: mult } : null
+      })
+      .filter((p): p is SparkPoint => p != null && p.label !== '')
+    ebitdaFinal.push(...fromIS.filter(p => !ebitdaFinal.some(e => e.label === p.label)))
+  }
+
+  if (revFinal.length < 2) {
+    const fromIS: SparkPoint[] = annualIS
+      .filter(r => r.totalRevenue != null && (r.totalRevenue as number) > 0 && mktCapNow > 0)
+      .slice(-5)
+      .map(r => {
+        const year = String(r.year ?? r.endDate ?? '').slice(0, 4)
+        const rev  = (r.totalRevenue as number) * 1e6
+        const mult = clamp(mktCapNow / rev, 0.1, 100)
+        return mult != null ? { label: year, value: mult } : null
+      })
+      .filter((p): p is SparkPoint => p != null && p.label !== '')
+    revFinal.push(...fromIS.filter(p => !revFinal.some(e => e.label === p.label)))
+  }
+
   // Append current TTM value as 'curr' point
   const peCurrent       = apiData.quote?.peRatio ?? null
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -178,15 +178,30 @@ export function TinyLineChart({
   yFormat: (v: number) => string
 }) {
   const chartData = data.filter(p => p.label !== 'curr')
+  const currPoint = data.find(p => p.label === 'curr')
 
-  if (chartData.length < 2) return (
-    <div className="flex flex-col" role="img" aria-label={`${title}: no data`}>
-      <p className="text-[10px] font-[600] text-[#6B6B6B] mb-2">{title}</p>
-      <div className="flex items-center justify-center rounded-lg bg-[#F5F5F5] border border-[#E3E1DA]" style={{ height: 120 }}>
-        <p className="text-[10px] text-[#9B9B9B]">No data</p>
+  if (chartData.length < 2) {
+    // Show current value as a single stat when no history is available
+    if (currPoint != null) {
+      return (
+        <div className="flex flex-col" role="img" aria-label={`${title}: current value`}>
+          <p className="text-[10px] font-[600] text-[#6B6B6B] mb-2">{title}</p>
+          <div className="flex flex-col items-center justify-center rounded-lg bg-[#F5F5F5] border border-[#E3E1DA]" style={{ height: 120 }}>
+            <p className="text-[18px] font-[700] tabular-nums" style={{ color }}>{yFormat(currPoint.value)}</p>
+            <p className="text-[9px] text-[#9B9B9B] mt-1">Current · no history</p>
+          </div>
+        </div>
+      )
+    }
+    return (
+      <div className="flex flex-col" role="img" aria-label={`${title}: no data`}>
+        <p className="text-[10px] font-[600] text-[#6B6B6B] mb-2">{title}</p>
+        <div className="flex items-center justify-center rounded-lg bg-[#F5F5F5] border border-[#E3E1DA]" style={{ height: 120 }}>
+          <p className="text-[10px] text-[#9B9B9B]">No data</p>
+        </div>
       </div>
-    </div>
-  )
+    )
+  }
 
   // Compute Y-axis width from longest formatted tick so values never clip
   const allVals = chartData.map(p => p.value)
