@@ -875,3 +875,57 @@ export function computeCockpitOutput(
     divergence,
   }
 }
+
+// ─── Versioned engine interface ───────────────────────────────────────────────
+//
+// V1 is the current production engine. The existing `computeCockpitOutput`
+// function is preserved as-is and aliased to `computeCockpitOutputV1`.
+//
+// V2 will be added in lib/valuation/v2/ and wired up here when ready.
+// The public `computeCockpitOutput` remains the stable external API.
+
+import {
+  type ValuationEngineOptions,
+  getConfiguredValuationEngineVersion,
+  isShadowModeEnabled,
+} from './engineVersion'
+
+/**
+ * V1 engine — the current production implementation.
+ * Never remove or rename this function; existing callers that saved a
+ * reference to V1 must continue to work.
+ */
+export const computeCockpitOutputV1 = computeCockpitOutput
+
+/**
+ * V2 engine — placeholder until Phase 4 implementation is complete.
+ * Currently forwards to V1 so callers can wire up the version flag safely.
+ * @internal Do not call directly from UI components.
+ */
+export function computeCockpitOutputV2(
+  assumptions: ValuationAssumptions,
+  snapshot: CockpitSnapshot,
+): CockpitOutput {
+  // V2 implementation lives in lib/valuation/v2/index.ts.
+  // Until it is complete and validated, V2 falls back to V1.
+  // This prevents accidental exposure of an incomplete engine.
+  try {
+    // Dynamic import avoids circular deps if v2 imports from cockpit.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const v2Module = require('./v2') as { computeCockpitOutputV2Impl?: typeof computeCockpitOutput }
+    if (typeof v2Module?.computeCockpitOutputV2Impl === 'function') {
+      return v2Module.computeCockpitOutputV2Impl(assumptions, snapshot)
+    }
+  } catch {
+    // V2 module not yet available — fall through to V1.
+  }
+  // Fallback: V1 with a diagnostic marker in divergence summary
+  const v1Result = computeCockpitOutput(assumptions, snapshot)
+  return {
+    ...v1Result,
+    divergence: {
+      ...v1Result.divergence,
+      summary: `[V2 fallback to V1] ${v1Result.divergence.summary}`,
+    },
+  }
+}
