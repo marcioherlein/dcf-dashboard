@@ -97,6 +97,7 @@ interface SummaryTabProps {
   evToEbitda?: number | null
   dividendYield?: number | null
   nextEarningsDate?: string | null
+  analystForwardPE?: number | null
   // holding returns
   holdingReturns?: {
     stock1y: number | null; stock3y: number | null; stock5y: number | null
@@ -155,10 +156,29 @@ export default function SummaryTab({
   nextEarningsDate: _nextEarningsDate,
   onViewValuation, onViewFinancials: _onViewFinancials, onViewConviction,
   onViewAssumptions: _onViewAssumptions, analystRecommendation,
-  analystForwardEstimates, roe, roic, ownership, earningsSurprises, analystRatingTrend,
+  analystForwardEstimates, analystForwardPE, roe, roic, ownership, earningsSurprises, analystRatingTrend,
 }: SummaryTabProps) {
 
   const isFinancialSector = ['Financial Services', 'Banks', 'Insurance', 'Financial'].includes(sector)
+
+  // Build sparkline series from quarterly ratios for the metrics panel
+  const peSparkline = useMemo(() => {
+    const rq = (ratiosQuarterly ?? []) as Array<{ date: string; priceEarningsRatio?: number | null }>
+    return [...rq]
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .slice(-12)
+      .map(r => r.priceEarningsRatio)
+      .filter((v): v is number => v != null && isFinite(v) && v > 0 && v < 500)
+  }, [ratiosQuarterly])
+
+  const evSparkline = useMemo(() => {
+    const rq = (ratiosQuarterly ?? []) as Array<{ date: string; enterpriseValueMultiple?: number | null }>
+    return [...rq]
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .slice(-12)
+      .map(r => r.enterpriseValueMultiple)
+      .filter((v): v is number => v != null && isFinite(v) && v > 0 && v < 150)
+  }, [ratiosQuarterly])
 
   // Extract forward EPS growth for next 1Y from analystForwardEstimates
   const epsGrowthFwd = useMemo(
@@ -232,6 +252,10 @@ export default function SummaryTab({
         low52={low52}
         nextEarningsDate={_nextEarningsDate ?? null}
         revenueGrowth={cagrAnalysis?.historicalCagr3y ?? null}
+        forwardPE={analystForwardPE ?? null}
+        pegRatioValue={quote?.pegRatio ?? null}
+        peHistory={peSparkline.length >= 2 ? peSparkline : undefined}
+        evHistory={evSparkline.length >= 2 ? evSparkline : undefined}
         onViewValuation={onViewValuation}
         onViewConviction={onViewConviction}
       />

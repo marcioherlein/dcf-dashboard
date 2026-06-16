@@ -175,6 +175,7 @@ interface FinancialsData {
     eps?: { growth?: number | null } | null
     revenue?: { growth?: number | null } | null
   }>
+  analystForwardPE?: number | null
 }
 
 export default function StockPage() {
@@ -622,6 +623,7 @@ function StockPageBody() {
                     userModelFairValue={userModelFairValue}
                     analystRecommendation={data.analystRecommendation ?? ''}
                     analystForwardEstimates={data.analystForwardEstimates ?? []}
+                    analystForwardPE={data.analystForwardPE ?? null}
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     roe={(data.businessProfile as any)?.roe ?? null}
                     roic={computedScores?.roic?.roic ?? data.scores?.roic?.roic ?? null}
