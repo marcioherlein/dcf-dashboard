@@ -318,6 +318,8 @@ export default function SummaryTab({
           sector={sector}
           ratiosQuarterly={ratiosQuarterly}
           historicalMultiples={historicalMultiples}
+          epsGrowthFwd={epsGrowthFwd}
+          analystForwardPE={analystForwardPE ?? null}
         />
       </div>
 
