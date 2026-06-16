@@ -30,6 +30,9 @@ interface SummaryHeroCardProps {
   drivers: string[]
   onViewValuation: () => void
   analystTargetMean?: number | null
+  analystTargetLow?: number | null
+  analystTargetHigh?: number | null
+  numAnalysts?: number | null
   analystRecommendation?: string | null
 }
 
@@ -72,11 +75,18 @@ export default function SummaryHeroCard({
   scenarios,
   drivers,
   analystTargetMean,
+  analystTargetLow,
+  analystTargetHigh,
+  numAnalysts,
   analystRecommendation,
 }: SummaryHeroCardProps) {
   const verdict     = deriveVerdict(upsidePct, fairValue)
   const description = buildVerdictDescription(upsidePct, verdict.descVerb)
   const ratio       = fairValue != null && fairValue > 0 ? price / fairValue : null
+
+  const hasTarget = analystTargetMean != null && analystTargetLow != null && analystTargetHigh != null && price > 0
+  const targetUpside = hasTarget ? (analystTargetMean! - price) / price : null
+  const sym = currency === 'USD' ? '$' : currency + ' '
 
   const badgeDrivers = drivers
     .filter(d => typeof d === 'string' && POSITIVE_RE.test(d))
@@ -160,36 +170,76 @@ export default function SummaryHeroCard({
           </p>
         )}
 
-        {/* ── Analyst consensus line ── */}
-        {(analystTargetMean != null || analystRecommendation) && (
-          <div className="flex items-center gap-2 flex-wrap">
-            {analystRecommendation && analystRecommendation.trim().length > 0 && (() => {
-              const r = analystRecommendation.toLowerCase()
-              const recLabel = r.includes('strong_buy') || r.includes('strong buy') ? 'Strong Buy'
-                : r.includes('buy') ? 'Buy'
-                : r.includes('hold') || r.includes('neutral') ? 'Hold'
-                : r.includes('sell') ? 'Sell'
-                : analystRecommendation
-              const recColor = recLabel === 'Strong Buy' || recLabel === 'Buy' ? 'text-[#4ADE80]'
-                : recLabel === 'Hold' ? 'text-[#FCD34D]'
-                : recLabel === 'Sell' ? 'text-[#F87171]'
-                : 'text-white/50'
+        {/* ── Analyst price target — embedded slider ── */}
+        {hasTarget && (
+          <div className="rounded-xl bg-white/8 border border-white/12 p-3">
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <p className="text-[12px] font-[700] text-white/80">Analyst Price Target</p>
+                {numAnalysts != null && numAnalysts > 0 && (
+                  <p className="text-[10px] text-white/40">{numAnalysts} analyst{numAnalysts !== 1 ? 's' : ''}</p>
+                )}
+              </div>
+              <div className="text-right">
+                <p className={`text-[15px] font-[750] tabular-nums ${targetUpside != null && targetUpside >= 0 ? 'text-[#4ADE80]' : 'text-[#F87171]'}`}>
+                  {sym}{analystTargetMean!.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </p>
+                {targetUpside != null && (
+                  <p className={`text-[10px] font-[650] ${targetUpside >= 0 ? 'text-[#4ADE80]' : 'text-[#F87171]'}`}>
+                    {targetUpside >= 0 ? '+' : ''}{(targetUpside * 100).toFixed(1)}%
+                  </p>
+                )}
+              </div>
+            </div>
+            {/* Slider track */}
+            {(() => {
+              const range = analystTargetHigh! - analystTargetLow!
+              const safe = range > 0 ? range : 1
+              const curPct  = Math.max(0, Math.min(100, ((price - analystTargetLow!) / safe) * 100))
+              const meanPct = Math.max(0, Math.min(100, ((analystTargetMean! - analystTargetLow!) / safe) * 100))
+              const isUp = analystTargetMean! > price
               return (
-                <span className="text-[11px] text-white/40">
-                  Analysts: <span className={cn('font-[700]', recColor)}>{recLabel}</span>
-                </span>
+                <>
+                  <div className="relative h-2 rounded-full bg-white/15 mx-1 mb-2">
+                    {isUp ? (
+                      <div className="absolute top-0 bottom-0 rounded-full bg-[#4ADE80]/70"
+                        style={{ left: `${curPct}%`, width: `${meanPct - curPct}%` }} />
+                    ) : (
+                      <div className="absolute top-0 bottom-0 rounded-full bg-[#F87171]/70"
+                        style={{ left: `${meanPct}%`, width: `${curPct - meanPct}%` }} />
+                    )}
+                    <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-white border border-white/30 shadow-sm z-10"
+                      style={{ left: `${curPct}%` }} />
+                    <div className={`absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full border border-white/30 shadow-sm z-10 ${isUp ? 'bg-[#4ADE80]' : 'bg-[#F87171]'}`}
+                      style={{ left: `${meanPct}%` }} />
+                  </div>
+                  <div className="flex justify-between mx-1 text-[10px] text-white/40">
+                    <span className="tabular-nums">{sym}{analystTargetLow!.toFixed(0)} Low</span>
+                    <span className="tabular-nums">High {sym}{analystTargetHigh!.toFixed(0)}</span>
+                  </div>
+                </>
               )
             })()}
-            {analystTargetMean != null && analystTargetMean > 0 && (
-              <span className="text-[11px] text-white/40">
-                · target{' '}
-                <span className="font-[700] text-white/65 tabular-nums">
-                  {fmtPrice(analystTargetMean, currency)}
-                </span>
-              </span>
-            )}
           </div>
         )}
+
+        {/* ── Analyst recommendation (when no target data, show inline) ── */}
+        {!hasTarget && analystRecommendation && analystRecommendation.trim().length > 0 && (() => {
+          const r = analystRecommendation.toLowerCase()
+          const recLabel = r.includes('strong_buy') || r.includes('strong buy') ? 'Strong Buy'
+            : r.includes('buy') ? 'Buy'
+            : r.includes('hold') || r.includes('neutral') ? 'Hold'
+            : r.includes('sell') ? 'Sell'
+            : analystRecommendation
+          const recColor = recLabel === 'Strong Buy' || recLabel === 'Buy' ? 'text-[#4ADE80]'
+            : recLabel === 'Hold' ? 'text-[#FCD34D]'
+            : 'text-[#F87171]'
+          return (
+            <span className="text-[11px] text-white/40">
+              Analysts: <span className={cn('font-[700]', recColor)}>{recLabel}</span>
+            </span>
+          )
+        })()}
 
         {/* ── Scenario range bar ── */}
         {scenarios && (

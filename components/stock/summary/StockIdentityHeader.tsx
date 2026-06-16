@@ -54,6 +54,9 @@ interface Props {
   postMarketChangePct?: number | null
   fairValue?: number | null
   analystTargetMean?: number | null
+  analystTargetLow?: number | null
+  analystTargetHigh?: number | null
+  numAnalysts?: number | null
   userModelFairValue?: number | null
   marketCap?: number | null
   peRatio?: number | null
@@ -195,7 +198,7 @@ export default function StockIdentityHeader({
   ticker, companyName, description, sector, industry, country, employees: _employees,
   currency, price, change, changePct,
   marketState, preMarketPrice, preMarketChangePct, postMarketPrice, postMarketChangePct,
-  fairValue, analystTargetMean, userModelFairValue,
+  fairValue, analystTargetMean, analystTargetLow, analystTargetHigh, numAnalysts, userModelFairValue,
   marketCap, peRatio, evToEbitda, roe, roic, beta, dividendYield,
   fcfMargin, grossMargin, netMargin, revenueGrowth,
   forwardPE, pegRatioValue,
@@ -382,7 +385,56 @@ export default function StockIdentityHeader({
                 </button>
               )}
 
-              {analystTargetMean != null && analystUpside != null && (
+              {/* Analyst price target — embedded slider when full data available */}
+              {analystTargetMean != null && analystTargetLow != null && analystTargetHigh != null && (() => {
+                const sym = currencyPrefix(currency)
+                const range = analystTargetHigh - analystTargetLow
+                const safe = range > 0 ? range : 1
+                const curPct  = Math.max(0, Math.min(100, ((price - analystTargetLow) / safe) * 100))
+                const meanPct = Math.max(0, Math.min(100, ((analystTargetMean - analystTargetLow) / safe) * 100))
+                const isUp = analystTargetMean > price
+                const tgtUpside = (analystTargetMean - price) / price * 100
+                return (
+                  <div className="mt-2 rounded-lg bg-[#F9F9F9] border border-[#E5E5E5] px-3 py-2.5">
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <p className="text-[10px] text-[#9B9B9B] leading-none mb-0.5">Analyst target</p>
+                        <p className={`text-[14px] font-[700] leading-none tabular-nums ${isUp ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
+                          {sym}{analystTargetMean.toFixed(2)}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className={`text-[12px] font-[700] ${isUp ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
+                          {tgtUpside >= 0 ? '+' : ''}{tgtUpside.toFixed(1)}%
+                        </p>
+                        {numAnalysts != null && numAnalysts > 0 && (
+                          <p className="text-[10px] text-[#9B9B9B]">{numAnalysts} analysts</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="relative h-2 rounded-full bg-[#E5E5E5] mx-0.5">
+                      {isUp ? (
+                        <div className="absolute top-0 bottom-0 rounded-full bg-[#11875D]/60"
+                          style={{ left: `${curPct}%`, width: `${meanPct - curPct}%` }} />
+                      ) : (
+                        <div className="absolute top-0 bottom-0 rounded-full bg-[#D83B3B]/60"
+                          style={{ left: `${meanPct}%`, width: `${curPct - meanPct}%` }} />
+                      )}
+                      <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-[#111111] border-2 border-white shadow-sm z-10"
+                        style={{ left: `${curPct}%` }} />
+                      <div className={`absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 rounded-full border-2 border-white shadow-sm z-10 ${isUp ? 'bg-[#11875D]' : 'bg-[#D83B3B]'}`}
+                        style={{ left: `${meanPct}%` }} />
+                    </div>
+                    <div className="flex justify-between mt-1.5 text-[9px] text-[#9B9B9B] tabular-nums">
+                      <span>{sym}{analystTargetLow.toFixed(0)}</span>
+                      <span>{sym}{analystTargetHigh.toFixed(0)}</span>
+                    </div>
+                  </div>
+                )
+              })()}
+
+              {/* Fallback: plain text when no range data */}
+              {analystTargetMean != null && (analystTargetLow == null || analystTargetHigh == null) && analystUpside != null && (
                 <div className="flex items-center justify-between gap-2 px-2 py-1.5">
                   <div>
                     <p className="text-[10px] text-[#9B9B9B] leading-none mb-0.5">Analyst target</p>

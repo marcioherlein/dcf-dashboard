@@ -149,7 +149,7 @@ export default function SummaryTab({
   scenarios: _scenarios, ratings, scores, businessProfile, cagrAnalysis, statementsData,
   valuationMethods, quote, analystTargetMean,
   ratiosQuarterly, historicalMultiples,
-  analystTargetLow: _analystTargetLow, analystTargetHigh: _analystTargetHigh,
+  analystTargetLow: analystTargetLow, analystTargetHigh: analystTargetHigh,
   userModelFairValue,
   marketCap, peRatio, beta, pegRatio: _pegRatio, evToEbitda, dividendYield,
   holdingReturns,
@@ -237,6 +237,9 @@ export default function SummaryTab({
         postMarketChangePct={quote?.postMarketChangePct ?? null}
         fairValue={fairValue}
         analystTargetMean={analystTargetMean ?? null}
+        analystTargetLow={analystTargetLow ?? null}
+        analystTargetHigh={analystTargetHigh ?? null}
+        numAnalysts={quote?.numAnalysts ?? null}
         userModelFairValue={userModelFairValue ?? null}
         marketCap={marketCap ?? null}
         peRatio={peRatio ?? null}
@@ -290,25 +293,35 @@ export default function SummaryTab({
         </div>
       </div>
 
-      {/* ── 4. REVERSE DCF — What the market is pricing in (full width) ─────── */}
-      <ReverseDCFCompactCard
-        price={price}
-        currency={currency}
-        sharesM={sharesM}
-        cashM={cashM}
-        debtM={debtM}
-        revenueM={revenueM}
-        fcfMargin={fcfMarginProp ?? businessProfile?.fcfMargin ?? null}
-        wacc={wacc}
-        terminalG={terminalG}
-        historicalCAGR={historicalCAGR ?? cagrAnalysis?.historicalCagr3y ?? null}
-        analystCAGR={analystCAGR ?? cagrAnalysis?.analystEstimate1y ?? null}
-        isEmergingMarket={isEmergingMarket}
-        isFinancialSector={isFinancialSector}
-        revenueHistory={revenueHistory}
-      />
+      {/* ── 4. 2-COL: Reverse DCF | Valuation Ratios ────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 items-stretch">
+        <ReverseDCFCompactCard
+          price={price}
+          currency={currency}
+          sharesM={sharesM}
+          cashM={cashM}
+          debtM={debtM}
+          revenueM={revenueM}
+          fcfMargin={fcfMarginProp ?? businessProfile?.fcfMargin ?? null}
+          wacc={wacc}
+          terminalG={terminalG}
+          historicalCAGR={historicalCAGR ?? cagrAnalysis?.historicalCagr3y ?? null}
+          analystCAGR={analystCAGR ?? cagrAnalysis?.analystEstimate1y ?? null}
+          isEmergingMarket={isEmergingMarket}
+          isFinancialSector={isFinancialSector}
+          revenueHistory={revenueHistory}
+        />
+        <ValuationRatiosCard
+          estimates={valuationMethods?.models?.multiples?.estimates}
+          pegRatio={quote?.pegRatio}
+          peRatio={peRatio}
+          sector={sector}
+          ratiosQuarterly={ratiosQuarterly}
+          historicalMultiples={historicalMultiples}
+        />
+      </div>
 
-      {/* ── 5. 2×2 GRID: Profitability chart | Profitability text | Peer valuation | Valuation ratios */}
+      {/* ── 5. 2×2 GRID: Profitability chart | Profitability text ──────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 items-stretch">
         <ProfitabilityChartCard
           statementsData={statementsData}
@@ -324,46 +337,42 @@ export default function SummaryTab({
           ratingsLabel={ratings?.overall?.label}
           cagrDrivers={cagrAnalysis?.drivers}
         />
-        <PeerValuationChart ticker={ticker} isFinancialSector={isFinancialSector} />
-        <ValuationRatiosCard
-          estimates={valuationMethods?.models?.multiples?.estimates}
-          pegRatio={quote?.pegRatio}
-          peRatio={peRatio}
-          sector={sector}
-          ratiosQuarterly={ratiosQuarterly}
-          historicalMultiples={historicalMultiples}
-        />
       </div>
 
-      {/* ── 5. 2-COL: ETF Exposure | Holding Returns (if present) ──────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 items-start">
+      {/* ── 6. 2-COL: ETF Exposure | Peer Valuation ─────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 items-stretch">
         <ETFExposureCard ticker={ticker} />
-        {holdingReturns && (
-          <HoldingReturns returns={holdingReturns} ticker={ticker} />
-        )}
+        <PeerValuationChart ticker={ticker} isFinancialSector={isFinancialSector} />
       </div>
 
-      {/* ── 5b. EPS Beat/Miss chart (full width when data available) ────────── */}
-      {earningsSurprises && earningsSurprises.length > 0 && (
-        <EpsBeatMissChart
-          surprises={earningsSurprises}
-          currency={currency}
-          epsGrowthYoy={cagrAnalysis?.epsGrowthYoy ?? null}
-        />
+      {/* ── 7. Holding Returns (if present) ─────────────────────────────────── */}
+      {holdingReturns && (
+        <HoldingReturns returns={holdingReturns} ticker={ticker} />
       )}
 
-      {/* ── 5c. Analyst Recommendations + Price Targets ─────────────────────── */}
-      {analystRatingTrend && analystRatingTrend.length > 0 && (
-        <AnalystRecommendationsChart
-          trend={analystRatingTrend}
-          numAnalysts={quote?.numAnalysts ?? null}
-          currentPrice={price}
-          targetMean={analystTargetMean ?? null}
-          targetLow={quote?.analystTargetLow ?? null}
-          targetHigh={quote?.analystTargetHigh ?? null}
-          currency={currency}
-        />
-      )}
+      {/* ── 8. 2-COL: EPS Beat/Miss | Analyst Recommendations ───────────────── */}
+      {(earningsSurprises?.length || analystRatingTrend?.length) ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 items-stretch">
+          {earningsSurprises && earningsSurprises.length > 0 && (
+            <EpsBeatMissChart
+              surprises={earningsSurprises}
+              currency={currency}
+              epsGrowthYoy={cagrAnalysis?.epsGrowthYoy ?? null}
+            />
+          )}
+          {analystRatingTrend && analystRatingTrend.length > 0 && (
+            <AnalystRecommendationsChart
+              trend={analystRatingTrend}
+              numAnalysts={quote?.numAnalysts ?? null}
+              currentPrice={price}
+              targetMean={null}
+              targetLow={null}
+              targetHigh={null}
+              currency={currency}
+            />
+          )}
+        </div>
+      ) : null}
 
       {/* ── 6. INCOME FLOW CARD (Sankey, full width) ────────────────────────── */}
       {statementsData && (
