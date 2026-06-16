@@ -371,7 +371,7 @@ function StockPageBody() {
 
   return (
     <>
-    <div className={`min-h-dvh transition-colors duration-300 ${activeTab === 'overview' ? 'bg-[#26272B]' : 'bg-[#F4F3EF]'}`}>
+    <div className={`min-h-dvh transition-colors duration-300 ${activeTab === 'overview' ? 'bg-[#ECEAE3]' : 'bg-[#F4F3EF]'}`}>
 
       {/* Context bar: stock identity + tab navigation */}
       <StockContextBar
