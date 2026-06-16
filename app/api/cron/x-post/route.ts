@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 const VALID_MODES = [
-  'morning_brief','earnings','feature','dcf','midday_pulse',
-  'macro','etf_pulse','dcf_bear','market_close',
+  'morning_brief','earnings','feature','dcf','dcf2','dcf_bear',
+  'midday_pulse','macro','etf_pulse','economic_results',
+  'market_open','sector_spotlight','pre_close',
+  'market_close','after_hours','earnings_results',
   'weekly_wrap','question','sentiment','news',
+  'theory_overnight','holiday_deep_dive','sector_scan',
 ]
 
 export async function GET(req: NextRequest) {
