@@ -629,6 +629,8 @@ function StockPageBody() {
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     earningsSurprises={(data as any).earningsSurprises ?? []}
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    analystRatingTrend={(data as any).analystRatingTrend ?? []}
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     ratiosQuarterly={(data as any).ratiosQuarterly ?? []}
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     historicalMultiples={(data as any).historicalMultiples ?? []}

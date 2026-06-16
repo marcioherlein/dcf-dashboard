@@ -16,6 +16,7 @@ import IncomeFlowCard from './IncomeFlowCard'
 import InvestmentVerdict from '@/components/stock/InvestmentVerdict'
 import ReverseDCFCompactCard from './ReverseDCFCompactCard'
 import EpsBeatMissChart, { type EpsSurprise } from '@/components/stock/EpsBeatMissChart'
+import AnalystRecommendationsChart, { type RatingPeriod } from '@/components/stock/AnalystRecommendationsChart'
 import { computeConvictionScore } from '@/lib/stock/computeConvictionScore'
 import { computeVerdict } from '@/lib/verdict/computeVerdict'
 
@@ -118,6 +119,7 @@ interface SummaryTabProps {
   roic?: number | null
   ownership?: { insiderPct: number | null; shortPct: number | null } | null
   earningsSurprises?: EpsSurprise[]
+  analystRatingTrend?: RatingPeriod[]
 }
 
 // ─── Section heading ──────────────────────────────────────────────────────────
@@ -153,7 +155,7 @@ export default function SummaryTab({
   nextEarningsDate: _nextEarningsDate,
   onViewValuation, onViewFinancials: _onViewFinancials, onViewConviction,
   onViewAssumptions: _onViewAssumptions, analystRecommendation,
-  analystForwardEstimates, roe, roic, ownership, earningsSurprises,
+  analystForwardEstimates, roe, roic, ownership, earningsSurprises, analystRatingTrend,
 }: SummaryTabProps) {
 
   const isFinancialSector = ['Financial Services', 'Banks', 'Insurance', 'Financial'].includes(sector)
@@ -323,6 +325,19 @@ export default function SummaryTab({
           surprises={earningsSurprises}
           currency={currency}
           epsGrowthYoy={cagrAnalysis?.epsGrowthYoy ?? null}
+        />
+      )}
+
+      {/* ── 5c. Analyst Recommendations + Price Targets ─────────────────────── */}
+      {analystRatingTrend && analystRatingTrend.length > 0 && (
+        <AnalystRecommendationsChart
+          trend={analystRatingTrend}
+          numAnalysts={quote?.numAnalysts ?? null}
+          currentPrice={price}
+          targetMean={analystTargetMean ?? null}
+          targetLow={quote?.analystTargetLow ?? null}
+          targetHigh={quote?.analystTargetHigh ?? null}
+          currency={currency}
         />
       )}
 
