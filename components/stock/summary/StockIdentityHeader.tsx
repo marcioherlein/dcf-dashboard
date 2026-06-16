@@ -246,7 +246,7 @@ export default function StockIdentityHeader({
   const roeSentiment: Sentiment       = roe          == null ? 'neutral' : roe  > .15        ? 'positive' : roe  < 0         ? 'negative' : 'neutral'
   const roicSentiment: Sentiment      = roic         == null ? 'neutral' : roic > .12        ? 'positive' : roic < 0         ? 'negative' : 'neutral'
 
-  const DESC_LIMIT = 520
+  const DESC_LIMIT = 700
   const shouldTruncate = description && description.length > DESC_LIMIT
   const displayedDesc  = shouldTruncate && !descExpanded ? description!.slice(0, DESC_LIMIT).trimEnd() + '…' : description
 
@@ -299,7 +299,7 @@ export default function StockIdentityHeader({
           {/* Description */}
           {displayedDesc && (
             <div className="mt-3">
-              <p className="text-[13px] text-[#6B6B6B] leading-relaxed">{displayedDesc}</p>
+              <p className="text-[13.5px] text-[#566174] leading-[1.65]">{displayedDesc}</p>
               {shouldTruncate && (
                 <button onClick={() => setDescExpanded(v => !v)} aria-expanded={descExpanded}
                   className="mt-1 text-[#5F790B] font-semibold text-[12px] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B] rounded">

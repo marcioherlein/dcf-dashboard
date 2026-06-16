@@ -283,7 +283,15 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
     ro.observe(mainRef.current)
     ro.observe(subRef.current)
 
-    return () => { ro.disconnect(); mc.remove(); sc.remove() }
+    // Force a size update on next frame in case clientWidth was 0 at mount
+    // (happens when the chart is inside a flex/grid container that hasn't painted)
+    const raf = requestAnimationFrame(() => {
+      if (mainRef.current && mainRef.current.clientWidth > 0) {
+        mc.applyOptions({ width: mainRef.current.clientWidth })
+      }
+    })
+
+    return () => { cancelAnimationFrame(raf); ro.disconnect(); mc.remove(); sc.remove() }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
