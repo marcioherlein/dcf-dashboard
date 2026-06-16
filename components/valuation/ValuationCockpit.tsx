@@ -138,7 +138,7 @@ function buildHistoricalData(apiData: ApiData): HistoricalData {
     apiData.financialStatements?.incomeStatement ?? []
   const mktCapNow: number = apiData.quote?.marketCap ?? 0  // full USD
   const priceNow: number  = apiData.quote?.price ?? 0
-  const sharesNow: number = priceNow > 0 && mktCapNow > 0 ? mktCapNow / priceNow : 0  // shares
+  const _sharesNow: number = priceNow > 0 && mktCapNow > 0 ? mktCapNow / priceNow : 0  // shares
 
   if (peFinal.length < 2) {
     // Build from annual IS: netIncome in millions → full USD; marketCap approximated

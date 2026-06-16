@@ -213,7 +213,7 @@ function PEGBlock({ peg, peRatioTTM, epsGrowthFwd, analystForwardPE }: PEGBlockP
       {/* ── Formula breakdown ── */}
       {(peUsed != null || growthPct != null) && (
         <div className="rounded-xl border border-[#E5E5E5] bg-[#FAFAFA] px-3 py-2.5">
-          <p className="text-[10px] font-[600] text-[#9B9B9B] uppercase tracking-wide mb-2">How it's calculated</p>
+          <p className="text-[10px] font-[600] text-[#9B9B9B] uppercase tracking-wide mb-2">How it&apos;s calculated</p>
           <div className="flex items-center gap-1.5 flex-wrap">
 
             {/* P/E box */}
