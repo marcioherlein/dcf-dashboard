@@ -246,7 +246,7 @@ export default function StockIdentityHeader({
   const roeSentiment: Sentiment       = roe          == null ? 'neutral' : roe  > .15        ? 'positive' : roe  < 0         ? 'negative' : 'neutral'
   const roicSentiment: Sentiment      = roic         == null ? 'neutral' : roic > .12        ? 'positive' : roic < 0         ? 'negative' : 'neutral'
 
-  const DESC_LIMIT = 280
+  const DESC_LIMIT = 520
   const shouldTruncate = description && description.length > DESC_LIMIT
   const displayedDesc  = shouldTruncate && !descExpanded ? description!.slice(0, DESC_LIMIT).trimEnd() + '…' : description
 
@@ -463,10 +463,10 @@ export default function StockIdentityHeader({
       </div>
 
       {/* ── ROW 2: Price Chart + Market Metrics ─────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row gap-3 items-start">
+      <div className="flex flex-col sm:flex-row gap-3 items-stretch">
 
-        {/* Chart — no aria wrapper div that could collapse height */}
-        <div className="bg-white border border-[#E3E1DA] rounded-xl overflow-hidden flex flex-col w-full sm:basis-[66%] sm:max-w-[66%]"
+        {/* Chart */}
+        <div className="bg-white border border-[#E3E1DA] rounded-xl flex flex-col w-full sm:basis-[66%] sm:max-w-[66%] min-h-[360px]"
           style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
           <PriceChart
             ticker={ticker}
@@ -500,7 +500,7 @@ export default function StockIdentityHeader({
           )}
         </div>
 
-        {/* Metrics */}
+        {/* Metrics — stretch to match chart height */}
         <div className="bg-white border border-[#E3E1DA] rounded-xl flex flex-col w-full sm:basis-[34%] sm:max-w-[34%] sm:min-w-[200px]"
           style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
           <div className="px-4 pt-4 pb-2 flex-1">
