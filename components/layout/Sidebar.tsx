@@ -58,17 +58,17 @@ function NavItem({
             : 'text-[rgba(255,255,255,0.5)] hover:text-[rgba(255,255,255,0.85)]',
         )}
       >
-        {/* Glass active pill */}
+        {/* Glass active pill — slate base + olive accent */}
         {active && (
           <motion.span
             layoutId="sidebar-active-pill"
             className="absolute inset-0 rounded-[10px]"
             style={{
-              background: 'linear-gradient(135deg, rgba(124,154,25,0.28) 0%, rgba(95,121,11,0.18) 100%)',
+              background: 'linear-gradient(135deg, rgba(30,41,59,0.70) 0%, rgba(51,65,85,0.50) 50%, rgba(95,121,11,0.22) 100%)',
               backdropFilter: 'blur(12px)',
               WebkitBackdropFilter: 'blur(12px)',
-              border: '1px solid rgba(124,154,25,0.30)',
-              boxShadow: '0 2px 12px rgba(95,121,11,0.18), inset 0 1px 0 rgba(255,255,255,0.08)',
+              border: '1px solid rgba(51,65,85,0.55)',
+              boxShadow: '0 2px 12px rgba(15,23,42,0.35), inset 0 1px 0 rgba(148,163,184,0.08)',
             }}
             transition={{ type: 'spring', stiffness: 380, damping: 30 }}
           />
@@ -138,27 +138,26 @@ export default function Sidebar() {
       aria-label="Application sidebar"
       className="fixed left-0 top-0 bottom-0 w-[192px] z-30 hidden lg:flex flex-col overflow-hidden"
       style={{
-        /* Gradient: pure black top → very subtle warm olive tint at bottom */
-        background: 'linear-gradient(180deg, #0A0A0A 0%, #0D0F0A 60%, #0F1108 100%)',
-        /* Right-edge specular — mimics light catching glass */
-        borderRight: '1px solid rgba(255,255,255,0.07)',
+        /* Shifted from warm-black to cool slate-black — same family as landing hero */
+        background: 'linear-gradient(180deg, #0d1117 0%, #111827 55%, #0f1a2e 100%)',
+        borderRight: '1px solid rgba(51,65,85,0.35)',
       }}
     >
-      {/* Specular highlight on right edge */}
+      {/* Specular highlight on right edge — now hints slate-blue */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute right-0 top-0 bottom-0 w-px"
         style={{
-          background: 'linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.04) 40%, rgba(124,154,25,0.12) 100%)',
+          background: 'linear-gradient(180deg, rgba(148,163,184,0.12) 0%, rgba(51,65,85,0.08) 45%, rgba(124,154,25,0.14) 100%)',
         }}
       />
 
-      {/* Ambient olive glow — bottom corner */}
+      {/* Ambient glow — slate top, olive bottom — bridges both materials */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute bottom-0 left-0 right-0 h-48"
+        className="pointer-events-none absolute inset-0"
         style={{
-          background: 'radial-gradient(ellipse 180% 80% at 50% 120%, rgba(95,121,11,0.12) 0%, transparent 70%)',
+          background: 'radial-gradient(ellipse 140% 50% at 50% -10%, rgba(30,41,59,0.5) 0%, transparent 65%), radial-gradient(ellipse 180% 80% at 50% 120%, rgba(95,121,11,0.14) 0%, transparent 70%)',
         }}
       />
 
