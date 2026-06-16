@@ -225,13 +225,13 @@ export default function ProfitabilityChartCard({
 
   return (
     <div className="border border-[#E2E8F0] rounded-xl overflow-hidden flex flex-col" aria-label="Profitability margins chart">
-      {/* Slate header */}
+      
       <div
         className="px-4 py-3 flex items-center justify-between gap-2 shrink-0"
-        style={{ background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)' }}
+        
       >
         <div className="flex items-center gap-1.5">
-          <span className="text-[13px] font-[700] text-white leading-tight">Profitability</span>
+          <span className="text-[13px] font-[700] text-[#111111] leading-tight">Profitability</span>
           <InfoTooltip text="Gross, EBIT and Net profit margins as a % of revenue. Quarterly (last 12Q) or annual (last 8Y) data." />
         </div>
         <div className="flex items-center gap-3 flex-wrap justify-end">

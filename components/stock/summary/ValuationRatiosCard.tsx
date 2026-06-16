@@ -303,12 +303,12 @@ export default function ValuationRatiosCard({
 
   return (
     <div className="border border-[#E2E8F0] rounded-xl overflow-hidden flex flex-col h-full">
-      {/* Slate header */}
+      
       <div
         className="px-4 py-3 shrink-0"
-        style={{ background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)' }}
+        
       >
-        <p className="text-[13px] font-[700] text-white">Valuation Ratios</p>
+        <p className="text-[13px] font-[700] text-[#111111]">Valuation Ratios</p>
       </div>
 
       <div className="bg-white flex-1 p-4 sm:p-5 flex flex-col">

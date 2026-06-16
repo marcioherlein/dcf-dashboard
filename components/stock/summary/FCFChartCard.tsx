@@ -205,8 +205,8 @@ export default function FCFChartCard({ statementsData, currency: _currency = 'US
   if (!statementsData || points.length === 0) {
     return (
       <div className="border border-[#E2E8F0] rounded-xl overflow-hidden">
-        <div className="px-4 py-3" style={{ background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)' }}>
-          <p className="text-[13px] font-[700] text-white leading-tight">Free cash flow</p>
+        <div className="px-4 py-3" >
+          <p className="text-[13px] font-[700] text-[#111111] leading-tight">Free cash flow</p>
         </div>
         <div className="bg-white p-4">
           <p className="text-[12px] text-[#6B6B6B]">No cash flow data available.</p>
@@ -221,18 +221,18 @@ export default function FCFChartCard({ statementsData, currency: _currency = 'US
 
   return (
     <div className="border border-[#E2E8F0] rounded-xl overflow-hidden flex flex-col">
-      {/* Slate header */}
+      
       <div
         className="flex items-center justify-between px-4 py-3 gap-2 shrink-0"
-        style={{ background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)' }}
+        
       >
-        <span className="text-[13px] font-[700] text-white leading-tight">
+        <span className="text-[13px] font-[700] text-[#111111] leading-tight">
           Free Cash Flow {unitLabel}
         </span>
         <div
           role="group"
           aria-label="Display period"
-          className="flex items-center gap-0.5 bg-white/10 rounded-lg p-0.5 shrink-0"
+          className="flex items-center gap-0.5 bg-[#F5F5F5] rounded-lg p-0.5 shrink-0"
         >
           {(['Q', 'Y'] as PeriodTab[]).map(tab => (
             <button
@@ -241,10 +241,10 @@ export default function FCFChartCard({ statementsData, currency: _currency = 'US
               aria-pressed={period === tab}
               aria-label={tab === 'Q' ? 'Quarterly view' : 'Annual view'}
               className={[
-                'text-[11px] font-[600] min-w-[28px] min-h-[28px] px-2 rounded-md transition-colors focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-0 focus-visible:outline-none',
+                'text-[11px] font-[600] min-w-[44px] min-h-[44px] px-2 rounded-md transition-colors focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-offset-1 focus-visible:outline-none',
                 period === tab
-                  ? 'bg-white/20 text-white shadow-sm'
-                  : 'text-white/45 hover:text-white/75',
+                  ? 'bg-white text-[#111111] shadow-sm'
+                  : 'text-[#566174] hover:text-[#111111]',
               ].join(' ')}
             >
               {tab}
