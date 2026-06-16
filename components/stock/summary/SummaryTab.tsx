@@ -307,6 +307,11 @@ export default function SummaryTab({
           terminalG={terminalG}
           historicalCAGR={historicalCAGR ?? cagrAnalysis?.historicalCagr3y ?? null}
           analystCAGR={analystCAGR ?? cagrAnalysis?.analystEstimate1y ?? null}
+          analystCAGR2y={cagrAnalysis?.analystEstimate2y ?? null}
+          fundamentalGrowth={cagrAnalysis?.fundamentalGrowth ?? null}
+          blendedCAGR={cagrAnalysis?.blended ?? null}
+          epsGrowthFwd={epsGrowthFwd}
+          numAnalysts={cagrAnalysis?.numAnalysts ?? null}
           isEmergingMarket={isEmergingMarket}
           isFinancialSector={isFinancialSector}
           revenueHistory={revenueHistory}

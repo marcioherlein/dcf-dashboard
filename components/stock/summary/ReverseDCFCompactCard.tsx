@@ -21,7 +21,12 @@ interface ReverseDCFCompactCardProps {
   wacc: number
   terminalG: number
   historicalCAGR: number | null
-  analystCAGR: number | null
+  analystCAGR: number | null         // analyst 1Y revenue growth
+  analystCAGR2y?: number | null      // analyst 2Y revenue growth
+  fundamentalGrowth?: number | null  // fundamental (reinvestment-rate) growth
+  blendedCAGR?: number | null        // blended CAGR used in model
+  epsGrowthFwd?: number | null       // forward EPS growth (fraction)
+  numAnalysts?: number | null
   isEmergingMarket?: boolean
   isFinancialSector?: boolean
   rawBlendedCagr?: number | null
@@ -68,6 +73,11 @@ export default function ReverseDCFCompactCard({
   terminalG,
   historicalCAGR,
   analystCAGR,
+  analystCAGR2y,
+  fundamentalGrowth,
+  blendedCAGR,
+  epsGrowthFwd,
+  numAnalysts,
   isEmergingMarket = false,
   isFinancialSector = false,
   rawBlendedCagr,
@@ -96,8 +106,19 @@ export default function ReverseDCFCompactCard({
     historicalCAGR != null ? historicalCAGR * 100 : null
   const analystPct =
     analystCAGR != null ? analystCAGR * 100 : null
+  const analyst2yPct =
+    analystCAGR2y != null ? analystCAGR2y * 100 : null
+  const fundamentalPct =
+    fundamentalGrowth != null ? fundamentalGrowth * 100 : null
+  const blendedPct =
+    blendedCAGR != null ? blendedCAGR * 100 : null
+  const epsPct =
+    epsGrowthFwd != null ? epsGrowthFwd * 100 : null
 
-  const allValues = [impliedPct ?? 0, historicalPct ?? 0, analystPct ?? 0]
+  const allValues = [
+    impliedPct ?? 0, historicalPct ?? 0, analystPct ?? 0,
+    analyst2yPct ?? 0, fundamentalPct ?? 0, blendedPct ?? 0, epsPct ?? 0,
+  ]
   const minVal = Math.min(...allValues, 0)
   const maxVal = Math.max(...allValues, 10)
   const range = maxVal - minVal
@@ -185,7 +206,7 @@ export default function ReverseDCFCompactCard({
             widthPct={impliedPct != null ? barWidth(impliedPct) : 0}
             zeroLineLeft={minVal < 0 ? zeroLineLeft : null}
           />
-          {/* Historical */}
+          {/* Historical 3Y */}
           <BarRow
             label="3Y Historical"
             dotHex="#3B82F6"
@@ -194,16 +215,64 @@ export default function ReverseDCFCompactCard({
             widthPct={historicalPct != null ? barWidth(historicalPct) : 0}
             zeroLineLeft={minVal < 0 ? zeroLineLeft : null}
           />
-          {/* Analyst */}
+          {/* Blended model CAGR */}
+          {blendedPct != null && (
+            <BarRow
+              label="Model Blended"
+              labelTooltip="Blended revenue CAGR used in the DCF model — weighted mix of historical, analyst, and fundamental growth signals."
+              dotHex="#6366F1"
+              value={blendedPct}
+              barColor="bg-[#6366F1]"
+              widthPct={barWidth(blendedPct)}
+              zeroLineLeft={minVal < 0 ? zeroLineLeft : null}
+            />
+          )}
+          {/* Analyst 1Y revenue */}
           <BarRow
-            label="Analyst Est. (1Y)"
-            labelTooltip="1-year forward revenue growth consensus from Yahoo Finance analyst estimates. A single-year estimate — may not reflect the long-term trajectory."
+            label={`Analyst Rev. (1Y)${numAnalysts ? ` · ${numAnalysts}` : ''}`}
+            labelTooltip="1-year forward revenue growth consensus from analyst estimates."
             dotHex="#7C3AED"
             value={analystPct}
             barColor="bg-[#7C3AED]"
             widthPct={analystPct != null ? barWidth(analystPct) : 0}
             zeroLineLeft={minVal < 0 ? zeroLineLeft : null}
           />
+          {/* Analyst 2Y revenue */}
+          {analyst2yPct != null && (
+            <BarRow
+              label="Analyst Rev. (2Y)"
+              labelTooltip="2-year forward revenue growth consensus from analyst estimates."
+              dotHex="#A855F7"
+              value={analyst2yPct}
+              barColor="bg-[#A855F7]"
+              widthPct={barWidth(analyst2yPct)}
+              zeroLineLeft={minVal < 0 ? zeroLineLeft : null}
+            />
+          )}
+          {/* Analyst EPS growth (fwd) */}
+          {epsPct != null && (
+            <BarRow
+              label="Analyst EPS (1Y)"
+              labelTooltip="Forward EPS growth consensus from analyst estimates (+1Y). Earnings growth can diverge from revenue growth due to margin expansion or compression."
+              dotHex="#EC4899"
+              value={epsPct}
+              barColor="bg-[#EC4899]"
+              widthPct={barWidth(epsPct)}
+              zeroLineLeft={minVal < 0 ? zeroLineLeft : null}
+            />
+          )}
+          {/* Fundamental (reinvestment-based) growth */}
+          {fundamentalPct != null && (
+            <BarRow
+              label="Fundamental"
+              labelTooltip="Growth implied by the company's reinvestment rate and return on capital — what sustainable growth looks like given current financials, independent of analyst estimates."
+              dotHex="#F59E0B"
+              value={fundamentalPct}
+              barColor="bg-[#F59E0B]"
+              widthPct={barWidth(fundamentalPct)}
+              zeroLineLeft={minVal < 0 ? zeroLineLeft : null}
+            />
+          )}
         </div>
       </div>
 
