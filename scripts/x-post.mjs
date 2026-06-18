@@ -463,7 +463,7 @@ async function runEarnings() {
     if (fair && price) {
       const parts = [
         ``,
-        `━━━ DCF SNAPSHOT ━━━`,
+        ``,
         `Model view:  ${verdictEmoji} ${verdictText}`,
         `Price:       ${fmt(price)}`,
         `Fair Value:  ${fmt(fair)}  (${pct(upside)} vs current price)`,
@@ -491,15 +491,15 @@ async function runEarnings() {
   const whenVerb = featuredDate === yesterdayStr ? 'reported' : 'reports'
 
   const lines = [
-    `📊 Earnings — $${ticker} ${whenVerb} ${whenStr}`,
+    `📊 $${ticker} ${whenVerb} earnings ${whenStr}`,
     ``,
-    dcfBlock || `Run the valuation → ${APP_URL}/stock/${ticker}`,
+    dcfBlock || `Full model → ${APP_URL}/stock/${ticker}`,
     ``,
-    ...(others.length > 0 ? [`Also ${whenVerb} ${whenStr}: ${others.join(' · ')}`, ``] : []),
-    `Does the business justify its current price? Run the model before the number drops.`,
+    ...(others.length > 0 ? [`Also ${whenVerb} ${whenStr}: ${others.join(' · ')}`] : []),
+    ``,
+    `Before the number: does the current price require a beat to be fairly valued, or is it cheap enough to miss?`,
     `${APP_URL}/stock/${ticker}`,
-    ``,
-    `#Earnings #${ticker} #DCF #StockMarket`,
+    `$${ticker} #Earnings #DCF #StockMarket`,
   ].filter(Boolean)
 
   await post(lines.join('\n'))
@@ -701,7 +701,7 @@ async function runNews() {
     `📰 ${title}`,
     ``,
     ...(link ? [link, ``] : []),
-    `━━━ WHY THIS MATTERS ━━━`,
+    ``,
     `Every major headline has a valuation angle. Ask yourself:`,
     `• Does this change the company's revenue trajectory?`,
     `• Does it affect the discount rate (WACC)?`,
@@ -831,14 +831,14 @@ async function runMacro() {
         `Index: ${d.latestVal.toFixed(1)}  (prev: ${d.previousVal.toFixed(1)})`,
         `Month-over-month change: ${chg >= 0 ? '+' : ''}${chg.toFixed(2)} pts`,
         ``,
-        `━━━ WHAT THIS MEANS ━━━`,
+        ``,
         chg > 0.3
           ? `Hotter than expected. The Fed has less room to cut. Higher rates for longer means higher WACC — and lower DCF fair values across the board, especially for long-duration growth stocks.`
           : chg < 0
           ? `Cooling inflation. Rate cut expectations rise. Lower discount rates mean higher fair values — especially for high-growth names that benefit most from lower WACC.`
           : `In-line print. Fed likely holds. Market prices remain anchored to current rate expectations.`,
         ``,
-        `━━━ VALUATION IMPACT ━━━`,
+        ``,
         `A 1% change in WACC typically moves a growth stock's fair value by 15–25%.`,
         `If you're holding stocks with elevated valuations, this print matters.`,
         ``,
@@ -856,7 +856,7 @@ async function runMacro() {
         `Nonfarm Payrolls: ${d.latestVal.toFixed(0)}K new jobs`,
         `Month-over-month change: ${chgK >= 0 ? '+' : ''}${chgK}K`,
         ``,
-        `━━━ WHAT THIS MEANS ━━━`,
+        ``,
         d.latestVal > 250
           ? `Strong labor market. The Fed has no reason to cut. Higher-for-longer rates are the base case — which compresses DCF fair values on growth stocks and keeps value names relatively attractive.`
           : d.latestVal < 100
@@ -866,7 +866,7 @@ async function runMacro() {
         `A healthy labor market is good for consumer stocks, banks, and cyclicals.`,
         `A weak print is good for rate-sensitive growth names.`,
         ``,
-        `Check which stocks benefit → ${APP_URL}`,
+        `See which stocks benefit most → ${APP_URL}`,
         `#NFP #JobsReport #Fed #Macro #Investing`,
       ]
     } else if (todayEvent.type === 'FOMC') {
@@ -880,7 +880,7 @@ async function runMacro() {
         ``,
         `Fed Funds Rate: ${d.latestVal.toFixed(2)}%  (was: ${d.previousVal.toFixed(2)}%)`,
         ``,
-        `━━━ VALUATION IMPACT ━━━`,
+        ``,
         chg > 0
           ? `Higher rates → higher WACC → lower DCF fair values.\n\nGrowth stocks (long duration) take the biggest hit. A 1% WACC increase on a high-growth stock can cut fair value by 20–30%.\n\nValue stocks and dividend payers are relatively insulated — their near-term cash flows discount less.`
           : chg < 0
@@ -962,13 +962,13 @@ const FEATURE_POSTS = {
       ``,
       `The core idea is simple: a business is worth the sum of all the cash it will generate in the future, discounted back to today's dollars.`,
       ``,
-      `━━━ THE FORMULA IN PLAIN ENGLISH ━━━`,
+      ``,
       `1. Estimate how much free cash flow the business will generate each year`,
       `2. Apply a discount rate (WACC) to reflect risk and the time value of money`,
       `3. Add a terminal value for cash flows beyond the projection period`,
       `4. Subtract debt, add cash → divide by shares outstanding`,
       ``,
-      `━━━ WHY IT MATTERS ━━━`,
+      ``,
       `Price tells you what the market currently thinks a stock is worth.`,
       `DCF tells you what the underlying business is worth.`,
       ``,
@@ -979,7 +979,7 @@ const FEATURE_POSTS = {
       ``,
       `Most investors skip this step and pay whatever the market asks. That's how they overpay.`,
       ``,
-      `Run a free DCF on any NYSE/NASDAQ stock → ${APP_URL}`,
+      `Free DCF on any NYSE/NASDAQ stock → ${APP_URL}`,
       `#DCF #Investing #StockValuation #FundamentalAnalysis`,
     ],
   },
@@ -989,13 +989,13 @@ const FEATURE_POSTS = {
       ``,
       `WACC (Weighted Average Cost of Capital) is the discount rate in a DCF model. It's arguably the most important single number in equity valuation — and most investors have never heard of it.`,
       ``,
-      `━━━ WHAT WACC REPRESENTS ━━━`,
+      ``,
       `WACC is the minimum return a business must earn to justify its existence.`,
       ``,
       `If a business earns less than its WACC → it's destroying shareholder value`,
       `If a business earns more than its WACC → it's creating value`,
       ``,
-      `━━━ WHY IT MOVES VALUATIONS ━━━`,
+      ``,
       `Higher WACC = future cash flows are worth less today → lower fair value`,
       `Lower WACC = future cash flows are worth more today → higher fair value`,
       ``,
@@ -1006,14 +1006,14 @@ const FEATURE_POSTS = {
       ``,
       `A 2% increase in WACC can cut a growth stock's fair value by 20–40%.`,
       ``,
-      `━━━ WHAT DRIVES WACC ━━━`,
+      ``,
       `• Risk-free rate (US 10-year Treasury yield)`,
       `• Beta (how volatile the stock is vs. the market)`,
       `• Equity risk premium`,
       `• Cost of debt × (1 - tax rate)`,
       `• Capital structure (debt/equity mix)`,
       ``,
-      `See the live WACC breakdown for any stock → ${APP_URL}`,
+      `WACC breakdown for any stock, free → ${APP_URL}`,
       `#WACC #DCF #Investing #InterestRates`,
     ],
   },
@@ -1023,7 +1023,7 @@ const FEATURE_POSTS = {
       ``,
       `The growth assumption is the single biggest driver of fair value. Get it wrong and you can be off by 50%. Here's how to think about it rigorously.`,
       ``,
-      `━━━ THREE GROWTH SIGNALS ━━━`,
+      ``,
       ``,
       `1. Historical CAGR (3-year)`,
       `What the business has actually delivered. Backward-looking, but grounded in reality. High-growth companies often can't sustain their historical rate as they scale.`,
@@ -1034,16 +1034,16 @@ const FEATURE_POSTS = {
       `3. Fundamental growth rate`,
       `Derived from ROE × earnings retention rate. What the business can organically grow without external capital. A sanity check on the other two.`,
       ``,
-      `━━━ THE CONVERGENCE DISCOUNT ━━━`,
+      ``,
       `No company grows fast forever. Damodaran's research shows that high-growth companies systematically mean-revert toward industry and economy-wide growth rates.`,
       ``,
       `We apply a convergence discount: raw blended growth gets haircut toward a stable long-run rate. This prevents models from pricing in perpetual 40% growth.`,
       ``,
-      `━━━ WHAT THIS MEANS IN PRACTICE ━━━`,
+      ``,
       `A stock pricing in 30% perpetual growth is almost always a bad bet.`,
       `A stock pricing in 8% growth on a business delivering 20% might be a great one.`,
       ``,
-      `See the growth model for any stock → ${APP_URL}`,
+      `Growth model for any stock → ${APP_URL}`,
       `#Valuation #DCF #GrowthInvesting #FinancialModeling`,
     ],
   },
@@ -1053,7 +1053,7 @@ const FEATURE_POSTS = {
       ``,
       `Every DCF model is built on assumptions. Assumptions can be wrong. The solution isn't to find the "right" number — it's to understand the range.`,
       ``,
-      `━━━ THREE SCENARIOS ━━━`,
+      ``,
       ``,
       `🐻 Bear case`,
       `Higher WACC (Fed doesn't cut, risk premium expands)`,
@@ -1071,7 +1071,7 @@ const FEATURE_POSTS = {
       `Higher terminal growth`,
       `→ Shows upside if things go right`,
       ``,
-      `━━━ HOW TO USE THE RANGE ━━━`,
+      ``,
       `The width of the range tells you how uncertain the valuation is.`,
       ``,
       `Narrow range ($180–$220): high confidence, fairly predictable business`,
@@ -1080,7 +1080,7 @@ const FEATURE_POSTS = {
       `A stock where the bear case = current price is a stock with no margin of safety.`,
       `A stock where the bear case is 30% below and the bull is 100% above? That's an asymmetric bet.`,
       ``,
-      `See bear/base/bull for any stock → ${APP_URL}`,
+      `Bear/base/bull scenarios for any stock → ${APP_URL}`,
       `#DCF #ScenarioAnalysis #Investing #RiskManagement`,
     ],
   },
@@ -1090,28 +1090,28 @@ const FEATURE_POSTS = {
       ``,
       `Warren Buffett talks about moats. Most investors think about brand or market share. The most rigorous way to measure a moat is ROIC vs WACC.`,
       ``,
-      `━━━ DEFINITIONS ━━━`,
+      ``,
       `ROIC (Return on Invested Capital): how much profit the business generates per dollar of capital deployed`,
       `WACC (Weighted Average Cost of Capital): the minimum return the business needs to earn to justify that capital`,
       ``,
-      `━━━ THE SPREAD ━━━`,
+      ``,
       `ROIC > WACC = value creation. The business earns more than it costs to operate.`,
       `ROIC < WACC = value destruction. Even profitable companies can be destroying shareholder value.`,
       `ROIC = WACC = breakeven. Capital earns exactly what it costs.`,
       ``,
-      `━━━ WHAT SEPARATES GREAT BUSINESSES ━━━`,
+      ``,
       `Apple: ROIC ~50%+. Every dollar deployed returns 50 cents in profit.`,
       `Most retailers: ROIC near WACC. Thin margins, commodity economics.`,
       `Capital-heavy utilities: ROIC often below WACC before regulatory returns.`,
       ``,
-      `━━━ THE VALUATION CONNECTION ━━━`,
+      ``,
       `A business that consistently earns ROIC >> WACC deserves a premium multiple.`,
       `A business earning ROIC < WACC deserves to trade below book value.`,
       ``,
       `Most "expensive" stocks look cheap when you account for ROIC spread.`,
       `Many "cheap" stocks are value traps when ROIC is below WACC.`,
       ``,
-      `Check ROIC vs WACC for any stock → ${APP_URL}`,
+      `ROIC vs WACC for any stock → ${APP_URL}`,
       `#ROIC #Moat #ValueInvesting #Buffett #DCF`,
     ],
   },
@@ -1121,7 +1121,7 @@ const FEATURE_POSTS = {
       ``,
       `insic runs a multi-model DCF valuation on any NYSE or NASDAQ stock. Here's exactly what happens when you type a ticker:`,
       ``,
-      `━━━ THE 5-MODEL BLEND ━━━`,
+      ``,
       ``,
       `1. FCFF DCF (Unlevered)`,
       `Free cash flow to the firm, discounted at WACC. The Damodaran standard. WACC is calculated from CAPM + country risk premium.`,
@@ -1138,12 +1138,12 @@ const FEATURE_POSTS = {
       `5. EV/EBITDA multiple`,
       `Enterprise value relative to operating earnings.`,
       ``,
-      `━━━ THE OUTPUT ━━━`,
+      ``,
       `Each model is weighted by company type (growth, financial, dividend, etc.) and blended into a single consensus fair value.`,
       ``,
       `You also see: bear/base/bull scenarios, ROIC vs WACC, Piotroski score, Altman Z-score, Beneish M-score, analyst estimates, EPS surprises, financial statements.`,
       ``,
-      `━━━ WHAT MAKES IT DIFFERENT ━━━`,
+      ``,
       `Every assumption is shown. You can override WACC, CAGR, and terminal growth and see the fair value update in real time.`,
       ``,
       `No black box. No opinion. Just a transparent model you can stress-test.`,
@@ -1158,21 +1158,21 @@ const FEATURE_POSTS = {
       ``,
       `This confusion costs investors money. Here's the difference:`,
       ``,
-      `━━━ ANALYST PRICE TARGET ━━━`,
+      ``,
       `• Where an analyst thinks the stock will trade in 12 months`,
       `• Based on relative multiples, sentiment, and recent catalysts`,
       `• Revised frequently based on news flow`,
       `• Often anchors to recent price (behavioral bias)`,
       `• A prediction about market behavior`,
       ``,
-      `━━━ DCF FAIR VALUE ━━━`,
+      ``,
       `• What the underlying business is intrinsically worth today`,
       `• Based on discounted future cash flows, independent of market mood`,
       `• Grounded in business fundamentals: growth, margins, WACC`,
       `• Changes only when business fundamentals change`,
       `• A claim about business value, not price movement`,
       ``,
-      `━━━ WHY THIS MATTERS ━━━`,
+      ``,
       `A stock can be at its analyst price target and still be 40% overvalued by DCF.`,
       `A stock can be well below its price target but still expensive relative to intrinsic value.`,
       ``,
@@ -1181,7 +1181,7 @@ const FEATURE_POSTS = {
       ``,
       `DCF doesn't care what the market is doing. It asks one question: what will this business generate in cash, and what's that worth today?`,
       ``,
-      `That's the question worth asking before you invest → ${APP_URL}`,
+      `Worth asking before you invest → ${APP_URL}`,
       `#Investing #ValueInvesting #DCF #StockMarket`,
     ],
   },
@@ -1273,7 +1273,7 @@ const QUESTIONS = [
     ``,
     `Reply below 👇`,
     ``,
-    `Run a free DCF on any stock → ${APP_URL}`,
+    `Free DCF model for any stock → ${APP_URL}`,
     `#Investing #Stocks #StockMarket`,
   ],
   [
@@ -1296,7 +1296,7 @@ const QUESTIONS = [
     `Wall St: Strong Buy`,
     ``,
     `Two very different frameworks. Which one are you using?`,
-    `Run the model yourself → ${APP_URL}/stock/NVDA`,
+    `See the full model → ${APP_URL}/stock/NVDA`,
     ``,
     `#NVDA #Nvidia #DCF #Investing`,
   ],
@@ -1415,37 +1415,21 @@ async function runDcfBear() {
   const lines = [
     `${v.emoji} $${ticker} — ${v.short}`,
     ``,
-    `━━━ VALUATION ━━━`,
-    `Current price:  ${fmt(price)}`,
-    `Fair value est: ${fmt(fair)}`,
-    `Difference:     ${pct(upside)} vs current price`,
-    ...(bear && bull ? [`Scenario range: ${fmt(bear)} (bear) → ${fmt(bull)} (bull)`] : []),
+    `Price: ${fmt(price)} · Model fair value: ${fmt(fair)} (${pct(upside)})`,
+    ...(bear && bull ? [`Bear case: ${fmt(bear)} · Bull case: ${fmt(bull)}`] : []),
     ``,
     modelVsMarket,
     ``,
-    `━━━ MODEL INPUTS ━━━`,
-    `WACC:         ${pct(wacc, false)}`,
-    `Revenue CAGR: ${pct(cagr, false)} (model)${analyst1y != null && numAnalysts >= 3 ? ` · ${pct(analyst1y, false)}/yr analyst est (${numAnalysts})` : ''}`,
+    `WACC: ${pct(wacc, false)} · Revenue CAGR: ${pct(cagr, false)}${analyst1y != null && numAnalysts >= 3 ? ` (analysts: ${pct(analyst1y, false)}, n=${numAnalysts})` : ''}`,
     ...(terminalG ? [`Terminal growth: ${pct(terminalG, false)}`] : []),
     ``,
-    `━━━ BUSINESS QUALITY ━━━`,
-    ...(grossMargin != null ? [`Gross margin: ${pct(grossMargin, false)}`] : []),
-    ...(netMargin != null ? [`Net margin:   ${pct(netMargin, false)}`] : []),
-    ...(fcfMargin != null ? [`FCF margin:   ${pct(fcfMargin, false)}`] : []),
+    ...(grossMargin != null ? [`Gross margin ${pct(grossMargin, false)}${netMargin != null ? ` · Net margin ${pct(netMargin, false)}` : ''}${fcfMargin != null ? ` · FCF ${pct(fcfMargin, false)}` : ''}`] : []),
     ...(roic != null ? [`ROIC: ${pct(roic, false)}${roicSpread != null ? ` (${roicSpread > 0 ? '+' : ''}${pct(roicSpread, false)} vs WACC)` : ''}`] : []),
-    ...(revenueM ? [`Revenue: ${fmt(revenueM * 1e6)}`] : []),
-    ``,
-    `━━━ ANALYST CONSENSUS ━━━`,
-    ...(recLabel ? [`Wall St: ${recLabel}`] : []),
-    ...(analystTarget ? [`Price target: ${fmt(analystTarget)}`] : []),
-    ...(forwardPE ? [`Forward P/E:  ${forwardPE}×`] : []),
-    ...(beatCount > 0 ? [`EPS beats: ${beatCount}/${surprises.length} last quarters`] : []),
-    ...(stock1y != null && spy1y != null ? [`1Y return: ${pct(stock1y)} vs SPY ${pct(spy1y)}`] : []),
-    ``,
-    `Rating: ${grade} ${label} · ${sector}`,
+    ...(recLabel && analystTarget ? [`Wall St: ${recLabel} · target ${fmt(analystTarget)}${forwardPE ? ` · fwd P/E ${forwardPE}×` : ''}`] : []),
+    ...(stock1y != null && spy1y != null ? [`1Y: ${pct(stock1y)} vs SPY ${pct(spy1y)}`] : []),
     ``,
     `Full model → ${APP_URL}/stock/${ticker}`,
-    `#DCF #Valuation #${ticker} #Investing`,
+    `$${ticker} #DCF #Valuation #Investing`,
   ].filter(Boolean)
 
   await post(lines.join('\n'))
@@ -1583,14 +1567,14 @@ const SENTIMENT_POSTS = [
     `S&P 500 (SPY): ${spy.changePct >= 0 ? '+' : ''}${spy.changePct.toFixed(2)}% this week`,
     `VIX: ${vix?.price.toFixed(1) ?? 'N/A'} — ${vix ? vixSentiment(vix.price).label : 'unknown'}`,
     ``,
-    `━━━ WHAT IT MEANS ━━━`,
+    ``,
     spy.changePct > 3
       ? `Strong week. When prices move this fast, it's worth asking: did the fundamentals change, or did the market just get more optimistic?\n\nOptimism isn't a moat. Check whether your positions still trade below fair value after the move.`
       : spy.changePct < -3
       ? `Tough week for markets. Selloffs are uncomfortable — they're also often when the best buying opportunities appear.\n\nThe question isn't "should I sell?" It's "what has the business actually changed?" If the fundamentals are intact and the price fell, the margin of safety just improved.`
       : `Relatively quiet week. Low-volatility periods are the best time to do valuation work — before the market gets noisy again.`,
     ``,
-    `━━━ THE DISCIPLINE ━━━`,
+    ``,
     `Weekly price movements are noise. Business fundamentals change quarterly.`,
     `The investors who build wealth over decades are the ones who stay focused on the second, not the first.`,
     ``,
@@ -1605,7 +1589,7 @@ const SENTIMENT_POSTS = [
     `S&P 500 (SPY): ${spy.changePct >= 0 ? '+' : ''}${spy.changePct.toFixed(2)}% last session`,
     `VIX: ${vix?.price.toFixed(1) ?? 'N/A'} — ${vix ? vixSentiment(vix.price).label : ''}`,
     ``,
-    `━━━ BEFORE MARKETS OPEN MONDAY ━━━`,
+    ``,
     ``,
     `1. Re-check your DCF assumptions`,
     `Did anything change last week that should update your growth estimate, WACC, or terminal value? If not, the model stands.`,
@@ -1727,7 +1711,7 @@ async function runSentiment() {
 
   // Macro events
   if (macroNextWeek.length > 0) {
-    lines.push(``, `━━━ MACRO CALENDAR ━━━`)
+    lines.push(``, `Macro calendar:`)
     for (const e of macroNextWeek) {
       const dayLabel = new Date(e.date + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
       const impact = {
@@ -1743,7 +1727,7 @@ async function runSentiment() {
 
   // Earnings next week
   if (Object.keys(earnersByDay).length > 0) {
-    lines.push(``, `━━━ EARNINGS NEXT WEEK ━━━`)
+    lines.push(``, `Earnings next week:`)
     for (const [date, tickers] of Object.entries(earnersByDay)) {
       const dayLabel = new Date(date + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
       lines.push(`${dayLabel}: ${tickers.slice(0, 4).map(t => `$${t}`).join(' · ')}`)
@@ -1921,7 +1905,7 @@ async function runMorningBrief() {
   ].filter(Boolean)
 
   if (overnightItems.length > 0 || commodityItems.length > 0) {
-    lines.push(``, `━━━ OVERNIGHT ━━━`)
+    lines.push(``)
     if (overnightItems.length > 0) lines.push(overnightItems.join('  '))
     if (commodityItems.length > 0) lines.push(commodityItems.join(' · '))
   }
@@ -1934,7 +1918,7 @@ async function runMorningBrief() {
 
   const hasEvents = macroNarrative.length > 0 || earningsNarrative
   if (hasEvents) {
-    lines.push(``, `━━━ TODAY'S EVENTS ━━━`)
+    lines.push(``)
     lines.push(...macroNarrative)
     if (earningsNarrative) lines.push(earningsNarrative)
   }
@@ -1947,7 +1931,7 @@ async function runMorningBrief() {
       if (!byDate[e.date]) byDate[e.date] = []
       byDate[e.date].push(`$${e.symbol}`)
     }
-    lines.push(``, `━━━ EARNINGS THIS WEEK ━━━`)
+    lines.push(`Earnings this week:`)
     for (const [date, tickers] of Object.entries(byDate)) {
       const dayLabel = new Date(date + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
       lines.push(`${dayLabel}: ${tickers.join(' · ')}`)
@@ -2053,7 +2037,7 @@ async function runMiddayPulse() {
   if (vix) lines.push(`VIX: ${vix.price.toFixed(1)} — ${vixSentiment(vix.price).label}`)
 
   if (sectorData.length > 0) {
-    lines.push(``, `━━━ SECTORS ━━━`)
+    lines.push(``)
     sectorData.forEach(s => {
       const emoji = s.changePct >= 1 ? '🟢' : s.changePct <= -1 ? '🔴' : '🟡'
       lines.push(`${emoji} ${s.name}: ${s.changePct >= 0 ? '+' : ''}${s.changePct.toFixed(2)}%`)
@@ -2062,7 +2046,7 @@ async function runMiddayPulse() {
   }
 
   if (tnx || oil || gold || dxy) {
-    lines.push(``, `━━━ MACRO ━━━`)
+    lines.push(``)
     if (yieldNote) lines.push(yieldNote)
     if (oil)  lines.push(`Oil (WTI): $${oil.price.toFixed(2)} ${oil.changePct >= 0 ? '+' : ''}${oil.changePct.toFixed(2)}%${oil.changePct < -1 ? ' — energy under pressure' : oil.changePct > 1 ? ' — crude rallying' : ''}`)
     if (gold) lines.push(`Gold: $${gold.price.toFixed(0)} ${gold.changePct >= 0 ? '+' : ''}${gold.changePct.toFixed(2)}%${gold.changePct > 0.5 ? ' — safe-haven demand intact' : ''}`)
@@ -2070,9 +2054,9 @@ async function runMiddayPulse() {
     if (oilEnergyNote) lines.push(oilEnergyNote)
   }
 
-  if (macroNote.length > 0) lines.push(``, `━━━ EVENTS ━━━`, ...macroNote)
+  if (macroNote.length > 0) lines.push(``, ...macroNote)
 
-  lines.push(``, hooks[weekOfYear % hooks.length], ``, `Model any stock free → ${APP_URL}`)
+  lines.push(``, hooks[weekOfYear % hooks.length], ``, `Check the model for any stock → ${APP_URL}`)
   lines.push(`#Midday #StockMarket #Investing #WallStreet`)
 
   await post(lines.join('\n'))
@@ -2162,15 +2146,14 @@ async function runMarketClose() {
 
   const lines = [
     `🔔 Markets Closed — ${dayName}`, ``,
-    `━━━ FINAL CLOSE ━━━`,
-    sp500  ? `S&P 500: ${sp500.changePct >= 0 ? '+' : ''}${sp500.changePct.toFixed(2)}% · ${sp500.price.toFixed(0)}` : null,
-    nasdaq ? `Nasdaq:  ${nasdaq.changePct >= 0 ? '+' : ''}${nasdaq.changePct.toFixed(2)}% · ${nasdaq.price.toFixed(0)}` : null,
-    dow    ? `Dow:     ${dow.changePct >= 0 ? '+' : ''}${dow.changePct.toFixed(2)}% · ${dow.price.toFixed(0)}` : null,
+    sp500  ? `S&P 500: ${sp500.changePct >= 0 ? '+' : ''}${sp500.changePct.toFixed(2)}%` : null,
+    nasdaq ? `Nasdaq:  ${nasdaq.changePct >= 0 ? '+' : ''}${nasdaq.changePct.toFixed(2)}%` : null,
+    dow    ? `Dow:     ${dow.changePct >= 0 ? '+' : ''}${dow.changePct.toFixed(2)}%` : null,
     vix    ? `VIX: ${vix.price.toFixed(1)} — ${vixSentiment(vix.price).label}` : null,
   ].filter(Boolean)
 
   if (sectorData.length > 0) {
-    lines.push(``, `━━━ SECTOR SCORECARD ━━━`)
+    lines.push(``)
     sectorData.forEach((s, i) => {
       const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : s.changePct < 0 ? '📉' : '  '
       lines.push(`${medal} ${s.name} ${s.changePct >= 0 ? '+' : ''}${s.changePct.toFixed(2)}%`)
@@ -2178,20 +2161,22 @@ async function runMarketClose() {
   }
 
   if (tnx || oil || gold || dxy) {
-    lines.push(``, `━━━ COMMODITIES & RATES ━━━`)
+    lines.push(``)
     if (tnx)  lines.push(`10Y Yield: ${tnx.price.toFixed(3)}% (${tnx.changePct >= 0 ? '+' : ''}${tnx.changePct.toFixed(2)}%)`)
-    if (oil)  lines.push(`Oil (WTI): $${oil.price.toFixed(2)} (${oil.changePct >= 0 ? '+' : ''}${oil.changePct.toFixed(2)}%)`)
+    if (oil)  lines.push(`Oil: $${oil.price.toFixed(2)} (${oil.changePct >= 0 ? '+' : ''}${oil.changePct.toFixed(2)}%)`)
     if (gold) lines.push(`Gold: $${gold.price.toFixed(0)} (${gold.changePct >= 0 ? '+' : ''}${gold.changePct.toFixed(2)}%)`)
-    if (dxy)  lines.push(`Dollar (DXY): ${dxy.price.toFixed(1)} (${dxy.changePct >= 0 ? '+' : ''}${dxy.changePct.toFixed(2)}%)`)
+    if (dxy)  lines.push(`DXY: ${dxy.price.toFixed(1)} (${dxy.changePct >= 0 ? '+' : ''}${dxy.changePct.toFixed(2)}%)`)
   }
 
-  lines.push(``, `━━━ WHAT DROVE IT ━━━`)
+  lines.push(``)
   whatDroveIt.forEach(l => lines.push(l))
 
-  lines.push(``, `━━━ WHAT TO WATCH TOMORROW ━━━`)
-  watchTomorrow.forEach(w => lines.push(`→ ${w}`))
+  if (watchTomorrow.length > 0) {
+    lines.push(``, `Tomorrow:`)
+    watchTomorrow.forEach(w => lines.push(`→ ${w}`))
+  }
 
-  lines.push(``, hooks[weekOfYear % hooks.length], ``, `Model any stock free → ${APP_URL}`)
+  lines.push(``, hooks[weekOfYear % hooks.length], ``, `${APP_URL}`)
   lines.push(`#MarketClose #Investing #WallStreet #StockMarket`)
 
   await post(lines.join('\n'))
@@ -2289,7 +2274,7 @@ async function runSectorSpotlight() {
     ``,
     narrative,
     ``,
-    `━━━ ALL SECTORS ━━━`,
+    ``,
     ...sectorData.map(s => {
       const e = s.changePct >= 1 ? '🟢' : s.changePct <= -1 ? '🔴' : '🟡'
       return `${e} ${sectorName[s.symbol] ?? s.symbol}: ${s.changePct >= 0 ? '+' : ''}${s.changePct.toFixed(2)}%`
@@ -2356,26 +2341,16 @@ async function runDcf2() {
   const lines = [
     `${v.emoji} $${ticker} — ${v.short}`,
     ``,
-    `━━━ VALUATION ━━━`,
-    `Current price:  ${fmt(price)}`,
-    `Fair value est: ${fmt(fair)}`,
-    `Difference:     ${pct(upside)} vs current price`,
-    ...(bear && bull ? [`Scenario range: ${fmt(bear)} (bear) → ${fmt(bull)} (bull)`] : []),
+    `Price: ${fmt(price)} · Model: ${fmt(fair)} (${pct(upside)})`,
+    ...(bear && bull ? [`Bear: ${fmt(bear)} · Bull: ${fmt(bull)}`] : []),
     ``,
-    `━━━ MODEL INPUTS ━━━`,
     `WACC: ${pct(wacc, false)} · CAGR: ${pct(cagr, false)}${analyst1y != null && numAnalysts >= 3 ? ` (analysts: ${pct(analyst1y, false)}, n=${numAnalysts})` : ''}`,
-    ``,
-    `━━━ QUALITY ━━━`,
-    ...(grossM != null ? [`Gross margin: ${pct(grossM, false)}`] : []),
-    ...(netM != null ? [`Net margin:   ${pct(netM, false)}`] : []),
-    ...(roic != null ? [`ROIC: ${pct(roic, false)}${roicSpread != null ? ` (${roicSpread > 0 ? '+' : ''}${pct(roicSpread, false)} vs WACC)` : ''}`] : []),
-    ``,
-    ...(recLabel ? [`Wall St: ${recLabel}`] : []),
-    `Rating: ${grade} ${label} · ${sector}`,
+    ...(grossM != null ? [`Gross margin ${pct(grossM, false)}${netM != null ? ` · Net ${pct(netM, false)}` : ''}${roic != null ? ` · ROIC ${pct(roic, false)}` : ''}`] : []),
+    ...(recLabel ? [`Wall St: ${recLabel}${grade ? ` · Rating: ${grade} ${label}` : ''}`] : []),
     ``,
     `$${ticker} ${v.long}.`,
     `${APP_URL}/stock/${ticker}`,
-    `#DCF #${ticker} #Valuation #Investing`,
+    `$${ticker} #DCF #Valuation #Investing`,
   ].filter(Boolean)
 
   await post(lines.join('\n'))
@@ -2417,7 +2392,7 @@ async function runPreClose() {
     `Nasdaq:  ${nasdaq?.changePct >= 0 ? '+' : ''}${nasdaq?.changePct.toFixed(2) ?? 'N/A'}%`,
     tnx ? `10Y Yield: ${tnx.price.toFixed(3)}%` : null,
     ``,
-    `━━━ SECTORS INTO CLOSE ━━━`,
+    ``,
     ...sectors.map(s => {
       const e = s.changePct >= 0.5 ? '🟢' : s.changePct <= -0.5 ? '🔴' : '🟡'
       return `${e} ${s.name}: ${s.changePct >= 0 ? '+' : ''}${s.changePct.toFixed(2)}%`
@@ -2479,7 +2454,7 @@ async function runAfterHours() {
   const lines = [
     `🔔 After Hours — ${dayName}`,
     ``,
-    `━━━ FINAL CLOSE ━━━`,
+    ``,
     `S&P 500: ${sp500?.changePct >= 0 ? '+' : ''}${sp500?.changePct.toFixed(2) ?? 'N/A'}% · ${sp500?.price.toFixed(0) ?? ''}`,
     `Nasdaq:  ${nasdaq?.changePct >= 0 ? '+' : ''}${nasdaq?.changePct.toFixed(2) ?? 'N/A'}%`,
     `Dow:     ${dow?.changePct >= 0 ? '+' : ''}${dow?.changePct.toFixed(2) ?? 'N/A'}%`,
@@ -2488,17 +2463,17 @@ async function runAfterHours() {
   ]
 
   if (todayEarners.length > 0) {
-    lines.push(``, `━━━ REPORTING AFTER HOURS ━━━`)
+    lines.push(``, `Reporting after hours:`)
     todayEarners.forEach(t => lines.push(`📊 $${t.symbol} — run the model before results: ${APP_URL}/stock/${t.symbol}`))
   }
 
   if (tomorrowEarners.length > 0) {
-    lines.push(``, `━━━ TOMORROW'S EARNINGS ━━━`)
+    lines.push(``, `Tomorrow's earnings:`)
     lines.push(tomorrowEarners.map(t => `$${t.symbol}`).join(' · '))
   }
 
   if (macroTomorrow.length > 0) {
-    lines.push(``, `━━━ TOMORROW'S CALENDAR ━━━`)
+    lines.push(``, `Tomorrow:`)
     macroTomorrow.forEach(e => lines.push(`📅 ${e.label}`))
   }
 
@@ -2520,7 +2495,7 @@ const THEORY_POSTS = {
       ``,
       `It's not about finding great companies. It's about finding great companies at prices that leave room for you to be wrong.`,
       ``,
-      `━━━ HOW IT WORKS ━━━`,
+      ``,
       `You estimate intrinsic value: $100`,
       `You only buy at: $70 (30% margin of safety)`,
       ``,
@@ -2541,16 +2516,16 @@ const THEORY_POSTS = {
       ``,
       `P/E is the most quoted multiple in finance. It's also one of the most misleading.`,
       ``,
-      `━━━ THE PROBLEM WITH P/E ━━━`,
+      ``,
       `P/E ignores capital structure. A company with $10B in debt looks "cheaper" on P/E than one with no debt — but the acquirer takes on that debt.`,
       ``,
-      `━━━ WHY EV/EBITDA IS BETTER ━━━`,
+      ``,
       `Enterprise Value = Market Cap + Debt - Cash`,
       `It's what you'd actually pay to own the whole business.`,
       ``,
       `EBITDA strips out financing choices. It lets you compare a leveraged buyout candidate with a debt-free tech company on equal footing.`,
       ``,
-      `━━━ WHEN EACH IS USEFUL ━━━`,
+      ``,
       `P/E: Quick screen, mature profitable businesses, same-sector comparison`,
       `EV/EBITDA: Cross-sector comparison, M&A analysis, capital-intensive businesses`,
       ``,
@@ -2570,12 +2545,12 @@ const THEORY_POSTS = {
       ``,
       `In plain English: the cash a business actually generates for its owners — after investing what it needs to maintain its competitive position.`,
       ``,
-      `━━━ WHY THIS MATTERS ━━━`,
+      ``,
       `Reported earnings can be manipulated. Revenue is even easier to game. Free cash flow gets distorted by working capital timing.`,
       ``,
       `Owner earnings strips all of that out. It asks: if I owned this entire business, how much cash would actually end up in my pocket each year?`,
       ``,
-      `━━━ THE DCF CONNECTION ━━━`,
+      ``,
       `Owner earnings is essentially what we're discounting in a FCFF model. The best investors aren't doing anything exotic — they're just being rigorous about this one number.`,
       ``,
       `${APP_URL}`,
@@ -2590,12 +2565,12 @@ const THEORY_POSTS = {
       ``,
       `Companies that trade at 50× earnings today rarely still trade at 50× in 10 years. Companies at 8× rarely stay at 8×.`,
       ``,
-      `━━━ THE EVIDENCE ━━━`,
+      ``,
       `Damodaran's data shows that high-growth companies (>25% revenue CAGR) sustain that growth for an average of 4-5 years before converging toward industry averages.`,
       ``,
       `This is why we apply a convergence discount in our models. It's not pessimism — it's empiricism.`,
       ``,
-      `━━━ THE INVESTOR IMPLICATION ━━━`,
+      ``,
       `Paying for perpetual high growth is almost always a mistake.`,
       `The opportunity is when the market prices in mean reversion faster than it actually happens.`,
       ``,
@@ -2613,12 +2588,12 @@ const THEORY_POSTS = {
       ``,
       `These are qualitative observations. ROIC vs WACC is the quantitative proof.`,
       ``,
-      `━━━ THE MATH ━━━`,
+      ``,
       `If ROIC = 20% and WACC = 10%, every $1 reinvested creates $0.20 of economic profit above the cost of capital.`,
       ``,
       `Compound that for 20 years with a business that can redeploy most of its earnings at 20% ROIC — that's how generational wealth is created.`,
       ``,
-      `━━━ WHY MOST COMPANIES DON'T HAVE IT ━━━`,
+      ``,
       `ROIC > WACC attracts competition. Competition erodes returns. Most businesses converge to ROIC ≈ WACC over time.`,
       ``,
       `The question isn't "does this company have a moat today?" — it's "how long can they sustain ROIC > WACC?"`,
@@ -2638,12 +2613,12 @@ const THEORY_POSTS = {
       ``,
       `The debate between them has consumed decades of academic research. Both sides have data. Both sides are right some of the time.`,
       ``,
-      `━━━ WHAT THE DATA ACTUALLY SHOWS ━━━`,
+      ``,
       `Value (low P/B, low P/E) has historically outperformed — but much of that premium disappeared after it was discovered and arbitraged.`,
       ``,
       `Quality (high ROIC, strong balance sheet, stable earnings) has shown persistent outperformance, especially in the modern information economy.`,
       ``,
-      `━━━ THE SYNTHESIS ━━━`,
+      ``,
       `The real edge is buying quality at a discount to intrinsic value.`,
       ``,
       `Not: buy anything cheap. Not: buy quality at any price.`,
@@ -2663,10 +2638,10 @@ const THEORY_POSTS = {
       ``,
       `A better question: "what growth rate is the current price assuming?"`,
       ``,
-      `━━━ WHAT IS THE IMPLIED CAGR? ━━━`,
+      ``,
       `Reverse DCF: instead of estimating growth to get a fair value, you take the current price as given and solve for the growth rate that justifies it.`,
       ``,
-      `━━━ WHY IT'S MORE USEFUL ━━━`,
+      ``,
       `"NVDA at $200 — is it cheap or expensive?"`,
       `→ Hard to say.`,
       ``,
@@ -2687,12 +2662,12 @@ const THEORY_POSTS = {
       ``,
       `For most growth companies, 60-80% of the total valuation comes from the terminal value — the value assigned to all cash flows after your explicit forecast period.`,
       ``,
-      `━━━ WHAT THIS MEANS ━━━`,
+      ``,
       `You spend hours modeling years 1-5 in detail. Then you apply a single terminal growth rate that determines most of the answer.`,
       ``,
       `A 0.5% difference in terminal growth rate can change fair value by 20-30% for a growth stock.`,
       ``,
-      `━━━ HOW TO BE RIGOROUS ABOUT IT ━━━`,
+      ``,
       `1. Terminal growth should approximate long-run nominal GDP growth (2-3% for developed markets)`,
       `2. Never use a terminal growth rate above the growth rate of the economy the company operates in`,
       `3. Apply a convergence discount from high near-term growth down to terminal`,
@@ -2712,12 +2687,12 @@ const THEORY_POSTS = {
       ``,
       `Change the discount rate — and every valuation on earth changes simultaneously.`,
       ``,
-      `━━━ THIS IS WHY INTEREST RATES MATTER SO MUCH ━━━`,
+      ``,
       `When the Fed raises rates, it raises the risk-free rate. The risk-free rate is the floor of every discount rate. When the floor rises, every asset's present value falls.`,
       ``,
       `It's not sentiment. It's arithmetic.`,
       ``,
-      `━━━ WACC IS YOUR PERSONAL DISCOUNT RATE ━━━`,
+      ``,
       `WACC (Weighted Average Cost of Capital) is the discount rate for a specific business — it reflects the riskiness of that business's cash flows, its capital structure, and the current interest rate environment.`,
       ``,
       `When you see "NVDA WACC: 13.8%" — that means you're demanding 13.8% annual return to justify the risk of owning NVDA's future cash flows. At current prices, does NVDA deliver that?`,
@@ -2734,17 +2709,17 @@ const THEORY_POSTS = {
       ``,
       `Wall St analysts produce price targets. These are not valuations.`,
       ``,
-      `━━━ WHAT A PRICE TARGET IS ━━━`,
+      ``,
       `A 12-month estimate of where an analyst thinks the stock will trade. It's based on relative multiples, recent momentum, sentiment, and what the analyst thinks other investors will pay.`,
       ``,
       `It's a prediction about human psychology.`,
       ``,
-      `━━━ WHAT INTRINSIC VALUE IS ━━━`,
+      ``,
       `The present value of all future cash flows the business will generate. It's independent of what other investors think. It changes only when the business fundamentals change.`,
       ``,
       `It's a claim about economic reality.`,
       ``,
-      `━━━ WHY THIS MATTERS ━━━`,
+      ``,
       `Price targets cluster near the current price (anchoring bias). They rise after stocks rise and fall after stocks fall. They are reactive, not predictive.`,
       ``,
       `Intrinsic value is the anchor you use when the market is being irrational — in either direction.`,
@@ -2916,7 +2891,7 @@ async function runEarningsResults() {
       ...(ahContext ? [ahContext] : []),
       ``,
       `The real question: did this change the intrinsic value, or just the price?`,
-      `Updated model → ${APP_URL}/stock/${c.ticker}`,
+      `See updated fair value → ${APP_URL}/stock/${c.ticker}`,
       `#${c.ticker} #Earnings #DCF`,
     ].filter(Boolean)
 
@@ -3010,12 +2985,12 @@ const HOLIDAY_POSTS = [
       `The ERP is the extra return investors demand for owning equities over risk-free bonds.`,
       `It sits inside every WACC calculation. Change it by 1% and fair values shift 15-30%.`,
       ``,
-      `━━━ WHAT ACADEMICS FOUND ━━━`,
+      ``,
       `Dimson, Marsh & Staunton (2022): realized ERP ≈ 3.5-4.5% over 120 years across developed markets.`,
       `Damodaran (2026): implied ERP from S&P 500 prices ≈ 4.0-5.5% in current market.`,
       `Mehra & Prescott (1985): called it the "equity premium puzzle" — too high to explain with rational risk models alone.`,
       ``,
-      `━━━ WHY IT MATTERS FOR YOUR MODEL ━━━`,
+      ``,
       `ERP = 4%: Cost of equity for a beta-1 stock = Rf + 1.0 × 4% = e.g. 8.3%`,
       `ERP = 5%: Same stock = 9.3%`,
       `That 1% difference in ERP compresses a growth stock's fair value by ~20%.`,
@@ -3044,7 +3019,7 @@ const HOLIDAY_POSTS = [
       `4. Profitability — high operating profit stocks beat low ones`,
       `5. Investment — companies that invest conservatively beat aggressive investors`,
       ``,
-      `━━━ THE DCF CONNECTION ━━━`,
+      ``,
       `Factor 3 (value) and 4 (profitability) map directly to DCF.`,
       `Low P/B = trading below book = margin of safety.`,
       `High profitability = high ROIC = durable cash flows.`,
@@ -3066,7 +3041,7 @@ const HOLIDAY_POSTS = [
       ``,
       `The idea: one year of earnings is noisy. Average over a decade and you get signal.`,
       ``,
-      `━━━ WHAT THE DATA SAYS ━━━`,
+      ``,
       `Historical average CAPE: ~16-17×`,
       `1929 peak: ~33× (preceded the crash)`,
       `2000 peak: ~44× (dot-com bubble)`,
@@ -3075,7 +3050,7 @@ const HOLIDAY_POSTS = [
       ``,
       `High CAPE predicts lower 10-year forward returns. Not useless — just long-horizon.`,
       ``,
-      `━━━ CRITIQUE AND NUANCE ━━━`,
+      ``,
       `Jeremy Siegel: accounting changes make modern earnings look smaller → CAPE overstates valuation`,
       `Damodaran: CAPE says nothing about individual stocks, only the index`,
       ``,
@@ -3095,17 +3070,17 @@ const HOLIDAY_POSTS = [
       `In a perfect market, a firm's value is independent of how it's financed.`,
       `Debt vs equity? Doesn't matter for total firm value.`,
       ``,
-      `━━━ THE INTUITION ━━━`,
+      ``,
       `If debt is cheap, it raises leverage risk. Higher risk = investors demand higher return on equity.`,
       `The cost savings from cheap debt are exactly offset by the higher cost of equity.`,
       `Total cost of capital stays the same.`,
       ``,
-      `━━━ IN PRACTICE (WITH TAXES) ━━━`,
+      ``,
       `Taxes break the perfect market assumption.`,
       `Interest is tax-deductible → debt has a tax shield → some debt adds value.`,
       `This is why WACC includes (1 - tax rate) on the cost of debt in our models.`,
       ``,
-      `━━━ THE IMPLICATION ━━━`,
+      ``,
       `Companies can't create value by shuffling debt and equity.`,
       `Value comes from operations: higher ROIC, better margins, faster growth.`,
       `Financing is just execution. The DCF is what captures the real value.`,
@@ -3129,7 +3104,7 @@ const HOLIDAY_POSTS = [
       ``,
       `You are never obligated to trade with him.`,
       ``,
-      `━━━ THE LESSON ━━━`,
+      ``,
       `Mr. Market is there to serve you, not to guide you.`,
       `His price is useful if you want to buy or sell.`,
       `His price is useless as a measure of business value.`,
@@ -3137,7 +3112,7 @@ const HOLIDAY_POSTS = [
       `The investor's job: know what the business is worth independently.`,
       `Trade with Mr. Market only when his price is attractive relative to that value.`,
       ``,
-      `━━━ THE DCF IS YOUR ANCHOR ━━━`,
+      ``,
       `Without an independent valuation, you have no way to judge Mr. Market's offers.`,
       `With one, his volatility becomes opportunity rather than anxiety.`,
       ``,
@@ -3158,13 +3133,13 @@ const HOLIDAY_POSTS = [
       ``,
       `Applied to investing: f* = edge / odds`,
       ``,
-      `━━━ WHAT THIS MEANS ━━━`,
+      ``,
       `The bigger your edge (margin of safety), the more you should allocate.`,
       `The bigger the uncertainty, the less you should allocate.`,
       ``,
       `Kelly maximizes long-run wealth growth. In practice, investors use half-Kelly or quarter-Kelly to reduce volatility.`,
       ``,
-      `━━━ THE VALUATION CONNECTION ━━━`,
+      ``,
       `Kelly requires you to know your edge.`,
       `Edge = (intrinsic value - current price) / intrinsic value = margin of safety`,
       ``,
@@ -3185,11 +3160,11 @@ const HOLIDAY_POSTS = [
       ``,
       `Net income is what accountants report. It's not what investors should care about.`,
       ``,
-      `━━━ THE PROBLEM WITH NET INCOME ━━━`,
+      ``,
       `Net income ignores the cost of equity capital.`,
       `A company can report positive net income while destroying shareholder value.`,
       ``,
-      `━━━ THE SOLUTION: ECONOMIC PROFIT ━━━`,
+      ``,
       `Economic Profit = NOPAT - (Invested Capital × WACC)`,
       `NOPAT = Net Operating Profit After Tax (strips out financing effects)`,
       ``,
@@ -3199,7 +3174,7 @@ const HOLIDAY_POSTS = [
       `This is mathematically equivalent to ROIC > WACC.`,
       `And it's exactly what we compute in every insic valuation.`,
       ``,
-      `━━━ WHY THIS MATTERS ━━━`,
+      ``,
       `Companies with persistent positive Economic Profit deserve premium valuations.`,
       `Companies with negative Economic Profit — no matter how "profitable" — are traps.`,
       ``,
@@ -3332,20 +3307,14 @@ async function runSectorScan() {
     `${scan.emoji} ${scan.name} — Valuation Scan`,
     `${dateStr}`,
     ``,
-    `━━━ Fwd P/E · EV/EBITDA · Rev Growth · Model ━━━`,
+    ``,
     ...tableLines,
     ``,
     scan.context,
     ``,
     ...insightLines,
     ``,
-    `Full DCF models → ${APP_URL}`,
-    scan.hashtags,
-  ].filter(Boolean)
-
-  await post(lines.join('\n'))
-}
-
+    `Free models on every S&P 500 stock → ${APP_URL}`,
     scan.hashtags,
   ].filter(Boolean)
 
