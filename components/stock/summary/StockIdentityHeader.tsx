@@ -79,7 +79,7 @@ function initials(name: string): string {
 function PriceValuationPanel({
   currency, price, change, changePct,
   marketState, preMarketPrice, preMarketChangePct, postMarketPrice, postMarketChangePct,
-  fairValue, analystTargetMean, analystTargetLow, analystTargetHigh, numAnalysts,
+  fairValue, analystTargetMean: _analystTargetMean, analystTargetLow: _analystTargetLow, analystTargetHigh: _analystTargetHigh, numAnalysts: _numAnalysts,
   onViewValuation, onViewConviction,
 }: Pick<Props,
   'currency' | 'price' | 'change' | 'changePct' |
@@ -89,14 +89,13 @@ function PriceValuationPanel({
 >) {
   const isPositive  = change >= 0
   const prefix      = currencyPrefix(currency)
-  const upside      = fairValue != null         ? (fairValue        - price) / price * 100 : null
-  const analystUpside = analystTargetMean != null ? (analystTargetMean - price) / price * 100 : null
+  const upside      = fairValue != null ? (fairValue - price) / price * 100 : null
 
   return (
     <div className="flex flex-col gap-0">
-      {/* Price block */}
+      {/* Price block — tighter padding */}
       <div
-        className="rounded-xl px-3.5 py-3 -mx-3.5 mb-1"
+        className="rounded-xl px-3 py-2.5 -mx-3 mb-1"
         style={{
           background: isPositive
             ? 'linear-gradient(135deg, rgba(17,135,93,0.06) 0%, rgba(17,135,93,0.02) 60%, transparent 100%)'
@@ -104,7 +103,7 @@ function PriceValuationPanel({
         }}
       >
         <p className="text-[11px] text-[#9B9B9B] mb-0.5 leading-none">Current price</p>
-        <p className="text-[32px] font-bold leading-none text-[#111111] tracking-tight">
+        <p className="text-[30px] font-bold leading-none text-[#111111] tracking-tight">
           {prefix}{price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </p>
         <div className={`mt-1 flex items-center gap-1 text-[13px] font-semibold ${isPositive ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
@@ -138,109 +137,43 @@ function PriceValuationPanel({
         </div>
       )}
 
-      {/* Model estimate + analyst target */}
-      {(fairValue != null || analystTargetMean != null) && (
-        <div className="mt-4 pt-3 border-t border-[#F0F0F0] flex flex-col gap-1">
-
-          {fairValue != null && upside != null && (
-            <button onClick={onViewValuation}
-              className="group flex items-center justify-between gap-2 text-left hover:bg-[#F5F5F5] rounded-lg px-2 py-2 -mx-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-olive-700 focus-visible:rounded-lg"
-              aria-label="View valuation details"
-            >
-              <div>
-                <p className="text-[10px] text-[#9B9B9B] leading-none mb-0.5">Model estimate</p>
-                <p className="text-[15px] font-[750] text-[#111111] leading-none tabular-nums">
-                  {fmtPriceValue(fairValue, currency)}
-                </p>
-              </div>
-              <div className="flex flex-col items-end gap-0.5">
-                <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-[650] ${
-                  upside > 15  ? 'bg-[#E8F7EF] text-[#11875D]' :
-                  upside < -10 ? 'bg-[#FCEAEA] text-[#D83B3B]' :
-                  'bg-[#F5F5F5] text-[#6B6B6B]'
-                }`}>
-                  {upside > 0 ? '+' : ''}{upside.toFixed(1)}%
-                </span>
-                <span className="text-[10px] text-[#9B9B9B] group-hover:text-[#5F790B] transition-colors">
-                  See valuation →
-                </span>
-              </div>
-            </button>
-          )}
-
-          {/* Analyst target with range slider when full data available */}
-          {analystTargetMean != null && analystTargetLow != null && analystTargetHigh != null && (() => {
-            const sym = currencyPrefix(currency)
-            const range = analystTargetHigh - analystTargetLow
-            const safe = range > 0 ? range : 1
-            const curPct  = Math.max(0, Math.min(100, ((price - analystTargetLow) / safe) * 100))
-            const meanPct = Math.max(0, Math.min(100, ((analystTargetMean - analystTargetLow) / safe) * 100))
-            const isUp = analystTargetMean > price
-            const tgtUpside = (analystTargetMean - price) / price * 100
-            return (
-              <div className="mt-2 rounded-lg bg-[#F9F9F9] border border-[#E5E5E5] px-3 py-2.5">
-                <div className="flex items-center justify-between mb-2">
-                  <div>
-                    <p className="text-[10px] text-[#9B9B9B] leading-none mb-0.5">Analyst target</p>
-                    <p className={`text-[14px] font-[700] leading-none tabular-nums ${isUp ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
-                      {sym}{analystTargetMean.toFixed(2)}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className={`text-[12px] font-[700] ${isUp ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
-                      {tgtUpside >= 0 ? '+' : ''}{tgtUpside.toFixed(1)}%
-                    </p>
-                    {numAnalysts != null && numAnalysts > 0 && (
-                      <p className="text-[10px] text-[#9B9B9B]">{numAnalysts} analysts</p>
-                    )}
-                  </div>
-                </div>
-                <div className="relative h-2 rounded-full bg-[#E5E5E5] mx-0.5">
-                  {isUp ? (
-                    <div className="absolute top-0 bottom-0 rounded-full bg-[#11875D]/60"
-                      style={{ left: `${curPct}%`, width: `${Math.max(0, meanPct - curPct)}%` }} />
-                  ) : (
-                    <div className="absolute top-0 bottom-0 rounded-full bg-[#D83B3B]/60"
-                      style={{ left: `${meanPct}%`, width: `${Math.max(0, curPct - meanPct)}%` }} />
-                  )}
-                  <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-[#111111] border-2 border-white shadow-sm z-10"
-                    style={{ left: `${curPct}%` }} />
-                  <div className={`absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 rounded-full border-2 border-white shadow-sm z-10 ${isUp ? 'bg-[#11875D]' : 'bg-[#D83B3B]'}`}
-                    style={{ left: `${meanPct}%` }} />
-                </div>
-                <div className="flex justify-between mt-1.5 text-[9px] text-[#9B9B9B] tabular-nums">
-                  <span>{sym}{analystTargetLow.toFixed(0)}</span>
-                  <span>{sym}{analystTargetHigh.toFixed(0)}</span>
-                </div>
-              </div>
-            )
-          })()}
-
-          {/* Fallback: plain text when no range data */}
-          {analystTargetMean != null && (analystTargetLow == null || analystTargetHigh == null) && analystUpside != null && (
-            <div className="flex items-center justify-between gap-2 px-2 py-1.5">
-              <div>
-                <p className="text-[10px] text-[#9B9B9B] leading-none mb-0.5">Analyst target</p>
-                <p className="text-[14px] font-[650] text-[#111111] leading-none tabular-nums">
-                  {fmtPriceValue(analystTargetMean, currency)}
-                </p>
-              </div>
-              <span className={`text-[12px] font-[650] ${analystUpside >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
-                {analystUpside >= 0 ? '+' : ''}{analystUpside.toFixed(1)}%
+      {/* Model estimate only — analyst target moved to Market Signals section */}
+      {fairValue != null && upside != null && (
+        <div className="mt-3 pt-3 border-t border-[#F0F0F0]">
+          <button onClick={onViewValuation}
+            className="group w-full flex items-center justify-between gap-2 text-left hover:bg-[#F5F5F5] rounded-lg px-2 py-2 -mx-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-olive-700 focus-visible:rounded-lg"
+            aria-label="View valuation details"
+          >
+            <div>
+              <p className="text-[10px] text-[#9B9B9B] leading-none mb-0.5">Model estimate</p>
+              <p className="text-[15px] font-[750] text-[#111111] leading-none tabular-nums">
+                {fmtPriceValue(fairValue, currency)}
+              </p>
+            </div>
+            <div className="flex flex-col items-end gap-0.5">
+              <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-[650] ${
+                upside > 15  ? 'bg-[#E8F7EF] text-[#11875D]' :
+                upside < -10 ? 'bg-[#FCEAEA] text-[#D83B3B]' :
+                'bg-[#F5F5F5] text-[#6B6B6B]'
+              }`}>
+                {upside > 0 ? '+' : ''}{upside.toFixed(1)}%
+              </span>
+              <span className="text-[10px] text-[#9B9B9B] group-hover:text-[#5F790B] transition-colors">
+                See valuation →
               </span>
             </div>
-          )}
-
-          {onViewConviction && (
-            <button onClick={onViewConviction}
-              className="flex items-center gap-1.5 px-2 py-1.5 -mx-2 rounded-lg hover:bg-[#F5F5F5] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-olive-700 focus-visible:rounded-lg">
-              <svg className="w-3.5 h-3.5 text-[#5F790B] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span className="text-[11px] font-[600] text-[#5F790B]">Check conviction score →</span>
-            </button>
-          )}
+          </button>
         </div>
+      )}
+
+      {onViewConviction && (
+        <button onClick={onViewConviction}
+          className="mt-2 flex items-center gap-1.5 px-2 py-1.5 -mx-2 rounded-lg hover:bg-[#F5F5F5] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-olive-700 focus-visible:rounded-lg">
+          <svg className="w-3.5 h-3.5 text-[#5F790B] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span className="text-[11px] font-[600] text-[#5F790B]">Check conviction score →</span>
+        </button>
       )}
     </div>
   )
@@ -297,7 +230,7 @@ export default function StockIdentityHeader({
       {/* ══ SECTION A: Company Summary Hero ═══════════════════════════════════ */}
       {/* Two-column on sm+: ~63% left / ~37% right. Single column on mobile. */}
       <div
-        className="bg-white border border-[#E3E1DA] rounded-xl p-5 sm:p-6"
+        className="bg-white border border-[#E3E1DA] rounded-xl p-4 sm:p-5"
         style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}
       >
         <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_minmax(0,37%)] gap-5 sm:gap-6">
@@ -359,7 +292,7 @@ export default function StockIdentityHeader({
             {description && (
               <div>
                 <p
-                  className={`text-[13.5px] text-[#566174] leading-[1.65] ${descExpanded ? '' : 'line-clamp-4'}`}
+                  className={`text-[13px] text-[#566174] leading-[1.6] ${descExpanded ? '' : 'line-clamp-3'}`}
                   style={{ overflowWrap: 'break-word' }}
                 >
                   {description}

@@ -501,21 +501,24 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
   return (
     <div {...shellProps}>
 
-      {/* ── Row 1: Timeframe selector ── */}
-      <div className="flex items-center gap-1 px-5 pt-4 pb-2 flex-wrap">
-        {PERIODS.map(p => (
-          <button key={p} onClick={() => setPeriod(p)}
-            aria-pressed={period === p}
-            className={`rounded-xl px-3 py-1.5 text-[12px] font-[600] transition-colors min-h-[36px] ${period === p ? 'text-[#25310b]' : 'text-[#566174] border border-[#E5E5E5] bg-white hover:bg-[#F0F1F6] hover:border-[#CDD1C8]'}`}
-            style={period === p ? { background: '#e8f0d2', border: '1px solid #c8dba0' } : undefined}
-          >
-            {PERIOD_LABELS[p]}
-          </button>
-        ))}
-      </div>
+      {/* ── Row 1: Timeframe + Compare + Indicators on one line ── */}
+      <div className="flex items-center gap-2 px-5 pt-3 pb-2 flex-wrap">
+        {/* Timeframe pills */}
+        <div className="flex items-center gap-1 flex-wrap">
+          {PERIODS.map(p => (
+            <button key={p} onClick={() => setPeriod(p)}
+              aria-pressed={period === p}
+              className={`rounded-lg px-2.5 py-1 text-[11px] font-[600] transition-colors min-h-[30px] ${period === p ? 'text-[#25310b]' : 'text-[#566174] border border-[#E5E5E5] bg-white hover:bg-[#F0F1F6] hover:border-[#CDD1C8]'}`}
+              style={period === p ? { background: '#e8f0d2', border: '1px solid #c8dba0' } : undefined}
+            >
+              {PERIOD_LABELS[p]}
+            </button>
+          ))}
+        </div>
 
-      {/* ── Row 2: Compare + Indicators ── */}
-      <div className="flex items-center gap-2 px-5 pb-2 flex-wrap">
+        {/* Divider */}
+        <div className="w-px h-4 bg-[#E5E5E5] shrink-0 hidden sm:block" />
+
         {/* SPY quick-compare toggle */}
         {ticker.toUpperCase() !== 'SPY' && (() => {
           const spyOn = compareTickers.includes('SPY')
@@ -523,7 +526,7 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
             <button
               onClick={() => spyOn ? removeCompareTicker('SPY') : addCompareTicker('SPY')}
               aria-pressed={spyOn}
-              className={`inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-[12px] font-[600] border transition-all min-h-[36px] ${spyOn ? 'bg-[#fff3e0] border-[#f97316] text-[#c2410c]' : 'border-[#E5E5E5] text-[#566174] hover:border-[#CDD1C8] hover:bg-[#F0F1F6]'}`}
+              className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-[600] border transition-all min-h-[30px] ${spyOn ? 'bg-[#fff3e0] border-[#f97316] text-[#c2410c]' : 'border-[#E5E5E5] text-[#566174] hover:border-[#CDD1C8] hover:bg-[#F0F1F6]'}`}
             >
               {spyOn ? <>vs SPY <span className="opacity-60 ml-0.5">×</span></> : 'vs SPY'}
             </button>
@@ -534,7 +537,7 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
         {compareTickers.filter(t => t !== 'SPY').map((ct) => {
           const i = compareTickers.indexOf(ct)
           return (
-            <span key={ct} className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[12px] font-[600] border min-h-[36px]"
+            <span key={ct} className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-[600] border min-h-[30px]"
               style={{ background: COMPARE_COLORS[i % 3] + '22', color: COMPARE_COLORS[i % 3], borderColor: COMPARE_COLORS[i % 3] + '66' }}>
               {ct}
               <button onClick={() => removeCompareTicker(ct)} className="opacity-60 hover:opacity-100 ml-0.5" aria-label={`Remove ${ct} comparison`}>×</button>
@@ -550,7 +553,7 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
               onBlur={() => { if (compareInput.trim()) addCompareTicker(compareInput) }}
               placeholder="+ Compare" maxLength={10}
               aria-label="Add ticker to compare"
-              className="inline-flex items-center rounded-lg px-3 py-1.5 text-[12px] font-[600] border border-dashed border-[#CDD1C8] bg-white focus:outline-none focus:border-[#5F790B] w-24 min-h-[36px] placeholder:text-[#8A95A6] text-[#06101F]"
+              className="inline-flex items-center rounded-lg px-2.5 py-1 text-[11px] font-[600] border border-dashed border-[#CDD1C8] bg-white focus:outline-none focus:border-[#5F790B] w-20 min-h-[30px] placeholder:text-[#8A95A6] text-[#06101F]"
             />
           </form>
         )}
@@ -558,7 +561,7 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
         {/* % / $ mode when comparing */}
         {isCompare && (
           <button onClick={() => setCompareMode(p => p === 'price' ? 'percent' : 'price')}
-            className={`text-[12px] font-[600] px-3 py-1.5 rounded-lg border transition min-h-[36px] ${compareMode === 'percent' ? 'bg-olive-700 text-white border-olive-700' : 'border-[#E5E5E5] text-[#566174] hover:bg-[#F0F1F6]'}`}>
+            className={`text-[11px] font-[600] px-2.5 py-1 rounded-lg border transition min-h-[30px] ${compareMode === 'percent' ? 'bg-olive-700 text-white border-olive-700' : 'border-[#E5E5E5] text-[#566174] hover:bg-[#F0F1F6]'}`}>
             {compareMode === 'percent' ? '% Return' : '$ Price'}
           </button>
         )}
@@ -693,7 +696,7 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
         <div
           ref={mainRef}
           className="w-full"
-          style={{ height: 'clamp(320px, 42vw, 520px)' }}
+          style={{ height: 'clamp(260px, 36vw, 420px)' }}
         />
         <div ref={tooltipRef} className="pointer-events-none absolute z-20 hidden rounded-lg px-2.5 py-2 text-[11px]"
           style={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', minWidth: 120, lineHeight: 1.6 }} />

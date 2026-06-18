@@ -395,9 +395,9 @@ export default function SummaryTab({
               trend={analystRatingTrend}
               numAnalysts={quote?.numAnalysts ?? null}
               currentPrice={price}
-              targetMean={null}
-              targetLow={null}
-              targetHigh={null}
+              targetMean={analystTargetMean ?? null}
+              targetLow={_analystTargetLow ?? null}
+              targetHigh={_analystTargetHigh ?? null}
               currency={currency}
             />
           )}

@@ -22,7 +22,7 @@ export default function TradingRangeCard({ high52, low52, price, currency = 'USD
 
   return (
     <div
-      className="bg-white rounded-2xl p-5"
+      className="bg-white rounded-2xl p-4"
       style={{
         border: '1px solid rgba(15,23,42,0.08)',
         boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 8px 24px rgba(15,23,42,0.05)',

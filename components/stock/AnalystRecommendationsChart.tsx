@@ -125,7 +125,8 @@ const StackedBars = dynamic(
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function AnalystRecommendationsChart({
-  trend, numAnalysts, currency: _currency = 'USD',
+  trend, numAnalysts, currency = 'USD',
+  currentPrice, targetMean, targetLow, targetHigh,
 }: Props) {
   if (!trend || trend.length === 0) return null
 
@@ -153,7 +154,7 @@ export default function AnalystRecommendationsChart({
 
   return (
     <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 sm:p-5 h-full flex flex-col">
-      {/* Header */}
+      {/* Header — title + consensus badge */}
       <div className="flex items-start justify-between mb-3 gap-2">
         <div>
           <p className="text-[13px] font-[700] text-[#111111] leading-tight">Analyst Recommendations</p>
@@ -165,6 +166,59 @@ export default function AnalystRecommendationsChart({
           {consensusLabel}
         </span>
       </div>
+
+      {/* Analyst price target strip — shown when data available */}
+      {targetMean != null && currentPrice != null && currentPrice > 0 && (() => {
+        const sym = currency === 'USD' ? '$' : currency === 'BRL' ? 'R$ ' : currency + ' '
+        const fmt = (v: number) => Math.abs(v) >= 1000
+          ? sym + v.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+          : sym + v.toFixed(2)
+        const upside = (targetMean - currentPrice) / currentPrice * 100
+        const isUp = upside >= 0
+        const hasRange = targetLow != null && targetHigh != null && targetHigh > targetLow
+        const range = hasRange ? targetHigh! - targetLow! : 1
+        const curPct  = hasRange ? Math.max(0, Math.min(100, ((currentPrice - targetLow!) / range) * 100)) : 50
+        const meanPct = hasRange ? Math.max(0, Math.min(100, ((targetMean  - targetLow!) / range) * 100)) : 50
+        return (
+          <div className="rounded-lg bg-[#F9F9F9] border border-[#E5E5E5] px-3 py-2.5 mb-3">
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <p className="text-[10px] text-[#9B9B9B] leading-none mb-0.5">Analyst price target</p>
+                <p className={`text-[15px] font-[700] leading-none tabular-nums ${isUp ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
+                  {fmt(targetMean)}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className={`text-[13px] font-[700] tabular-nums ${isUp ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
+                  {isUp ? '+' : ''}{upside.toFixed(1)}%
+                </p>
+                <p className="text-[10px] text-[#9B9B9B]">vs current price</p>
+              </div>
+            </div>
+            {hasRange && (
+              <>
+                <div className="relative h-2 rounded-full bg-[#E5E5E5]">
+                  {isUp ? (
+                    <div className="absolute inset-y-0 rounded-full bg-[#11875D]/50"
+                      style={{ left: `${curPct}%`, width: `${Math.max(0, meanPct - curPct)}%` }} />
+                  ) : (
+                    <div className="absolute inset-y-0 rounded-full bg-[#D83B3B]/50"
+                      style={{ left: `${meanPct}%`, width: `${Math.max(0, curPct - meanPct)}%` }} />
+                  )}
+                  <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-[#111111] border-2 border-white shadow-sm z-10"
+                    style={{ left: `${curPct}%` }} />
+                  <div className={`absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 rounded-full border-2 border-white shadow-sm z-10 ${isUp ? 'bg-[#11875D]' : 'bg-[#D83B3B]'}`}
+                    style={{ left: `${meanPct}%` }} />
+                </div>
+                <div className="flex justify-between mt-1.5 text-[9px] text-[#9B9B9B] tabular-nums">
+                  <span>{fmt(targetLow!)}</span>
+                  <span>{fmt(targetHigh!)}</span>
+                </div>
+              </>
+            )}
+          </div>
+        )
+      })()}
 
       {/* Consensus breakdown */}
       <div className="flex items-center gap-3 mb-3">
