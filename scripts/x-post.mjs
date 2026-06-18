@@ -1229,88 +1229,99 @@ async function runWeeklyWrap() {
       price: data.quote?.price,
       fair: appFairValue(data),
       upside: appUpside(data),
+      data,
     }))
     .filter(s => s.price && s.fair)
 
   if (stocks.length === 0) throw new Error('No valuation data for weekly wrap')
 
+  // Sort: most undervalued first, most overvalued last — shows the spread
+  stocks.sort((a, b) => (b.upside ?? 0) - (a.upside ?? 0))
+
   const lines = [
-    `📊 Weekly Valuation Wrap`,
-    ``,
-    `This week's DCF verdicts on some of the most-watched names:`,
+    `How does the market value these 3 stocks vs what our DCF model says?`,
     ``,
   ]
 
   for (const s of stocks) {
     const v = verdictLabel(s.upside)
-    lines.push(`${v.emoji} $${s.ticker}`)
-    lines.push(`   Price ${fmt(s.price)} · Fair value est ${fmt(s.fair)} · ${pct(s.upside)} vs current price`)
-    lines.push(`   Model view: ${v.short}`)
+    const impliedG = s.data?.valuationMethods?.models?.reverseDcf?.impliedCAGR
+    lines.push(`${v.emoji} $${s.ticker}: price ${fmt(s.price)} · model ${fmt(s.fair)} (${pct(s.upside)})`)
+    if (impliedG != null) lines.push(`   Market pricing in ~${pct(impliedG, false)}/yr growth`)
     lines.push(``)
   }
 
-  lines.push(`These numbers come straight out of a full DCF — WACC, CAGR, terminal growth, 4-model blend.`)
+  lines.push(`All three run through the same DCF engine. The inputs drive the output.`)
   lines.push(``)
-  lines.push(`Not a buy/sell signal. A starting point for your own thinking.`)
+  lines.push(`Which one do you think the market has most wrong?`)
   lines.push(``)
-  lines.push(`Full interactive models → ${APP_URL}`)
-  lines.push(`#Stocks #DCF #Investing #WeeklyWrap`)
+  lines.push(`Free models on every S&P 500 stock → ${APP_URL}`)
+  lines.push(`#DCF #Investing #ValueInvesting`)
 
   await post(lines.join('\n'))
 }
 
 // ─── Mode: question ───────────────────────────────────────────────────────────
-// Sunday — rotating engagement question to drive replies and impressions.
+// Sunday — rotating engagement question. Format: provocative framing +
+// specific data point from insic + open question. Drives replies.
 
 const QUESTIONS = [
   [
-    `💭 Which metric do you use most to value a stock?`,
+    `Hot take: most retail investors are paying for growth that will never materialise.`,
     ``,
-    `→ P/E ratio`,
-    `→ DCF / intrinsic value`,
-    `→ Analyst price targets`,
-    `→ Revenue growth rate`,
+    `When you buy $TSLA at 25× revenue, you're implicitly forecasting the company will need to deliver ~30%+ annual growth for the next decade just to justify today's price.`,
     ``,
-    `Reply below 👇`,
+    `Do you actually believe that? Or are you just buying because it went up?`,
     ``,
-    `Free DCF model for any stock → ${APP_URL}`,
-    `#Investing #Stocks #StockMarket`,
+    `Check what any stock is implying → ${APP_URL}`,
+    `#Investing #Tesla #TSLA #ValueInvesting`,
   ],
   [
-    `💭 What's your biggest challenge when researching a stock?`,
+    `Unpopular opinion: analyst price targets are mostly useless.`,
     ``,
-    `→ Too much data, don't know what matters`,
-    `→ Don't understand valuation models`,
-    `→ Hard to find reliable free data`,
-    `→ Takes too long`,
+    `They're based on peer multiples that are themselves overvalued. It's circular.`,
     ``,
-    `Reply below 👇 — we built insic to solve exactly this.`,
+    `A stock with a $300 target can still be worth $180 by an independent DCF — and both can be right in different frameworks.`,
+    ``,
+    `Which framework are you using?`,
     ``,
     `${APP_URL}`,
-    `#Investing #Stocks #RetailInvestors`,
+    `#Investing #Stocks #WallStreet`,
   ],
   [
-    `💭 Do you think $NVDA is expensive at current prices?`,
+    `How much growth is already priced into $NVDA?`,
     ``,
-    `Our model: 🔴 Trading at a significant premium to fair value`,
-    `Wall St: Strong Buy`,
+    `At today's price, the market is pricing in roughly 40%+ annual revenue growth for the next 5 years.`,
     ``,
-    `Two very different frameworks. Which one are you using?`,
-    `See the full model → ${APP_URL}/stock/NVDA`,
+    `That's not impossible — NVDA has exceeded that historically. But it's worth knowing that's what you're betting on.`,
     ``,
-    `#NVDA #Nvidia #DCF #Investing`,
+    `Do you agree with the market's bet?`,
+    ``,
+    `See the full reverse DCF → ${APP_URL}/stock/NVDA`,
+    `$NVDA #Nvidia #DCF #Investing`,
   ],
   [
-    `💭 Warren Buffett famously avoids tech stocks he can't value.`,
+    `Most investors know what a stock costs. Very few know what it's worth.`,
     ``,
-    `Do you think DCF works for high-growth tech companies like $AMZN or $MSFT?`,
+    `The difference is a DCF. You project cash flows, discount them back to today, and compare to price.`,
     ``,
-    `→ Yes, with adjusted assumptions`,
-    `→ No, different framework needed`,
-    `→ Only for mature tech`,
+    `If the price is below intrinsic value → margin of safety.`,
+    `If it's above → you're paying for optimism.`,
     ``,
-    `See how we model it → ${APP_URL}`,
-    `#ValueInvesting #Buffett #DCF`,
+    `Which stocks in your portfolio have a real margin of safety right now?`,
+    ``,
+    `Free model for any stock → ${APP_URL}`,
+    `#DCF #ValueInvesting #Investing`,
+  ],
+  [
+    `Be honest: do you know what growth rate is already priced into the stocks you own?`,
+    ``,
+    `Most people don't. They buy because the chart looks good, or because someone said it's a great company.`,
+    ``,
+    `"Great company" and "great investment at this price" are two completely different things.`,
+    ``,
+    `Check the implied growth for any stock → ${APP_URL}`,
+    `#Investing #ValueInvesting #StockMarket`,
   ],
 ]
 
@@ -1405,31 +1416,51 @@ async function runDcfBear() {
     : recommendation === 'hold' ? 'Hold'
     : recommendation === 'sell' ? 'Sell' : null
 
-  // Neutral analysis — no bull/bear label. Just model vs market.
-  const modelVsMarket = recLabel && Math.abs(upside) > 0.15
-    ? `Wall St consensus: ${recLabel}. Model estimate: ${v.short}. The gap is worth understanding.`
-    : Math.abs(upside) > 0.25
-    ? `Model and market price diverge significantly (${pct(upside)}). One of them is wrong.`
-    : `Model and market are broadly aligned on this one.`
+  // Build the implied growth narrative — the most shareable part
+  const impliedGrowth = data.valuationMethods?.models?.reverseDcf?.impliedCAGR
+  const historicalCagr = data.cagrAnalysis?.historicalCagr3y
+
+  // What is the market pricing in?
+  const impliedStr = impliedGrowth != null
+    ? `At ${fmt(price)}, the market is pricing in ~${pct(impliedGrowth, false)}/yr revenue growth over 5 years.`
+    : null
+
+  const historicalStr = historicalCagr != null
+    ? `${ticker}'s actual 3-year revenue CAGR: ${pct(historicalCagr, false)}.`
+    : null
+
+  // The provocative take — the gap between implied and historical
+  const take = (() => {
+    if (impliedGrowth == null || historicalCagr == null) {
+      return upside > 0.20
+        ? `Our model says the market is underpricing this business by ${pct(upside)}.`
+        : upside < -0.20
+        ? `Our model says the market is overpricing this business by ${pct(Math.abs(upside))}.`
+        : `Market price and our model are broadly aligned.`
+    }
+    const ratio = impliedGrowth / historicalCagr
+    if (ratio > 1.3)  return `The market needs ${ticker} to significantly accelerate beyond its historical pace. That's a bet worth stress-testing.`
+    if (ratio < 0.7)  return `The market is pricing in a slowdown well below ${ticker}'s historical pace. Is the pessimism justified?`
+    return `The implied growth rate is roughly in line with history. The question is whether that pace is sustainable.`
+  })()
+
+  const comparedToAnalysts = recLabel && analyst1y != null && numAnalysts >= 5
+    ? `Analysts (${numAnalysts}) expect ${pct(analyst1y, false)}/yr and rate it ${recLabel}.`
+    : null
 
   const lines = [
-    `${v.emoji} $${ticker} — ${v.short}`,
+    impliedStr ? `What is $${ticker}'s stock price actually betting on?` : `${v.emoji} $${ticker} — ${v.short}`,
     ``,
-    `Price: ${fmt(price)} · Model fair value: ${fmt(fair)} (${pct(upside)})`,
-    ...(bear && bull ? [`Bear case: ${fmt(bear)} · Bull case: ${fmt(bull)}`] : []),
+    ...(impliedStr ? [impliedStr] : []),
+    ...(historicalStr ? [historicalStr] : []),
+    ...(take ? [take] : []),
     ``,
-    modelVsMarket,
-    ``,
-    `WACC: ${pct(wacc, false)} · Revenue CAGR: ${pct(cagr, false)}${analyst1y != null && numAnalysts >= 3 ? ` (analysts: ${pct(analyst1y, false)}, n=${numAnalysts})` : ''}`,
-    ...(terminalG ? [`Terminal growth: ${pct(terminalG, false)}`] : []),
-    ``,
-    ...(grossMargin != null ? [`Gross margin ${pct(grossMargin, false)}${netMargin != null ? ` · Net margin ${pct(netMargin, false)}` : ''}${fcfMargin != null ? ` · FCF ${pct(fcfMargin, false)}` : ''}`] : []),
-    ...(roic != null ? [`ROIC: ${pct(roic, false)}${roicSpread != null ? ` (${roicSpread > 0 ? '+' : ''}${pct(roicSpread, false)} vs WACC)` : ''}`] : []),
-    ...(recLabel && analystTarget ? [`Wall St: ${recLabel} · target ${fmt(analystTarget)}${forwardPE ? ` · fwd P/E ${forwardPE}×` : ''}`] : []),
-    ...(stock1y != null && spy1y != null ? [`1Y: ${pct(stock1y)} vs SPY ${pct(spy1y)}`] : []),
+    ...(comparedToAnalysts ? [comparedToAnalysts] : []),
+    `Our model: fair value ~${fmt(fair)} (${pct(upside)} vs current price)`,
+    ...(bear && bull ? [`Scenario range: ${fmt(bear)} → ${fmt(bull)}`] : []),
     ``,
     `Full model → ${APP_URL}/stock/${ticker}`,
-    `$${ticker} #DCF #Valuation #Investing`,
+    `$${ticker} #DCF #Investing`,
   ].filter(Boolean)
 
   await post(lines.join('\n'))
@@ -2338,19 +2369,44 @@ async function runDcf2() {
 
   if (!price || !fair) throw new Error(`No price/fair value for ${ticker}`)
 
+  // dcf2 angle: stress-test framing — what has to go RIGHT for this price to make sense
+  const impliedGrowth = data.valuationMethods?.models?.reverseDcf?.impliedCAGR
+  const historicalCagr = data.cagrAnalysis?.historicalCagr3y
+
+  const stressTest = (() => {
+    if (upside < -0.15 && impliedGrowth != null) {
+      return `For $${ticker} at ${fmt(price)} to be fairly valued, you need to believe in ~${pct(impliedGrowth, false)}/yr revenue growth for 5 years.`
+    }
+    if (upside > 0.20 && impliedGrowth != null) {
+      return `$${ticker} at ${fmt(price)} is only pricing in ~${pct(impliedGrowth, false)}/yr growth — well below what the business has historically delivered.`
+    }
+    if (bear && bull) {
+      return `Under our bear case (${fmt(bear)}), the downside is ${pct((bear - price) / price)}. Under the bull (${fmt(bull)}), the upside is ${pct((bull - price) / price)}.`
+    }
+    return `Model fair value: ${fmt(fair)}. The market disagrees by ${pct(Math.abs(upside))}.`
+  })()
+
+  const qualityNote = (() => {
+    if (roic != null && roicSpread != null && roicSpread > 0.08)
+      return `ROIC ${pct(roic, false)} vs WACC — ${pct(roicSpread, false)} spread. This business consistently creates value above its cost of capital.`
+    if (grossM != null && grossM > 0.60)
+      return `Gross margin of ${pct(grossM, false)} suggests real pricing power.`
+    if (netM != null && netM < 0 && upside > 0)
+      return `Still loss-making (net margin ${pct(netM, false)}), but the model sees a path to profitability in the growth assumptions.`
+    return null
+  })()
+
   const lines = [
-    `${v.emoji} $${ticker} — ${v.short}`,
+    stressTest,
     ``,
-    `Price: ${fmt(price)} · Model: ${fmt(fair)} (${pct(upside)})`,
-    ...(bear && bull ? [`Bear: ${fmt(bear)} · Bull: ${fmt(bull)}`] : []),
+    ...(historicalCagr != null ? [`Historical 3Y revenue CAGR: ${pct(historicalCagr, false)}.`] : []),
+    ...(qualityNote ? [qualityNote] : []),
     ``,
-    `WACC: ${pct(wacc, false)} · CAGR: ${pct(cagr, false)}${analyst1y != null && numAnalysts >= 3 ? ` (analysts: ${pct(analyst1y, false)}, n=${numAnalysts})` : ''}`,
-    ...(grossM != null ? [`Gross margin ${pct(grossM, false)}${netM != null ? ` · Net ${pct(netM, false)}` : ''}${roic != null ? ` · ROIC ${pct(roic, false)}` : ''}`] : []),
-    ...(recLabel ? [`Wall St: ${recLabel}${grade ? ` · Rating: ${grade} ${label}` : ''}`] : []),
+    ...(recLabel ? [`Wall St: ${recLabel}${analyst1y != null && numAnalysts >= 3 ? ` · ${numAnalysts} analysts expect ${pct(analyst1y, false)}/yr growth` : ''}`] : []),
+    `Our model: ${fmt(fair)} (${pct(upside)})${bear && bull ? ` · Range ${fmt(bear)}–${fmt(bull)}` : ''}`,
     ``,
-    `$${ticker} ${v.long}.`,
     `${APP_URL}/stock/${ticker}`,
-    `$${ticker} #DCF #Valuation #Investing`,
+    `$${ticker} #DCF #Investing`,
   ].filter(Boolean)
 
   await post(lines.join('\n'))
