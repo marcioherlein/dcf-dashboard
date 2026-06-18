@@ -71,7 +71,7 @@ export default function MarketTeaserSection() {
           {/* Header */}
           <div className="flex items-start gap-3 px-4 sm:px-6 pt-6 pb-4 border-b border-[#F5F5F5]">
             <motion.div
-              className="w-10 h-10 rounded-md bg-[#EEF4DD] flex items-center justify-center shrink-0 mt-0.5"
+              className="w-10 h-10 rounded-md bg-[#EEF2FA] flex items-center justify-center shrink-0 mt-0.5"
               initial={reduced ? {} : { scale: 0.8, opacity: 0 }}
               animate={inView ? (reduced ? {} : { scale: 1, opacity: 1 }) : {}}
               transition={{ duration: 0.55, ease: EASE, delay: 0.15 }}

@@ -60,7 +60,7 @@ export default function AssumptionSlider({
           value={value}
           onChange={(e) => onChange(parseFloat(e.target.value))}
           className="w-full h-1.5 appearance-none rounded-full cursor-pointer
-            bg-[#F4F3EF]
+            bg-[#F0F1F6]
             [&::-webkit-slider-thumb]:appearance-none
             [&::-webkit-slider-thumb]:w-5
             [&::-webkit-slider-thumb]:h-5

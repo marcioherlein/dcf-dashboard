@@ -86,7 +86,7 @@ function buildInterpretation(
   } else {
     title = 'Insufficient model data'
     body = 'Fair value estimate is unavailable. Check back when more financial data is accessible.'
-    bgColor = '#F4F3EF'
+    bgColor = '#F0F1F6'
     borderColor = '#E3E1DA'
   }
 
@@ -191,7 +191,7 @@ export default function MarketInterpretationCard({
               return (
                 <div className="mt-1">
                   {/* Bar */}
-                  <div className="relative h-4 rounded-full bg-[#F4F3EF] overflow-visible">
+                  <div className="relative h-4 rounded-full bg-[#F0F1F6] overflow-visible">
                     {/* Range band (low to high target) */}
                     <div
                       className="absolute top-0 bottom-0 rounded-full bg-gradient-to-r from-slate-200 to-emerald-200"

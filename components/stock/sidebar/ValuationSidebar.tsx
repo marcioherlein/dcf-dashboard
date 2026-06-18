@@ -101,7 +101,7 @@ function DecisionLabel({ verdict, text }: { verdict: Verdict; text: string }) {
     verdict === 'good'  ? 'bg-[#E8F7EF] text-[#11875D] border-[#A3D9BE]' :
     verdict === 'watch' ? 'bg-[#FFF4DA] text-[#B56A00] border-[#F3D391]' :
     verdict === 'risk'  ? 'bg-[#FCEAEA] text-[#D83B3B] border-[#F0B8B8]' :
-                          'bg-[#F4F3EF] text-[#566174] border-[#E3E1DA]'
+                          'bg-[#F0F1F6] text-[#566174] border-[#E3E1DA]'
   return (
     <span className={cn('inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border', cls)}>
       {text}

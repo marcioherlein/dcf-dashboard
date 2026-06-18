@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic'
 
 const PayPalSubscribeButton = dynamic(
   () => import('@/components/payments/PayPalSubscribeButton'),
-  { ssr: false, loading: () => <div className="h-12 rounded-xl bg-[#EEF4DD] animate-pulse" /> }
+  { ssr: false, loading: () => <div className="h-12 rounded-xl bg-[#EEF2FA] animate-pulse" /> }
 )
 
 const FREE_FEATURES = [
@@ -59,7 +59,7 @@ export default function PricingSection() {
 
           {/* Free */}
           <div className="rounded-2xl border border-[#E5E5E5] bg-white p-6 flex flex-col shadow-card relative">
-            <div className="absolute top-4 right-4 rounded-full bg-[#EEF4DD] border border-[#BFD2A1] text-[#5F790B] text-[10px] font-bold uppercase tracking-wider px-2.5 py-1">
+            <div className="absolute top-4 right-4 rounded-full bg-[#EEF2FA] border border-[#BFD2A1] text-[#5F790B] text-[10px] font-bold uppercase tracking-wider px-2.5 py-1">
               Beta — free now
             </div>
             <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-[#6B6B6B] mb-3">Free</p>
@@ -97,7 +97,7 @@ export default function PricingSection() {
             <p className="text-[12px] text-[#6B6B6B] mb-5">Cancel anytime · No contracts.</p>
 
             {isPro ? (
-              <div className="w-full flex items-center justify-center gap-2 rounded-md py-3 text-[13.5px] font-semibold text-[#5F790B] bg-[#EEF4DD] border border-[#BFD2A1] mb-5 min-h-[48px]">
+              <div className="w-full flex items-center justify-center gap-2 rounded-md py-3 text-[13.5px] font-semibold text-[#5F790B] bg-[#EEF2FA] border border-[#BFD2A1] mb-5 min-h-[48px]">
                 <Check size={14} strokeWidth={2.5} />
                 You&apos;re on Pro
               </div>

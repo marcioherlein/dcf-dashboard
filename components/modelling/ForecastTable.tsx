@@ -359,7 +359,7 @@ export default function ForecastTable({
           ? 'bg-[#FEF9C3] text-[#92400E]'
           : row.isProjected
             ? 'bg-[#EAF1FF] text-[#1D4ED8]'
-            : 'bg-[#F4F3EF] text-[#566174]'
+            : 'bg-[#F0F1F6] text-[#566174]'
       )}>
         <div className="flex flex-col items-end gap-0.5">
           <span>{label}</span>
@@ -377,14 +377,14 @@ export default function ForecastTable({
 
   function revenueRows() {
     return [
-      <tr key="revenue" className="group hover:bg-[#F4F3EF]">
-        <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F4F3EF] px-4 py-1.5 text-xs font-medium text-[#06101F] whitespace-nowrap w-36 min-w-[144px] sm:w-52 sm:min-w-[200px] border-r border-[#E3E1DA]">
+      <tr key="revenue" className="group hover:bg-[#F0F1F6]">
+        <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F0F1F6] px-4 py-1.5 text-xs font-medium text-[#06101F] whitespace-nowrap w-36 min-w-[144px] sm:w-52 sm:min-w-[200px] border-r border-[#E3E1DA]">
           Revenue <span className="text-[11px] text-[#566174] font-normal">$M</span>
         </td>
         {rows.map(r => <DataCell key={r.year} value={fmtVal(r.revenue)} row={r} />)}
       </tr>,
-      <tr key="revenue-growth" className="group hover:bg-[#F4F3EF] border-b border-[#E3E1DA]">
-        <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F4F3EF] pl-6 pr-4 py-0.5 text-[11px] font-bold text-[#2563EB] whitespace-nowrap border-r border-[#E3E1DA]">
+      <tr key="revenue-growth" className="group hover:bg-[#F0F1F6] border-b border-[#E3E1DA]">
+        <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F0F1F6] pl-6 pr-4 py-0.5 text-[11px] font-bold text-[#2563EB] whitespace-nowrap border-r border-[#E3E1DA]">
           Revenue Growth <span aria-hidden="true" className="text-[10px] text-[#2563EB]">✎</span>
         </td>
         {rows.map((r) => {
@@ -417,15 +417,15 @@ export default function ForecastTable({
       ...revenueRows(),
 
       // EBIT
-      <tr key="ebit" className="group hover:bg-[#F4F3EF]">
-        <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F4F3EF] px-4 py-1.5 text-xs font-medium text-[#06101F] whitespace-nowrap border-r border-[#E3E1DA]">
+      <tr key="ebit" className="group hover:bg-[#F0F1F6]">
+        <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F0F1F6] px-4 py-1.5 text-xs font-medium text-[#06101F] whitespace-nowrap border-r border-[#E3E1DA]">
           EBIT <span className="text-[11px] text-[#9B9B9B] font-normal">{isPct ? '% Rev' : '$M'}</span>
         </td>
         {rows.map(r => <DataCell key={r.year} value={isPct ? fmtPctDisplay(r.ebitMarginPct) : fmtVal(r.ebit)} row={r} />)}
       </tr>,
       !isPct && (
-        <tr key="ebit-margin" className="group hover:bg-[#F4F3EF] border-b border-[#E3E1DA]">
-          <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F4F3EF] pl-8 pr-4 py-0.5 text-[11px] text-[#566174] whitespace-nowrap border-r border-[#E3E1DA]">
+        <tr key="ebit-margin" className="group hover:bg-[#F0F1F6] border-b border-[#E3E1DA]">
+          <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F0F1F6] pl-8 pr-4 py-0.5 text-[11px] text-[#566174] whitespace-nowrap border-r border-[#E3E1DA]">
             EBIT Margin
           </td>
           {rows.map(r => (
@@ -438,8 +438,8 @@ export default function ForecastTable({
       isPct && <tr key="ebit-spacer" className="border-b border-[#E3E1DA]"><td colSpan={n} className="py-0" /></tr>,
 
       // Tax Rate
-      <tr key="taxrate" className="group hover:bg-[#F4F3EF] border-b border-[#E3E1DA]">
-        <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F4F3EF] px-4 py-1.5 text-xs font-medium text-[#06101F] whitespace-nowrap border-r border-[#E3E1DA]">
+      <tr key="taxrate" className="group hover:bg-[#F0F1F6] border-b border-[#E3E1DA]">
+        <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F0F1F6] px-4 py-1.5 text-xs font-medium text-[#06101F] whitespace-nowrap border-r border-[#E3E1DA]">
           {(() => {
             const representativeRate = rows.find(r => r.taxRatePct != null)?.taxRatePct
             return representativeRate != null ? `Tax (${fmtPctDisplay(representativeRate)})` : 'Tax Rate'
@@ -453,15 +453,15 @@ export default function ForecastTable({
       </tr>,
 
       // NOPAT
-      <tr key="nopat" className="group hover:bg-[#F4F3EF] bg-[#FAFAF8] border-t-2 border-[#E3E1DA]">
+      <tr key="nopat" className="group hover:bg-[#F0F1F6] bg-[#FAFAF8] border-t-2 border-[#E3E1DA]">
         <td className="sticky left-0 z-10 bg-[#FAFAF8] px-4 py-1.5 text-xs font-bold text-[#06101F] whitespace-nowrap border-r border-[#E3E1DA]">
           NOPAT <span className="text-[11px] text-[#566174] font-normal">{isPct ? '% Rev' : '$M'}</span>
         </td>
         {rows.map(r => <DataCell key={r.year} value={isPct ? fmtPctDisplay(r.nopatMarginPct) : fmtVal(r.nopat)} row={r} bold />)}
       </tr>,
       !isPct && (
-        <tr key="nopat-margin" className="group hover:bg-[#F4F3EF] border-b border-[#E3E1DA]">
-          <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F4F3EF] pl-8 pr-4 py-0.5 text-[11px] text-[#566174] whitespace-nowrap border-r border-[#E3E1DA]">
+        <tr key="nopat-margin" className="group hover:bg-[#F0F1F6] border-b border-[#E3E1DA]">
+          <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F0F1F6] pl-8 pr-4 py-0.5 text-[11px] text-[#566174] whitespace-nowrap border-r border-[#E3E1DA]">
             NOPAT Margin
           </td>
           {rows.map(r => (
@@ -474,15 +474,15 @@ export default function ForecastTable({
       isPct && <tr key="nopat-spacer" className="border-b border-[#E3E1DA]"><td colSpan={n} className="py-0" /></tr>,
 
       // D&A
-      <tr key="dna" className="group hover:bg-[#F4F3EF]">
-        <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F4F3EF] px-4 py-1.5 text-xs font-medium text-[#06101F] whitespace-nowrap border-r border-[#E3E1DA]">
+      <tr key="dna" className="group hover:bg-[#F0F1F6]">
+        <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F0F1F6] px-4 py-1.5 text-xs font-medium text-[#06101F] whitespace-nowrap border-r border-[#E3E1DA]">
           D&amp;A <span className="text-[11px] text-[#06101F] font-normal">{isPct ? '% Rev' : '$M'}</span>
         </td>
         {rows.map(r => <DataCell key={r.year} value={isPct ? fmtPctDisplay(r.dnaPct) : fmtVal(r.dna)} row={r} />)}
       </tr>,
       !isPct && (
-        <tr key="dna-pct" className="group hover:bg-[#F4F3EF]">
-          <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F4F3EF] pl-8 pr-4 py-0.5 text-[11px] text-[#566174] whitespace-nowrap border-r border-[#E3E1DA]">
+        <tr key="dna-pct" className="group hover:bg-[#F0F1F6]">
+          <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F0F1F6] pl-8 pr-4 py-0.5 text-[11px] text-[#566174] whitespace-nowrap border-r border-[#E3E1DA]">
             D&amp;A / Revenue
           </td>
           {rows.map(r => (
@@ -494,8 +494,8 @@ export default function ForecastTable({
       ),
 
       // Capex
-      <tr key="capex" className="group hover:bg-[#F4F3EF]">
-        <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F4F3EF] px-4 py-1.5 text-xs font-medium text-[#06101F] whitespace-nowrap border-r border-[#E3E1DA]">
+      <tr key="capex" className="group hover:bg-[#F0F1F6]">
+        <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F0F1F6] px-4 py-1.5 text-xs font-medium text-[#06101F] whitespace-nowrap border-r border-[#E3E1DA]">
           Capex <span className="text-[11px] text-[#06101F] font-normal">{isPct ? '% Rev' : '$M'}</span>
         </td>
         {rows.map(r => (
@@ -507,8 +507,8 @@ export default function ForecastTable({
         ))}
       </tr>,
       !isPct && (
-        <tr key="capex-pct" className="group hover:bg-[#F4F3EF]">
-          <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F4F3EF] pl-8 pr-4 py-0.5 text-[11px] text-[#566174] whitespace-nowrap border-r border-[#E3E1DA]">
+        <tr key="capex-pct" className="group hover:bg-[#F0F1F6]">
+          <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F0F1F6] pl-8 pr-4 py-0.5 text-[11px] text-[#566174] whitespace-nowrap border-r border-[#E3E1DA]">
             Capex / Revenue
           </td>
           {rows.map(r => (
@@ -521,8 +521,8 @@ export default function ForecastTable({
       ),
 
       // Chg NWC
-      <tr key="nwcdelta" className="group hover:bg-[#F4F3EF]">
-        <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F4F3EF] px-4 py-1.5 text-xs font-medium text-[#06101F] whitespace-nowrap border-r border-[#E3E1DA]">
+      <tr key="nwcdelta" className="group hover:bg-[#F0F1F6]">
+        <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F0F1F6] px-4 py-1.5 text-xs font-medium text-[#06101F] whitespace-nowrap border-r border-[#E3E1DA]">
           △ NWC <span className="text-[11px] text-[#9B9B9B] font-normal">{isPct ? '% Rev' : '$M'}</span>
         </td>
         {rows.map(r => (
@@ -534,8 +534,8 @@ export default function ForecastTable({
         ))}
       </tr>,
       !isPct && (
-        <tr key="nwcdelta-pct" className="group hover:bg-[#F4F3EF] border-b border-[#E3E1DA]">
-          <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F4F3EF] pl-8 pr-4 py-0.5 text-[11px] text-[#566174] whitespace-nowrap border-r border-[#E3E1DA]">
+        <tr key="nwcdelta-pct" className="group hover:bg-[#F0F1F6] border-b border-[#E3E1DA]">
+          <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F0F1F6] pl-8 pr-4 py-0.5 text-[11px] text-[#566174] whitespace-nowrap border-r border-[#E3E1DA]">
             △ NWC / Revenue
           </td>
           {rows.map(r => (
@@ -563,8 +563,8 @@ export default function ForecastTable({
           </td>
         ))}
       </tr>,
-      <tr key="ufcf-growth" className="group hover:bg-[#F4F3EF]">
-        <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F4F3EF] pl-8 pr-4 py-0.5 text-[11px] text-[#566174] whitespace-nowrap border-r border-[#E3E1DA]">
+      <tr key="ufcf-growth" className="group hover:bg-[#F0F1F6]">
+        <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F0F1F6] pl-8 pr-4 py-0.5 text-[11px] text-[#566174] whitespace-nowrap border-r border-[#E3E1DA]">
           UFCF % Chg
         </td>
         {rows.map(r => (
@@ -575,8 +575,8 @@ export default function ForecastTable({
           </td>
         ))}
       </tr>,
-      <tr key="pv-ufcf" className="group hover:bg-[#F4F3EF] border-b border-[#E3E1DA]">
-        <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F4F3EF] px-4 py-0.5 text-[11px] text-[#06101F] whitespace-nowrap border-r border-[#E3E1DA]">
+      <tr key="pv-ufcf" className="group hover:bg-[#F0F1F6] border-b border-[#E3E1DA]">
+        <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F0F1F6] px-4 py-0.5 text-[11px] text-[#06101F] whitespace-nowrap border-r border-[#E3E1DA]">
           PV of UFCF
         </td>
         {rows.map(r => (
@@ -587,8 +587,8 @@ export default function ForecastTable({
       </tr>,
 
       // Discount Factor
-      <tr key="discount-factor" className="group hover:bg-[#F4F3EF] border-b border-[#E3E1DA]">
-        <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F4F3EF] px-4 py-0.5 text-[11px] text-[#06101F] whitespace-nowrap border-r border-[#E3E1DA]">
+      <tr key="discount-factor" className="group hover:bg-[#F0F1F6] border-b border-[#E3E1DA]">
+        <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F0F1F6] px-4 py-0.5 text-[11px] text-[#06101F] whitespace-nowrap border-r border-[#E3E1DA]">
           Discount Factor ({((currentWacc ?? waccData.wacc * 100)).toFixed(1)}%)
         </td>
         {rows.map(r => (
@@ -601,8 +601,8 @@ export default function ForecastTable({
       </tr>,
 
       // Discount Factor
-      <tr key="discount-factor-ufcf" className="group hover:bg-[#F4F3EF] border-b border-[#E3E1DA]">
-        <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F4F3EF] px-4 py-0.5 text-[11px] text-[#06101F] whitespace-nowrap border-r border-[#E3E1DA]">
+      <tr key="discount-factor-ufcf" className="group hover:bg-[#F0F1F6] border-b border-[#E3E1DA]">
+        <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F0F1F6] px-4 py-0.5 text-[11px] text-[#06101F] whitespace-nowrap border-r border-[#E3E1DA]">
           Discount Factor ({((currentWacc ?? waccData.wacc * 100)).toFixed(1)}%)
         </td>
         {rows.map(r => (
@@ -626,15 +626,15 @@ export default function ForecastTable({
       ...revenueRows(),
 
       // Net Income
-      <tr key="netincome" className="group hover:bg-[#F4F3EF]">
-        <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F4F3EF] px-4 py-1.5 text-xs font-medium text-[#06101F] whitespace-nowrap border-r border-[#E3E1DA]">
+      <tr key="netincome" className="group hover:bg-[#F0F1F6]">
+        <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F0F1F6] px-4 py-1.5 text-xs font-medium text-[#06101F] whitespace-nowrap border-r border-[#E3E1DA]">
           Net Income <span className="text-[11px] text-[#06101F] font-normal">{isPct ? '% Rev' : '$M'}</span>
         </td>
         {rows.map(r => <DataCell key={r.year} value={isPct ? fmtPctDisplay(r.netMarginPct) : fmtVal(r.netIncome)} row={r} />)}
       </tr>,
       !isPct && (
-        <tr key="net-margin" className="group hover:bg-[#F4F3EF] border-b border-[#E3E1DA]">
-          <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F4F3EF] pl-8 pr-4 py-0.5 text-[11px] text-[#566174] whitespace-nowrap border-r border-[#E3E1DA]">
+        <tr key="net-margin" className="group hover:bg-[#F0F1F6] border-b border-[#E3E1DA]">
+          <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F0F1F6] pl-8 pr-4 py-0.5 text-[11px] text-[#566174] whitespace-nowrap border-r border-[#E3E1DA]">
             Net Margin
           </td>
           {rows.map(r => (
@@ -647,15 +647,15 @@ export default function ForecastTable({
       isPct && <tr key="netincome-spacer" className="border-b border-[#E3E1DA]"><td colSpan={n} className="py-0" /></tr>,
 
       // D&A
-      <tr key="dna" className="group hover:bg-[#F4F3EF]">
-        <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F4F3EF] px-4 py-1.5 text-xs font-medium text-[#06101F] whitespace-nowrap border-r border-[#E3E1DA]">
+      <tr key="dna" className="group hover:bg-[#F0F1F6]">
+        <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F0F1F6] px-4 py-1.5 text-xs font-medium text-[#06101F] whitespace-nowrap border-r border-[#E3E1DA]">
           D&amp;A <span className="text-[11px] text-[#06101F] font-normal">{isPct ? '% Rev' : '$M'}</span>
         </td>
         {rows.map(r => <DataCell key={r.year} value={isPct ? fmtPctDisplay(r.dnaPct) : fmtVal(r.dna)} row={r} />)}
       </tr>,
       !isPct && (
-        <tr key="dna-pct" className="group hover:bg-[#F4F3EF]">
-          <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F4F3EF] pl-8 pr-4 py-0.5 text-[11px] text-[#566174] whitespace-nowrap border-r border-[#E3E1DA]">
+        <tr key="dna-pct" className="group hover:bg-[#F0F1F6]">
+          <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F0F1F6] pl-8 pr-4 py-0.5 text-[11px] text-[#566174] whitespace-nowrap border-r border-[#E3E1DA]">
             D&amp;A / Revenue
           </td>
           {rows.map(r => (
@@ -667,8 +667,8 @@ export default function ForecastTable({
       ),
 
       // Capex
-      <tr key="capex" className="group hover:bg-[#F4F3EF]">
-        <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F4F3EF] px-4 py-1.5 text-xs font-medium text-[#06101F] whitespace-nowrap border-r border-[#E3E1DA]">
+      <tr key="capex" className="group hover:bg-[#F0F1F6]">
+        <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F0F1F6] px-4 py-1.5 text-xs font-medium text-[#06101F] whitespace-nowrap border-r border-[#E3E1DA]">
           Capex <span className="text-[11px] text-[#06101F] font-normal">{isPct ? '% Rev' : '$M'}</span>
         </td>
         {rows.map(r => (
@@ -680,8 +680,8 @@ export default function ForecastTable({
         ))}
       </tr>,
       !isPct && (
-        <tr key="capex-pct" className="group hover:bg-[#F4F3EF]">
-          <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F4F3EF] pl-8 pr-4 py-0.5 text-[11px] text-[#566174] whitespace-nowrap border-r border-[#E3E1DA]">
+        <tr key="capex-pct" className="group hover:bg-[#F0F1F6]">
+          <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F0F1F6] pl-8 pr-4 py-0.5 text-[11px] text-[#566174] whitespace-nowrap border-r border-[#E3E1DA]">
             Capex / Revenue
           </td>
           {rows.map(r => (
@@ -694,8 +694,8 @@ export default function ForecastTable({
       ),
 
       // NWC
-      <tr key="nwcdelta" className="group hover:bg-[#F4F3EF]">
-        <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F4F3EF] px-4 py-1.5 text-xs font-medium text-[#06101F] whitespace-nowrap border-r border-[#E3E1DA]">
+      <tr key="nwcdelta" className="group hover:bg-[#F0F1F6]">
+        <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F0F1F6] px-4 py-1.5 text-xs font-medium text-[#06101F] whitespace-nowrap border-r border-[#E3E1DA]">
           △ NWC <span className="text-[11px] text-[#9B9B9B] font-normal">{isPct ? '% Rev' : '$M'}</span>
         </td>
         {rows.map(r => (
@@ -707,8 +707,8 @@ export default function ForecastTable({
         ))}
       </tr>,
       !isPct && (
-        <tr key="nwcdelta-pct" className="group hover:bg-[#F4F3EF]">
-          <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F4F3EF] pl-8 pr-4 py-0.5 text-[11px] text-[#566174] whitespace-nowrap border-r border-[#E3E1DA]">
+        <tr key="nwcdelta-pct" className="group hover:bg-[#F0F1F6]">
+          <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F0F1F6] pl-8 pr-4 py-0.5 text-[11px] text-[#566174] whitespace-nowrap border-r border-[#E3E1DA]">
             △ NWC / Revenue
           </td>
           {rows.map(r => (
@@ -721,15 +721,15 @@ export default function ForecastTable({
       ),
 
       // Net Debt Repayment
-      <tr key="netdebt" className="group hover:bg-[#F4F3EF]">
-        <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F4F3EF] px-4 py-1.5 text-xs font-medium text-[#06101F] whitespace-nowrap border-r border-[#E3E1DA]">
+      <tr key="netdebt" className="group hover:bg-[#F0F1F6]">
+        <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F0F1F6] px-4 py-1.5 text-xs font-medium text-[#06101F] whitespace-nowrap border-r border-[#E3E1DA]">
           Net Debt Repayment <span className="text-[11px] text-[#06101F] font-normal">{isPct ? '% Rev' : '$M'}</span>
         </td>
         {rows.map(r => <DataCell key={r.year} value={isPct ? fmtPctDisplay(r.netDebtRepaymentPct) : fmtVal(r.netDebtRepayment)} row={r} />)}
       </tr>,
       !isPct && (
-        <tr key="netdebt-pct" className="group hover:bg-[#F4F3EF] border-b border-[#E3E1DA]">
-          <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F4F3EF] pl-8 pr-4 py-0.5 text-[11px] text-[#566174] whitespace-nowrap border-r border-[#E3E1DA]">
+        <tr key="netdebt-pct" className="group hover:bg-[#F0F1F6] border-b border-[#E3E1DA]">
+          <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F0F1F6] pl-8 pr-4 py-0.5 text-[11px] text-[#566174] whitespace-nowrap border-r border-[#E3E1DA]">
             Net Debt Repayment / Rev
           </td>
           {rows.map(r => (
@@ -755,8 +755,8 @@ export default function ForecastTable({
           </td>
         ))}
       </tr>,
-      <tr key="lfcf-growth" className="group hover:bg-[#F4F3EF]">
-        <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F4F3EF] pl-8 pr-4 py-0.5 text-[11px] text-[#566174] whitespace-nowrap border-r border-[#E3E1DA]">
+      <tr key="lfcf-growth" className="group hover:bg-[#F0F1F6]">
+        <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F0F1F6] pl-8 pr-4 py-0.5 text-[11px] text-[#566174] whitespace-nowrap border-r border-[#E3E1DA]">
           LFCF % Chg
         </td>
         {rows.map(r => (
@@ -767,8 +767,8 @@ export default function ForecastTable({
           </td>
         ))}
       </tr>,
-      <tr key="pv-lfcf" className="group hover:bg-[#F4F3EF] border-b border-[#E3E1DA]">
-        <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F4F3EF] px-4 py-0.5 text-[11px] text-[#06101F] whitespace-nowrap border-r border-[#E3E1DA]">
+      <tr key="pv-lfcf" className="group hover:bg-[#F0F1F6] border-b border-[#E3E1DA]">
+        <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F0F1F6] px-4 py-0.5 text-[11px] text-[#06101F] whitespace-nowrap border-r border-[#E3E1DA]">
           PV of LFCF
         </td>
         {rows.map(r => (
@@ -779,8 +779,8 @@ export default function ForecastTable({
       </tr>,
 
       // Discount Factor
-      <tr key="discount-factor-lfcf" className="group hover:bg-[#F4F3EF] border-b border-[#E3E1DA]">
-        <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F4F3EF] px-4 py-0.5 text-[11px] text-[#06101F] whitespace-nowrap border-r border-[#E3E1DA]">
+      <tr key="discount-factor-lfcf" className="group hover:bg-[#F0F1F6] border-b border-[#E3E1DA]">
+        <td className="sticky left-0 z-10 bg-white group-hover:bg-[#F0F1F6] px-4 py-0.5 text-[11px] text-[#06101F] whitespace-nowrap border-r border-[#E3E1DA]">
           Discount Factor ({((currentWacc ?? waccData.wacc * 100)).toFixed(1)}%)
         </td>
         {rows.map(r => (
@@ -967,7 +967,7 @@ export default function ForecastTable({
                 aria-checked={td.method === m}
                 className={cn(
                   'px-2.5 py-1 text-[11px] font-[650] transition-colors',
-                  td.method === m ? 'bg-[#2563EB] text-white' : 'text-[#566174] bg-white hover:bg-[#F4F3EF]',
+                  td.method === m ? 'bg-[#2563EB] text-white' : 'text-[#566174] bg-white hover:bg-[#F0F1F6]',
                 )}
               >
                 {m === 'multiple' ? 'Exit ×' : 'Perp. g'}
@@ -980,7 +980,7 @@ export default function ForecastTable({
             <div className="flex items-center gap-1 shrink-0">
               <button data-no-min-h onClick={() => onExitMultipleChange(Math.round(Math.max(1, td.exitMultiple - 1) * 10) / 10)} className="w-5 h-5 rounded bg-white border border-[#E3E1DA] text-[#566174] hover:bg-[#E3E1DA] text-xs font-bold flex items-center justify-center">−</button>
               <input
-                className="w-12 border border-[#E3E1DA] bg-[#F4F3EF] px-1.5 py-0.5 text-center text-[12px] font-[700] text-[#06101F] rounded focus:border-[#2563EB] focus:outline-none"
+                className="w-12 border border-[#E3E1DA] bg-[#F0F1F6] px-1.5 py-0.5 text-center text-[12px] font-[700] text-[#06101F] rounded focus:border-[#2563EB] focus:outline-none"
                 style={{ fontSize: '16px' }}
                 value={exitMultipleDraft ?? Math.max(1, td.exitMultiple).toFixed(1)}
                 onChange={e => setExitMultipleDraft(e.target.value)}
@@ -995,7 +995,7 @@ export default function ForecastTable({
             <div className="flex items-center gap-1 shrink-0">
               <button data-no-min-h onClick={() => onTerminalGChange(Math.round(Math.max(0, td.terminalG - 0.005) * 1000) / 1000)} className="w-5 h-5 rounded bg-white border border-[#E3E1DA] text-[#566174] hover:bg-[#E3E1DA] text-xs font-bold flex items-center justify-center">−</button>
               <input
-                className={cn("w-12 border bg-[#F4F3EF] px-1.5 py-0.5 text-center text-[12px] font-[700] text-[#06101F] rounded focus:border-[#2563EB] focus:outline-none", tgError ? 'border-red-400' : 'border-[#E3E1DA]')}
+                className={cn("w-12 border bg-[#F0F1F6] px-1.5 py-0.5 text-center text-[12px] font-[700] text-[#06101F] rounded focus:border-[#2563EB] focus:outline-none", tgError ? 'border-red-400' : 'border-[#E3E1DA]')}
                 style={{ fontSize: '16px' }}
                 value={terminalGDraft ?? (td.terminalG * 100).toFixed(1)}
                 onChange={e => setTerminalGDraft(e.target.value)}
@@ -1232,7 +1232,7 @@ export default function ForecastTable({
                 aria-label={vm === '$M' ? 'Show dollar values' : 'Show % of sales'}
                 className={cn(
                   'px-3 py-2 text-[12px] font-semibold transition-colors min-h-[44px]',
-                  viewMode === vm ? 'bg-[#566174] text-white' : 'text-[#566174] hover:bg-[#F4F3EF] bg-transparent'
+                  viewMode === vm ? 'bg-[#566174] text-white' : 'text-[#566174] hover:bg-[#F0F1F6] bg-transparent'
                 )}
               >
                 {vm === '$M' ? '$M' : '% Sales'}
@@ -1250,7 +1250,7 @@ export default function ForecastTable({
                 aria-label={m === 'ufcf' ? 'Unlevered Free Cash Flow mode' : 'Levered Free Cash Flow mode'}
                 className={cn(
                   'px-3 py-2 text-[12px] font-semibold transition-colors min-h-[44px]',
-                  mode === m ? 'bg-[#5F790B] text-white' : 'text-[#566174] hover:bg-[#F4F3EF] bg-transparent'
+                  mode === m ? 'bg-[#5F790B] text-white' : 'text-[#566174] hover:bg-[#F0F1F6] bg-transparent'
                 )}
               >
                 {m === 'ufcf' ? 'Unlevered' : 'Levered'}
@@ -1283,7 +1283,7 @@ export default function ForecastTable({
                 return [
                   historical.length > 0 && (
                     <th key="grp-hist" colSpan={historical.length}
-                      className="px-1 sm:px-2 py-1 sm:py-1.5 text-center text-[9px] sm:text-[10px] font-[700] uppercase tracking-widest text-[#9B9B9B] bg-[#F4F3EF] border-r border-[#E3E1DA] whitespace-nowrap">
+                      className="px-1 sm:px-2 py-1 sm:py-1.5 text-center text-[9px] sm:text-[10px] font-[700] uppercase tracking-widest text-[#9B9B9B] bg-[#F0F1F6] border-r border-[#E3E1DA] whitespace-nowrap">
                       Hist.
                     </th>
                   ),

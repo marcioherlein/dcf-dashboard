@@ -12,7 +12,7 @@ interface Props {
 const CONFIDENCE_BADGE = {
   high:   'bg-[#E8F7EF] text-[#11875D] border-[#A3D9BE]',
   medium: 'bg-[#FFF4DA] text-[#B56A00] border-[#F3D391]',
-  low:    'bg-[#F4F3EF] text-[#566174] border-[#E3E1DA]',
+  low:    'bg-[#F0F1F6] text-[#566174] border-[#E3E1DA]',
 }
 
 export default function ModelBreakdownTable({ methods, currentPrice: _currentPrice, currency }: Props) {

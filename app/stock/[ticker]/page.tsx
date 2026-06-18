@@ -371,7 +371,7 @@ function StockPageBody() {
 
   return (
     <>
-    <div className={`min-h-dvh transition-colors duration-300 ${activeTab === 'overview' ? 'bg-[#ECEAE3]' : 'bg-[#F4F3EF]'}`}>
+    <div className={`min-h-dvh transition-colors duration-300 ${activeTab === 'overview' ? 'bg-[#E8EAF2]' : 'bg-[#F0F1F6]'}`}>
 
       {/* Context bar: stock identity + tab navigation */}
       <StockContextBar
@@ -461,17 +461,17 @@ function StockPageBody() {
             <div className="rounded-xl bg-white border border-[#E3E1DA] p-5">
               <div className="flex justify-between gap-4">
                 <div className="space-y-2">
-                  <div className="h-6 w-20 rounded-lg bg-[#F4F3EF]" />
-                  <div className="h-7 w-52 rounded-lg bg-[#F4F3EF]" />
+                  <div className="h-6 w-20 rounded-lg bg-[#F0F1F6]" />
+                  <div className="h-7 w-52 rounded-lg bg-[#F0F1F6]" />
                 </div>
                 <div className="space-y-2 text-right">
-                  <div className="h-9 w-32 rounded-lg bg-[#F4F3EF] ml-auto" />
-                  <div className="h-4 w-24 rounded-lg bg-[#F4F3EF] ml-auto" />
+                  <div className="h-9 w-32 rounded-lg bg-[#F0F1F6] ml-auto" />
+                  <div className="h-4 w-24 rounded-lg bg-[#F0F1F6] ml-auto" />
                 </div>
               </div>
               <div className="mt-4 grid grid-cols-2 sm:grid-cols-5 gap-2">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="h-14 rounded-xl bg-[#F4F3EF]" />
+                  <div key={i} className="h-14 rounded-xl bg-[#F0F1F6]" />
                 ))}
               </div>
             </div>
@@ -482,7 +482,7 @@ function StockPageBody() {
         )}
 
         {error && (
-          <div className={`mt-8 rounded-xl border px-5 py-5 ${error.includes('NYSE and NASDAQ') ? 'bg-[#F4F3EF] border-[#E3E1DA]' : 'bg-[#FCEAEA] border-[#D83B3B]/30'}`}>
+          <div className={`mt-8 rounded-xl border px-5 py-5 ${error.includes('NYSE and NASDAQ') ? 'bg-[#F0F1F6] border-[#E3E1DA]' : 'bg-[#FCEAEA] border-[#D83B3B]/30'}`}>
             {error.includes('NYSE and NASDAQ') ? (
               <div className="flex flex-col gap-2">
                 <p className="text-sm font-semibold text-[#06101F]">{error}</p>

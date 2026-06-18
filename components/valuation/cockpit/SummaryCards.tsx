@@ -65,7 +65,7 @@ export default function SummaryCards({ output, currentPrice, changePct, currency
 
   return (
     <div className="bg-white rounded-[14px] border border-[#E6ECF5] shadow-[0_1px_2px_rgba(15,23,42,0.04)] overflow-hidden">
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-px bg-[#F4F3EF]">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-px bg-[#F0F1F6]">
 
         {/* Current Price */}
         <div className="bg-white px-5 py-4 flex flex-col gap-1">

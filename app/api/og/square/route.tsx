@@ -128,7 +128,7 @@ export async function GET(req: NextRequest) {
   const isUp        = (upside ?? 0) >= 0
   const upsideStr   = upside != null ? fmtPct(upside) : null
   const upsideColor = upside == null ? '#566174' : isUp ? BRAND.positive : BRAND.negative
-  const upBg        = upside == null ? '#F4F3EF' : isUp ? BRAND.positiveSoft : BRAND.negativeSoft
+  const upBg        = upside == null ? '#F0F1F6' : isUp ? BRAND.positiveSoft : BRAND.negativeSoft
 
   const baseUrl = `${req.nextUrl.protocol}//${req.nextUrl.host}`
 

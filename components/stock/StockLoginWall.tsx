@@ -42,7 +42,7 @@ function fmt(n: number, currency: string) {
 function ScenarioCell({ label, value, variant }: { label: string; value: string; variant: 'bear' | 'base' | 'bull' }) {
   const styles = {
     bear: { cell: 'bg-[#FCEAEA] border-[#F0B8B8]', label: 'text-[#D83B3B]', value: 'text-[#8A95A6]' },
-    base: { cell: 'bg-[#F4F3EF] border-[#E3E1DA]', label: 'text-[#566174]', value: 'text-[#8A95A6]' },
+    base: { cell: 'bg-[#F0F1F6] border-[#E3E1DA]', label: 'text-[#566174]', value: 'text-[#8A95A6]' },
     bull: { cell: 'bg-[#E8F7EF] border-[#A3D9BE]',  label: 'text-[#11875D]', value: 'text-[#8A95A6]' },
   }
   const s = styles[variant]
@@ -99,7 +99,7 @@ export default function StockLoginWall({ ticker, companyName, price, currency, f
         <div className="px-5 py-4 space-y-3">
           {/* Fair value row */}
           {fairValue != null && (
-            <div className="flex items-center justify-between gap-3 rounded-xl bg-[#F4F3EF] border border-[#E3E1DA] px-4 py-3">
+            <div className="flex items-center justify-between gap-3 rounded-xl bg-[#F0F1F6] border border-[#E3E1DA] px-4 py-3">
               <div>
                 <p className="text-[11px] text-[#566174] font-semibold">Fair Value</p>
                 <p className="text-[17px] font-bold text-[#06101F] tabular-nums">{fmt(fairValue, currency)}</p>

@@ -46,7 +46,7 @@ export function ETFHelpButton() {
             <button
               onClick={() => setOpen(false)}
               aria-label="Close"
-              className="shrink-0 w-6 h-6 flex items-center justify-center rounded-md text-[#8A95A6] hover:text-[#566174] hover:bg-[#F4F3EF] transition-colors"
+              className="shrink-0 w-6 h-6 flex items-center justify-center rounded-md text-[#8A95A6] hover:text-[#566174] hover:bg-[#F0F1F6] transition-colors"
             >
               <X size={12} />
             </button>

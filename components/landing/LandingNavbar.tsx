@@ -129,7 +129,7 @@ export default function LandingNavbar() {
                   key={link.label}
                   href={link.href}
                   onClick={() => setMobileOpen(false)}
-                  className="flex items-center py-3 px-4 rounded-md text-[15px] font-medium text-[#6B6B6B] hover:bg-[#EEF4DD] hover:text-[#111111] transition-colors"
+                  className="flex items-center py-3 px-4 rounded-md text-[15px] font-medium text-[#6B6B6B] hover:bg-[#EEF2FA] hover:text-[#111111] transition-colors"
                   style={{ minHeight: '44px' }}
                 >
                   {link.label}

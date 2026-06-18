@@ -23,12 +23,12 @@ export default function ProGate({ children, featureName, isPro, placeholderHeigh
   return (
     <div className={`relative ${placeholderHeight} flex items-center justify-center bg-[#F9F8F6] border border-[#E5E5E5] rounded-xl`}>
       <div className="flex flex-col items-center gap-3 px-6 text-center">
-        <div className="w-10 h-10 rounded-full bg-[#EEF4DD] border border-[#BFD2A1] flex items-center justify-center">
+        <div className="w-10 h-10 rounded-full bg-[#EEF2FA] border border-[#BFD2A1] flex items-center justify-center">
           <Lock size={16} className="text-[#5F790B]" />
         </div>
         <div>
           <p className="text-[14px] font-semibold text-[#111111]">{featureName}</p>
-          <span className="inline-block mt-1 text-[10px] font-bold bg-[#EEF4DD] text-[#5F790B] px-2 py-0.5 rounded uppercase tracking-wide">
+          <span className="inline-block mt-1 text-[10px] font-bold bg-[#EEF2FA] text-[#5F790B] px-2 py-0.5 rounded uppercase tracking-wide">
             Pro feature
           </span>
         </div>

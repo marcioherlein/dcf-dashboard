@@ -277,7 +277,7 @@ export default function SaveToWatchlistDialog({ open, payload, onClose, onReview
           <DialogFooter>
             <button
               onClick={() => { setStatus('idle'); onClose() }}
-              className="flex-1 rounded-lg border border-[#E3E1DA] py-2 text-sm text-[#566174] hover:bg-[#F4F3EF] transition-colors"
+              className="flex-1 rounded-lg border border-[#E3E1DA] py-2 text-sm text-[#566174] hover:bg-[#F0F1F6] transition-colors"
             >
               Cancel
             </button>

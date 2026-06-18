@@ -92,11 +92,11 @@ export default function PeerValuationChart({ ticker, isFinancialSector = false }
     return (
       <div className={CARD}>
         <div className="flex items-center justify-between mb-3">
-          <div className="h-3.5 w-36 rounded bg-[#F4F3EF] motion-safe:animate-pulse" />
-          <div className="h-3 w-20 rounded bg-[#F4F3EF] motion-safe:animate-pulse" />
+          <div className="h-3.5 w-36 rounded bg-[#F0F1F6] motion-safe:animate-pulse" />
+          <div className="h-3 w-20 rounded bg-[#F0F1F6] motion-safe:animate-pulse" />
         </div>
-        <div className="h-[260px] rounded-xl bg-[#F4F3EF] motion-safe:animate-pulse" />
-        <div className="mt-3 h-3 w-48 rounded bg-[#F4F3EF] motion-safe:animate-pulse" />
+        <div className="h-[260px] rounded-xl bg-[#F0F1F6] motion-safe:animate-pulse" />
+        <div className="mt-3 h-3 w-48 rounded bg-[#F0F1F6] motion-safe:animate-pulse" />
       </div>
     )
   }
@@ -108,7 +108,7 @@ export default function PeerValuationChart({ ticker, isFinancialSector = false }
       : (error ?? 'No comparable peers found for this stock on Yahoo Finance.')
     return (
       <div className={cn(CARD, 'flex items-center gap-3 py-5')}>
-        <div className="w-7 h-7 rounded-lg bg-[#F4F3EF] border border-[#E3E1DA] flex items-center justify-center shrink-0">
+        <div className="w-7 h-7 rounded-lg bg-[#F0F1F6] border border-[#E3E1DA] flex items-center justify-center shrink-0">
           <Info className="w-3.5 h-3.5 text-[#8A95A6]" />
         </div>
         <div className="flex-1 min-w-0">

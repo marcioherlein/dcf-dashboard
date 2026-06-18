@@ -329,7 +329,7 @@ export default function FCFBuildUp({
       <button onClick={onClick}
         className={`px-3 py-1.5 text-xs font-medium transition ${active
           ? 'bg-olive-700 text-white'
-          : 'text-[#566174] hover:bg-[#F4F3EF]'}`}>
+          : 'text-[#566174] hover:bg-[#F0F1F6]'}`}>
         {label}
       </button>
     )
@@ -376,7 +376,7 @@ export default function FCFBuildUp({
       <div className="overflow-x-auto">
         <table className="w-full min-w-[780px]">
           {/* Column headers */}
-          <thead className="bg-[#F4F3EF]">
+          <thead className="bg-[#F0F1F6]">
             <tr>
               <td className="px-4 py-2 text-[10px] font-semibold text-[#8A95A6] uppercase tracking-wide min-w-[164px]">
                 {mode === 'unlevered' ? 'UNLEVERED FCF BUILD-UP' : 'LEVERED FCF BUILD-UP'}
@@ -433,13 +433,13 @@ export default function FCFBuildUp({
                   {divider}
                   {projRows.map(r => <td key={r.year} className="px-3 py-2.5 text-center text-xs text-[#8A95A6] tabular-nums">{fmtPctPlain(r.taxRateVal)}</td>)}
                 </tr>
-                <tr className="bg-[#F4F3EF]">
+                <tr className="bg-[#F0F1F6]">
                   {labelCell(`NOPAT (${scale})`)}
                   {histRows.map(r => numCell(fmtDollars(r.nopat, scale), false, true))}
                   {divider}
                   {projRows.map(r => numCell(fmtDollars(r.nopat, scale), true, true))}
                 </tr>
-                <tr className="bg-[#F4F3EF]">
+                <tr className="bg-[#F0F1F6]">
                   {subLabelCell('NOPAT Margin')}
                   {histRows.map(r => subCell(fmtPctPlain(r.nopatMargin)))}
                   <td className="px-1 py-1" />
@@ -448,13 +448,13 @@ export default function FCFBuildUp({
               </>
             ) : (
               <>
-                <tr className="border-t border-[#E3E1DA] bg-[#F4F3EF]">
+                <tr className="border-t border-[#E3E1DA] bg-[#F0F1F6]">
                   {labelCell(`Net Income (${scale})`)}
                   {histRows.map(r => numCell(fmtDollars(r.netIncome, scale), false, true))}
                   {divider}
                   {projRows.map(r => numCell(fmtDollars(r.netIncome, scale), true, true))}
                 </tr>
-                <tr className="bg-[#F4F3EF]">
+                <tr className="bg-[#F0F1F6]">
                   {subLabelCell('Net Margin')}
                   {histRows.map(r => subCell(fmtPctPlain(r.netMargin)))}
                   <td className="px-1 py-1" />
@@ -552,7 +552,7 @@ export default function FCFBuildUp({
             </tr>
 
             {/* ── PV of FCF ── */}
-            <tr className="border-t border-[#E3E1DA] bg-[#F4F3EF]">
+            <tr className="border-t border-[#E3E1DA] bg-[#F0F1F6]">
               {labelCell(`PV of ${fcfLabel} (${scale})`, true)}
               {histRows.map(r => <td key={r.year} className="px-3 py-2.5 text-center text-xs text-[#8A95A6]">—</td>)}
               {divider}
@@ -563,7 +563,7 @@ export default function FCFBuildUp({
             </tr>
 
             {/* ── Cumulative PV ── */}
-            <tr className="border-t border-[#E3E1DA] bg-[#F4F3EF]">
+            <tr className="border-t border-[#E3E1DA] bg-[#F0F1F6]">
               {labelCell(`Σ PV (${scale})`, true)}
               {histRows.map(r => <td key={r.year} className="px-3 py-2.5 text-center text-xs text-[#8A95A6]">—</td>)}
               {divider}
@@ -587,7 +587,7 @@ export default function FCFBuildUp({
 
         {/* WACC input */}
         <div className="flex flex-wrap gap-4 mb-5">
-          <div className="rounded-lg bg-[#F4F3EF] px-4 py-3 flex items-center gap-2">
+          <div className="rounded-lg bg-[#F0F1F6] px-4 py-3 flex items-center gap-2">
             <span className="text-[10px] text-[#8A95A6] uppercase tracking-wide">WACC</span>
             <input type="number" step="0.1" min="1" max="30"
               value={waccEdit}

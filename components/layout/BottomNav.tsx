@@ -148,7 +148,7 @@ export default function BottomNav() {
                 onClick={() => setMoreOpen(false)}
                 className={cn(
                   'flex items-center gap-3 px-3 py-3 min-h-[44px] rounded-xl text-[14px] font-medium transition-colors',
-                  active ? 'bg-[#EEF4DD] text-[#111111]' : 'text-[#6B6B6B] hover:bg-[#F6FAEA]',
+                  active ? 'bg-[#EEF2FA] text-[#111111]' : 'text-[#6B6B6B] hover:bg-[#F6FAEA]',
                 )}
               >
                 <Icon

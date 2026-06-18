@@ -118,7 +118,7 @@ function DonutChart({ inst, insider, retail }: { inst: number; insider: number; 
   return (
     <svg width={80} height={80} viewBox="0 0 80 80">
       {/* Background ring */}
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#F4F3EF" strokeWidth={10} />
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#F0F1F6" strokeWidth={10} />
       {paths}
     </svg>
   )
@@ -218,7 +218,7 @@ export default function OverviewSidebar({
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-[11px] text-[#8A95A6]">52W Range</span>
             </div>
-            <div className="relative h-1.5 rounded-full overflow-hidden bg-[#F4F3EF] mb-1">
+            <div className="relative h-1.5 rounded-full overflow-hidden bg-[#F0F1F6] mb-1">
               <div className="absolute inset-0 bg-gradient-to-r from-slate-300 to-slate-400" />
               <div
                 className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-slate-700 border-2 border-white shadow-sm"
@@ -232,7 +232,7 @@ export default function OverviewSidebar({
           </div>
         )}
 
-        <div className="divide-y divide-[#F4F3EF]">
+        <div className="divide-y divide-[#F0F1F6]">
           {quote.nextEarningsDate && (
             <MetricRow label="Next Earnings" value={new Date(quote.nextEarningsDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} />
           )}

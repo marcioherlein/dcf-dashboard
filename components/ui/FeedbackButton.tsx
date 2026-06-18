@@ -65,7 +65,7 @@ export default function FeedbackButton() {
               </div>
               <button
                 onClick={() => setOpen(false)}
-                className="p-1.5 rounded-lg hover:bg-[#F4F3EF] text-[#9B9B9B] hover:text-[#111111] transition-colors"
+                className="p-1.5 rounded-lg hover:bg-[#F0F1F6] text-[#9B9B9B] hover:text-[#111111] transition-colors"
               >
                 <X size={15} />
               </button>
@@ -75,7 +75,7 @@ export default function FeedbackButton() {
             <form onSubmit={handleSubmit} className="p-5 space-y-4">
               {status === 'sent' ? (
                 <div className="py-6 text-center">
-                  <div className="w-10 h-10 rounded-full bg-[#EEF4DD] flex items-center justify-center mx-auto mb-3">
+                  <div className="w-10 h-10 rounded-full bg-[#EEF2FA] flex items-center justify-center mx-auto mb-3">
                     <svg className="w-5 h-5 text-[#5F790B]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                     </svg>

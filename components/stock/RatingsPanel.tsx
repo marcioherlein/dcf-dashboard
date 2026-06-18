@@ -53,7 +53,7 @@ const colorMap: Record<string, {
 function ScoreBar({ score }: { score: number }) {
   const pct = ((score - 1) / 4) * 100
   return (
-    <div className="h-1.5 w-full rounded-full bg-[#F4F3EF] flex-1">
+    <div className="h-1.5 w-full rounded-full bg-[#F0F1F6] flex-1">
       <div
         className="h-1.5 rounded-full bg-slate-700 transition-all"
         style={{ width: `${pct}%` }}

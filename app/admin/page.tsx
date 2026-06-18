@@ -426,7 +426,7 @@ export default function AdminPage() {
                   className={[
                     'px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors capitalize',
                     audience === a
-                      ? 'bg-[#EEF4DD] text-[#5F790B] border-[#5F790B]/30'
+                      ? 'bg-[#EEF2FA] text-[#5F790B] border-[#5F790B]/30'
                       : 'bg-white text-[#6B6B6B] border-[#E5E5E5] hover:border-[#C8C8C8] hover:text-[#111111]',
                   ].join(' ')}
                 >
@@ -541,7 +541,7 @@ export default function AdminPage() {
                         {item.user_email ?? 'Anonymous'}
                       </span>
                       {item.page && (
-                        <span className="shrink-0 text-[11px] text-[#9B9B9B] bg-[#F4F3EF] border border-[#E5E5E5] rounded-full px-2 py-0.5 font-mono">
+                        <span className="shrink-0 text-[11px] text-[#9B9B9B] bg-[#F0F1F6] border border-[#E5E5E5] rounded-full px-2 py-0.5 font-mono">
                           {item.page}
                         </span>
                       )}

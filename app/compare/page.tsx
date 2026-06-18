@@ -145,7 +145,7 @@ export default function ComparePage() {
     : '#11875D'
 
   return (
-    <div className="min-h-dvh bg-[#F4F3EF]">
+    <div className="min-h-dvh bg-[#F0F1F6]">
       {/* Header */}
       <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-[#E3E1DA] bg-white">
         <h1 className="text-sm sm:text-base font-semibold text-[#06101F]">Multi-Ticker Comparison</h1>
@@ -248,7 +248,7 @@ export default function ComparePage() {
               <div key={dataKey} className="bg-white rounded-xl border border-[#E3E1DA] p-4 sm:p-5">
                 <div className="flex items-center gap-3 mb-4">
                   <span className="text-[12px] font-semibold uppercase tracking-wider" style={{ color }}>{label}</span>
-                  <div className="flex-1 h-px bg-[#F4F3EF]" />
+                  <div className="flex-1 h-px bg-[#F0F1F6]" />
                 </div>
                 <div className="h-52">
                   <ResponsiveContainer width="100%" height="100%">

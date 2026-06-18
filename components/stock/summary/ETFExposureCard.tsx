@@ -57,7 +57,7 @@ export function ETFExposureCard({ ticker }: Props) {
         <div className="h-4 w-40 bg-[#E3E1DA] rounded mb-3" />
         <div className="space-y-2">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-8 bg-[#F4F3EF] rounded" />
+            <div key={i} className="h-8 bg-[#F0F1F6] rounded" />
           ))}
         </div>
       </div>
@@ -97,12 +97,12 @@ export function ETFExposureCard({ ticker }: Props) {
               <Link
                 key={etf.etfTicker}
                 href={`/etf/${etf.etfTicker}`}
-                className="flex items-center gap-3 hover:bg-[#F4F3EF]/80 rounded-lg px-2 py-1.5 -mx-2 transition-colors group"
+                className="flex items-center gap-3 hover:bg-[#F0F1F6]/80 rounded-lg px-2 py-1.5 -mx-2 transition-colors group"
               >
                 <span className="font-mono font-bold text-sm text-[#06101F] group-hover:text-[#2563EB] transition-colors w-12 shrink-0">{etf.etfTicker}</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <div className="flex-1 h-1 bg-[#F4F3EF] rounded-full overflow-hidden">
+                    <div className="flex-1 h-1 bg-[#F0F1F6] rounded-full overflow-hidden">
                       <div
                         className="h-full bg-[#5F790B] rounded-full"
                         style={{ width: `${(etf.weight / maxWeight) * 100}%` }}

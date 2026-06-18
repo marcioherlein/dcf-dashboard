@@ -150,7 +150,7 @@ export default function WarrenTable({ instruments }: Props) {
               return (
                 <tr
                   key={inst.ticker}
-                  className="border-b border-[#E3E1DA] hover:bg-[#F4F3EF] transition-colors cursor-pointer"
+                  className="border-b border-[#E3E1DA] hover:bg-[#F0F1F6] transition-colors cursor-pointer"
                   onClick={() => setSelected(inst)}
                 >
                   {/* Rank */}

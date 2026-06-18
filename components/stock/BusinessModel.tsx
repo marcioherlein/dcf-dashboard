@@ -131,13 +131,13 @@ export default function BusinessModel({ businessProfile, historicalRevenues, tic
       label: 'Profit Margin',
       value: netMarginKeep ?? (displayNetMgn != null ? fmtPct(displayNetMgn) : '—'),
       sub: netMarginKeep ? `Net income per $100 revenue${usingTTM ? ' (TTM)' : ''}` : 'Net margin',
-      color: displayNetMgn != null && displayNetMgn > 0.10 ? 'bg-[#E8F7EF] border-[#A3D9BE]' : 'bg-[#F4F3EF] border-[#E3E1DA]',
+      color: displayNetMgn != null && displayNetMgn > 0.10 ? 'bg-[#E8F7EF] border-[#A3D9BE]' : 'bg-[#F0F1F6] border-[#E3E1DA]',
     },
     {
       label: 'Free Cash Flow',
       value: fcfB ?? (displayFcfMgn != null ? fmtPct(displayFcfMgn) : '—'),
       sub: fcfB ? `Generated per year (est.)${usingTTM ? ' · TTM' : ''}` : 'FCF margin',
-      color: displayFcfMgn != null && displayFcfMgn > 0.10 ? 'bg-[#E8F7EF] border-[#A3D9BE]' : 'bg-[#F4F3EF] border-[#E3E1DA]',
+      color: displayFcfMgn != null && displayFcfMgn > 0.10 ? 'bg-[#E8F7EF] border-[#A3D9BE]' : 'bg-[#F0F1F6] border-[#E3E1DA]',
     },
   ]
 
@@ -149,7 +149,7 @@ export default function BusinessModel({ businessProfile, historicalRevenues, tic
       {pills.length > 0 && (
         <div className="mb-4 flex flex-wrap gap-2">
           {pills.map((p) => (
-            <span key={p.label} className="rounded-full border border-[#E3E1DA] bg-[#F4F3EF] px-3 py-2 text-[12px] font-medium text-[#566174] min-h-[44px] flex items-center">
+            <span key={p.label} className="rounded-full border border-[#E3E1DA] bg-[#F0F1F6] px-3 py-2 text-[12px] font-medium text-[#566174] min-h-[44px] flex items-center">
               {p.label}
             </span>
           ))}

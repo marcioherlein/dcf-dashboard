@@ -34,7 +34,7 @@ export function ETFHoldingsTable({ holdings }: Props) {
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-[#E3E1DA] bg-[#F4F3EF]/60">
+            <tr className="border-b border-[#E3E1DA] bg-[#F0F1F6]/60">
               <th className="text-left px-4 py-2 text-xs text-[#566174] font-semibold w-8">#</th>
               <th className="text-left px-4 py-2 text-xs text-[#566174] font-semibold">Ticker</th>
               <th className="text-left px-4 py-2 text-xs text-[#566174] font-semibold">Name</th>
@@ -44,7 +44,7 @@ export function ETFHoldingsTable({ holdings }: Props) {
           </thead>
           <tbody>
             {holdings.map((h) => (
-              <tr key={h.symbol} className="border-b border-[#F4F3EF] last:border-0 hover:bg-[#F4F3EF]/60 transition-colors group">
+              <tr key={h.symbol} className="border-b border-[#F4F3EF] last:border-0 hover:bg-[#F0F1F6]/60 transition-colors group">
                 <td className="px-4 py-2.5 text-xs text-[#8A95A6] tabular-nums">{h.rank}</td>
                 <td className="px-4 py-2.5">
                   <span className="font-bold font-sans text-[#06101F] text-xs">{h.symbol}</span>
@@ -53,7 +53,7 @@ export function ETFHoldingsTable({ holdings }: Props) {
                 <td className="px-4 py-2.5 text-right">
                   {h.weight != null ? (
                     <div className="flex items-center justify-end gap-2">
-                      <div className="w-16 h-1.5 bg-[#F4F3EF] rounded-full overflow-hidden hidden sm:block">
+                      <div className="w-16 h-1.5 bg-[#F0F1F6] rounded-full overflow-hidden hidden sm:block">
                         <div
                           className="h-full bg-olive-700 rounded-full"
                           style={{ width: `${(h.weight / maxWeight) * 100}%` }}

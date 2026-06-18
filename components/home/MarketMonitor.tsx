@@ -126,7 +126,7 @@ function SkeletonRow() {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2">
       {[0, 1, 2, 3, 4, 5].map((i) => (
-        <div key={i} className="animate-pulse bg-[#F4F3EF] border border-[#E3E1DA] rounded-xl h-20" />
+        <div key={i} className="animate-pulse bg-[#F0F1F6] border border-[#E3E1DA] rounded-xl h-20" />
       ))}
     </div>
   )
@@ -200,7 +200,7 @@ export default function MarketMonitor() {
 
   return (
     <>
-      <div className="min-h-dvh bg-[#F4F3EF]">
+      <div className="min-h-dvh bg-[#F0F1F6]">
 
         {/* Page header */}
         <div className="px-4 sm:px-6 py-4 border-b border-[#E3E1DA] bg-white flex items-center justify-between gap-3">
@@ -216,7 +216,7 @@ export default function MarketMonitor() {
           </div>
           <button
             onClick={() => { setLoading(true); fetch('/api/market').then((r) => r.json()).then((d) => { setData(d); setLoading(false) }).catch(() => setLoading(false)) }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-[#E3E1DA] text-xs font-medium text-[#06101F] hover:bg-[#F4F3EF] transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-[#E3E1DA] text-xs font-medium text-[#06101F] hover:bg-[#F0F1F6] transition-colors"
           >
             <svg className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -258,7 +258,7 @@ export default function MarketMonitor() {
                 'px-2.5 py-1 rounded-lg text-[12px] font-medium transition-colors shrink-0 min-h-[36px]',
                 activeGroup === null
                   ? 'bg-olive-700 text-white'
-                  : 'bg-[#F4F3EF] text-[#566174] hover:bg-[#E3E1DA]',
+                  : 'bg-[#F0F1F6] text-[#566174] hover:bg-[#E3E1DA]',
               ].join(' ')}
             >
               All
@@ -277,7 +277,7 @@ export default function MarketMonitor() {
                     'flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[12px] font-medium transition-colors shrink-0 min-h-[36px]',
                     activeGroup === g.name
                       ? 'bg-olive-700 text-white'
-                      : 'bg-[#F4F3EF] text-[#566174] hover:bg-[#E3E1DA]',
+                      : 'bg-[#F0F1F6] text-[#566174] hover:bg-[#E3E1DA]',
                   ].join(' ')}
                 >
                   <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: accentDot }} />
@@ -306,7 +306,7 @@ export default function MarketMonitor() {
             <div className="space-y-6">
               {GROUP_ORDER.slice(0, 4).map((g) => (
                 <div key={g}>
-                  <div className="h-3 w-32 bg-[#F4F3EF] rounded animate-pulse mb-3" />
+                  <div className="h-3 w-32 bg-[#F0F1F6] rounded animate-pulse mb-3" />
                   <SkeletonRow />
                 </div>
               ))}

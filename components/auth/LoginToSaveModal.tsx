@@ -28,14 +28,14 @@ export default function LoginToSaveModal({ ticker, companyName, fairValue, upsid
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-3">
           <h2 className="text-[16px] font-bold text-[#06101F]">Sign in to save this analysis</h2>
-          <button onClick={onClose} className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-[#8A95A6] hover:text-[#06101F] hover:bg-[#F4F3EF] transition-colors">
+          <button onClick={onClose} className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-[#8A95A6] hover:text-[#06101F] hover:bg-[#F0F1F6] transition-colors">
             <X size={16} strokeWidth={2.5} />
           </button>
         </div>
 
         {/* Preview of what gets saved */}
         <div className="px-5 pb-4">
-          <div className="rounded-xl bg-[#F4F3EF] border border-[#E3E1DA] px-4 py-3 flex items-center justify-between gap-3">
+          <div className="rounded-xl bg-[#F0F1F6] border border-[#E3E1DA] px-4 py-3 flex items-center justify-between gap-3">
             <div>
               <p className="text-[12px] font-bold text-[#06101F] font-mono">{ticker}</p>
               <p className="text-[12px] text-[#566174] truncate max-w-[160px]">{companyName}</p>

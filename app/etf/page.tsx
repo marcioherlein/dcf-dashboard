@@ -33,7 +33,7 @@ function SortIcon({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey; s
 }
 
 const groupBadge: Record<ETFGroup, string> = {
-  sector: 'bg-[#F4F3EF] text-[#566174] border-[#E3E1DA]',
+  sector: 'bg-[#F0F1F6] text-[#566174] border-[#E3E1DA]',
   geo:    'bg-[#EFF6FF] text-[#2563EB] border-[#BFDBFE]',
   style:  'bg-[#F0FDF4] text-[#11875D] border-[#BBF7D0]',
 }
@@ -119,8 +119,8 @@ function Rankings({
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-[#E3E1DA] bg-[#F4F3EF]">
-                <th className="text-left pl-4 pr-3 py-2 text-[11px] font-[600] text-[#566174] sticky left-0 bg-[#F4F3EF]">ETF</th>
+              <tr className="border-b border-[#E3E1DA] bg-[#F0F1F6]">
+                <th className="text-left pl-4 pr-3 py-2 text-[11px] font-[600] text-[#566174] sticky left-0 bg-[#F0F1F6]">ETF</th>
                 <th className="text-left px-3 py-2 text-[11px] font-[600] text-[#566174]">Type</th>
                 {COLS.map((col) => (
                   <th
@@ -138,7 +138,7 @@ function Rankings({
                 <th className="px-3 py-2 w-10" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#F4F3EF]">
+            <tbody className="divide-y divide-[#F0F1F6]">
               {rows.map(({ meta, item }) => {
                 const score = item?.valueScore ?? null
                 const isWatchlisted = watchlistedTickers.has(meta.ticker)
@@ -218,7 +218,7 @@ function Rankings({
                         aria-label={isWatchlisted ? `${meta.ticker} in watchlist` : `Add ${meta.ticker} to watchlist`}
                         className={cn(
                           'w-7 h-7 flex items-center justify-center rounded-lg transition-all',
-                          isWatchlisted ? 'bg-[#E8F7EF] text-[#11875D]' : 'bg-[#F4F3EF] text-[#8A95A6] hover:bg-olive-50 hover:text-olive-700',
+                          isWatchlisted ? 'bg-[#E8F7EF] text-[#11875D]' : 'bg-[#F0F1F6] text-[#8A95A6] hover:bg-olive-50 hover:text-olive-700',
                         )}
                       >
                         {isWatchlisted ? <Check size={10} /> : <Plus size={10} />}

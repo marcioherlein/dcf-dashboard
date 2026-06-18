@@ -506,7 +506,7 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
         {PERIODS.map(p => (
           <button key={p} onClick={() => setPeriod(p)}
             aria-pressed={period === p}
-            className={`rounded-xl px-3 py-1.5 text-[12px] font-[600] transition-colors min-h-[36px] ${period === p ? 'text-[#25310b]' : 'text-[#566174] border border-[#E5E5E5] bg-white hover:bg-[#F4F3EF] hover:border-[#CDD1C8]'}`}
+            className={`rounded-xl px-3 py-1.5 text-[12px] font-[600] transition-colors min-h-[36px] ${period === p ? 'text-[#25310b]' : 'text-[#566174] border border-[#E5E5E5] bg-white hover:bg-[#F0F1F6] hover:border-[#CDD1C8]'}`}
             style={period === p ? { background: '#e8f0d2', border: '1px solid #c8dba0' } : undefined}
           >
             {PERIOD_LABELS[p]}
@@ -523,7 +523,7 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
             <button
               onClick={() => spyOn ? removeCompareTicker('SPY') : addCompareTicker('SPY')}
               aria-pressed={spyOn}
-              className={`inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-[12px] font-[600] border transition-all min-h-[36px] ${spyOn ? 'bg-[#fff3e0] border-[#f97316] text-[#c2410c]' : 'border-[#E5E5E5] text-[#566174] hover:border-[#CDD1C8] hover:bg-[#F4F3EF]'}`}
+              className={`inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-[12px] font-[600] border transition-all min-h-[36px] ${spyOn ? 'bg-[#fff3e0] border-[#f97316] text-[#c2410c]' : 'border-[#E5E5E5] text-[#566174] hover:border-[#CDD1C8] hover:bg-[#F0F1F6]'}`}
             >
               {spyOn ? <>vs SPY <span className="opacity-60 ml-0.5">×</span></> : 'vs SPY'}
             </button>
@@ -558,7 +558,7 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
         {/* % / $ mode when comparing */}
         {isCompare && (
           <button onClick={() => setCompareMode(p => p === 'price' ? 'percent' : 'price')}
-            className={`text-[12px] font-[600] px-3 py-1.5 rounded-lg border transition min-h-[36px] ${compareMode === 'percent' ? 'bg-olive-700 text-white border-olive-700' : 'border-[#E5E5E5] text-[#566174] hover:bg-[#F4F3EF]'}`}>
+            className={`text-[12px] font-[600] px-3 py-1.5 rounded-lg border transition min-h-[36px] ${compareMode === 'percent' ? 'bg-olive-700 text-white border-olive-700' : 'border-[#E5E5E5] text-[#566174] hover:bg-[#F0F1F6]'}`}>
             {compareMode === 'percent' ? '% Return' : '$ Price'}
           </button>
         )}
@@ -570,7 +570,7 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
               onClick={() => setIndicatorsOpen(v => !v)}
               aria-expanded={indicatorsOpen}
               aria-haspopup="menu"
-              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-[600] border transition-all min-h-[36px] ${indicatorsOpen || activeIndicators.length > 0 ? 'border-[#c8dba0] text-[#3d5a06] bg-[#f1f7e5]' : 'border-[#E5E5E5] text-[#566174] hover:bg-[#F4F3EF]'}`}
+              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-[600] border transition-all min-h-[36px] ${indicatorsOpen || activeIndicators.length > 0 ? 'border-[#c8dba0] text-[#3d5a06] bg-[#f1f7e5]' : 'border-[#E5E5E5] text-[#566174] hover:bg-[#F0F1F6]'}`}
             >
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />

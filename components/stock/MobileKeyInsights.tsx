@@ -112,7 +112,7 @@ export default function MobileKeyInsights({ data, hideBlendedFV = false }: Props
                   const cat = ratings[key]
                   if (!cat) return null
                   return (
-                    <div key={key} className="rounded-lg bg-[#F4F3EF] border border-[#E3E1DA] px-2 py-3 text-center min-h-[60px] flex flex-col items-center justify-center">
+                    <div key={key} className="rounded-lg bg-[#F0F1F6] border border-[#E3E1DA] px-2 py-3 text-center min-h-[60px] flex flex-col items-center justify-center">
                       <p className="text-[11px] text-[#566174] mb-1">{label}</p>
                       <span className={cn('text-[11px] font-[600] px-2.5 py-0.5 rounded-full border leading-5', gradeChipClass(cat.grade))}>
                         {cat.grade}

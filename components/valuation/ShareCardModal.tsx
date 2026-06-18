@@ -219,15 +219,15 @@ export default function ShareCardModal({
 
         {/* Preview — portrait only */}
         <div className="px-5 pt-4 pb-3">
-          <div className="w-full rounded-xl overflow-hidden border border-[#E3E1DA] bg-[#F4F3EF] relative aspect-[1080/1350]">
+          <div className="w-full rounded-xl overflow-hidden border border-[#E3E1DA] bg-[#F0F1F6] relative aspect-[1080/1350]">
             {previewState === 'loading' && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#F4F3EF]">
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#F0F1F6]">
                 <Loader2 size={20} className="text-[#5F790B] animate-spin" />
                 <p className="text-[12px] text-[#8A95A6]">Generating card…</p>
               </div>
             )}
             {previewState === 'error' && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#F4F3EF]">
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#F0F1F6]">
                 <AlertCircle size={20} className="text-[#D83B3B]" />
                 <p className="text-[12px] text-[#566174] font-semibold">Preview failed</p>
                 <button
@@ -277,7 +277,7 @@ export default function ShareCardModal({
           {/* Native share / copy link */}
           <button
             onClick={handleShareNative}
-            className="flex items-center justify-center gap-2 rounded-xl py-2.5 px-4 text-[13px] font-[650] border border-[#E3E1DA] bg-white text-[#06101F] hover:bg-[#F4F3EF] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-offset-1"
+            className="flex items-center justify-center gap-2 rounded-xl py-2.5 px-4 text-[13px] font-[650] border border-[#E3E1DA] bg-white text-[#06101F] hover:bg-[#F0F1F6] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-offset-1"
           >
             {copying ? <Check size={14} className="text-[#11875D]" /> : <Share2 size={14} />}
             {copying ? 'Copied' : 'Share'}

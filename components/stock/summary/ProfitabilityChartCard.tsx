@@ -47,7 +47,7 @@ interface ChartPoint {
 const ChartBody = dynamic(() => import('./ProfitabilityChartBody'), {
   ssr: false,
   loading: () => (
-    <div className="h-[200px] motion-safe:animate-pulse rounded-lg bg-[#F4F3EF]" />
+    <div className="h-[200px] motion-safe:animate-pulse rounded-lg bg-[#F0F1F6]" />
   ),
 })
 

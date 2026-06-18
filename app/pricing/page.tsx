@@ -136,7 +136,7 @@ export default function PricingPage() {
           {/* Free */}
           <div className="rounded-2xl border border-gray-200 bg-white p-8 flex flex-col shadow-sm relative">
             <div className="absolute top-5 left-5">
-              <span className="rounded-full bg-[#EEF4DD] border border-[#BFD2A1] text-[#5F790B] text-[10px] font-bold uppercase tracking-wider px-2.5 py-1">
+              <span className="rounded-full bg-[#EEF2FA] border border-[#BFD2A1] text-[#5F790B] text-[10px] font-bold uppercase tracking-wider px-2.5 py-1">
                 Beta — free now
               </span>
             </div>
@@ -272,7 +272,7 @@ export default function PricingPage() {
                       {row.pro === true  && <Check size={16} className="text-[#5F790B] mx-auto" strokeWidth={2.5} />}
                       {row.pro === false && <X    size={16} className="text-gray-300 mx-auto" strokeWidth={2} />}
                       {typeof row.pro === 'string' && (
-                        <span className="text-[12px] font-semibold text-[#5F790B] bg-[#EEF4DD] rounded-full px-2.5 py-0.5">{row.pro}</span>
+                        <span className="text-[12px] font-semibold text-[#5F790B] bg-[#EEF2FA] rounded-full px-2.5 py-0.5">{row.pro}</span>
                       )}
                     </td>
                   </tr>
@@ -300,7 +300,7 @@ export default function PricingPage() {
                           {typeof val === 'string' && (
                             <span className={cn(
                               'text-[11px] font-semibold rounded-full px-2 py-0.5',
-                              tier === 'Pro' ? 'text-[#5F790B] bg-[#EEF4DD]' : 'text-gray-500 bg-gray-100',
+                              tier === 'Pro' ? 'text-[#5F790B] bg-[#EEF2FA]' : 'text-gray-500 bg-gray-100',
                             )}>{val}</span>
                           )}
                         </span>

@@ -249,7 +249,7 @@ function EarningsList({ items, loading }: { items: EarningsItem[]; loading: bool
                   {/* Ticker chip */}
                   <Link
                     href={`/stock/${item.ticker}`}
-                    className="shrink-0 px-2 py-0.5 rounded text-[11px] font-bold bg-[#F5F5F5] text-[#111111] hover:bg-[#EEF4DD] hover:text-[#5F790B] transition-colors"
+                    className="shrink-0 px-2 py-0.5 rounded text-[11px] font-bold bg-[#F5F5F5] text-[#111111] hover:bg-[#EEF2FA] hover:text-[#5F790B] transition-colors"
                   >
                     {item.ticker}
                   </Link>
@@ -372,7 +372,7 @@ function SplitsList({ splits, loading }: { splits: SplitItem[]; loading: boolean
               <div key={item.ticker} className="flex items-center gap-3 px-4 py-2.5 hover:bg-[#FAFAFA] transition-colors">
                 <Link
                   href={`/stock/${item.ticker}`}
-                  className="shrink-0 px-2 py-0.5 rounded text-[11px] font-bold bg-[#F5F5F5] text-[#111111] hover:bg-[#EEF4DD] hover:text-[#5F790B] transition-colors"
+                  className="shrink-0 px-2 py-0.5 rounded text-[11px] font-bold bg-[#F5F5F5] text-[#111111] hover:bg-[#EEF2FA] hover:text-[#5F790B] transition-colors"
                 >
                   {item.ticker}
                 </Link>

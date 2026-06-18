@@ -50,7 +50,7 @@ export default function ValuationOverview({ ticker, currentPrice, changePct, cur
             {fmt(weightedFairValue, currency)}
           </p>
         ) : (
-          <div className="h-[28px] w-24 bg-[#F4F3EF] rounded animate-pulse" />
+          <div className="h-[28px] w-24 bg-[#F0F1F6] rounded animate-pulse" />
         )}
         <p className="text-[11px] text-[#8A95A6]">Weighted model estimate</p>
       </div>
@@ -63,7 +63,7 @@ export default function ValuationOverview({ ticker, currentPrice, changePct, cur
             {upsidePct >= 0 ? '+' : ''}{(upsidePct * 100).toFixed(1)}%
           </p>
         ) : (
-          <div className="h-[28px] w-16 bg-[#F4F3EF] rounded animate-pulse" />
+          <div className="h-[28px] w-16 bg-[#F0F1F6] rounded animate-pulse" />
         )}
         <p className="text-[11px] text-[#8A95A6]">vs. current price</p>
       </div>
@@ -76,7 +76,7 @@ export default function ValuationOverview({ ticker, currentPrice, changePct, cur
             {verdict.label}
           </div>
         ) : (
-          <div className="h-[28px] w-20 bg-[#F4F3EF] rounded animate-pulse" />
+          <div className="h-[28px] w-20 bg-[#F0F1F6] rounded animate-pulse" />
         )}
         <p className="text-[11px] text-[#8A95A6]">{ticker} vs. intrinsic value</p>
       </div>

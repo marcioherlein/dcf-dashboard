@@ -60,7 +60,7 @@ export default function ETFCompareContent() {
   const sharedHoldings = new Set(Array.from(holdingMap.entries()).filter(([, c]) => c > 1).map(([s]) => s))
 
   return (
-    <div className="min-h-dvh bg-[#F4F3EF]">
+    <div className="min-h-dvh bg-[#F0F1F6]">
       <div className="px-4 sm:px-8 py-6 sm:py-8 max-w-6xl mx-auto space-y-6">
 
         {/* Back + title */}

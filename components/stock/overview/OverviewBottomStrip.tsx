@@ -157,7 +157,7 @@ export default function OverviewBottomStrip({ drivers, ratings, cagrAnalysis, up
           {onSave && (
             <button
               onClick={onSave}
-              className="w-full rounded-xl py-3 min-h-[44px] text-[14px] font-semibold text-[#566174] border border-[#E5E5E5] hover:bg-[#F4F3EF] transition-colors"
+              className="w-full rounded-xl py-3 min-h-[44px] text-[14px] font-semibold text-[#566174] border border-[#E5E5E5] hover:bg-[#F0F1F6] transition-colors"
             >
               Add to watchlist
             </button>

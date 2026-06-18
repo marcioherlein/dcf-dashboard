@@ -32,7 +32,7 @@ export default function ETFLoginToSaveModal({ ticker, name, valueScore, onClose 
           <h2 className="text-[16px] font-bold text-[#06101F]">Sign in to save your watchlist</h2>
           <button
             onClick={onClose}
-            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-[#8A95A6] hover:text-[#06101F] hover:bg-[#F4F3EF] transition-colors"
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-[#8A95A6] hover:text-[#06101F] hover:bg-[#F0F1F6] transition-colors"
           >
             <X size={16} strokeWidth={2.5} />
           </button>
@@ -40,7 +40,7 @@ export default function ETFLoginToSaveModal({ ticker, name, valueScore, onClose 
 
         {/* Preview of what gets saved */}
         <div className="px-5 pb-4">
-          <div className="rounded-xl bg-[#F4F3EF] border border-[#E3E1DA] px-4 py-3 flex items-center justify-between gap-3">
+          <div className="rounded-xl bg-[#F0F1F6] border border-[#E3E1DA] px-4 py-3 flex items-center justify-between gap-3">
             <div className="min-w-0">
               <p className="text-[13px] font-bold text-[#06101F] tabular-nums">{ticker}</p>
               {name && <p className="text-[11px] text-[#566174] truncate">{name}</p>}

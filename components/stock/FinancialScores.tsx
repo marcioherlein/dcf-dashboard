@@ -77,7 +77,7 @@ export default function FinancialScores({ scores }: Props) {
       <div className="rounded-xl card p-6">
         <h2 className="mb-4 text-[13px] font-[700] text-[#111111] leading-tight">Financial Quality Scores</h2>
         <div className="flex flex-col items-center justify-center py-10 gap-3">
-          <div className="w-12 h-12 rounded-full bg-[#F4F3EF] flex items-center justify-center">
+          <div className="w-12 h-12 rounded-full bg-[#F0F1F6] flex items-center justify-center">
             <svg className="w-6 h-6 text-[#8A95A6]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
             </svg>
@@ -95,8 +95,8 @@ export default function FinancialScores({ scores }: Props) {
   const altmanGood = altmanSafe != null && altmanSafe.zScore >= 3.0
   const altmanMid  = altmanSafe != null && altmanSafe.zScore >= 1.8 && altmanSafe.zScore < 3.0
   const altmanColor = altmanSafe == null ? 'text-[#8A95A6]' : altmanGood ? 'text-[#11875D]' : altmanMid ? 'text-[#B56A00]' : 'text-[#D83B3B]'
-  const altmanBg    = altmanSafe == null ? 'bg-[#F4F3EF] border-[#E3E1DA]' : altmanGood ? 'bg-[#E8F7EF] border-[#A3D9BE]' : altmanMid ? 'bg-[#FFF4DA] border-[#F3D391]' : 'bg-[#FCEAEA] border-[#F0B8B8]'
-  const altmanBadge = altmanSafe == null ? 'bg-[#F4F3EF] text-[#566174]' : altmanGood ? 'bg-[#E8F7EF] text-[#0D6B46]' : altmanMid ? 'bg-[#FFF4DA] text-[#854D0E]' : 'bg-[#FCEAEA] text-[#991B1B]'
+  const altmanBg    = altmanSafe == null ? 'bg-[#F0F1F6] border-[#E3E1DA]' : altmanGood ? 'bg-[#E8F7EF] border-[#A3D9BE]' : altmanMid ? 'bg-[#FFF4DA] border-[#F3D391]' : 'bg-[#FCEAEA] border-[#F0B8B8]'
+  const altmanBadge = altmanSafe == null ? 'bg-[#F0F1F6] text-[#566174]' : altmanGood ? 'bg-[#E8F7EF] text-[#0D6B46]' : altmanMid ? 'bg-[#FFF4DA] text-[#854D0E]' : 'bg-[#FCEAEA] text-[#991B1B]'
   const altmanZoneLabel = altmanSafe == null ? 'No data' : altmanSafe.zone === 'Safe' ? 'Safe Zone' : altmanSafe.zone === 'Grey' ? 'Grey Zone' : 'Distress Zone'
 
   const mScore = beneish?.mScore ?? 0
@@ -251,7 +251,7 @@ export default function FinancialScores({ scores }: Props) {
         </div>
 
         {/* ── Earnings Quality (Beneish M-Score) ── */}
-        <div className={`rounded-xl border p-4 ${beneish ? beneishBg : 'bg-[#F4F3EF] border-[#E3E1DA]'}`}>
+        <div className={`rounded-xl border p-4 ${beneish ? beneishBg : 'bg-[#F0F1F6] border-[#E3E1DA]'}`}>
           <div className="flex items-start justify-between mb-1">
             <div>
               <p className="text-[11px] font-[600] text-[#566174]">Earnings Quality</p>
@@ -269,7 +269,7 @@ export default function FinancialScores({ scores }: Props) {
                 {beneishLabel}
               </span>
             ) : (
-              <span className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold bg-[#F4F3EF] text-[#566174]">
+              <span className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold bg-[#F0F1F6] text-[#566174]">
                 N/A
               </span>
             )}

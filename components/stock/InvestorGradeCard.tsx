@@ -275,7 +275,7 @@ export default function InvestorGradeCard({
       </div>
 
       {/* Fair value visual + actions */}
-      <div className="border-t border-[#E3E1DA] px-4 sm:px-5 pb-4 sm:pb-5 pt-4 space-y-4 bg-[#F4F3EF]">
+      <div className="border-t border-[#E3E1DA] px-4 sm:px-5 pb-4 sm:pb-5 pt-4 space-y-4 bg-[#F0F1F6]">
 
         {/* Alert triggered banner */}
         {alertTriggered && fairValue != null && (

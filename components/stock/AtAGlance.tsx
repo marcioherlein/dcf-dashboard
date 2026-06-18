@@ -85,8 +85,8 @@ export default function AtAGlance({
 
       {/* Sector / country pills */}
       <div className="flex gap-1.5 flex-wrap">
-        {sector  && <span className="rounded-full bg-[#F4F3EF] border border-[#E3E1DA] text-[#06101F] px-2.5 py-0.5 text-[12px] font-medium min-h-[32px] flex items-center">{sector}</span>}
-        {country && <span className="rounded-full bg-[#F4F3EF] border border-[#E3E1DA] text-[#06101F] px-2.5 py-0.5 text-[12px] font-medium min-h-[32px] flex items-center">{country}</span>}
+        {sector  && <span className="rounded-full bg-[#F0F1F6] border border-[#E3E1DA] text-[#06101F] px-2.5 py-0.5 text-[12px] font-medium min-h-[32px] flex items-center">{sector}</span>}
+        {country && <span className="rounded-full bg-[#F0F1F6] border border-[#E3E1DA] text-[#06101F] px-2.5 py-0.5 text-[12px] font-medium min-h-[32px] flex items-center">{country}</span>}
       </div>
 
       {/* TTM Multiples */}

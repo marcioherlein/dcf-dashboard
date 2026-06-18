@@ -56,8 +56,8 @@ const VERDICT_CONFIG: Record<VerdictType, {
   'Fairly Priced':      { badge: 'informational', bg: '#EAF1FF', border: '#93B4F5', valueColor: '#2563EB', label: 'Fairly Priced' },
   'Expensive':          { badge: 'warning',       bg: '#FFF4DA', border: '#F3D391', valueColor: '#B56A00', label: 'Expensive' },
   'Overvalued':         { badge: 'negative',      bg: '#FCEAEA', border: '#F0B8B8', valueColor: '#D83B3B', label: 'Overvalued' },
-  'Uncertain':          { badge: 'neutral',       bg: '#F4F3EF', border: '#E3E1DA', valueColor: '#566174', label: 'Uncertain' },
-  'Insufficient Data':  { badge: 'neutral',       bg: '#F4F3EF', border: '#E3E1DA', valueColor: '#566174', label: 'Insufficient Data' },
+  'Uncertain':          { badge: 'neutral',       bg: '#F0F1F6', border: '#E3E1DA', valueColor: '#566174', label: 'Uncertain' },
+  'Insufficient Data':  { badge: 'neutral',       bg: '#F0F1F6', border: '#E3E1DA', valueColor: '#566174', label: 'Insufficient Data' },
 }
 
 const CONFIDENCE_LABEL: Record<ConfidenceLevel, string> = {

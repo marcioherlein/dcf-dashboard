@@ -37,7 +37,7 @@ function fmt(n: number, currency: string) {
 function ScenarioCell({ label, value, variant, locked }: { label: string; value: string; variant: 'bear' | 'base' | 'bull'; locked?: boolean }) {
   const styles = {
     bear: { cell: 'bg-[#FCEAEA] border-[#F0B8B8]', label: 'text-[#D83B3B]' },
-    base: { cell: 'bg-[#F4F3EF] border-[#E3E1DA]', label: 'text-[#566174]' },
+    base: { cell: 'bg-[#F0F1F6] border-[#E3E1DA]', label: 'text-[#566174]' },
     bull: { cell: 'bg-[#E8F7EF] border-[#A3D9BE]',  label: 'text-[#11875D]' },
   }
   const s = styles[variant]
@@ -95,7 +95,7 @@ export default function StockUpgradeWall({ ticker, companyName, price, currency,
         <div className="px-5 py-4 space-y-3">
           {/* Fair value — blurred to signal unlock needed */}
           {fairValue != null && (
-            <div className="flex items-center justify-between gap-3 rounded-xl bg-[#F4F3EF] border border-[#E3E1DA] px-4 py-3">
+            <div className="flex items-center justify-between gap-3 rounded-xl bg-[#F0F1F6] border border-[#E3E1DA] px-4 py-3">
               <div>
                 <p className="text-[11px] text-[#566174] font-semibold">Fair Value</p>
                 <p className="text-[17px] font-bold text-[#06101F] tabular-nums blur-[4px] select-none" aria-hidden="true">
@@ -145,7 +145,7 @@ export default function StockUpgradeWall({ ticker, companyName, price, currency,
               <span className="text-[#566174]">{used} of {LIMIT} free analyses used this month</span>
               <span className="text-[#B56A00] font-bold">Limit reached</span>
             </div>
-            <div className="h-1.5 bg-[#F4F3EF] rounded-full overflow-hidden" role="progressbar" aria-valuenow={used} aria-valuemin={0} aria-valuemax={LIMIT}>
+            <div className="h-1.5 bg-[#F0F1F6] rounded-full overflow-hidden" role="progressbar" aria-valuenow={used} aria-valuemin={0} aria-valuemax={LIMIT}>
               <div
                 className="h-full bg-[#B56A00] rounded-full transition-all duration-500"
                 style={{ width: '100%' }}

@@ -33,7 +33,7 @@ function ratingBadgeClass(rating: Rating): string {
     return 'bg-[#E8F7EF] text-[#11875D] border border-[#A3D9BE]'
   }
   if (rating === 'B+' || rating === 'B') {
-    return 'bg-[#EEF4DD] text-[#5F790B] border border-[#C9DC8E]'
+    return 'bg-[#EEF2FA] text-[#5F790B] border border-[#C9DC8E]'
   }
   // C — amber
   return 'bg-[#FFF4DA] text-[#B56A00] border border-[#F3D391]'

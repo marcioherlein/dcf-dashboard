@@ -186,11 +186,11 @@ function SkeletonRow({ index }: { index: number }) {
       <td className="sticky left-0 z-10 bg-white px-4 py-3.5 w-[220px]">
         <div className="flex flex-col gap-1.5">
           <div className="h-3.5 bg-[#E5E5E5] rounded w-14" />
-          <div className="h-3 bg-[#F4F3EF] rounded w-28" />
+          <div className="h-3 bg-[#F0F1F6] rounded w-28" />
         </div>
       </td>
       {Array.from({ length: 6 }).map((_, i) => (
-        <td key={i} className="px-4 py-3.5"><div className="h-3.5 bg-[#F4F3EF] rounded w-16 ml-auto" /></td>
+        <td key={i} className="px-4 py-3.5"><div className="h-3.5 bg-[#F0F1F6] rounded w-16 ml-auto" /></td>
       ))}
     </tr>
   )
@@ -224,7 +224,7 @@ const SECTOR_COLORS: Record<string, string> = {
   'Consumer Cyclical':      'bg-orange-50 text-orange-700',
   'Consumer Defensive':     'bg-[#FFF4DA] text-[#B56A00]',
   'Communication Services': 'bg-cyan-50 text-cyan-700',
-  'Industrials':            'bg-[#F4F3EF] text-[#6B6B6B]',
+  'Industrials':            'bg-[#F0F1F6] text-[#6B6B6B]',
   'Energy':                 'bg-[#FFF4DA] text-[#B56A00]',
   'Basic Materials':        'bg-lime-50 text-lime-700',
   'Real Estate':            'bg-rose-50 text-rose-700',
@@ -234,7 +234,7 @@ const SECTOR_COLORS: Record<string, string> = {
 function SectorBadge({ sector }: { sector: string | null }) {
   if (!sector) return <span className="text-[#6B6B6B] text-[11px]">—</span>
   return (
-    <span className={cn('inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full', SECTOR_COLORS[sector] ?? 'bg-[#F4F3EF] text-[#6B6B6B]')}>
+    <span className={cn('inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full', SECTOR_COLORS[sector] ?? 'bg-[#F0F1F6] text-[#6B6B6B]')}>
       {sector}
     </span>
   )
@@ -453,7 +453,7 @@ export default function ScreenerPage() {
               {EXCHANGES.map(ex => (
                 <button key={ex.id} onClick={() => setFilter('exchange', ex.id)}
                   className={cn('px-3 py-2 text-[12px] font-[500] border-r border-[#E5E5E5] last:border-r-0 transition-colors min-h-[44px]',
-                    filters.exchange === ex.id ? 'bg-olive-50 text-olive-700 font-[600]' : 'text-[#6B6B6B] hover:bg-[#F4F3EF]'
+                    filters.exchange === ex.id ? 'bg-olive-50 text-olive-700 font-[600]' : 'text-[#6B6B6B] hover:bg-[#F0F1F6]'
                   )}>
                   {ex.label}
                 </button>
@@ -465,7 +465,7 @@ export default function ScreenerPage() {
               {CAP_TIERS.map(t => (
                 <button key={t.id} onClick={() => setFilter('capTier', t.id)} title={t.sub || undefined}
                   className={cn('px-3 py-2 text-[12px] font-[500] border-r border-[#E5E5E5] last:border-r-0 transition-colors min-h-[44px] whitespace-nowrap',
-                    filters.capTier === t.id ? 'bg-olive-50 text-olive-700 font-[600]' : 'text-[#6B6B6B] hover:bg-[#F4F3EF]'
+                    filters.capTier === t.id ? 'bg-olive-50 text-olive-700 font-[600]' : 'text-[#6B6B6B] hover:bg-[#F0F1F6]'
                   )}>
                   {t.label}
                   {t.sub && <span className="hidden md:inline text-[9px] opacity-60 ml-0.5">{t.sub}</span>}
@@ -643,9 +643,9 @@ export default function ScreenerPage() {
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[720px]">
                   <thead>
-                    <tr className="border-b border-[#E5E5E5] bg-[#F4F3EF]/60">
+                    <tr className="border-b border-[#E5E5E5] bg-[#F0F1F6]/60">
                       <th
-                        className="sticky left-0 z-10 bg-[#F4F3EF] px-4 py-3 text-left text-[11px] font-semibold text-[#6B6B6B] w-[220px] min-w-[200px] cursor-pointer select-none hover:text-[#06101F] transition-colors"
+                        className="sticky left-0 z-10 bg-[#F0F1F6] px-4 py-3 text-left text-[11px] font-semibold text-[#6B6B6B] w-[220px] min-w-[200px] cursor-pointer select-none hover:text-[#06101F] transition-colors"
                         onClick={() => toggleSort('name')}
                         aria-sort={sortKey === 'name' ? (sortDir === 'desc' ? 'descending' : 'ascending') : 'none'}
                       >

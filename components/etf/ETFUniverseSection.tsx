@@ -29,7 +29,7 @@ function SortIcon({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey; s
 
 // Group badge — uses neutral palette, distinguished by shape/icon rather than random colors
 const groupBadge: Record<ETFGroup, string> = {
-  sector: 'bg-[#F4F3EF] text-[#566174] border-[#E3E1DA]',
+  sector: 'bg-[#F0F1F6] text-[#566174] border-[#E3E1DA]',
   geo:    'bg-[#EFF6FF] text-[#2563EB] border-[#BFDBFE]',
   style:  'bg-[#F0FDF4] text-[#11875D] border-[#BBF7D0]',
 }
@@ -140,8 +140,8 @@ function Leaderboard({
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-[#E3E1DA] bg-[#F4F3EF]">
-                <th scope="col" className="text-left pl-4 pr-3 py-2.5 text-[11px] font-semibold text-[#566174] w-[200px] sticky left-0 bg-[#F4F3EF]">
+              <tr className="border-b border-[#E3E1DA] bg-[#F0F1F6]">
+                <th scope="col" className="text-left pl-4 pr-3 py-2.5 text-[11px] font-semibold text-[#566174] w-[200px] sticky left-0 bg-[#F0F1F6]">
                   ETF
                 </th>
                 <th scope="col" className="text-left px-3 py-2.5 text-[11px] font-semibold text-[#566174]">
@@ -168,14 +168,14 @@ function Leaderboard({
                 <th scope="col" className="px-4 py-2.5 w-10" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#F4F3EF]">
+            <tbody className="divide-y divide-[#F0F1F6]">
               {rows.map(({ meta, item }) => {
                 const score = item?.valueScore ?? null
                 const isWatchlisted = watchlistedTickers.has(meta.ticker)
                 const wasJustAdded = justAdded.has(meta.ticker)
                 return (
-                  <tr key={meta.ticker} className="hover:bg-[#F4F3EF] transition-colors group">
-                    <td className="pl-4 pr-3 py-3 sticky left-0 bg-white group-hover:bg-[#F4F3EF] transition-colors">
+                  <tr key={meta.ticker} className="hover:bg-[#F0F1F6] transition-colors group">
+                    <td className="pl-4 pr-3 py-3 sticky left-0 bg-white group-hover:bg-[#F0F1F6] transition-colors">
                       <Link href={`/etf/${meta.ticker}`} className="block">
                         <span className="font-[700] text-[13px] text-[#06101F] hover:text-olive-700 transition-colors">
                           {meta.ticker}
@@ -226,7 +226,7 @@ function Leaderboard({
                           'min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-all duration-150',
                           isWatchlisted
                             ? 'bg-[#E8F7EF] text-[#11875D]'
-                            : 'bg-[#F4F3EF] text-[#8A95A6] hover:bg-olive-50 hover:text-olive-700',
+                            : 'bg-[#F0F1F6] text-[#8A95A6] hover:bg-olive-50 hover:text-olive-700',
                           wasJustAdded && 'scale-125',
                         )}
                         style={wasJustAdded ? { transition: 'transform 0.15s ease' } : undefined}
@@ -260,7 +260,7 @@ function EmptyWatchlistCTA({
     <section>
       <h2 className="text-[13px] font-[700] text-[#111111] mb-5">My Watchlist</h2>
       <div className="bg-white border border-[#E3E1DA] rounded-2xl p-8 flex flex-col items-center text-center" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
-        <div className="w-12 h-12 rounded-xl bg-[#F4F3EF] flex items-center justify-center mb-4">
+        <div className="w-12 h-12 rounded-xl bg-[#F0F1F6] flex items-center justify-center mb-4">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8A95A6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21.21 15.89A10 10 0 1 1 8 2.83" /><path d="M22 12A10 10 0 0 0 12 2v10z" />
           </svg>

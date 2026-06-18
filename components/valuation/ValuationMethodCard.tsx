@@ -65,7 +65,7 @@ export default function ValuationMethodCard({
       {/* Header strip */}
       <div className={cn(
         'flex items-center justify-between px-4 py-3 rounded-t-xl border-b',
-        isActive ? 'bg-[#EAF1FF] border-[#93B4F5]' : 'bg-[#F4F3EF] border-[#E3E1DA]',
+        isActive ? 'bg-[#EAF1FF] border-[#93B4F5]' : 'bg-[#F0F1F6] border-[#E3E1DA]',
       )}>
         <div className="flex items-center gap-2">
           <span className={cn(
@@ -109,7 +109,7 @@ export default function ValuationMethodCard({
         'flex items-center justify-between px-4 py-2.5 rounded-b-xl border-t text-xs font-medium transition-colors',
         isActive
           ? 'border-[#93B4F5] bg-[#EAF1FF] text-[#2563EB]'
-          : 'border-[#E3E1DA] bg-[#F4F3EF] text-[#566174] group-hover:text-[#2563EB]',
+          : 'border-[#E3E1DA] bg-[#F0F1F6] text-[#566174] group-hover:text-[#2563EB]',
       )}>
         <span>{isActive ? 'Model open' : 'Open model'}</span>
         <ChevronRight size={14} className={cn('transition-transform', isActive && 'rotate-90')} />

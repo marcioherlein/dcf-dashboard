@@ -6,7 +6,7 @@ const EFFECTIVE_DATE = 'June 9, 2026'
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-dvh bg-[#F4F3EF]">
+    <div className="min-h-dvh bg-[#F0F1F6]">
       <div className="mx-auto max-w-2xl px-4 sm:px-6 py-12 sm:py-24">
 
         <div className="mb-8">
@@ -87,7 +87,7 @@ export default function PrivacyPage() {
             </p>
             <div className="mt-3 rounded-xl border border-[#E3E1DA] overflow-x-auto">
               <table className="w-full text-xs min-w-[420px]">
-                <thead className="bg-[#F4F3EF]">
+                <thead className="bg-[#F0F1F6]">
                   <tr>
                     <th className="text-left px-4 py-2 font-semibold text-[#566174]">Processing activity</th>
                     <th className="text-left px-4 py-2 font-semibold text-[#566174]">Legal basis (GDPR Art. 6)</th>
@@ -148,7 +148,7 @@ export default function PrivacyPage() {
             </p>
             <div className="mt-3 rounded-xl border border-[#E3E1DA] overflow-x-auto">
               <table className="w-full text-xs min-w-[480px]">
-                <thead className="bg-[#F4F3EF]">
+                <thead className="bg-[#F0F1F6]">
                   <tr>
                     <th className="text-left px-4 py-2 font-semibold text-[#566174]">Service</th>
                     <th className="text-left px-4 py-2 font-semibold text-[#566174]">Purpose</th>

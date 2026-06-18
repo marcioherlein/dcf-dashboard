@@ -48,7 +48,7 @@ export function ETFComparisonTable({ profiles }: Props) {
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-[#E3E1DA]/60 bg-[#F4F3EF]/60">
+            <tr className="border-b border-[#E3E1DA]/60 bg-[#F0F1F6]/60">
               <th className="text-left px-4 py-3 text-xs font-semibold text-[#566174] w-32">Metric</th>
               {profiles.map((p) => (
                 <th key={p.ticker} className="px-4 py-3 text-center">
@@ -58,11 +58,11 @@ export function ETFComparisonTable({ profiles }: Props) {
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#F4F3EF]">
+          <tbody className="divide-y divide-[#F0F1F6]">
             {METRICS.map((m) => {
               const bestIdx = getBestIdx(profiles, m.key, m.bestDir)
               return (
-                <tr key={m.key} className="hover:bg-[#F4F3EF]/60 transition-colors">
+                <tr key={m.key} className="hover:bg-[#F0F1F6]/60 transition-colors">
                   <td className="px-4 py-3 text-xs font-semibold text-[#566174]">{m.label}</td>
                   {profiles.map((p, i) => {
                     const raw = p[m.key] as number | null

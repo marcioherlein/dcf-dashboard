@@ -35,7 +35,7 @@ function WeightBar({ label, weight, color }: { label: string; weight: number; co
   return (
     <div className="flex items-center gap-2">
       <span className="w-24 shrink-0 text-[10px] text-[#566174]">{label}</span>
-      <div className="flex-1 rounded-full bg-[#F4F3EF] h-1.5 overflow-hidden">
+      <div className="flex-1 rounded-full bg-[#F0F1F6] h-1.5 overflow-hidden">
         <div className="h-full rounded-full" style={{ width: `${pct}%`, background: color }} />
       </div>
       <span className="w-8 text-right text-[10px] font-semibold text-[#566174]">{pct}%</span>
@@ -127,7 +127,7 @@ export default function CAGRAnalysis({ cagrAnalysis: ca, isNegativeFCF, growthMo
               <tr
                 key={row.label}
                 className={`border-b border-[#F4F3EF] ${
-                  (row as { bold?: boolean }).bold ? 'bg-[#F4F3EF]' : ''
+                  (row as { bold?: boolean }).bold ? 'bg-[#F0F1F6]' : ''
                 }`}
               >
                 <td className={`py-2 ${
@@ -157,7 +157,7 @@ export default function CAGRAnalysis({ cagrAnalysis: ca, isNegativeFCF, growthMo
 
       {/* Blending weights visual */}
       {(ca.weights.historical > 0 || ca.weights.analyst > 0 || ca.weights.fundamental > 0) && (
-        <div className="mb-4 rounded-xl border border-[#E3E1DA] bg-[#F4F3EF] px-4 py-3">
+        <div className="mb-4 rounded-xl border border-[#E3E1DA] bg-[#F0F1F6] px-4 py-3">
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-[#8A95A6]">Blending Weights</p>
           <div className="space-y-1.5">
             <WeightBar label="Analyst"     weight={ca.weights.analyst}     color="#6366f1" />
@@ -168,13 +168,13 @@ export default function CAGRAnalysis({ cagrAnalysis: ca, isNegativeFCF, growthMo
       )}
 
       {/* DCF Growth Model */}
-      <div className="mb-4 rounded-xl border border-[#E3E1DA] bg-[#F4F3EF] px-4 py-3">
+      <div className="mb-4 rounded-xl border border-[#E3E1DA] bg-[#F0F1F6] px-4 py-3">
         <div className="flex items-center gap-2">
           <p className="text-xs font-semibold text-[#566174]">DCF Growth Model</p>
           {growthModel === 'three-stage' ? (
             <span className="rounded-full px-2.5 py-0.5 text-[11px] font-[600] border bg-violet-50 text-violet-600 border-violet-200">Three-Stage (Damodaran)</span>
           ) : (
-            <span className="rounded-full px-2.5 py-0.5 text-[11px] font-[600] border bg-[#F4F3EF] text-[#566174] border-[#E3E1DA]">Two-Stage (Standard)</span>
+            <span className="rounded-full px-2.5 py-0.5 text-[11px] font-[600] border bg-[#F0F1F6] text-[#566174] border-[#E3E1DA]">Two-Stage (Standard)</span>
           )}
         </div>
         {growthModel === 'three-stage' ? (

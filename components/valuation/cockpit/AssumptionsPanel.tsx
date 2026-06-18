@@ -279,7 +279,7 @@ function AssumptionRowExpanded({
     if (!field.isExitMultiple || currentMultiple == null || currentMultiple <= 0) return null
     const ratio = value / currentMultiple
     if (ratio < 0.90) return { text: `▼ Implies ${((1 - ratio) * 100).toFixed(0)}% compression vs current ${currentMultiple.toFixed(1)}×`, cls: 'bg-[#E8F7EF] border-[#A7D7C0] text-[#11875D]' }
-    if (ratio <= 1.10) return { text: `≈ Near current ${currentMultiple.toFixed(1)}×`, cls: 'bg-[#F4F3EF] border-[#E3E1DA] text-[#566174]' }
+    if (ratio <= 1.10) return { text: `≈ Near current ${currentMultiple.toFixed(1)}×`, cls: 'bg-[#F0F1F6] border-[#E3E1DA] text-[#566174]' }
     if (ratio <= 1.50) return { text: `▲ Assumes ${ratio.toFixed(1)}× expansion vs current ${currentMultiple.toFixed(1)}×`, cls: 'bg-[#FFF4DA] border-[#F3D391] text-[#B56A00]' }
     return { text: `▲▲ Aggressive ${ratio.toFixed(1)}× expansion vs current ${currentMultiple.toFixed(1)}×`, cls: 'bg-[#FCEAEA] border-[#F0AEAE] text-[#D83B3B]' }
   })()
@@ -334,10 +334,10 @@ function AssumptionRowExpanded({
 
       {/* Steppers */}
       <div className="flex items-center justify-between gap-2">
-        <button onClick={() => onChange(clamp(value - field.step))} className="flex-1 h-11 flex items-center justify-center rounded-lg border border-[#E3E1DA] bg-white text-[#566174] hover:text-[#06101F] hover:bg-[#F4F3EF] transition-all text-sm font-bold select-none" aria-label={`Decrease ${field.label}`}>−</button>
+        <button onClick={() => onChange(clamp(value - field.step))} className="flex-1 h-11 flex items-center justify-center rounded-lg border border-[#E3E1DA] bg-white text-[#566174] hover:text-[#06101F] hover:bg-[#F0F1F6] transition-all text-sm font-bold select-none" aria-label={`Decrease ${field.label}`}>−</button>
         <button
           onClick={startEdit}
-          className="flex-1 h-11 text-[13px] font-[700] tabular-nums text-center border border-[#E3E1DA] rounded-lg bg-white hover:bg-[#F4F3EF] transition-colors text-[#566174]"
+          className="flex-1 h-11 text-[13px] font-[700] tabular-nums text-center border border-[#E3E1DA] rounded-lg bg-white hover:bg-[#F0F1F6] transition-colors text-[#566174]"
           title="Click to type a value directly"
           aria-label={`${field.label}: ${fmtVal(value, field.unit)}. Click to type.`}
         >
@@ -353,7 +353,7 @@ function AssumptionRowExpanded({
             />
           ) : fmtVal(value, field.unit)}
         </button>
-        <button onClick={() => onChange(clamp(value + field.step))} className="flex-1 h-11 flex items-center justify-center rounded-lg border border-[#E3E1DA] bg-white text-[#566174] hover:text-[#06101F] hover:bg-[#F4F3EF] transition-all text-sm font-bold select-none" aria-label={`Increase ${field.label}`}>+</button>
+        <button onClick={() => onChange(clamp(value + field.step))} className="flex-1 h-11 flex items-center justify-center rounded-lg border border-[#E3E1DA] bg-white text-[#566174] hover:text-[#06101F] hover:bg-[#F0F1F6] transition-all text-sm font-bold select-none" aria-label={`Increase ${field.label}`}>+</button>
       </div>
 
       {/* WACC signal */}
@@ -401,7 +401,7 @@ function AssumptionRowExpanded({
           <div className="flex items-center justify-between">
             <span className="text-[10px] text-[#8A95A6]">{hasSeries ? '5-year history' : 'No historical data'}</span>
           </div>
-          <div className="rounded-xl bg-[#F4F3EF]/60 p-2">
+          <div className="rounded-xl bg-[#F0F1F6]/60 p-2">
             <BarChart
               sparkPoints={sparkPoints ?? []} inputVal={value} color={color} unit={field.unit}
               typicalMin={effectiveTypicals.min} typicalMax={effectiveTypicals.max}
@@ -462,7 +462,7 @@ function AssumptionRowCollapsed({
       onClick={onToggle}
       className={cn(
         'w-full flex items-center gap-3 px-4 py-3 transition-colors text-left group',
-        isExpanded ? 'bg-[#F4F3EF]/80' : 'hover:bg-[#F4F3EF]/60',
+        isExpanded ? 'bg-[#F0F1F6]/80' : 'hover:bg-[#F0F1F6]/60',
       )}
       aria-expanded={isExpanded}
     >
@@ -613,7 +613,7 @@ export default function AssumptionsPanel({
           {/* Presets */}
           <div className="flex items-center gap-0.5 rounded-lg border border-[#E3E1DA] p-0.5 bg-white">
             {presets.map(p => (
-              <button key={p.id} onClick={p.onClick} className={cn('text-[11px] font-semibold px-3 py-1.5 rounded-md motion-safe:transition-all', p.active ? 'bg-[#2563EB] text-white shadow-sm' : 'text-[#566174] hover:text-[#06101F] hover:bg-[#F4F3EF]')}>
+              <button key={p.id} onClick={p.onClick} className={cn('text-[11px] font-semibold px-3 py-1.5 rounded-md motion-safe:transition-all', p.active ? 'bg-[#2563EB] text-white shadow-sm' : 'text-[#566174] hover:text-[#06101F] hover:bg-[#F0F1F6]')}>
                 {p.label}
               </button>
             ))}
@@ -628,11 +628,11 @@ export default function AssumptionsPanel({
 
           {/* Undo */}
           {canUndo && onUndo && (
-            <button onClick={onUndo} className="text-[11px] font-semibold text-[#566174] hover:text-[#06101F] px-2.5 py-1.5 rounded-lg border border-[#E3E1DA] hover:bg-[#F4F3EF] motion-safe:transition-all">↩</button>
+            <button onClick={onUndo} className="text-[11px] font-semibold text-[#566174] hover:text-[#06101F] px-2.5 py-1.5 rounded-lg border border-[#E3E1DA] hover:bg-[#F0F1F6] motion-safe:transition-all">↩</button>
           )}
 
           {/* Reset */}
-          <button onClick={onReset} disabled={!isModified} className="text-[11px] font-semibold text-[#566174] hover:text-[#06101F] disabled:text-[#8A95A6] px-2.5 py-1.5 rounded-lg border border-[#E3E1DA] hover:bg-[#F4F3EF] disabled:border-[#E3E1DA] motion-safe:transition-all">↺ Reset</button>
+          <button onClick={onReset} disabled={!isModified} className="text-[11px] font-semibold text-[#566174] hover:text-[#06101F] disabled:text-[#8A95A6] px-2.5 py-1.5 rounded-lg border border-[#E3E1DA] hover:bg-[#F0F1F6] disabled:border-[#E3E1DA] motion-safe:transition-all">↺ Reset</button>
         </div>
       </div>
 

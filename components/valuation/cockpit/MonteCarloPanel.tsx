@@ -322,7 +322,7 @@ export default function MonteCarloPanel({
             onClick={() => setDialogOpen(true)}
             aria-haspopup="dialog"
             aria-label="Expand Monte Carlo simulation"
-            className="text-[11px] font-[650] text-[#5F790B] bg-[#F6FAEA] border border-[#BFD2A1] px-3 py-2 rounded-lg min-h-[44px] flex items-center hover:bg-[#EEF4DD] transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B]"
+            className="text-[11px] font-[650] text-[#5F790B] bg-[#F6FAEA] border border-[#BFD2A1] px-3 py-2 rounded-lg min-h-[44px] flex items-center hover:bg-[#EEF2FA] transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B]"
           >
             Expand ↗
           </button>

@@ -372,18 +372,18 @@ export default function YahooFinancials({ statementsData, currency = '$', report
           <div className="flex rounded-lg overflow-hidden border border-[#E3E1DA] text-[12px]">
             <button
               onClick={() => setPeriod('annual')}
-              className={`px-3 py-1.5 ${period === 'annual' ? 'bg-olive-50 text-olive-700 font-semibold' : 'text-[#8A95A6] hover:bg-[#F4F3EF]'}`}
+              className={`px-3 py-1.5 ${period === 'annual' ? 'bg-olive-50 text-olive-700 font-semibold' : 'text-[#8A95A6] hover:bg-[#F0F1F6]'}`}
             >
               Annual
             </button>
             <button
               onClick={() => setPeriod('quarterly')}
-              className={`px-3 py-1.5 border-l border-[#E3E1DA] ${period === 'quarterly' ? 'bg-olive-50 text-olive-700 font-semibold' : 'text-[#8A95A6] hover:bg-[#F4F3EF]'}`}
+              className={`px-3 py-1.5 border-l border-[#E3E1DA] ${period === 'quarterly' ? 'bg-olive-50 text-olive-700 font-semibold' : 'text-[#8A95A6] hover:bg-[#F0F1F6]'}`}
             >
               Quarterly
             </button>
           </div>
-          <button onClick={() => toggleAll(false)} className="text-[12px] text-[#566174] hover:text-[#06101F] whitespace-nowrap min-h-[44px] px-2.5 py-1 rounded-full border border-[#E3E1DA] hover:border-[#CDD1C8] hover:bg-[#F4F3EF] transition-colors">
+          <button onClick={() => toggleAll(false)} className="text-[12px] text-[#566174] hover:text-[#06101F] whitespace-nowrap min-h-[44px] px-2.5 py-1 rounded-full border border-[#E3E1DA] hover:border-[#CDD1C8] hover:bg-[#F0F1F6] transition-colors">
             Collapse all
           </button>
           <button onClick={() => toggleAll(true)} className="text-[12px] text-[#2563EB] hover:text-[#2563EB] whitespace-nowrap min-h-[44px] px-2.5 py-1 rounded-full border border-[#93B4F5] hover:border-[#93B4F5] hover:bg-[#EAF1FF]/50 transition-colors">
@@ -414,7 +414,7 @@ export default function YahooFinancials({ statementsData, currency = '$', report
       <div className="overflow-x-auto">
         <table className="w-full text-[12px]" style={{ minWidth: `${280 + (showTTM && ttmData ? 1 : 0) * 110 + displayPeriods.length * 110}px` }}>
           <thead>
-            <tr className="border-b border-[#E3E1DA] bg-[#F4F3EF]/50">
+            <tr className="border-b border-[#E3E1DA] bg-[#F0F1F6]/50">
               <th className="sticky left-0 z-10 bg-[#F7F6F2] text-left px-3 sm:px-4 py-2 text-[11px] font-semibold text-[#566174] w-44 min-w-[160px] sm:w-56 sm:min-w-[200px] shadow-[2px_0_4px_rgba(0,0,0,0.06)]">
                 Breakdown
               </th>
@@ -444,10 +444,10 @@ export default function YahooFinancials({ statementsData, currency = '$', report
                   <tr
                     key={`hdr-${si}`}
                     id={`yfrow-${hdr.key}`}
-                    className={`border-b border-[#E3E1DA] ${isOrphan ? 'bg-[#F4F3EF]/30' : 'bg-[#F4F3EF]/60 hover:bg-[#F4F3EF]/60 cursor-pointer select-none'} ${flashKey === hdr.key ? 'row-flash' : ''}`}
+                    className={`border-b border-[#E3E1DA] ${isOrphan ? 'bg-[#F0F1F6]/30' : 'bg-[#F0F1F6]/60 hover:bg-[#F0F1F6]/60 cursor-pointer select-none'} ${flashKey === hdr.key ? 'row-flash' : ''}`}
                     onClick={() => !isOrphan && hasChildren && setExpanded(e => ({ ...e, [hdr.key]: !isOpen(hdr.key) }))}
                   >
-                    <td className="sticky left-0 z-10 bg-[#F4F3EF] px-3 sm:px-4 py-2 font-semibold text-[#06101F] whitespace-nowrap flex items-center gap-1.5 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">
+                    <td className="sticky left-0 z-10 bg-[#F0F1F6] px-3 sm:px-4 py-2 font-semibold text-[#06101F] whitespace-nowrap flex items-center gap-1.5 shadow-[2px_0_4px_rgba(0,0,0,0.06)]">
                       {!isOrphan && hasChildren && (
                         <svg
                           className={`w-3 h-3 text-[#8A95A6] shrink-0 transition-transform ${open ? 'rotate-90' : ''}`}
@@ -482,7 +482,7 @@ export default function YahooFinancials({ statementsData, currency = '$', report
                 ...(open || !hasChildren ? section.children.map((row, ri) => {
                   const rvt = row.valueType ?? 'money'
                   return (
-                    <tr key={`row-${si}-${ri}`} id={`yfrow-${row.key}`} className={`border-b border-[#F4F3EF] hover:bg-[#F4F3EF]/40 ${flashKey === row.key ? 'row-flash' : ''}`}>
+                    <tr key={`row-${si}-${ri}`} id={`yfrow-${row.key}`} className={`border-b border-[#F4F3EF] hover:bg-[#F0F1F6]/40 ${flashKey === row.key ? 'row-flash' : ''}`}>
                       <td className="sticky left-0 z-10 bg-white pl-7 sm:pl-10 pr-3 sm:pr-4 py-1.5 text-[#566174] whitespace-nowrap shadow-[2px_0_4px_rgba(0,0,0,0.04)]">
                         {row.label}
                       </td>

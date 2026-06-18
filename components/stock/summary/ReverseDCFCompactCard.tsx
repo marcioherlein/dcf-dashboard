@@ -39,7 +39,7 @@ const CHIP_STYLES = {
   reasonable:      { bg: 'bg-[#EFF6FF]', border: 'border-[#BFDBFE]', text: 'text-[#2563EB]' },
   aggressive:      { bg: 'bg-[#FFF7ED]', border: 'border-[#FED7AA]', text: 'text-[#D97706]' },
   very_aggressive: { bg: 'bg-[#FEF2F2]', border: 'border-[#FECACA]', text: 'text-[#DC2626]' },
-  not_meaningful:  { bg: 'bg-[#F4F3EF]', border: 'border-[#E3E1DA]', text: 'text-[#6B6B6B]' },
+  not_meaningful:  { bg: 'bg-[#F0F1F6]', border: 'border-[#E3E1DA]', text: 'text-[#6B6B6B]' },
 } as const
 
 const CHIP_LABELS = {
@@ -160,7 +160,7 @@ export default function ReverseDCFCompactCard({
               key={key}
               className={cn(
                 'rounded-full px-2.5 py-1 text-[11px] font-[600] border',
-                isActive ? cn(s.bg, s.border, s.text) : 'bg-[#F4F3EF] border-[#E3E1DA] text-[#8A95A6]',
+                isActive ? cn(s.bg, s.border, s.text) : 'bg-[#F0F1F6] border-[#E3E1DA] text-[#8A95A6]',
               )}
             >
               {CHIP_LABELS[key]}
@@ -302,7 +302,7 @@ export default function ReverseDCFCompactCard({
       )}
 
       {showCallout && (impliedPct == null || historicalPct == null) && (
-        <div className="rounded-lg bg-[#F4F3EF] border border-[#E3E1DA] px-3 py-2.5">
+        <div className="rounded-lg bg-[#F0F1F6] border border-[#E3E1DA] px-3 py-2.5">
           <p className="text-[12px] text-[#6B6B6B] leading-relaxed">
             {result.interpretationText}
           </p>
@@ -310,7 +310,7 @@ export default function ReverseDCFCompactCard({
       )}
 
       {!showCallout && (
-        <div className="rounded-lg bg-[#F4F3EF] border border-[#E3E1DA] px-3 py-2.5">
+        <div className="rounded-lg bg-[#F0F1F6] border border-[#E3E1DA] px-3 py-2.5">
           <p className="text-[12px] text-[#6B6B6B] leading-relaxed">
             {result.interpretationText}
           </p>

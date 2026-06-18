@@ -57,5 +57,5 @@ export function Sparkline({ prices, up, width = 88, height = 32, className }: Sp
 }
 
 export function SparklineSkeleton({ width = 88, height = 32 }: { width?: number; height?: number }) {
-  return <div className="animate-pulse rounded bg-[#F4F3EF]" style={{ width, height }} />
+  return <div className="animate-pulse rounded bg-[#F0F1F6]" style={{ width, height }} />
 }

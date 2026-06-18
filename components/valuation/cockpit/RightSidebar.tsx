@@ -42,7 +42,7 @@ const VERDICT_COLORS = {
   Undervalued:         { text: 'text-[#11875D]', bg: 'bg-[#ECFDF3] border-[#BBF7D0]' },
   'Fairly Valued':     { text: 'text-[#2563EB]',   bg: 'bg-[#EFF6FF] border-[#BFDBFE]' },
   Overvalued:          { text: 'text-[#D83B3B]',      bg: 'bg-[#FEF2F2] border-[#FECACA]' },
-  'Insufficient Data': { text: 'text-[#566174]',   bg: 'bg-[#F4F3EF] border-[#E3E1DA]' },
+  'Insufficient Data': { text: 'text-[#566174]',   bg: 'bg-[#F0F1F6] border-[#E3E1DA]' },
 }
 
 const DIVERGENCE_STYLE = {
@@ -91,7 +91,7 @@ function RangeBar({
         <span>{fmtPrice(min, currency)}</span>
         <span>{fmtPrice(max, currency)}</span>
       </div>
-      <div className="relative h-3 bg-[#F4F3EF] rounded-full" aria-hidden="true">
+      <div className="relative h-3 bg-[#F0F1F6] rounded-full" aria-hidden="true">
         {currentPct != null && !priceAbove && !priceBelow && (
           <div
             className="absolute top-0 h-full w-[2px] bg-[#8A95A6] rounded-full"
@@ -143,7 +143,7 @@ function WeightBars({ methods }: { methods: CockpitMethodResult[] }) {
             <span className={`text-[11px] flex-1 min-w-0 truncate ${isAvail ? 'text-[#566174]' : 'text-[#CDD1C8]'}`}>
               {m.method}
             </span>
-            <div className="w-20 h-1.5 bg-[#F4F3EF] rounded-full overflow-hidden shrink-0">
+            <div className="w-20 h-1.5 bg-[#F0F1F6] rounded-full overflow-hidden shrink-0">
               {isAvail && (
                 <div
                   className="h-full rounded-full motion-safe:transition-[width] duration-300"
@@ -262,7 +262,7 @@ export default function RightSidebar({
         <div className="px-5">
           <button
             onClick={onViewFullDCF}
-            className="w-full rounded-[10px] border border-[#E6ECF5] bg-white hover:bg-[#F4F3EF] text-[#566174] hover:text-[#06101F] text-[13px] font-[650] py-2.5 px-4 transition-colors flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1"
+            className="w-full rounded-[10px] border border-[#E6ECF5] bg-white hover:bg-[#F0F1F6] text-[#566174] hover:text-[#06101F] text-[13px] font-[650] py-2.5 px-4 transition-colors flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1"
           >
             View Year-by-Year DCF
             <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

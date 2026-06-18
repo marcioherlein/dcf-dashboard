@@ -7,7 +7,7 @@ const C = {
   olive:         '#5F790B',
   oliveBg:       '#F6FAEA',
   oliveLighter:  '#7C9A19',
-  oliveChip:     '#EEF4DD',
+  oliveChip:     '#EEF2FA',
   green:         '#11875D',
   greenSoft:     '#E8F7EF',
   amber:         '#B56A00',
@@ -348,7 +348,7 @@ function OverviewScreen() {
       {/* SummaryHeroCard */}
       <div
         className="rounded-xl px-4 py-4"
-        style={{ background: 'linear-gradient(135deg, #F6FAEA 0%, #EEF4DD 100%)', border: '1px solid #BFD2A1' }}
+        style={{ background: 'linear-gradient(135deg, #F6FAEA 0%, #EEF2FA 100%)', border: '1px solid #BFD2A1' }}
       >
         <p style={{ fontSize: 9, fontWeight: 700, color: C.olive, letterSpacing: '0.10em', textTransform: 'uppercase', marginBottom: 6 }}>
           INSIC VERDICT

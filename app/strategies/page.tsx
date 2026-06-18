@@ -86,7 +86,7 @@ function clr(val: number | null, good: 'high' | 'low'): string {
 }
 
 function rankColor(rank: number | null, total: number): string {
-  if (rank === null) return 'bg-[#F4F3EF] text-[#8A95A6]'
+  if (rank === null) return 'bg-[#F0F1F6] text-[#8A95A6]'
   const pct = rank / total
   if (pct <= 0.25) return 'bg-[#E8F7EF] text-[#11875D]'
   if (pct <= 0.50) return 'bg-sky-100 text-sky-800'
@@ -108,7 +108,7 @@ function StrategyHeader({ def }: { def: StrategyDef }) {
               <div className="text-[10px] font-semibold text-[#2563EB] uppercase tracking-wide mb-0.5">Formula</div>
               <code className="text-[12px] text-[#2563EB] font-mono">{def.formula}</code>
             </div>
-            <div className="bg-[#F4F3EF] border border-[#E3E1DA] rounded-lg px-3 py-2 flex-1 min-w-[240px]">
+            <div className="bg-[#F0F1F6] border border-[#E3E1DA] rounded-lg px-3 py-2 flex-1 min-w-[240px]">
               <div className="text-[10px] font-semibold text-[#566174] uppercase tracking-wide mb-0.5">Signal Rule</div>
               <p className="text-[12px] text-[#566174]">{def.signal}</p>
             </div>
@@ -127,7 +127,7 @@ function CategoryBadge({ category }: { category: StrategyRow['category'] }) {
     'BYMA':     'bg-[#E8F7EF] text-[#11875D]',
   }
   return (
-    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${styles[category] ?? 'bg-[#F4F3EF] text-[#566174]'}`}>
+    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${styles[category] ?? 'bg-[#F0F1F6] text-[#566174]'}`}>
       {category}
     </span>
   )
@@ -175,7 +175,7 @@ function MomentumTable({ rows }: { rows: StrategyRow[] }) {
           const pct = (r.momentumRank ?? n) / n
           const signal = pct <= 0.33 ? 'BUY' : pct >= 0.67 ? 'AVOID' : 'NEUTRAL'
           return (
-            <tr key={r.ticker} className="border-b border-[#E3E1DA] hover:bg-[#F4F3EF] transition-colors">
+            <tr key={r.ticker} className="border-b border-[#E3E1DA] hover:bg-[#F0F1F6] transition-colors">
               <td className="py-2.5 px-3">
                 <RankBadge rank={r.momentumRank} total={n} />
               </td>
@@ -230,7 +230,7 @@ function LowVolTable({ rows }: { rows: StrategyRow[] }) {
           const pct = (r.volRank ?? n) / n
           const signal = pct <= 0.33 ? 'BUY' : pct >= 0.67 ? 'AVOID' : 'NEUTRAL'
           return (
-            <tr key={r.ticker} className="border-b border-[#E3E1DA] hover:bg-[#F4F3EF]">
+            <tr key={r.ticker} className="border-b border-[#E3E1DA] hover:bg-[#F0F1F6]">
               <td className="py-2.5 px-3">
                 <RankBadge rank={r.volRank} total={n} />
               </td>
@@ -286,7 +286,7 @@ function MaTable({ rows }: { rows: StrategyRow[] }) {
         {sorted.map((r) => {
           const signal: 'BUY' | 'AVOID' | 'NEUTRAL' = r.maSignal === 'golden' ? 'BUY' : r.maSignal === 'death' ? 'AVOID' : 'NEUTRAL'
           return (
-            <tr key={r.ticker} className="border-b border-[#E3E1DA] hover:bg-[#F4F3EF]">
+            <tr key={r.ticker} className="border-b border-[#E3E1DA] hover:bg-[#F0F1F6]">
               <td className="py-2.5 px-3">
                 <div className="flex items-center gap-1.5">
                   <span className="font-semibold text-[#2563EB]">{r.ticker}</span>
@@ -337,7 +337,7 @@ function MeanRevTable({ rows }: { rows: StrategyRow[] }) {
           const z = r.mrZscore
           const signal: 'BUY' | 'AVOID' | 'NEUTRAL' = z !== null ? (z < -1 ? 'BUY' : z > 1 ? 'AVOID' : 'NEUTRAL') : 'NEUTRAL'
           return (
-            <tr key={r.ticker} className="border-b border-[#E3E1DA] hover:bg-[#F4F3EF]">
+            <tr key={r.ticker} className="border-b border-[#E3E1DA] hover:bg-[#F0F1F6]">
               <td className="py-2.5 px-3">
                 <div className="flex items-center gap-1.5">
                   <span className="font-semibold text-[#2563EB]">{r.ticker}</span>
@@ -391,7 +391,7 @@ function ValueTable({ rows }: { rows: StrategyRow[] }) {
           const pct = (r.valueRank ?? n) / n
           const signal = pct <= 0.33 ? 'BUY' : pct >= 0.67 ? 'AVOID' : 'NEUTRAL'
           return (
-            <tr key={r.ticker} className="border-b border-[#E3E1DA] hover:bg-[#F4F3EF]">
+            <tr key={r.ticker} className="border-b border-[#E3E1DA] hover:bg-[#F0F1F6]">
               <td className="py-2.5 px-3">
                 <RankBadge rank={r.valueRank} total={n} />
               </td>
@@ -431,7 +431,7 @@ function SignalBadge({ signal }: { signal: 'BUY' | 'AVOID' | 'NEUTRAL' }) {
     return <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#E8F7EF] text-[#11875D]">BUY</span>
   if (signal === 'AVOID')
     return <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#FCEAEA] text-[#D83B3B]">AVOID</span>
-  return <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#F4F3EF] text-[#566174]">NEUTRAL</span>
+  return <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#F0F1F6] text-[#566174]">NEUTRAL</span>
 }
 
 // ─── Summary consensus bar ────────────────────────────────────────────────────
@@ -487,7 +487,7 @@ function ConsensusSummary({ rows }: { rows: StrategyRow[] }) {
             <span className="w-14 font-semibold text-[13px] text-[#2563EB] shrink-0">{c.ticker}</span>
             <span className="text-[11px] text-[#8A95A6] w-24 truncate hidden sm:block">{c.name}</span>
             <div className="flex items-center gap-1.5 flex-1">
-              <div className="flex-1 h-2 bg-[#F4F3EF] rounded-full overflow-hidden flex">
+              <div className="flex-1 h-2 bg-[#F0F1F6] rounded-full overflow-hidden flex">
                 <div
                   className="h-full bg-[#E8F7EF]0 transition-all"
                   style={{ width: `${(c.buys / c.total) * 100}%` }}
@@ -504,7 +504,7 @@ function ConsensusSummary({ rows }: { rows: StrategyRow[] }) {
             <div className="shrink-0">
               {c.score >= 0.4 && <span className="text-[11px] font-bold bg-[#E8F7EF] text-[#11875D] px-2 py-0.5 rounded-full">Strong Buy</span>}
               {c.score > 0 && c.score < 0.4 && <span className="text-[11px] font-bold bg-sky-100 text-sky-700 px-2 py-0.5 rounded-full">Buy Lean</span>}
-              {c.score === 0 && <span className="text-[11px] font-bold bg-[#F4F3EF] text-[#566174] px-2 py-0.5 rounded-full">Mixed</span>}
+              {c.score === 0 && <span className="text-[11px] font-bold bg-[#F0F1F6] text-[#566174] px-2 py-0.5 rounded-full">Mixed</span>}
               {c.score < 0 && c.score > -0.4 && <span className="text-[11px] font-bold bg-[#FFF4DA] text-[#B56A00] px-2 py-0.5 rounded-full">Avoid Lean</span>}
               {c.score <= -0.4 && <span className="text-[11px] font-bold bg-[#FCEAEA] text-[#D83B3B] px-2 py-0.5 rounded-full">Avoid</span>}
             </div>
@@ -540,7 +540,7 @@ export default function StrategiesPage() {
   const activeDef = STRATEGIES.find(s => s.id === activeStrategy) ?? null
 
   return (
-    <div className="min-h-dvh bg-[#F4F3EF]">
+    <div className="min-h-dvh bg-[#F0F1F6]">
       <div className="px-4 py-6">
         {/* Header */}
         <div className="mb-5">
@@ -641,7 +641,7 @@ function TabBtn({ active, onClick, label }: { active: boolean; onClick: () => vo
         'px-3.5 py-1.5 rounded-lg text-[13px] font-medium transition-colors shrink-0 min-h-[44px]',
         active
           ? 'bg-blue-600 text-white'
-          : 'text-[#566174] hover:text-[#06101F] hover:bg-[#F4F3EF]',
+          : 'text-[#566174] hover:text-[#06101F] hover:bg-[#F0F1F6]',
       ].join(' ')}
     >
       {label}

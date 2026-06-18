@@ -167,7 +167,7 @@ export default function ValuationNotAvailableCard({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {/* Multiples blended FV */}
             {hasMultiplesFV && currentPrice != null && currentPrice > 0 && (
-              <div className="rounded-lg border border-[#E6ECF5] bg-[#F4F3EF] px-4 py-3 flex flex-col gap-1">
+              <div className="rounded-lg border border-[#E6ECF5] bg-[#F0F1F6] px-4 py-3 flex flex-col gap-1">
                 <p className="text-[11px] text-[#566174] font-[500] uppercase tracking-wide">Multiples estimate</p>
                 <p className="text-[22px] font-[750] text-[#06101F] leading-none">
                   {fmtPrice(multiplesBlendedFV!, currency)}
@@ -185,7 +185,7 @@ export default function ValuationNotAvailableCard({
 
             {/* Analyst consensus */}
             {hasAnalystTarget && currentPrice != null && currentPrice > 0 && (
-              <div className="rounded-lg border border-[#E6ECF5] bg-[#F4F3EF] px-4 py-3 flex flex-col gap-1">
+              <div className="rounded-lg border border-[#E6ECF5] bg-[#F0F1F6] px-4 py-3 flex flex-col gap-1">
                 <p className="text-[11px] text-[#566174] font-[500] uppercase tracking-wide">Analyst consensus target</p>
                 <p className="text-[22px] font-[750] text-[#06101F] leading-none">
                   {fmtPrice(analystTargetMean!, currency)}
@@ -259,7 +259,7 @@ export default function ValuationNotAvailableCard({
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {multiples.map(m => (
-              <div key={m.label} className="rounded-md border border-[#E6ECF5] bg-[#F4F3EF] px-3 py-2.5 flex flex-col gap-0.5">
+              <div key={m.label} className="rounded-md border border-[#E6ECF5] bg-[#F0F1F6] px-3 py-2.5 flex flex-col gap-0.5">
                 <p className="text-[11px] text-[#566174] font-[500]">{m.label}</p>
                 <p className="text-[17px] font-[700] text-[#06101F] leading-none">{fmt(m.value)}×</p>
               </div>
@@ -272,7 +272,7 @@ export default function ValuationNotAvailableCard({
               <p className="text-[11px] text-[#566174] font-[500]">Peer EV/Revenue comparison</p>
               <div className="flex flex-wrap gap-2">
                 {validPeers.slice(0, 6).map(p => (
-                  <div key={p.ticker} className="rounded-sm border border-[#E6ECF5] bg-[#F4F3EF] px-2.5 py-1.5 flex items-center gap-1.5">
+                  <div key={p.ticker} className="rounded-sm border border-[#E6ECF5] bg-[#F0F1F6] px-2.5 py-1.5 flex items-center gap-1.5">
                     <span className="text-[11px] font-[650] text-[#566174]">{p.ticker}</span>
                     {p.evToRevenue != null && (
                       <span className="text-[11px] text-[#566174]">{fmt(p.evToRevenue)}×</span>
@@ -319,7 +319,7 @@ export default function ValuationNotAvailableCard({
       )}
 
       {/* ── Redirect to other tabs ── */}
-      <div className="rounded-xl border border-[#E6ECF5] bg-[#F4F3EF] px-5 py-4">
+      <div className="rounded-xl border border-[#E6ECF5] bg-[#F0F1F6] px-5 py-4">
         <p className="text-[12px] font-[650] text-[#566174] mb-2">Available on other tabs</p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-[12px] text-[#566174]">
           <div className="flex items-start gap-2">

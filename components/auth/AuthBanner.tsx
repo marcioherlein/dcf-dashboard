@@ -47,7 +47,7 @@ export default function AuthBanner() {
             setVisible(false)
             try { sessionStorage.setItem(DISMISSED_KEY, '1') } catch {}
           }}
-          className="w-[36px] h-[36px] flex items-center justify-center rounded-lg text-[#8A95A6] hover:text-[#566174] hover:bg-[#EEF4DD] transition-colors"
+          className="w-[36px] h-[36px] flex items-center justify-center rounded-lg text-[#8A95A6] hover:text-[#566174] hover:bg-[#EEF2FA] transition-colors"
           aria-label="Dismiss"
         >
           <X size={14} />

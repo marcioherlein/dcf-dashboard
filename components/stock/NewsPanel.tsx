@@ -22,7 +22,7 @@ const SENTIMENT_CONFIG: Array<{
   { pattern: /miss|warning|slump|plunge|fall|decline|weak|disapp|concern|bear|pessim|layoff|cut|worr/i, label: 'Bearish', badge: 'bg-[#FCEAEA] text-[#D83B3B] border-[#F0B8B8]',      card: 'border-[#F0B8B8] bg-[#FCEAEA]/25',  dot: 'bg-[#D83B3B]' },
 ]
 
-const NEUTRAL_STYLE = { badge: 'bg-[#F4F3EF] text-[#566174] border-[#E3E1DA]', card: 'border-[#E3E1DA] bg-white', dot: 'bg-[#CDD1C8]' }
+const NEUTRAL_STYLE = { badge: 'bg-[#F0F1F6] text-[#566174] border-[#E3E1DA]', card: 'border-[#E3E1DA] bg-white', dot: 'bg-[#CDD1C8]' }
 
 // Thin shims for call sites expecting the old structures
 const SENTIMENT_RULES = SENTIMENT_CONFIG.map(({ pattern, label }) => ({ pattern, label }))
@@ -146,7 +146,7 @@ export default function NewsPanel({ ticker }: { ticker: string }) {
         </div>
       ) : news.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <div className="w-10 h-10 rounded-full bg-[#F4F3EF] flex items-center justify-center mb-3">
+          <div className="w-10 h-10 rounded-full bg-[#F0F1F6] flex items-center justify-center mb-3">
             <svg className="w-5 h-5 text-[#8A95A6]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 0 1-2.25 2.25M16.5 7.5V18a2.25 2.25 0 0 0 2.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 0 0 2.25 2.25h13.5M6 7.5h3v3H6v-3Z" />
             </svg>

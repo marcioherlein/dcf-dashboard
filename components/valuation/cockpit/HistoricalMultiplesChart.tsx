@@ -152,7 +152,7 @@ export default function HistoricalMultiplesChart({
           )}
         </div>
         {/* Metric tabs */}
-        <div className="flex items-center gap-1 bg-[#F4F3EF] rounded-lg p-0.5 shrink-0">
+        <div className="flex items-center gap-1 bg-[#F0F1F6] rounded-lg p-0.5 shrink-0">
           {METRICS.map(m => (
             <button
               key={m.key}

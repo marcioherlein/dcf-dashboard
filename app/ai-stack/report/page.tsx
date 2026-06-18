@@ -67,7 +67,7 @@ function LayerSection({ layer, rows }: { layer: number; rows: ValuationMetrics[]
       {/* Body */}
       <div style={{ border: `1px solid ${color}40`, borderTop: 'none', borderRadius: '0 0 8px 8px', background: 'white' }}>
         {/* 4 info fields in 2x2 grid */}
-        <div className="report-layer-info-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: `1px solid #F4F3EF` }}>
+        <div className="report-layer-info-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: `1px solid #F0F1F6` }}>
           {[
             { label: 'What They Do', text: info.what },
             { label: 'Revenue Model', text: info.revenue },
@@ -76,8 +76,8 @@ function LayerSection({ layer, rows }: { layer: number; rows: ValuationMetrics[]
           ].map(({ label, text }, i) => (
             <div key={label} style={{
               padding: '10px 14px',
-              borderRight: i % 2 === 0 ? '1px solid #F4F3EF' : 'none',
-              borderBottom: i < 2 ? '1px solid #F4F3EF' : 'none',
+              borderRight: i % 2 === 0 ? '1px solid #F0F1F6' : 'none',
+              borderBottom: i < 2 ? '1px solid #F0F1F6' : 'none',
             }}>
               <div style={{ fontSize: '9px', fontWeight: 700, color: '#8A95A6', letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: '4px' }}>{label}</div>
               <p style={{ fontSize: '11px', color: '#374151', lineHeight: 1.5, margin: 0 }}>{text}</p>

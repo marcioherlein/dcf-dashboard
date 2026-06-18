@@ -52,7 +52,7 @@ export default function TestimonialsSection() {
           >
             <div className="flex items-start gap-4 mb-8">
               <motion.div
-                className="w-10 h-10 rounded-md bg-[#EEF4DD] flex items-center justify-center shrink-0 mt-0.5"
+                className="w-10 h-10 rounded-md bg-[#EEF2FA] flex items-center justify-center shrink-0 mt-0.5"
                 initial={reduced ? {} : { scale: 0.6, opacity: 0 }}
                 animate={inView ? { scale: 1, opacity: 1 } : {}}
                 transition={{ duration: 0.45, ease: EASE, delay: 0.1 }}
@@ -75,7 +75,7 @@ export default function TestimonialsSection() {
                   transition={{ duration: 0.45, ease: EASE, delay: 0.18 + i * 0.09 }}
                   className="flex items-center gap-3"
                 >
-                  <div className="w-5 h-5 rounded-full bg-[#EEF4DD] flex items-center justify-center shrink-0">
+                  <div className="w-5 h-5 rounded-full bg-[#EEF2FA] flex items-center justify-center shrink-0">
                     <AnimatedCheck
                       visible={inView}
                       reduced={reduced}

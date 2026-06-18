@@ -111,7 +111,7 @@ export default function FactorRankingPage() {
   ]
 
   return (
-    <div className="flex flex-col min-h-dvh bg-[#F4F3EF]">
+    <div className="flex flex-col min-h-dvh bg-[#F0F1F6]">
 
       {/* Ticker Marquee */}
       <TickerMarquee instruments={results} />
@@ -128,7 +128,7 @@ export default function FactorRankingPage() {
         <button
           onClick={fetchRankings}
           disabled={loading}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-[#E3E1DA] text-xs font-medium text-[#566174] hover:bg-[#F4F3EF] transition-colors disabled:opacity-50"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-[#E3E1DA] text-xs font-medium text-[#566174] hover:bg-[#F0F1F6] transition-colors disabled:opacity-50"
         >
           <svg className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -149,7 +149,7 @@ export default function FactorRankingPage() {
                 'px-2.5 py-1 rounded-lg text-[12px] font-medium transition-colors shrink-0 min-h-[36px]',
                 market === opt.id
                   ? 'bg-[#2563EB] text-white'
-                  : 'bg-[#F4F3EF] text-[#566174] hover:bg-[#E3E1DA]',
+                  : 'bg-[#F0F1F6] text-[#566174] hover:bg-[#E3E1DA]',
               ].join(' ')}
             >
               {opt.label}
@@ -204,13 +204,13 @@ export default function FactorRankingPage() {
         <div className="ml-auto flex gap-1">
           <button
             onClick={() => setActiveView('table')}
-            className={`px-2.5 py-1 rounded-lg text-[12px] font-medium transition-colors ${activeView === 'table' ? 'bg-[#F4F3EF] text-[#06101F]' : 'text-[#8A95A6] hover:text-[#566174]'}`}
+            className={`px-2.5 py-1 rounded-lg text-[12px] font-medium transition-colors ${activeView === 'table' ? 'bg-[#F0F1F6] text-[#06101F]' : 'text-[#8A95A6] hover:text-[#566174]'}`}
           >
             ≡ Table
           </button>
           <button
             onClick={() => setActiveView('bubble')}
-            className={`px-2.5 py-1 rounded-lg text-[12px] font-medium transition-colors ${activeView === 'bubble' ? 'bg-[#F4F3EF] text-[#06101F]' : 'text-[#8A95A6] hover:text-[#566174]'}`}
+            className={`px-2.5 py-1 rounded-lg text-[12px] font-medium transition-colors ${activeView === 'bubble' ? 'bg-[#F0F1F6] text-[#06101F]' : 'text-[#8A95A6] hover:text-[#566174]'}`}
           >
             ⬤ Map
           </button>

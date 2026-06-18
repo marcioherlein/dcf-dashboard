@@ -63,7 +63,7 @@ export default function InsiderTransactionsWidget({ ticker }: { ticker: string }
   if (loading) {
     return (
       <div className="space-y-2 motion-safe:animate-pulse">
-        {[1, 2, 3].map(i => <div key={i} className="h-12 rounded-lg bg-[#F4F3EF]" />)}
+        {[1, 2, 3].map(i => <div key={i} className="h-12 rounded-lg bg-[#F0F1F6]" />)}
       </div>
     )
   }

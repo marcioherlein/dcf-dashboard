@@ -54,13 +54,13 @@ export default function NextStepsCard({
         </button>
         <button
           onClick={onViewConviction}
-          className="w-full h-11 rounded-lg bg-white border border-[#E3E1DA] text-[#566174] hover:border-[#CDD1C8] hover:bg-[#F4F3EF] text-[13px] font-medium transition-colors"
+          className="w-full h-11 rounded-lg bg-white border border-[#E3E1DA] text-[#566174] hover:border-[#CDD1C8] hover:bg-[#F0F1F6] text-[13px] font-medium transition-colors"
         >
           Risks &amp; health scores
         </button>
         <Link
           href={`/compare?a=${ticker}`}
-          className="w-full h-11 rounded-lg bg-white border border-[#E3E1DA] text-[#566174] hover:border-[#CDD1C8] hover:bg-[#F4F3EF] text-[13px] font-medium transition-colors flex items-center justify-center gap-1.5"
+          className="w-full h-11 rounded-lg bg-white border border-[#E3E1DA] text-[#566174] hover:border-[#CDD1C8] hover:bg-[#F0F1F6] text-[13px] font-medium transition-colors flex items-center justify-center gap-1.5"
         >
           <GitCompareArrows size={14} className="text-[#8A95A6]" />
           Compare with another stock

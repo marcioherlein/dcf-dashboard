@@ -10,20 +10,20 @@ const PRIMARY = [
   {
     Icon: Eye,
     iconColor: '#5F790B',
-    iconBg: '#EEF4DD',
+    iconBg: '#EEF2FA',
     title: 'Transparent assumptions',
     body: 'Every driver that affects fair value — growth rate, WACC, terminal margins — is visible and editable. No parameter hidden behind a paywall or buried in a black box.',
     chips: ['Growth rate', 'WACC', 'Margins'],
-    chipStyle: { bg: '#EEF4DD', text: '#5F790B', border: '#BFD2A1' },
+    chipStyle: { bg: '#EEF2FA', text: '#5F790B', border: '#BFD2A1' },
   },
   {
     Icon: LayoutGrid,
     iconColor: '#5F790B',
-    iconBg: '#EEF4DD',
+    iconBg: '#EEF2FA',
     title: 'Multiple valuation methods',
     body: 'DCF, Reverse DCF, and multiples work together in the same view. Compare outputs side-by-side and understand why they diverge.',
     chips: ['DCF', 'Reverse DCF', 'Multiples'],
-    chipStyle: { bg: '#EEF4DD', text: '#5F790B', border: '#BFD2A1' },
+    chipStyle: { bg: '#EEF2FA', text: '#5F790B', border: '#BFD2A1' },
   },
 ]
 

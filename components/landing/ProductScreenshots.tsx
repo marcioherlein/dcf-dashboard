@@ -86,7 +86,7 @@ export function SummaryMockScreen() {
       transition={reduced ? { duration: 0 } : { ...SPRING, delay: 0.05 }}
     >
       <BrowserFrame url="insic.app/stock/NOW — Overview">
-        <div className="overflow-hidden" style={{ background: '#F4F3EF' }}>
+        <div className="overflow-hidden" style={{ background: '#F0F1F6' }}>
           <Image
             src="/screenshots/summary-desktop.png"
             alt="insic stock summary tab — verdict, fair value, reverse DCF"
@@ -116,7 +116,7 @@ export function ValuationMockScreen() {
       transition={reduced ? { duration: 0 } : { ...SPRING, delay: 0.12 }}
     >
       <BrowserFrame url="insic.app/stock/NOW — Valuation">
-        <div className="overflow-hidden" style={{ background: '#F4F3EF' }}>
+        <div className="overflow-hidden" style={{ background: '#F0F1F6' }}>
           <Image
             src="/screenshots/valuation-cockpit.png"
             alt="insic valuation cockpit — DCF models, scenarios, assumptions"

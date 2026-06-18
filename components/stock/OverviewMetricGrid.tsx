@@ -123,7 +123,7 @@ function MiniBar({ value, max, color }: { value: number; max: number; color: str
     : color === 'amber' ? 'bg-[#B56A00]'
     : 'bg-[#D83B3B]'
   return (
-    <div className="flex-1 h-1.5 bg-[#F4F3EF] rounded-full overflow-hidden">
+    <div className="flex-1 h-1.5 bg-[#F0F1F6] rounded-full overflow-hidden">
       <div className={`h-full rounded-full ${barColor}`} style={{ width: `${pct}%` }} />
     </div>
   )
@@ -623,7 +623,7 @@ export default function OverviewMetricGrid({ ratings, scores, businessProfile, c
 
   if (panel) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-px bg-[#F4F3EF]">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-px bg-[#F0F1F6]">
         <div className="sm:col-span-2 bg-white p-4 sm:p-5">
           <BusinessQualityCard ratings={ratings} scores={scores ?? {}} panel />
         </div>

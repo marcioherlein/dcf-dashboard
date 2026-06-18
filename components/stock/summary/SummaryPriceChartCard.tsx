@@ -22,7 +22,7 @@ interface SummaryPriceChartCardProps {
 
 const PriceChart = dynamic(() => import('@/components/stock/PriceChart'), {
   ssr: false,
-  loading: () => <div className="h-[160px] motion-safe:animate-pulse rounded-xl bg-[#F4F3EF]" />,
+  loading: () => <div className="h-[160px] motion-safe:animate-pulse rounded-xl bg-[#F0F1F6]" />,
 })
 
 // ─── Card shell ───────────────────────────────────────────────────────────────

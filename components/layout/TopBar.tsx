@@ -49,7 +49,7 @@ function CompanyLogo({ ticker }: { ticker: string }) {
 
   if (failed) {
     return (
-      <div className="w-6 h-6 rounded-full bg-[#EEF4DD] border border-[#C8C8C8] flex items-center justify-center shrink-0">
+      <div className="w-6 h-6 rounded-full bg-[#EEF2FA] border border-[#C8C8C8] flex items-center justify-center shrink-0">
         <span className="text-[10px] font-bold text-[#5F790B] leading-none">{initials}</span>
       </div>
     )
@@ -451,7 +451,7 @@ export default function TopBar() {
                             </div>
                             {r.supported ? (
                               r.quoteType && (
-                                <span className="shrink-0 text-[11px] font-semibold text-[#5F790B] bg-[#EEF4DD] border border-[#BFD2A1] px-2 py-0.5 rounded-md">
+                                <span className="shrink-0 text-[11px] font-semibold text-[#5F790B] bg-[#EEF2FA] border border-[#BFD2A1] px-2 py-0.5 rounded-md">
                                   {r.quoteType === 'EQUITY' ? 'Equity' : r.quoteType === 'ETF' ? 'ETF' : r.quoteType === 'INDEX' ? 'Index' : r.quoteType}
                                 </span>
                               )
@@ -705,7 +705,7 @@ export default function TopBar() {
                           </div>
                           {r.supported ? (
                             r.quoteType && (
-                              <span className="shrink-0 text-[11px] font-semibold text-[#5F790B] bg-[#EEF4DD] border border-[#BFD2A1] px-2 py-0.5 rounded-md">
+                              <span className="shrink-0 text-[11px] font-semibold text-[#5F790B] bg-[#EEF2FA] border border-[#BFD2A1] px-2 py-0.5 rounded-md">
                                 {r.quoteType === 'EQUITY' ? 'Equity' : r.quoteType === 'ETF' ? 'ETF' : r.quoteType === 'INDEX' ? 'Index' : r.quoteType}
                               </span>
                             )
@@ -792,7 +792,7 @@ export default function TopBar() {
             >
               <FileText size={13} strokeWidth={2} />
               PDF
-              <span className="ml-1 text-[9px] font-bold bg-[#EEF4DD] text-[#5F790B] px-1 py-0.5 rounded">PRO</span>
+              <span className="ml-1 text-[9px] font-bold bg-[#EEF2FA] text-[#5F790B] px-1 py-0.5 rounded">PRO</span>
             </a>
           )}
 

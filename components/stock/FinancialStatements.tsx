@@ -118,7 +118,7 @@ function Divider({ cols }: { cols: number }) {
   return (
     <tr>
       <td colSpan={cols + 1} className="py-0">
-        <div className="h-px bg-[#F4F3EF]" />
+        <div className="h-px bg-[#F0F1F6]" />
       </td>
     </tr>
   )
@@ -126,10 +126,10 @@ function Divider({ cols }: { cols: number }) {
 
 function SectionHeader({ label, cols }: { label: string; cols: number }) {
   return (
-    <tr className="bg-[#F4F3EF]">
+    <tr className="bg-[#F0F1F6]">
       <td
         colSpan={cols + 1}
-        className="sticky left-0 z-10 bg-[#F4F3EF] px-4 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-[#566174]"
+        className="sticky left-0 z-10 bg-[#F0F1F6] px-4 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-[#566174]"
       >
         {label}
       </td>
@@ -150,8 +150,8 @@ function DataRow<T>({
   highlight?: boolean
 }) {
   const base = highlight
-    ? 'bg-[#F4F3EF]/60 hover:bg-[#F4F3EF]/60'
-    : 'hover:bg-[#F4F3EF]/50'
+    ? 'bg-[#F0F1F6]/60 hover:bg-[#F0F1F6]/60'
+    : 'hover:bg-[#F0F1F6]/50'
   return (
     <tr className={base}>
       <RowLabel label={label} indent={indent} bold={bold} />
@@ -176,7 +176,7 @@ export default function FinancialStatements({ incomeStatement, balanceSheet, cas
           <h2 className="text-sm font-headline font-semibold text-[#06101F]">Financial Statements</h2>
           <p className="mt-0.5 text-xs text-[#8A95A6]">Historical actuals · Model projections</p>
         </div>
-        <div className="flex rounded-xl bg-[#F4F3EF] p-1 gap-1 overflow-x-auto flex-shrink-0">
+        <div className="flex rounded-xl bg-[#F0F1F6] p-1 gap-1 overflow-x-auto flex-shrink-0">
           {TABS.map((t) => (
             <button
               key={t}

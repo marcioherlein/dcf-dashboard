@@ -68,7 +68,7 @@ export function ETFBasketDCF({ holdings }: Props) {
         <p className="text-sm font-semibold text-[#06101F] mb-3">Basket DCF Signal</p>
         <div className="space-y-2">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-7 bg-[#F4F3EF] rounded motion-safe:animate-pulse" />
+            <div key={i} className="h-7 bg-[#F0F1F6] rounded motion-safe:animate-pulse" />
           ))}
         </div>
       </div>

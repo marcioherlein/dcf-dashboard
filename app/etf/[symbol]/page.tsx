@@ -17,7 +17,7 @@ import type { ETFProfileResponse } from '@/lib/data/etfTypes'
 
 const PriceChart = dynamic(() => import('@/components/stock/PriceChart'), {
   ssr: false,
-  loading: () => <div className="min-h-[200px] rounded-xl bg-[#F4F3EF] motion-safe:animate-pulse" />,
+  loading: () => <div className="min-h-[200px] rounded-xl bg-[#F0F1F6] motion-safe:animate-pulse" />,
 })
 
 export default function ETFDetailPage() {
@@ -85,7 +85,7 @@ export default function ETFDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-dvh bg-[#F4F3EF] px-4 sm:px-8 py-4 sm:py-8">
+      <div className="min-h-dvh bg-[#F0F1F6] px-4 sm:px-8 py-4 sm:py-8">
         <div className="max-w-6xl mx-auto space-y-4">
           <div className="h-8 w-32 bg-[#E3E1DA] rounded motion-safe:animate-pulse" />
           <div className="h-40 bg-white rounded-2xl border border-[#E3E1DA] motion-safe:animate-pulse" />
@@ -101,7 +101,7 @@ export default function ETFDetailPage() {
 
   if (error || !profile) {
     return (
-      <div className="min-h-dvh bg-[#F4F3EF] px-4 sm:px-8 py-4 sm:py-8">
+      <div className="min-h-dvh bg-[#F0F1F6] px-4 sm:px-8 py-4 sm:py-8">
         <div className="max-w-6xl mx-auto">
           <Link href="/etf" className="inline-flex items-center gap-1.5 text-[14px] text-[#566174] hover:text-[#566174] mb-6 min-h-[44px]">
             <ArrowLeft size={14} /> ETF Tracker
@@ -115,7 +115,7 @@ export default function ETFDetailPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-[#F4F3EF]">
+    <div className="min-h-dvh bg-[#F0F1F6]">
       <div className="px-4 sm:px-8 py-6 sm:py-8 max-w-6xl mx-auto space-y-5">
         <Link href="/etf" className="inline-flex items-center gap-1.5 text-[14px] text-[#566174] hover:text-[#566174] min-h-[44px]">
           <ArrowLeft size={14} /> ETF Tracker

@@ -6,7 +6,7 @@ const EFFECTIVE_DATE = 'June 9, 2026'
 
 export default function TermsPage() {
   return (
-    <div className="min-h-dvh bg-[#F4F3EF]">
+    <div className="min-h-dvh bg-[#F0F1F6]">
       <div className="mx-auto max-w-2xl px-4 sm:px-6 py-12 sm:py-24">
 
         <div className="mb-8">

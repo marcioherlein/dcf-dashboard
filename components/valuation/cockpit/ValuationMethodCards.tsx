@@ -89,7 +89,7 @@ export const METHOD_CFG: Record<string, {
   },
   // EV/EBITDA — ink-tinted olive
   ev_ebitda: {
-    iconBg: 'bg-[#EEF4DD]', iconText: 'text-[#5F790B]',
+    iconBg: 'bg-[#EEF2FA]', iconText: 'text-[#5F790B]',
     barBg: 'bg-[#6F8F12]', valueBg: 'bg-[#F6FAEA]', valueText: 'text-[#5F790B]',
     chartHex: '#6F8F12',
     Icon: BarChart2 as IconComp,
@@ -131,7 +131,7 @@ export const METHOD_CFG: Record<string, {
   },
   // Core DCF — olive (brand primary, most trusted model)
   core_dcf: {
-    iconBg: 'bg-[#EEF4DD]', iconText: 'text-[#5F790B]',
+    iconBg: 'bg-[#EEF2FA]', iconText: 'text-[#5F790B]',
     barBg: 'bg-[#5F790B]', valueBg: 'bg-[#F6FAEA]', valueText: 'text-[#5F790B]',
     chartHex: '#5F790B',
     Icon: Target as IconComp,
@@ -950,7 +950,7 @@ export default function ValuationMethodCards({
                     <DcfDriverRow fcfMargin={fcfMargin} ttmEbitdaDollars={ttmEbitdaDollars} />
                     <button
                       onClick={onScrollToFullDCF}
-                      className="w-full text-[11px] font-[650] text-[#5F790B] bg-[#F6FAEA] border border-[#BFD2A1] rounded-lg py-2 hover:bg-[#EEF4DD] transition-colors"
+                      className="w-full text-[11px] font-[650] text-[#5F790B] bg-[#F6FAEA] border border-[#BFD2A1] rounded-lg py-2 hover:bg-[#EEF2FA] transition-colors"
                     >
                       Edit assumptions in Full DCF ↓
                     </button>

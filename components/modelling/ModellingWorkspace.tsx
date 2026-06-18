@@ -170,7 +170,7 @@ function DCFSetupBar({
   const displayCagrPct = flatCagrPct ?? baseCagrPct
 
   return (
-    <div className="px-4 sm:px-5 py-3 border-b border-[#E3E1DA] bg-[#F4F3EF] flex flex-wrap items-center gap-2">
+    <div className="px-4 sm:px-5 py-3 border-b border-[#E3E1DA] bg-[#F0F1F6] flex flex-wrap items-center gap-2">
 
       {/* Label */}
       <span className="text-[10px] font-[700] text-[#9B9B9B] uppercase tracking-widest shrink-0 mr-1">
@@ -186,7 +186,7 @@ function DCFSetupBar({
             aria-pressed={isLfcf === (m === 'lfcf')}
             className={cn(
               'px-2.5 py-1 text-[11px] font-[650] transition-colors min-h-[28px]',
-              isLfcf === (m === 'lfcf') ? 'bg-[#4A6109] text-white' : 'bg-white text-[#566174] hover:bg-[#F4F3EF]',
+              isLfcf === (m === 'lfcf') ? 'bg-[#4A6109] text-white' : 'bg-white text-[#566174] hover:bg-[#F0F1F6]',
             )}
           >
             {m === 'ufcf' ? 'UFCF' : 'LFCF'}
@@ -203,7 +203,7 @@ function DCFSetupBar({
             aria-pressed={terminalMethod === m}
             className={cn(
               'px-2.5 py-1 text-[11px] font-[650] transition-colors min-h-[28px]',
-              terminalMethod === m ? 'bg-[#2563EB] text-white' : 'bg-white text-[#566174] hover:bg-[#F4F3EF]',
+              terminalMethod === m ? 'bg-[#2563EB] text-white' : 'bg-white text-[#566174] hover:bg-[#F0F1F6]',
             )}
           >
             {m === 'multiple' ? 'Exit ×' : 'Perp. g'}

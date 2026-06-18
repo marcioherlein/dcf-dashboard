@@ -25,7 +25,7 @@ export default function CardBack({ title, emoji, intro, sections, warning, class
 
       <div className="space-y-2">
         {sections.map((s) => (
-          <div key={s.title} className="rounded-lg bg-[#F4F3EF] border border-[#E3E1DA] px-3 py-2.5">
+          <div key={s.title} className="rounded-lg bg-[#F0F1F6] border border-[#E3E1DA] px-3 py-2.5">
             <p className="text-[11px] font-semibold text-[#2563EB] mb-0.5">{s.title}</p>
             <p className="text-[11px] text-[#566174] leading-relaxed">{s.body}</p>
           </div>

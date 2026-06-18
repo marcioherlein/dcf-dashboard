@@ -42,7 +42,7 @@ const DynamicChart = dynamic(
       )
     }
   }),
-  { ssr: false, loading: () => <div className="h-[140px] rounded-lg bg-[#F4F3EF] motion-safe:animate-pulse" /> },
+  { ssr: false, loading: () => <div className="h-[140px] rounded-lg bg-[#F0F1F6] motion-safe:animate-pulse" /> },
 )
 
 export function ETFValuationHistory({ ticker }: Props) {
@@ -62,7 +62,7 @@ export function ETFValuationHistory({ ticker }: Props) {
     return (
       <div className="bg-white border border-[#E3E1DA] rounded-xl p-4">
         <p className="text-[13px] font-[700] text-[#111111] mb-3">Value Score History</p>
-        <div className="h-[140px] bg-[#F4F3EF] rounded-lg motion-safe:animate-pulse" />
+        <div className="h-[140px] bg-[#F0F1F6] rounded-lg motion-safe:animate-pulse" />
       </div>
     )
   }
@@ -71,7 +71,7 @@ export function ETFValuationHistory({ ticker }: Props) {
     <div className="bg-white border border-[#E3E1DA] rounded-xl p-4">
       <p className="text-[13px] font-[700] text-[#111111] mb-3">Value Score History</p>
       {data.length < 7 ? (
-        <div className="h-[140px] flex flex-col items-center justify-center gap-2 rounded-lg bg-[#F4F3EF] border border-dashed border-[#E3E1DA]">
+        <div className="h-[140px] flex flex-col items-center justify-center gap-2 rounded-lg bg-[#F0F1F6] border border-dashed border-[#E3E1DA]">
           {error ? (
             <>
               <p className="text-sm text-[#566174] font-semibold">Score history unavailable.</p>

@@ -341,7 +341,7 @@ function NumInput({
         step={step}
         min={min}
         max={max}
-        className="w-20 text-right border border-[#E3E1DA] rounded-md px-2 py-0.5 text-[12px] font-mono focus:outline-none focus:border-blue-400 bg-[#F4F3EF]"
+        className="w-20 text-right border border-[#E3E1DA] rounded-md px-2 py-0.5 text-[12px] font-mono focus:outline-none focus:border-blue-400 bg-[#F0F1F6]"
       />
       {suffix && <span className="text-[#8A95A6] text-[11px]">{suffix}</span>}
     </div>
@@ -450,7 +450,7 @@ function ValuationModal({
             <div className="text-[11px] font-bold text-[#8A95A6] uppercase tracking-widest mb-2">
               Past Evidence &amp; Derivation
             </div>
-            <div className="bg-[#F4F3EF] rounded-xl px-4 py-3 space-y-2">
+            <div className="bg-[#F0F1F6] rounded-xl px-4 py-3 space-y-2">
               {[
                 { label: 'Revenue CAGR',    evidence: a.cagrEvidence },
                 { label: 'Net Margin 2031', evidence: a.marginEvidence },
@@ -533,7 +533,7 @@ function ValuationModal({
 
           {/* Formula display */}
           {computed && (
-            <div className="bg-[#F4F3EF] rounded-xl px-4 py-3">
+            <div className="bg-[#F0F1F6] rounded-xl px-4 py-3">
               <div className="text-[11px] font-bold text-[#8A95A6] uppercase tracking-widest mb-2">Formula</div>
               <div className="text-[11px] font-mono text-[#566174] leading-relaxed">
                 {fmtB(a.ltvRevenue)} × (1+{cagr}%)^5 × {margin}% × {pe}×
@@ -662,7 +662,7 @@ function ScoreBar({ score }: { score: number }) {
 
   return (
     <div className="flex items-center gap-1.5 min-w-[90px]">
-      <div className="flex-1 h-1.5 bg-[#F4F3EF] rounded-full overflow-hidden">
+      <div className="flex-1 h-1.5 bg-[#F0F1F6] rounded-full overflow-hidden">
         <div
           className="h-full rounded-full transition-all"
           style={{ width: `${pct}%`, backgroundColor: barColor }}
@@ -818,7 +818,7 @@ export default function AIStackPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-[#F4F3EF] pt-[52px]">
+    <div className="min-h-dvh bg-[#F0F1F6] pt-[52px]">
 
       {/* Valuation assumptions modal */}
       {valModal?.valAssumptions && (
@@ -909,7 +909,7 @@ export default function AIStackPage() {
       {/* Controls */}
       <div className="bg-white border-b border-[#E3E1DA] px-4 sm:px-6 py-3 sticky top-[52px] z-20">
         <div className="max-w-screen-2xl mx-auto flex items-center gap-3 flex-wrap">
-          <div className="flex items-center gap-2 bg-[#F4F3EF] border border-[#E3E1DA] rounded-lg px-3 py-1.5 focus-within:border-blue-400 transition-colors min-w-0 flex-1 sm:flex-none">
+          <div className="flex items-center gap-2 bg-[#F0F1F6] border border-[#E3E1DA] rounded-lg px-3 py-1.5 focus-within:border-blue-400 transition-colors min-w-0 flex-1 sm:flex-none">
             <svg className="h-3.5 w-3.5 text-[#8A95A6] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M16.65 16.65A7.5 7.5 0 1 0 4.5 4.5a7.5 7.5 0 0 0 12.15 12.15z" />
             </svg>
@@ -929,7 +929,7 @@ export default function AIStackPage() {
             <button
               onClick={() => setLayerFilter(null)}
               className={`h-7 px-2.5 text-[11px] font-medium rounded-md transition-colors ${
-                layerFilter === null ? 'bg-[#2563EB] text-white' : 'bg-[#F4F3EF] text-[#566174] hover:bg-[#E3E1DA]'
+                layerFilter === null ? 'bg-[#2563EB] text-white' : 'bg-[#F0F1F6] text-[#566174] hover:bg-[#E3E1DA]'
               }`}
             >
               All Layers
@@ -939,7 +939,7 @@ export default function AIStackPage() {
                 key={layer}
                 onClick={() => setLayerFilter(layerFilter === layer ? null : layer)}
                 className={`h-7 px-2 text-[10px] font-medium rounded-md transition-colors ${
-                  layerFilter === layer ? 'text-white' : 'bg-[#F4F3EF] text-[#566174] hover:bg-[#E3E1DA]'
+                  layerFilter === layer ? 'text-white' : 'bg-[#F0F1F6] text-[#566174] hover:bg-[#E3E1DA]'
                 }`}
                 style={layerFilter === layer ? { backgroundColor: LAYER_COLORS[layer] } : {}}
               >
@@ -998,10 +998,10 @@ export default function AIStackPage() {
           <div className="relative overflow-auto rounded-xl border border-[#E3E1DA] shadow-sm">
             <table className="w-full text-[12px] border-collapse">
               <thead>
-                <tr className="bg-[#F4F3EF] border-b border-[#E3E1DA]">
-                  <th className="sticky left-0 bg-[#F4F3EF] z-10 text-left px-3 py-2 font-semibold text-[#566174] text-[11px] uppercase tracking-wide w-8 border-r border-[#E3E1DA]">#</th>
-                  <th className="sticky left-8 bg-[#F4F3EF] z-10 text-left px-3 py-2 font-semibold text-[#566174] text-[11px] uppercase tracking-wide min-w-[68px] border-r border-[#E3E1DA]">Ticker</th>
-                  <th className="sticky left-[116px] bg-[#F4F3EF] z-10 text-left px-3 py-2 font-semibold text-[#566174] text-[11px] uppercase tracking-wide min-w-[160px] border-r border-[#E3E1DA]">Company</th>
+                <tr className="bg-[#F0F1F6] border-b border-[#E3E1DA]">
+                  <th className="sticky left-0 bg-[#F0F1F6] z-10 text-left px-3 py-2 font-semibold text-[#566174] text-[11px] uppercase tracking-wide w-8 border-r border-[#E3E1DA]">#</th>
+                  <th className="sticky left-8 bg-[#F0F1F6] z-10 text-left px-3 py-2 font-semibold text-[#566174] text-[11px] uppercase tracking-wide min-w-[68px] border-r border-[#E3E1DA]">Ticker</th>
+                  <th className="sticky left-[116px] bg-[#F0F1F6] z-10 text-left px-3 py-2 font-semibold text-[#566174] text-[11px] uppercase tracking-wide min-w-[160px] border-r border-[#E3E1DA]">Company</th>
                   <th className="text-left px-3 py-2 font-semibold text-[#566174] text-[11px] uppercase tracking-wide min-w-[100px]">Layer</th>
                   <th
                     className="text-left px-3 py-2 font-semibold text-[#566174] text-[11px] uppercase tracking-wide cursor-pointer hover:text-[#2563EB] whitespace-nowrap min-w-[110px]"
@@ -1043,7 +1043,7 @@ export default function AIStackPage() {
                         </Link>
                         <div className="flex items-center gap-1 mt-0.5 flex-wrap">
                           {row.exchange && (
-                            <span className="text-[10px] font-medium text-[#8A95A6] bg-[#F4F3EF] px-1 py-0.5 rounded">
+                            <span className="text-[10px] font-medium text-[#8A95A6] bg-[#F0F1F6] px-1 py-0.5 rounded">
                               {row.exchange}
                             </span>
                           )}

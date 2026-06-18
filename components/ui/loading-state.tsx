@@ -10,7 +10,7 @@ function CardSkeleton({ lines = 3, height, className, ...props }: CardSkeletonPr
   return (
     <div
       className={cn(
-        "rounded-xl border border-[#E3E1DA] bg-[#F4F3EF] p-4 animate-pulse",
+        "rounded-xl border border-[#E3E1DA] bg-[#F0F1F6] p-4 animate-pulse",
         height,
         className
       )}

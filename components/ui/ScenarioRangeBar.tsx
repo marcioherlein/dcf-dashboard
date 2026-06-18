@@ -33,7 +33,7 @@ export default function ScenarioRangeBar({
     <div className="flex flex-col gap-2">
       <p className="text-[10px] font-[600] text-[#566174]">{label}</p>
 
-      <div className="relative h-2 bg-[#F4F3EF] rounded-full mx-1" aria-hidden="true">
+      <div className="relative h-2 bg-[#F0F1F6] rounded-full mx-1" aria-hidden="true">
         {/* Range fill bear → bull */}
         <div
           className="absolute top-0 h-full bg-[#EAF1FF] rounded-full"
@@ -56,7 +56,7 @@ export default function ScenarioRangeBar({
         />
         {/* Price tick */}
         <div
-          className="absolute w-0.5 h-4 bg-[#F4F3EF]0 top-1/2 -translate-y-1/2 -translate-x-1/2"
+          className="absolute w-0.5 h-4 bg-[#F0F1F6]0 top-1/2 -translate-y-1/2 -translate-x-1/2"
           style={{ left: `${priceP}%` }}
         />
       </div>
@@ -81,7 +81,7 @@ export default function ScenarioRangeBar({
           <span>Bull</span>
         </div>
         <div className="flex items-center gap-1">
-          <div className="w-0.5 h-3 bg-[#F4F3EF]0" />
+          <div className="w-0.5 h-3 bg-[#F0F1F6]0" />
           <span>Price</span>
         </div>
       </div>

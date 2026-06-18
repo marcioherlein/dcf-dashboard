@@ -165,7 +165,7 @@ export default function ProfitabilityTextCard({
     if (g === 'A+' || g === 'A')
       return 'bg-[#E8F7EF] text-[#11875D] border border-[#A3D9BE]'
     if (g === 'B+' || g === 'B')
-      return 'bg-[#EEF4DD] text-[#5F790B] border border-[#C9DC8E]'
+      return 'bg-[#EEF2FA] text-[#5F790B] border border-[#C9DC8E]'
     if (g === 'C' || g === 'D' || g === 'F')
       return 'bg-[#FFF4DA] text-[#B56A00] border border-[#F3D391]'
     return null

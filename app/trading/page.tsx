@@ -104,7 +104,7 @@ const REGIME_STYLE: Record<string, string> = {
 const ACTION_STYLE: Record<string, string> = {
   BUY:  'bg-[#E8F7EF] border-[#11875D]/30 text-[#11875D]',
   SELL: 'bg-[#FCEAEA] border-[#D83B3B]/30 text-[#D83B3B]',
-  HOLD: 'bg-[#F4F3EF] border-[#E3E1DA] text-[#566174]',
+  HOLD: 'bg-[#F0F1F6] border-[#E3E1DA] text-[#566174]',
 };
 
 function ars(v: number | null | undefined) {
@@ -166,7 +166,7 @@ export default function TradingPage() {
   }));
 
   return (
-    <div className="min-h-dvh bg-[#F4F3EF] px-4 py-6">
+    <div className="min-h-dvh bg-[#F0F1F6] px-4 py-6">
       <div className="space-y-5">
 
         {/* Header */}
@@ -216,7 +216,7 @@ export default function TradingPage() {
                 <input
                   type="number" min={0} value={holdings[t]}
                   onChange={(e) => setHoldings((prev) => ({ ...prev, [t]: e.target.value }))}
-                  className="w-full bg-[#F4F3EF] border border-[#E3E1DA] text-[#06101F] text-sm px-3 py-2 rounded-lg focus:outline-none focus:border-blue-400"
+                  className="w-full bg-[#F0F1F6] border border-[#E3E1DA] text-[#06101F] text-sm px-3 py-2 rounded-lg focus:outline-none focus:border-blue-400"
                   style={{ fontSize: '16px' }}
                   placeholder="shares"
                 />
@@ -498,7 +498,7 @@ export default function TradingPage() {
             <label className="block">
               <div className="text-[11px] text-[#8A95A6] mb-1 uppercase font-medium">Lookback (days)</div>
               <select value={lookback} onChange={(e) => setLookback(parseInt(e.target.value))}
-                className="bg-[#F4F3EF] border border-[#E3E1DA] text-[#06101F] text-xs px-2 py-1.5 rounded-lg focus:outline-none focus:border-blue-400"
+                className="bg-[#F0F1F6] border border-[#E3E1DA] text-[#06101F] text-xs px-2 py-1.5 rounded-lg focus:outline-none focus:border-blue-400"
                 style={{ fontSize: '16px' }}>
                 <option value={10}>10</option>
                 <option value={20}>20</option>
@@ -509,7 +509,7 @@ export default function TradingPage() {
             <label className="block">
               <div className="text-[11px] text-[#8A95A6] mb-1 uppercase font-medium">Z Entry</div>
               <select value={zEntry} onChange={(e) => setZEntry(parseFloat(e.target.value))}
-                className="bg-[#F4F3EF] border border-[#E3E1DA] text-[#06101F] text-xs px-2 py-1.5 rounded-lg focus:outline-none focus:border-blue-400"
+                className="bg-[#F0F1F6] border border-[#E3E1DA] text-[#06101F] text-xs px-2 py-1.5 rounded-lg focus:outline-none focus:border-blue-400"
                 style={{ fontSize: '16px' }}>
                 <option value={0.75}>0.75</option>
                 <option value={1.0}>1.0</option>
@@ -520,7 +520,7 @@ export default function TradingPage() {
             <label className="block">
               <div className="text-[11px] text-[#8A95A6] mb-1 uppercase font-medium">Cocos fee (bps/side)</div>
               <input type="number" value={costBps} onChange={(e) => setCostBps(parseFloat(e.target.value))}
-                className="bg-[#F4F3EF] border border-[#E3E1DA] text-[#06101F] text-xs px-2 py-1.5 rounded-lg focus:outline-none focus:border-blue-400 w-20"
+                className="bg-[#F0F1F6] border border-[#E3E1DA] text-[#06101F] text-xs px-2 py-1.5 rounded-lg focus:outline-none focus:border-blue-400 w-20"
                 style={{ fontSize: '16px' }} />
             </label>
             <label className="flex items-center gap-2 cursor-pointer">

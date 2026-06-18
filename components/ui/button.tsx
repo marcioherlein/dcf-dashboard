@@ -15,7 +15,7 @@ const buttonVariants = cva(
           "border-[#C8C8C8] bg-white text-[#111111] hover:bg-[#F6FAEA] hover:border-[#5F790B]",
         // Subtle tinted — tertiary/low-emphasis
         secondary:
-          "bg-[#FFFFFF] border-[#E5E5E5] text-[#6B6B6B] hover:bg-[#EEF4DD] hover:text-[#111111]",
+          "bg-[#FFFFFF] border-[#E5E5E5] text-[#6B6B6B] hover:bg-[#EEF2FA] hover:text-[#111111]",
         // Ghost — icon buttons, inline actions
         ghost:
           "text-[#6B6B6B] hover:bg-[#F5F5F5] hover:text-[#111111]",

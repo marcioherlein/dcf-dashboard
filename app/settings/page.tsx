@@ -9,7 +9,7 @@ import { Loader2 } from 'lucide-react'
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="border border-[#E3E1DA] rounded-2xl overflow-hidden">
-      <div className="px-5 py-3.5 bg-[#F4F3EF] border-b border-[#E3E1DA]">
+      <div className="px-5 py-3.5 bg-[#F0F1F6] border-b border-[#E3E1DA]">
         <h2 className="text-sm font-semibold text-[#06101F]">{title}</h2>
       </div>
       <div className="bg-white px-5 py-5 space-y-4">{children}</div>
@@ -213,7 +213,7 @@ export default function SettingsPage() {
             onClick={handleExport}
             disabled={exportLoading}
             className="mt-3 inline-flex items-center gap-2 rounded-lg border border-[#E3E1DA] bg-white
-              px-4 py-2 text-xs font-semibold text-[#06101F] hover:bg-[#F4F3EF] transition-colors
+              px-4 py-2 text-xs font-semibold text-[#06101F] hover:bg-[#F0F1F6] transition-colors
               disabled:opacity-50"
           >
             {exportLoading && <Loader2 size={12} className="animate-spin" />}

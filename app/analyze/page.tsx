@@ -410,7 +410,7 @@ function StockAnalysisCard({ q, index }: { q: FeaturedQuote; index: number }) {
         {/* Row 1: ticker + ETF badge | status badge */}
         <div className="flex items-center justify-between px-4 pt-4 pb-2 gap-2">
           <div className="flex items-center gap-1.5">
-            <span className="text-[11px] font-bold text-[#5F790B] bg-[#EEF4DD] border border-[#BFD2A1] rounded-md px-2 py-0.5 font-mono leading-tight">
+            <span className="text-[11px] font-bold text-[#5F790B] bg-[#EEF2FA] border border-[#BFD2A1] rounded-md px-2 py-0.5 font-mono leading-tight">
               {q.ticker}
             </span>
           </div>
@@ -740,7 +740,7 @@ function QuickActions() {
       title: 'My Valuations',
       desc: 'Review saved analyses and track conviction over time.',
       href: '/valuations',
-      iconCls: 'text-[#5F790B] bg-[#EEF4DD]',
+      iconCls: 'text-[#5F790B] bg-[#EEF2FA]',
     },
   ]
 

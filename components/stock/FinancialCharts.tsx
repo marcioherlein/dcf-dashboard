@@ -487,7 +487,7 @@ export default function FinancialCharts({
                 <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
                   isBelowAvg ? 'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D]'
                   : isAboveAvg ? 'bg-[#FCEAEA] border-[#F0B8B8] text-[#D83B3B]'
-                  : 'bg-[#F4F3EF] border-[#E3E1DA] text-[#566174]'
+                  : 'bg-[#F0F1F6] border-[#E3E1DA] text-[#566174]'
                 }`}>
                   Today: {current.toFixed(1)}×
                   {isBelowAvg ? ' — below historical avg' : isAboveAvg ? ' — above historical avg' : ' — near historical avg'}

@@ -52,7 +52,7 @@ export default function PaywallModal({ gate, onClose }: Props) {
         </button>
 
         {/* Icon */}
-        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#EEF4DD]">
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#EEF2FA]">
           <Lock className="h-7 w-7 text-[#5F790B]" />
         </div>
 
@@ -66,7 +66,7 @@ export default function PaywallModal({ gate, onClose }: Props) {
         <ul className="mt-5 space-y-3">
           {PRO_BULLETS.map(({ Icon, text }, i) => (
             <li key={i} className="flex items-center gap-3 text-sm text-[#111111]">
-              <div className="w-7 h-7 rounded-lg bg-[#EEF4DD] flex items-center justify-center shrink-0">
+              <div className="w-7 h-7 rounded-lg bg-[#EEF2FA] flex items-center justify-center shrink-0">
                 <Icon size={14} className="text-[#5F790B]" />
               </div>
               {text}

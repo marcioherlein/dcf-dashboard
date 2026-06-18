@@ -37,7 +37,7 @@ export default function WACCBreakdown({ wacc, onWACCChange }: Props) {
       <div className="overflow-x-auto -mx-2 px-2">
         <div className="overflow-hidden rounded-xl border border-[#E3E1DA] min-w-[480px]">
           <table className="w-full text-sm">
-          <thead className="bg-[#F4F3EF]">
+          <thead className="bg-[#F0F1F6]">
             <tr>
               {['Variable', 'Formula', 'Value', 'Source'].map((h, i) => (
                 <th key={h} className={`px-4 py-2 text-xs font-medium text-[#8A95A6] ${i > 1 ? 'text-right' : 'text-left'}`}>{h}</th>
@@ -46,7 +46,7 @@ export default function WACCBreakdown({ wacc, onWACCChange }: Props) {
           </thead>
           <tbody>
             {rows.map((r, i) => (
-              <tr key={r.label} className={`border-t border-[#E3E1DA] ${i === rows.length - 1 ? 'bg-[#F4F3EF] font-medium' : ''}`}>
+              <tr key={r.label} className={`border-t border-[#E3E1DA] ${i === rows.length - 1 ? 'bg-[#F0F1F6] font-medium' : ''}`}>
                 <td className="px-4 py-2 text-[#06101F]">{r.label}</td>
                 <td className="px-4 py-2 font-mono text-xs text-[#8A95A6]">{r.formula}</td>
                 <td className="px-4 py-2 text-right font-semibold text-[#06101F]">{r.value}</td>

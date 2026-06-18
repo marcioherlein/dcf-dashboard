@@ -71,7 +71,7 @@ export function ETFSectorAllocation({ sectorWeights }: Props) {
             <div className="flex-1 flex items-center justify-between gap-2 min-w-0">
               <span className="text-xs text-[#566174] truncate">{s.sector}</span>
               <div className="flex items-center gap-2 shrink-0">
-                <div className="w-20 h-1 bg-[#F4F3EF] rounded-full overflow-hidden hidden sm:block">
+                <div className="w-20 h-1 bg-[#F0F1F6] rounded-full overflow-hidden hidden sm:block">
                   <div
                     className="h-full rounded-full"
                     style={{

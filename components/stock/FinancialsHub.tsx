@@ -180,8 +180,8 @@ function MetricsTable({ columns, rows, hideSparks }: { columns: string[]; rows: 
           {rows.map((row, i) => {
             if (row.isHeader) {
               return (
-                <tr key={i} className="bg-[#F4F3EF] border-y border-[#E3E1DA]">
-                  <td colSpan={columns.length + 1} className="px-3 sm:px-4 py-1.5 text-[11px] font-semibold text-[#566174] bg-[#F4F3EF] border-y border-[#E3E1DA]">
+                <tr key={i} className="bg-[#F0F1F6] border-y border-[#E3E1DA]">
+                  <td colSpan={columns.length + 1} className="px-3 sm:px-4 py-1.5 text-[11px] font-semibold text-[#566174] bg-[#F0F1F6] border-y border-[#E3E1DA]">
                     {row.label}
                   </td>
                 </tr>
@@ -190,7 +190,7 @@ function MetricsTable({ columns, rows, hideSparks }: { columns: string[]; rows: 
 
             const pig = row.positiveIsGood ?? true
             return (
-              <tr key={i} className="border-b border-[#F4F3EF] hover:bg-[#F4F3EF] transition-colors">
+              <tr key={i} className="border-b border-[#F4F3EF] hover:bg-[#F0F1F6] transition-colors">
                 <td className={`sticky left-0 z-10 bg-white px-3 sm:px-4 py-2 text-xs whitespace-nowrap ${
                   row.indent ? 'pl-6 sm:pl-8 text-[#8A95A6]' : 'font-medium text-[#566174]'
                 }`}>
@@ -651,13 +651,13 @@ export default function FinancialsHub({ statementsData, financialsData, currency
           <div className="flex rounded-lg overflow-hidden border border-[#E3E1DA] text-[11px] shrink-0 ml-3">
             <button
               onClick={() => handlePeriodChange('annual')}
-              className={`px-2.5 py-1.5 transition-colors ${analyticsPeriod === 'annual' ? 'bg-olive-50 text-olive-700 font-semibold' : 'text-[#8A95A6] hover:bg-[#F4F3EF]'}`}
+              className={`px-2.5 py-1.5 transition-colors ${analyticsPeriod === 'annual' ? 'bg-olive-50 text-olive-700 font-semibold' : 'text-[#8A95A6] hover:bg-[#F0F1F6]'}`}
             >
               Annual
             </button>
             <button
               onClick={() => handlePeriodChange('quarterly')}
-              className={`px-2.5 py-1.5 border-l border-[#E3E1DA] transition-colors ${analyticsPeriod === 'quarterly' ? 'bg-olive-50 text-olive-700 font-semibold' : 'text-[#8A95A6] hover:bg-[#F4F3EF]'}`}
+              className={`px-2.5 py-1.5 border-l border-[#E3E1DA] transition-colors ${analyticsPeriod === 'quarterly' ? 'bg-olive-50 text-olive-700 font-semibold' : 'text-[#8A95A6] hover:bg-[#F0F1F6]'}`}
             >
               Quarterly
             </button>
@@ -666,7 +666,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
       </div>
 
       {/* Per-tab context strip */}
-      <div className="px-4 sm:px-5 py-2 border-b border-[#E3E1DA] bg-[#F4F3EF]/60">
+      <div className="px-4 sm:px-5 py-2 border-b border-[#E3E1DA] bg-[#F0F1F6]/60">
         <p className="text-[12px] text-[#566174] leading-snug">{TAB_ANCHORS[subTab]}</p>
       </div>
 
@@ -700,7 +700,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
           if (recentCAGR > 0.20)      { ratingLabel = 'Strong Growth';   ratingColor = 'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D]' }
           else if (recentCAGR > 0.10) { ratingLabel = 'Solid Growth';    ratingColor = 'bg-[#EAF1FF] border-[#93B4F5] text-[#2563EB]' }
           else if (recentCAGR > 0.05) { ratingLabel = 'Moderate Growth'; ratingColor = 'bg-[#FFF4DA] border-[#F3D391] text-[#B56A00]' }
-          else if (recentCAGR > 0)    { ratingLabel = 'Slow Growth';     ratingColor = 'bg-[#F4F3EF] border-[#E3E1DA] text-[#566174]' }
+          else if (recentCAGR > 0)    { ratingLabel = 'Slow Growth';     ratingColor = 'bg-[#F0F1F6] border-[#E3E1DA] text-[#566174]' }
           else                         { ratingLabel = 'Declining';       ratingColor = 'bg-[#FCEAEA] border-[#F0B8B8] text-[#D83B3B]' }
           if (priorCAGR != null && Math.abs(recentCAGR - priorCAGR) > 0.05) {
             ratingLabel += recentCAGR > priorCAGR ? ' · Accelerating' : ' · Decelerating'
@@ -784,7 +784,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                     <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${
                       isReducing ? 'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D]' :
                       isGrowing  ? 'bg-[#FCEAEA] border-[#F0B8B8] text-[#D83B3B]' :
-                      'bg-[#F4F3EF] border-[#E3E1DA] text-[#566174]'
+                      'bg-[#F0F1F6] border-[#E3E1DA] text-[#566174]'
                     }`}>
                       {isReducing ? `Buybacks: ${(totalChg * 100).toFixed(1)}%` :
                        isGrowing  ? `Dilution: +${(totalChg * 100).toFixed(1)}%` : 'Stable'}
@@ -1286,7 +1286,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                       <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${
                         isImproving ? 'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D]' :
                         isWorsening ? 'bg-[#FCEAEA] border-[#F0B8B8] text-[#D83B3B]' :
-                        'bg-[#F4F3EF] border-[#E3E1DA] text-[#566174]'
+                        'bg-[#F0F1F6] border-[#E3E1DA] text-[#566174]'
                       }`}>
                         {isImproving ? 'Deleveraging' : isWorsening ? 'Leveraging up' : 'Stable'}
                       </span>
@@ -1349,7 +1349,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                     <div className="rounded-xl border border-[#E3E1DA] overflow-hidden">
                       <table className="w-full text-[12px]">
                         <thead>
-                          <tr className="bg-[#F4F3EF] border-b border-[#E3E1DA]">
+                          <tr className="bg-[#F0F1F6] border-b border-[#E3E1DA]">
                             <th className="px-4 py-2 text-left font-semibold text-[#8A95A6] text-[10px] uppercase tracking-wide">Year</th>
                             {hasBuybacks  && <th className="px-4 py-2 text-right font-semibold text-[#8A95A6] text-[10px] uppercase tracking-wide">Buybacks</th>}
                             {hasDividends && <th className="px-4 py-2 text-right font-semibold text-[#8A95A6] text-[10px] uppercase tracking-wide">Dividends</th>}
@@ -1362,7 +1362,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                             const div = (r.dividendsPaid ?? 0) as number
                             const total = bb + div
                             return (
-                              <tr key={r.year} className="hover:bg-[#F4F3EF]/60 transition-colors">
+                              <tr key={r.year} className="hover:bg-[#F0F1F6]/60 transition-colors">
                                 <td className="px-4 py-3 font-medium text-[#06101F]">{r.year}</td>
                                 {hasBuybacks  && <td className="px-4 py-3 text-right tabular-nums text-[#06101F]">{fmtM(r.buybacks)}</td>}
                                 {hasDividends && <td className="px-4 py-3 text-right tabular-nums text-[#06101F]">{fmtM(r.dividendsPaid)}</td>}
@@ -1409,12 +1409,12 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                     )}
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3">
-                    <div className="rounded-xl bg-[#F4F3EF] border border-[#E3E1DA] px-3 py-2.5">
+                    <div className="rounded-xl bg-[#F0F1F6] border border-[#E3E1DA] px-3 py-2.5">
                       <p className="text-[10px] text-[#8A95A6] font-semibold uppercase tracking-wide mb-0.5">Dividend Yield</p>
                       <p className="text-[18px] font-bold text-[#11875D] tabular-nums">{(divYield * 100).toFixed(2)}%</p>
                     </div>
                     {payoutRatio != null && payoutRatio > 0 && (
-                      <div className="rounded-xl bg-[#F4F3EF] border border-[#E3E1DA] px-3 py-2.5">
+                      <div className="rounded-xl bg-[#F0F1F6] border border-[#E3E1DA] px-3 py-2.5">
                         <p className="text-[10px] text-[#8A95A6] font-semibold uppercase tracking-wide mb-0.5">Payout Ratio</p>
                         <p className="text-[18px] font-bold text-[#06101F] tabular-nums">{(payoutRatio * 100).toFixed(0)}%</p>
                         <div className="h-1 bg-[#E3E1DA] rounded-full mt-1">
@@ -1696,7 +1696,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                       <div className="rounded-xl border border-[#E3E1DA] overflow-hidden">
                         <table className="w-full text-[12px]">
                           <thead>
-                            <tr className="bg-[#F4F3EF] border-b border-[#E3E1DA]">
+                            <tr className="bg-[#F0F1F6] border-b border-[#E3E1DA]">
                               <th className="px-4 py-2 text-left font-semibold text-[#8A95A6] text-[10px] uppercase tracking-wide">Period</th>
                               {hasRevenue && <>
                                 <th className="px-4 py-2 text-right font-semibold text-[#8A95A6] text-[10px] uppercase tracking-wide">Rev. Est.</th>
@@ -1715,7 +1715,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                               const revAvg = row.revenue.avg
                               const epsAvg = row.eps.avg
                               return (
-                                <tr key={row.period} className="hover:bg-[#F4F3EF]/60 transition-colors">
+                                <tr key={row.period} className="hover:bg-[#F0F1F6]/60 transition-colors">
                                   <td className="px-4 py-3 font-semibold text-[#06101F]">{periodLabel(row.period, row.endDate)}</td>
                                   {hasRevenue && <>
                                     <td className="px-4 py-3 text-right tabular-nums font-mono text-[#06101F] font-medium">
@@ -1805,7 +1805,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                       </div>
                       <div className="rounded-xl border border-[#E3E1DA] overflow-hidden divide-y divide-[#E3E1DA]">
                         {/* Header */}
-                        <div className="grid grid-cols-4 px-4 py-2 bg-[#F4F3EF]">
+                        <div className="grid grid-cols-4 px-4 py-2 bg-[#F0F1F6]">
                           <span className="text-[10px] font-semibold text-[#8A95A6] uppercase tracking-wide">Multiple</span>
                           <span className="text-[10px] font-semibold text-[#8A95A6] uppercase tracking-wide text-right">Current</span>
                           <span className="text-[10px] font-semibold text-[#8A95A6] uppercase tracking-wide text-right">Median</span>
@@ -1829,7 +1829,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                                   <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${
                                     isDiscount ? 'bg-[#E8F7EF] text-[#11875D] border border-[#A3D9BE]' :
                                     isPremium  ? 'bg-[#FCEAEA] text-[#D83B3B] border border-[#F0B8B8]' :
-                                    'bg-[#F4F3EF] text-[#566174]'
+                                    'bg-[#F0F1F6] text-[#566174]'
                                   }`}>
                                     {premium >= 0 ? '+' : ''}{(premium * 100).toFixed(0)}%
                                   </span>
@@ -1851,7 +1851,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                           <div className="rounded-xl border border-[#E3E1DA] overflow-x-auto">
                             <table className="w-full text-[11px] min-w-[360px]">
                               <thead>
-                                <tr className="bg-[#F4F3EF] border-b border-[#E3E1DA]">
+                                <tr className="bg-[#F0F1F6] border-b border-[#E3E1DA]">
                                   <th className="px-3 py-2 text-left font-semibold text-[#8A95A6] uppercase tracking-wide">Ticker</th>
                                   <th className="px-3 py-2 text-right font-semibold text-[#8A95A6] uppercase tracking-wide">P/E</th>
                                   <th className="px-3 py-2 text-right font-semibold text-[#8A95A6] uppercase tracking-wide">EV/EBITDA</th>
@@ -1869,7 +1869,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                                   <td className="px-3 py-2.5 text-right tabular-nums font-mono text-[#06101F]">{psEst != null ? psEst.toFixed(1) + '×' : '—'}</td>
                                 </tr>
                                 {peerComps.map(p => (
-                                  <tr key={p.ticker} className="hover:bg-[#F4F3EF]/60 transition-colors">
+                                  <tr key={p.ticker} className="hover:bg-[#F0F1F6]/60 transition-colors">
                                     <td className="px-3 py-2.5 font-mono font-bold text-[#06101F]">{p.ticker}</td>
                                     <td className="px-3 py-2.5 text-right tabular-nums text-[#566174]">{p.trailingPE != null ? p.trailingPE.toFixed(1) + '×' : '—'}</td>
                                     <td className="px-3 py-2.5 text-right tabular-nums text-[#566174]">{p.evToEbitda != null ? p.evToEbitda.toFixed(1) + '×' : '—'}</td>
@@ -1920,7 +1920,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
         const segments = [
           { label: 'Institutions', pct: inst,    color: 'bg-[#EAF1FF]0',  bar: 'bg-[#EAF1FF]0',  text: 'text-[#2563EB]', bgLight: 'bg-[#EAF1FF]'   },
           { label: 'Insiders',     pct: insider,  color: 'bg-[#FFF4DA]0', bar: 'bg-[#FFF4DA]0', text: 'text-[#B56A00]',bgLight: 'bg-[#FFF4DA]'  },
-          { label: 'Retail / Other', pct: retail, color: 'bg-[#CDD1C8]', bar: 'bg-[#CDD1C8]', text: 'text-[#566174]',bgLight: 'bg-[#F4F3EF]'  },
+          { label: 'Retail / Other', pct: retail, color: 'bg-[#CDD1C8]', bar: 'bg-[#CDD1C8]', text: 'text-[#566174]',bgLight: 'bg-[#F0F1F6]'  },
         ]
         return (
           <div className="px-4 sm:px-5 py-5 space-y-5">
@@ -1939,7 +1939,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                       </div>
                       <span className="text-[13px] font-bold tabular-nums font-mono text-[#06101F]">{s.pct.toFixed(1)}%</span>
                     </div>
-                    <div className="h-2.5 bg-[#F4F3EF] rounded-full overflow-hidden">
+                    <div className="h-2.5 bg-[#F0F1F6] rounded-full overflow-hidden">
                       <div className={`h-full rounded-full ${s.bar}`} style={{ width: `${s.pct}%` }} />
                     </div>
                   </div>
@@ -2019,7 +2019,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                   <div className="rounded-xl border border-[#E3E1DA] overflow-hidden">
                     <table className="w-full text-[12px]">
                       <thead>
-                        <tr className="bg-[#F4F3EF] border-b border-[#E3E1DA]">
+                        <tr className="bg-[#F0F1F6] border-b border-[#E3E1DA]">
                           <th className="px-4 py-2 text-left font-semibold text-[#8A95A6] text-[10px] uppercase tracking-wide">Institution</th>
                           <th className="px-4 py-2 text-right font-semibold text-[#8A95A6] text-[10px] uppercase tracking-wide">Shares</th>
                           <th className="px-3 py-2 text-right font-semibold text-[#8A95A6] text-[10px] uppercase tracking-wide">Weight</th>
@@ -2031,7 +2031,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                           const up = h.weightChange > 0.5
                           const dn = h.weightChange < -0.5
                           return (
-                            <tr key={i} className="hover:bg-[#F4F3EF]/60 transition-colors">
+                            <tr key={i} className="hover:bg-[#F0F1F6]/60 transition-colors">
                               <td className="px-4 py-3 text-[#06101F] font-medium">
                                 <span className="truncate block max-w-[180px] sm:max-w-none">{h.name}</span>
                                 {h.isNew && <span className="text-[10px] font-semibold text-[#2563EB] ml-0 mt-0.5 block">New position</span>}
@@ -2063,7 +2063,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                 t === '10-K' ? 'bg-[#EAF1FF] text-[#2563EB] border-[#93B4F5]'
                 : t === '10-Q' ? 'bg-violet-50 text-violet-700 border-violet-200'
                 : t === 'DEF 14A' ? 'bg-[#FFF4DA] text-[#B56A00] border-[#F3D391]'
-                : 'bg-[#F4F3EF] text-[#566174] border-[#E3E1DA]'
+                : 'bg-[#F0F1F6] text-[#566174] border-[#E3E1DA]'
               return (
                 <div>
                   <p className="text-[13px] font-semibold text-[#06101F] mb-3">SEC Filings</p>
@@ -2074,7 +2074,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                         href={f.link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-3 px-4 py-3 bg-white hover:bg-[#F4F3EF] transition-colors group"
+                        className="flex items-center gap-3 px-4 py-3 bg-white hover:bg-[#F0F1F6] transition-colors group"
                       >
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded border shrink-0 ${typeStyle(f.type)}`}>
                           {f.type}

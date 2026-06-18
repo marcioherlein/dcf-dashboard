@@ -381,7 +381,7 @@ function ReverseDCFPanel({ result, cagrAnalysis, wacc, terminalG, lastFCFMargin,
                   </thead>
                   <tbody>
                     {projectionData.rows.map((row, i) => (
-                      <tr key={row.year} className={cn('border-b border-[#E3E1DA]', i % 2 === 0 ? '' : 'bg-[#F4F3EF]/40')}>
+                      <tr key={row.year} className={cn('border-b border-[#E3E1DA]', i % 2 === 0 ? '' : 'bg-[#F0F1F6]/40')}>
                         <td className="py-1.5 text-left text-[#566174] font-medium pr-2">{row.year}</td>
                         <td className="py-1.5 text-right text-[#2563EB] font-bold bg-[#EAF1FF]/40 px-2">
                           {impliedCAGR != null ? '+' + (impliedCAGR * 100).toFixed(1) + '%' : '—'}
@@ -404,7 +404,7 @@ function ReverseDCFPanel({ result, cagrAnalysis, wacc, terminalG, lastFCFMargin,
                       <td className="py-1.5 text-right text-[#06101F] font-semibold pl-2 tabular-nums">{fmtCompact(projectionData.pvTv)}</td>
                     </tr>
                     {/* Total EV row */}
-                    <tr className="border-t-2 border-[#CDD1C8] bg-[#F4F3EF]">
+                    <tr className="border-t-2 border-[#CDD1C8] bg-[#F0F1F6]">
                       <td colSpan={3} className="py-2 text-left font-bold text-[#06101F] pr-2 text-xs">Implied Enterprise Value</td>
                       <td className="py-2 text-right font-bold text-[#06101F] tabular-nums hidden sm:table-cell px-2"></td>
                       <td className="py-2 text-right font-bold text-[#06101F] tabular-nums hidden md:table-cell px-2"></td>
@@ -427,7 +427,7 @@ function ReverseDCFPanel({ result, cagrAnalysis, wacc, terminalG, lastFCFMargin,
 
             {/* Sensitivity strip */}
             {sensitivityScenarios.length > 0 && (
-              <div className="px-5 py-4 border-t border-[#E3E1DA] bg-[#F4F3EF]/60">
+              <div className="px-5 py-4 border-t border-[#E3E1DA] bg-[#F0F1F6]/60">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-[#8A95A6] mb-3">What if growth is different?</p>
                 <div className="flex gap-2 overflow-x-auto pb-1 -mx-5 px-5 snap-x">
                   {sensitivityScenarios.map(s => {
@@ -480,7 +480,7 @@ function ReverseDCFPanel({ result, cagrAnalysis, wacc, terminalG, lastFCFMargin,
       </AnimatePresence>
 
       {/* ④ Assumptions + interpretation (always visible) */}
-      <div className="px-5 py-4 border-t border-[#E3E1DA] bg-[#F4F3EF]">
+      <div className="px-5 py-4 border-t border-[#E3E1DA] bg-[#F0F1F6]">
         <p className="text-[10px] uppercase tracking-wider text-[#8A95A6] font-bold mb-3">Assumptions used</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <div>
@@ -645,7 +645,7 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
           ? ((config.fairValueSummary - config.currentPrice) / config.currentPrice * 100)
           : null
         return (
-          <p className="mx-5 mt-4 text-[11px] text-[#566174] bg-[#F4F3EF] rounded-lg px-3 py-2 border border-[#E3E1DA] leading-relaxed">
+          <p className="mx-5 mt-4 text-[11px] text-[#566174] bg-[#F0F1F6] rounded-lg px-3 py-2 border border-[#E3E1DA] leading-relaxed">
             With <strong className="text-[#06101F]">{cagrVal}% annual revenue growth</strong>, this model estimates{' '}
             <strong className="text-[#06101F]">{fmtPrice(config.fairValueSummary, currency)}</strong> fair value
             {upsideNum != null && (
@@ -780,7 +780,7 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
                             'text-[10px] px-2 py-0.5 rounded-full border tabular-nums transition-colors',
                             isCurrent
                               ? 'bg-[#EAF1FF] border-[#93B4F5] text-[#2563EB] font-semibold'
-                              : 'bg-[#F4F3EF] border-[#E3E1DA] text-[#566174] hover:bg-[#EAF1FF] hover:border-[#93B4F5] hover:text-[#2563EB]',
+                              : 'bg-[#F0F1F6] border-[#E3E1DA] text-[#566174] hover:bg-[#EAF1FF] hover:border-[#93B4F5] hover:text-[#2563EB]',
                           )}
                         >
                           {b.label}: {fmtBenchmarkValue(b.value, a.unit)}
@@ -828,7 +828,7 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
         <div className="px-5 pt-4 pb-2">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {readonlyAssumptions.map(a => (
-              <div key={a.key} className="bg-[#F4F3EF] rounded-lg px-3 py-2">
+              <div key={a.key} className="bg-[#F0F1F6] rounded-lg px-3 py-2">
                 <p className="text-[10px] text-[#566174] font-medium uppercase tracking-wider">{a.label}</p>
                 <p className="text-sm font-semibold tabular-nums text-[#06101F] mt-0.5">
                   {fmtAssumptionDisplay(a, overrides)}{a.unit === '%' ? '%' : a.unit === 'x' ? '×' : ''}
@@ -841,7 +841,7 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
 
       {/* Footer: Results + Reset */}
       {(config.results.length > 0 || isModified) && (
-        <div className="px-5 py-3 mt-2 border-t border-[#E3E1DA] bg-[#F4F3EF] flex items-center justify-between gap-4 flex-wrap">
+        <div className="px-5 py-3 mt-2 border-t border-[#E3E1DA] bg-[#F0F1F6] flex items-center justify-between gap-4 flex-wrap">
           <div className="flex gap-4 flex-wrap">
             {config.results.map((r, i) => (
               <div key={i} className="text-xs">
@@ -917,7 +917,7 @@ function MethodAccordion({
       {/* Clickable header row */}
       <button
         onClick={onToggle}
-        className="w-full px-5 py-4 flex items-start gap-3 text-left hover:bg-[#F4F3EF]/60 transition-colors"
+        className="w-full px-5 py-4 flex items-start gap-3 text-left hover:bg-[#F0F1F6]/60 transition-colors"
       >
         <ChevronDown
           size={14}
@@ -1469,7 +1469,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
         >
           {/* Executive DCF summary */}
           {coreDcfFV != null && (
-            <div className="px-5 pt-4 pb-3 border-b border-[#E3E1DA] bg-[#F4F3EF]/50">
+            <div className="px-5 pt-4 pb-3 border-b border-[#E3E1DA] bg-[#F0F1F6]/50">
               <p className="text-[10px] font-bold uppercase tracking-wider text-[#8A95A6] mb-2">
                 {fullDcfLiveFV != null ? 'Modelling Table Result' : 'Core DCF Result'}
               </p>
@@ -1510,7 +1510,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
         <div className="glass-accordion-header rounded-xl overflow-hidden">
           <button
             onClick={() => setSanityChecksOpen(o => !o)}
-            className="w-full flex items-center justify-between px-5 py-4 hover:bg-[#F4F3EF]/60 transition-colors text-left"
+            className="w-full flex items-center justify-between px-5 py-4 hover:bg-[#F0F1F6]/60 transition-colors text-left"
           >
             <div>
               <div className="flex items-center gap-2">

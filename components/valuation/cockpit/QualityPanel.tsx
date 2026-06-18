@@ -91,7 +91,7 @@ function MoatGauge({ roic, roicSpread, wacc }: { roic: number | null; roicSpread
       </div>
 
       {/* Visual gauge */}
-      <div className="relative h-2 bg-[#F4F3EF] rounded-full overflow-visible">
+      <div className="relative h-2 bg-[#F0F1F6] rounded-full overflow-visible">
         {/* Spread fill from WACC to ROIC */}
         {hasPositiveSpread && (
           <div

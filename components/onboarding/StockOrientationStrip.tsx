@@ -53,7 +53,7 @@ export default function StockOrientationStrip() {
           animate={reduced ? {} : { opacity: 1, y: 0 }}
           exit={reduced ? {} : { opacity: 0, y: -6 }}
           transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-          className="rounded-xl bg-[#F4F3EF] border border-[#E3E1DA] overflow-hidden"
+          className="rounded-xl bg-[#F0F1F6] border border-[#E3E1DA] overflow-hidden"
         >
           <div className="px-4 py-3 flex items-start gap-3">
             {/* Content */}
