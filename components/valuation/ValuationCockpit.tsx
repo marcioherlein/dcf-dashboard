@@ -638,22 +638,45 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
                   </div>
                 )
               })()}
-              {/* Tile 3: Market-implied growth */}
+              {/* Tile 3: EPS Surprise Streak — replaces market-implied growth */}
               {(() => {
-                const implied = output.marketImpliedGrowth
-                const analyst = snapshot.historicalCAGR
-                const pass = implied != null && analyst != null && implied <= analyst * 1.5
-                const na = implied == null
+                type Surprise = { surprisePercent: number | null; epsActual: number | null; epsEstimate: number | null; quarter: string | null }
+                const surprises: Surprise[] = (apiData.earningsSurprises ?? []).slice(-4)
+                const na = surprises.length === 0
+                const beats = surprises.filter((s: Surprise) => (s.surprisePercent ?? 0) > 0).length
+                const streak = na ? 0 : beats
+                const signal = na ? 'slate' : streak >= 3 ? 'green' : streak >= 2 ? 'amber' : 'red'
+                const label = na ? 'No data' : streak === 4 ? '4 beats' : streak === 3 ? '3 of 4 beats' : streak === 2 ? '2 of 4 beats' : streak === 1 ? '1 beat' : 'No beats'
                 return (
                   <div className={`bg-white px-3 py-3 flex flex-col gap-1.5 ${na ? 'opacity-50' : ''}`}>
-                    <p className="text-[10px] text-[#9B9B9B] leading-tight">Market expectations</p>
-                    <div className={`inline-flex items-center gap-1 text-[10px] font-[700] px-2 py-0.5 rounded-full border self-start ${na ? 'bg-[#F5F5F5] border-[#E3E1DA] text-[#9B9B9B]' : pass ? 'bg-[#EAF1FF] border-[#BFDBFE] text-[#2563EB]' : 'bg-[#FFF4DA] border-[#F3D391] text-[#B56A00]'}`}>
-                      {na ? 'No data' : pass ? 'Conservative' : 'Aggressive'}
+                    <p className="text-[10px] text-[#9B9B9B] leading-tight">Earnings surprises</p>
+                    <div className={`inline-flex items-center gap-1 text-[10px] font-[700] px-2 py-0.5 rounded-full border self-start ${signal === 'green' ? 'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D]' : signal === 'amber' ? 'bg-[#FFF4DA] border-[#F3D391] text-[#B56A00]' : signal === 'red' ? 'bg-[#FCEAEA] border-[#F0B8B8] text-[#D83B3B]' : 'bg-[#F5F5F5] border-[#E3E1DA] text-[#9B9B9B]'}`}>
+                      {label}
                     </div>
-                    <p className="text-[11px] font-[650] text-[#111111]">
-                      {implied != null ? `Implied ${(implied*100).toFixed(1)}% CAGR` : '—'}
-                    </p>
-                    {analyst != null && <p className="text-[10px] text-[#9B9B9B]">Historical {(analyst*100).toFixed(1)}%</p>}
+                    {/* Beat/miss dots — last 4Q left to right (oldest→newest) */}
+                    <div className="flex items-center gap-1 mt-0.5">
+                      {na ? (
+                        <span className="text-[10px] text-[#9B9B9B]">No data</span>
+                      ) : (
+                        surprises.map((s: Surprise, i: number) => {
+                          const beat = (s.surprisePercent ?? 0) > 0
+                          const pct = s.surprisePercent != null ? `${beat ? '+' : ''}${s.surprisePercent.toFixed(1)}%` : '—'
+                          return (
+                            <div
+                              key={i}
+                              title={`${s.quarter ?? `Q${i+1}`}: ${pct}`}
+                              className={`w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-[800] ${beat ? 'bg-[#E8F7EF] text-[#11875D]' : 'bg-[#FCEAEA] text-[#D83B3B]'}`}
+                            >
+                              {beat ? '✓' : '✗'}
+                            </div>
+                          )
+                        })
+                      )}
+                      {!na && <span className="text-[10px] text-[#9B9B9B] ml-0.5">last 4Q</span>}
+                    </div>
+                    {!na && surprises[surprises.length - 1]?.surprisePercent != null && (
+                      <p className="text-[10px] text-[#9B9B9B]">Last: {surprises[surprises.length - 1].surprisePercent! > 0 ? '+' : ''}{surprises[surprises.length - 1].surprisePercent!.toFixed(1)}% vs est.</p>
+                    )}
                   </div>
                 )
               })()}
@@ -765,7 +788,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
       <details className="group" id="deep_analysis">
         <summary className="flex items-center gap-2 cursor-pointer list-none bg-white rounded-xl border border-[#E3E1DA] shadow-card px-4 sm:px-5 py-3.5 hover:bg-[#F5F5F5] transition-colors select-none">
           <span className="text-[#6B6B6B] text-xs group-open:rotate-90 transition-transform inline-block">▶</span>
-          <span className="text-sm font-[650] text-[#111111]">Detailed Analysis</span>
+          <span className="text-sm font-[650] text-[#111111]">Deep Dive</span>
           <span className="ml-auto text-xs text-[#9B9B9B] hidden sm:inline">ROIC · FCF yield · EPV · market-implied growth · assumption audit</span>
         </summary>
         <div className="mt-2 flex flex-col gap-3">

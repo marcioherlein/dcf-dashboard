@@ -259,6 +259,7 @@ export default function SummaryTab({
         pegRatioValue={quote?.pegRatio ?? null}
         peHistory={peSparkline.length >= 2 ? peSparkline : undefined}
         evHistory={evSparkline.length >= 2 ? evSparkline : undefined}
+        earningsSurprises={earningsSurprises ?? null}
         onViewValuation={onViewValuation}
         onViewConviction={onViewConviction}
       />

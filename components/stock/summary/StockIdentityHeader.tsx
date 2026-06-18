@@ -75,6 +75,8 @@ interface Props {
   // sparkline history for evolving ratios (values newest→oldest, reversed internally)
   peHistory?: number[]
   evHistory?: number[]
+  /** Last 4 quarters of EPS beat/miss data */
+  earningsSurprises?: Array<{ surprisePercent: number | null; quarter: string | null }> | null
   high52: number
   low52: number
   nextEarningsDate?: string | null
@@ -376,6 +378,7 @@ export default function StockIdentityHeader({
   fcfMargin, grossMargin, netMargin: _netMargin, revenueGrowth,
   forwardPE, pegRatioValue,
   peHistory, evHistory,
+  earningsSurprises,
   high52, low52, nextEarningsDate,
   onViewValuation, onViewConviction,
 }: Props) {
@@ -605,6 +608,28 @@ export default function StockIdentityHeader({
             <PercentBarRow label="ROE"            valuePct={roe}              cap={50} sentiment={roeSentiment} />
             <PercentBarRow label="ROIC"           valuePct={roic}             cap={40} sentiment={roicSentiment} last />
           </div>
+
+          {/* Earnings beat/miss — last 4 quarters */}
+          {earningsSurprises && earningsSurprises.length > 0 && (
+            <div className="px-4 pt-3 pb-0">
+              <p className="text-[10px] font-[700] text-[#9B9B9B] uppercase tracking-wider mb-2">EPS Surprises</p>
+              <div className="flex items-center gap-1.5">
+                {earningsSurprises.slice(-4).map((s, i) => {
+                  const beat = (s.surprisePercent ?? 0) > 0
+                  const pct = s.surprisePercent != null ? `${beat ? '+' : ''}${s.surprisePercent.toFixed(1)}%` : null
+                  return (
+                    <div key={i} className="flex flex-col items-center gap-0.5" title={`${s.quarter ?? `Q${i+1}`}${pct ? ': ' + pct : ''}`}>
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-[800] ${beat ? 'bg-[#E8F7EF] text-[#11875D]' : 'bg-[#FCEAEA] text-[#D83B3B]'}`}>
+                        {beat ? '✓' : '✗'}
+                      </div>
+                      {pct && <span className={`text-[9px] font-[600] tabular-nums ${beat ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>{pct}</span>}
+                    </div>
+                  )
+                })}
+                <span className="text-[10px] text-[#9B9B9B] ml-1">last 4Q</span>
+              </div>
+            </div>
+          )}
 
           {/* 52-week range */}
           <div className="px-4 pb-4 pt-4 border-t border-[#F0F0F0] mt-auto">
