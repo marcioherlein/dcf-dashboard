@@ -134,6 +134,12 @@ export interface CockpitMethodResult {
     isCyclical?: boolean
     cyclicalWarning?: string | null
     effectiveNopatM?: number | null
+    // V2 engine enrichments
+    terminalValueShare?: number | null
+    impliedTerminalEVEBITDA?: number | null
+    enterpriseValueM?: number | null
+    dataWarnings?: string[]
+    engineVersion?: string
   }
 }
 
@@ -883,12 +889,6 @@ export function computeCockpitOutput(
 //
 // V2 will be added in lib/valuation/v2/ and wired up here when ready.
 // The public `computeCockpitOutput` remains the stable external API.
-
-import {
-  type ValuationEngineOptions,
-  getConfiguredValuationEngineVersion,
-  isShadowModeEnabled,
-} from './engineVersion'
 
 /**
  * V1 engine — the current production implementation.

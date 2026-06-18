@@ -22,7 +22,6 @@
  * Per-share = Equity Value / Diluted Shares (both in millions)
  */
 
-import type { ModelResult } from './types'
 
 export interface EnterpriseBridgeInputs {
   enterpriseValueM:         number

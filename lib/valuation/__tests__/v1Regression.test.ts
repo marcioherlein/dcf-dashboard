@@ -45,6 +45,7 @@ function makeSnapshot(overrides: Partial<CockpitSnapshot> = {}): CockpitSnapshot
     fcfMargin:            0.247,
     historicalCAGR:       0.08,
     analystTargetMean:    210.00,
+    analystRating:        null,
   }
   return { ...base, ...overrides }
 }
@@ -189,7 +190,7 @@ describe('Fixture 2: High-growth SaaS company', () => {
 
   it('terminalG must be less than WACC in computed output', () => {
     // The scenario base terminalG should not exceed WACC
-    const baseTermG = result.scenarios.base.cagr   // not terminalG but checking cagr is positive
+    const _baseTermG = result.scenarios.base.cagr   // not terminalG but checking cagr is positive
     expect(result.scenarios.base.wacc).toBeGreaterThan(0)
   })
 })
@@ -303,7 +304,7 @@ describe('Fixture 4: Bank (financial company)', () => {
   })
 
   it('uses P/B as the adaptive method for financial companies', () => {
-    const pbMethod = result.methods.find(m => m.id === 'ev_ebitda_adaptive' || m.id === 'pb')
+    const _pbMethod = result.methods.find(m => m.id === 'ev_ebitda_adaptive' || m.id === 'pb')
     // The financial company path should use PB, not EV/EBITDA as primary
     // Just verify it doesn't crash and returns a valid result
     expect(result.blendedFairValue).not.toBeNull()

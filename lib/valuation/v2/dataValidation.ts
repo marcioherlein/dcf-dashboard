@@ -6,7 +6,7 @@
  * fabricated value.
  */
 
-import type { CockpitSnapshotV2, ModelResult } from './types'
+import type { CockpitSnapshotV2 } from './types'
 
 export interface ValidationResult {
   isValid:   boolean

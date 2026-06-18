@@ -21,10 +21,7 @@
  * decides how to blend them. No automatic 50/50 average.
  */
 
-import type { ModelResult } from './types'
 import { computeEnterpriseBridgeV1Compat } from './enterpriseValueBridge'
-import { safeRevenue, safeEbitMargin, safeDilutedSharesM, validateForFCFFDcf } from './dataValidation'
-import type { CockpitSnapshotV2 } from './types'
 
 // ─── Inputs ───────────────────────────────────────────────────────────────────
 
@@ -223,7 +220,7 @@ export function computeFCFFDcfV2(inputs: FCFFDcfInputsV2): FCFFDcfResultV2 {
   }
 
   const lastRow         = rows[rows.length - 1]
-  const lastFcff        = lastRow.fcff
+  const _lastFcff       = lastRow.fcff
   const lastRevenue     = lastRow.revenue
   const lastNopat       = lastRow.nopat
   const lastDiscFactor  = Math.pow(1 + inputs.wacc, years)

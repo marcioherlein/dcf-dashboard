@@ -24,7 +24,6 @@ import {
   buildFCFFInputsFromV1Snapshot,
   type FCFFDcfResultV2,
 } from './fcffDcf'
-import { computeEnterpriseBridgeV1Compat } from './enterpriseValueBridge'
 import { computeCockpitOutput as computeCockpitOutputV1 } from '../cockpit'
 
 // ─── V2 implementation (stub — progressively replaces V1 models) ──────────────
@@ -67,7 +66,7 @@ export function computeCockpitOutputV2Impl(
   // Replace the 'core_dcf' method result with the V2 FCFF result.
   // All other methods (forward_pe, ev_ebitda, revenue_multiple, epv) stay as V1.
 
-  let updatedMethods = [...v1Result.methods]
+  const updatedMethods = [...v1Result.methods]
 
   if (v2FcffResult != null && v2FcffResult.fairValuePerShareGordon != null) {
     const v2DcfFairValue = v2FcffResult.fairValuePerShareGordon

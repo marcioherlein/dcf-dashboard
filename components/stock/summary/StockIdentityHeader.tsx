@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import { fmtLargeCurrency } from '@/lib/formatters'
 
@@ -437,11 +438,14 @@ export default function StockIdentityHeader({
             {/* Logo + name row */}
             <div className="flex items-start gap-3.5">
               {!logoError ? (
-                <img
+                <Image
                   src={logoSrc}
                   alt={`${companyName} logo`}
                   onError={() => setLogoError(true)}
+                  width={48}
+                  height={48}
                   className="flex-shrink-0 w-12 h-12 rounded-xl object-cover border border-[#E3E1DA]"
+                  unoptimized
                 />
               ) : (
                 <div

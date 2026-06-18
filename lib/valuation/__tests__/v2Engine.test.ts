@@ -7,7 +7,7 @@
 
 import { computeFCFFDcfV2, buildGrowthCurveFromLegacyCagr, type FCFFDcfInputsV2 } from '../v2/fcffDcf'
 import { computeEnterpriseBridgeV2, computeEnterpriseBridgeV1Compat } from '../v2/enterpriseValueBridge'
-import { validateForFCFFDcf, safeEbitMargin, safeRevenue } from '../v2/dataValidation'
+import { validateForFCFFDcf, safeEbitMargin } from '../v2/dataValidation'
 import type { CockpitSnapshotV2 } from '../v2/types'
 
 // ─── FCFF DCF formula tests ───────────────────────────────────────────────────
