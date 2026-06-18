@@ -1207,11 +1207,11 @@ async function runFeature() {
 // Picks 1 undervalued + 1 overvalued + 1 from the weekly rotation.
 
 const WEEKLY_PICKS = [
-  ['AAPL', 'MSFT',  'JPM'],
-  ['NVDA', 'GOOGL', 'JNJ'],
-  ['AMZN', 'META',  'V'],
-  ['MSFT', 'AAPL',  'KO'],
-  ['GOOGL','NVDA',  'BAC'],
+  ['AAPL',  'MSFT',  'JPM'],   // Week 0: consumer tech + finance
+  ['NVDA',  'GOOGL', 'JNJ'],   // Week 1: semis + search + pharma
+  ['AMZN',  'META',  'V'],     // Week 2: e-commerce + social + payments
+  ['TSLA',  'LLY',   'GS'],    // Week 3: EV + pharma + banking
+  ['COST',  'AVGO',  'XOM'],   // Week 4: consumer + semis + energy
 ]
 
 async function runWeeklyWrap() {
@@ -2323,11 +2323,11 @@ async function runSectorSpotlight() {
 // 1:30 PM ART — Second DCF of the day. Different pool, different offset, never repeats noon pick.
 
 const ROTATION2 = {
-  1: ['AAPL','MSFT','GOOGL','META','AMZN','NFLX','ADBE','CRM','NOW','INTU'],  // Monday: mega-cap tech
-  2: ['NVDA','AMD','INTC','QCOM','AVGO','TXN','MU','AMAT','LRCX','ON'],       // Tuesday: semis
-  3: ['JPM','BAC','GS','MS','WFC','V','MA','BLK','AXP','C'],                  // Wednesday: financials
-  4: ['WMT','COST','HD','TGT','MCD','SBUX','NKE','CMG','YUM','BKNG'],        // Thursday: consumer
-  5: ['XOM','CVX','NEE','DUK','COP','SLB','BA','CAT','HON','GE'],            // Friday: energy+industrials
+  1: ['AAPL','MSFT','GOOGL','META','AMZN','NFLX','ADBE','CRM','NOW','INTU'],  // Monday: mega-cap tech (dcf=semis → different)
+  2: ['NVDA','AMD','INTC','QCOM','AVGO','TXN','MU','AMAT','LRCX','ON'],       // Tuesday: semis (dcf=mega-cap tech → different)
+  3: ['JNJ','LLY','ABBV','MRK','AMGN','BMY','PFE','UNH','CVS','CI'],          // Wednesday: healthcare (dcf=financials → different; bear=healthcare handled by offset)
+  4: ['WMT','COST','HD','TGT','MCD','SBUX','NKE','CMG','YUM','BKNG'],        // Thursday: consumer (dcf=healthcare → different)
+  5: ['AAPL','MSFT','GOOGL','META','AMZN','ADBE','CRM','ORCL','NOW','INTU'], // Friday: mega-cap tech (dcf=consumer/energy → different)
 }
 
 async function runDcf2() {
