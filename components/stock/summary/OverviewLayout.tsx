@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import { cn } from '@/lib/utils'
 import { fmtLargeCurrency as _fmtLargeCurrency } from '@/lib/formatters'
@@ -55,77 +54,6 @@ function fmtPrice(v: number, currency: string) {
   const sym = currency === 'USD' ? '$' : currency === 'BRL' ? 'R$ ' : currency + ' '
   if (Math.abs(v) >= 1000) return sym + v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   return sym + v.toFixed(2)
-}
-
-// ─── Identity strip ───────────────────────────────────────────────────────────
-
-function _StockIdentityStrip({
-  ticker, companyName, description, sector, industry, country, currency, price, change, changePct,
-}: Pick<Props, 'ticker' | 'companyName' | 'description' | 'sector' | 'industry' | 'country' | 'currency' | 'price' | 'change' | 'changePct'>) {
-  const [logoErr, setLogoErr] = useState(false)
-  const [aboutOpen, setAboutOpen] = useState(false)
-  const logoSrc = `https://financialmodelingprep.com/image-stock/${ticker}.png`
-  const isPos = change >= 0
-
-  const tags = [sector, industry, country].filter(Boolean) as string[]
-
-  return (
-    <div className="mb-4">
-      <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
-        {/* Logo */}
-        {!logoErr ? (
-          <Image src={logoSrc} alt={`${companyName} logo`} width={40} height={40}
-            className="rounded-xl border border-[rgba(15,23,42,0.08)] object-cover shrink-0"
-            onError={() => setLogoErr(true)} />
-        ) : (
-          <div className="w-10 h-10 rounded-xl bg-[#EEF2FA] border border-[rgba(15,23,42,0.08)] flex items-center justify-center shrink-0"
-            role="img" aria-label={`${companyName} logo`}>
-            <span className="text-[13px] font-[800] text-[#5F790B]">{ticker.slice(0, 2)}</span>
-          </div>
-        )}
-
-        {/* Name + tags */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-baseline gap-2 flex-wrap">
-            <span className="text-[20px] font-[800] text-[#111111] tracking-tight leading-tight">{ticker}</span>
-            <span className="text-[15px] font-[500] text-[#6B6B6B] truncate max-w-[280px]">{companyName}</span>
-          </div>
-          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-            {tags.map(t => (
-              <span key={t} className="text-[11px] font-[500] text-[#6B6B6B] bg-[rgba(15,23,42,0.05)] rounded-full px-2 py-0.5">{t}</span>
-            ))}
-            {description && (
-              <button
-                onClick={() => setAboutOpen(v => !v)}
-                aria-expanded={aboutOpen}
-                aria-label={aboutOpen ? 'Hide company description' : 'Show company description'}
-                className="text-[11px] font-[600] text-[#5F790B] hover:underline ml-1 min-h-[44px] min-w-[44px] flex items-center px-1 -mx-1"
-              >
-                {aboutOpen ? 'Hide' : 'Company profile'}
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Price — stacks below on mobile, inline on sm+ */}
-        <div className="text-right shrink-0 w-full sm:w-auto">
-          <p className="text-[22px] font-[800] text-[#111111] tabular-nums tracking-tight leading-tight">
-            {fmtPrice(price, currency)}
-          </p>
-          <p className={cn('text-[13px] font-[600] tabular-nums', isPos ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
-            {isPos ? '+' : ''}{change.toFixed(2)} ({isPos ? '+' : ''}{Math.abs(changePct).toFixed(2)}%) today
-          </p>
-        </div>
-      </div>
-
-      {/* Collapsible description */}
-      {aboutOpen && description && (
-        <div className="mt-3 px-1">
-          <p className="text-[13px] text-[#6B6B6B] leading-relaxed max-w-3xl">{description}</p>
-        </div>
-      )}
-    </div>
-  )
 }
 
 // ─── Chart metrics summary footer ────────────────────────────────────────────
