@@ -163,7 +163,7 @@ export default function ShareCardModal({
       ? ` (${upsidePct >= 0 ? '+' : ''}${(upsidePct * 100).toFixed(1)}% to fair value)`
       : ''
     const conviction = checkLabel ? ` — ${checkLabel} conviction` : ''
-    const text = `$${ticker} looks ${verdict.toLowerCase()}${upsideStr}${conviction}.\n\nAnalyzed with insic 👇\nhttps://insic.app/stock/${ticker}`
+    const text = `$${ticker} looks ${verdict.toLowerCase()}${upsideStr}${conviction}.\n\nFull DCF model (free) 👇\nhttps://insic.app/stock/${ticker}`
     const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`
     window.open(twitterUrl, '_blank', 'noopener,noreferrer')
   }

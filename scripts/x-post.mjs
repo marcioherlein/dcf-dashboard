@@ -614,41 +614,38 @@ async function runDcf() {
   const bull      = data.scenarios?.bull?.fairValue
   const revenueM  = data.businessProfile?.revenueM
 
+  // Build the key insight sentence — the most shareable part
+  const impliedGrowth = data.valuationMethods?.models?.reverseDcf?.impliedCAGR
+  const impliedStr = impliedGrowth != null
+    ? `At ${fmt(price)}, the market is pricing in ~${pct(impliedGrowth, false)}/yr revenue growth for the next 5 years.`
+    : null
+
+  const historicalStr = (data.cagrAnalysis?.historicalCagr3y != null)
+    ? `Historical 3Y CAGR: ${pct(data.cagrAnalysis.historicalCagr3y, false)}.`
+    : null
+
+  const vsHistorical = (impliedGrowth != null && data.cagrAnalysis?.historicalCagr3y != null)
+    ? (impliedGrowth < data.cagrAnalysis.historicalCagr3y * 0.85
+        ? `That's below its historical pace — the market may be underestimating it.`
+        : impliedGrowth > data.cagrAnalysis.historicalCagr3y * 1.15
+        ? `That's well above its historical pace — high expectations baked in.`
+        : `Roughly in line with historical pace.`)
+    : null
+
   const lines = [
-    `${v.emoji} $${ticker} — ${v.short}`,
+    impliedStr
+      ? `What is $${ticker}'s stock price actually betting on?`
+      : `${v.emoji} $${ticker} — ${v.short}`,
     ``,
-    `━━━ VALUATION ━━━`,
-    `Current price:  ${fmt(price)}`,
-    `Fair value est: ${fmt(fair)}`,
-    `Difference:     ${pct(upside)} vs current price`,
-    `Model view: ${ticker} ${v.long}`,
-    ...(bear && bull ? [`Scenario range: ${fmt(bear)} (bear) → ${fmt(bull)} (bull)`] : []),
+    ...(impliedStr ? [impliedStr] : []),
+    ...(historicalStr ? [historicalStr] : []),
+    ...(vsHistorical ? [vsHistorical] : []),
     ``,
-    `━━━ MODEL INPUTS ━━━`,
-    `WACC:         ${pct(wacc, false)}`,
-    `Revenue CAGR: ${pct(cagr, false)} (model) ${analyst1y != null && numAnalysts >= 3 ? `· ${pct(analyst1y, false)}/yr analyst est (${numAnalysts})` : ''}`,
-    ...(terminalG ? [`Terminal growth: ${pct(terminalG, false)}`] : []),
+    `Model: fair value ~${fmt(fair)} (${pct(upside)} vs current price)`,
+    ...(bear && bull ? [`Range: ${fmt(bear)} bear → ${fmt(bull)} bull`] : []),
     ``,
-    `━━━ BUSINESS QUALITY ━━━`,
-    ...(grossMargin != null ? [`Gross margin: ${pct(grossMargin, false)}`] : []),
-    ...(netMargin != null ? [`Net margin:   ${pct(netMargin, false)}`] : []),
-    ...(fcfMargin != null ? [`FCF margin:   ${pct(fcfMargin, false)}`] : []),
-    ...(roic != null ? [`ROIC: ${pct(roic, false)} ${roicSpread != null ? `(${roicSpread > 0 ? '+' : ''}${pct(roicSpread, false)} vs WACC)` : ''}`] : []),
-    ...(revenueM ? [`Revenue: ${fmt(revenueM * 1e6)}`] : []),
-    ``,
-    `━━━ ANALYST CONSENSUS ━━━`,
-    ...(recommendation ? [`Wall St: ${recommendation === 'strong_buy' ? 'Strong Buy' : recommendation === 'buy' ? 'Buy' : recommendation === 'hold' ? 'Hold' : recommendation === 'sell' ? 'Sell' : recommendation}`] : []),
-    ...(analystTarget ? [`Price target: ${fmt(analystTarget)}`] : []),
-    ...(forwardPE ? [`Forward P/E:  ${forwardPE}×`] : []),
-    ...(beatCount > 0 ? [`EPS beats: ${beatCount}/${surprises.length} last quarters`] : []),
-    ...(stock1y != null && spy1y != null ? [`1Y return: ${pct(stock1y)} vs SPY ${pct(spy1y)}`] : []),
-    ``,
-    `Rating: ${grade} ${label} · ${sector}`,
-    ``,
-    `Model view: $${ticker} ${v.long}.`,
-    ``,
-    `Full interactive model → ${APP_URL}/stock/${ticker}`,
-    `#DCF #Valuation #${ticker} #Investing`,
+    `Full analysis → ${APP_URL}/stock/${ticker}`,
+    `$${ticker} #DCF #Investing`,
   ].filter(Boolean)
 
   await post(lines.join('\n'))
