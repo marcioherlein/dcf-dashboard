@@ -47,6 +47,7 @@ export default function RootLayout({
       <head>
         {/* Theme color matches --color-bg warm off-white */}
         <meta name="theme-color" content="#FAF9F6" />
+        <meta name="one-verification" content="6ad52dfc" />
       </head>
       <body className="antialiased bg-background">
         <Providers>
