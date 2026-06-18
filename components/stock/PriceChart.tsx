@@ -28,6 +28,8 @@ interface Props extends ValuationLevels {
   onPeriodChange?: (p: Period) => void
   /** Called whenever rawBars loads with the period return pct (null if unavailable) */
   onPeriodReturnChange?: (pct: number | null) => void
+  /** When true, renders without the outer card shell (bg, border, shadow, rounded) */
+  noShell?: boolean
 }
 
 interface OHLCVBar {
@@ -105,7 +107,7 @@ const VAL_LINES = [
 type SubPanel = 'volume' | 'rsi'
 
 // ─────────────────────────────────────────────────────────────────────────────
-export default function PriceChart({ ticker, triangulatedFairValue, analystTarget, userModelFairValue, initialPeriod, period: controlledPeriod, onPeriodChange, onPeriodReturnChange }: Props) {
+export default function PriceChart({ ticker, triangulatedFairValue, analystTarget, userModelFairValue, initialPeriod, period: controlledPeriod, onPeriodChange, onPeriodReturnChange, noShell }: Props) {
   // state — use controlled period if provided, else internal
   const [internalPeriod, setInternalPeriod] = useState<Period>(controlledPeriod ?? initialPeriod ?? '1y')
   const period = controlledPeriod ?? internalPeriod
@@ -492,8 +494,12 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
   ]
 
   // ── Render ────────────────────────────────────────────────────────────────
+  const shellProps = noShell
+    ? { className: 'flex flex-col' }
+    : { className: 'bg-white rounded-2xl flex flex-col overflow-hidden', style: { border: '1px solid rgba(15,23,42,0.08)', boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 8px 24px rgba(15,23,42,0.05)' } }
+
   return (
-    <div className="bg-white rounded-2xl flex flex-col overflow-hidden" style={{ border: '1px solid rgba(15,23,42,0.08)', boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 8px 24px rgba(15,23,42,0.05)' }}>
+    <div {...shellProps}>
 
       {/* ── Row 1: Timeframe selector ── */}
       <div className="flex items-center gap-1 px-5 pt-4 pb-2 flex-wrap">

@@ -262,28 +262,26 @@ export default function OverviewLayout({
       {/* Two-column grid */}
       <div className="grid gap-5 lg:grid-cols-[minmax(0,2.15fr)_minmax(300px,0.95fr)] items-start">
 
-        {/* Left: Chart + footer as one card */}
+        {/* Left: Chart + footer as one unified card */}
         <div
-          className="bg-white rounded-2xl overflow-hidden"
+          className="bg-white rounded-2xl overflow-hidden flex flex-col"
           style={{ border: '1px solid rgba(15,23,42,0.08)', boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 8px 24px rgba(15,23,42,0.05)' }}
         >
-          {/* PriceChart renders its own card shell — we strip that here and wrap externally */}
-          <div className="[&>div]:rounded-none [&>div]:border-0 [&>div]:shadow-none">
-            <PriceChart
-              ticker={ticker}
-              isDark={false}
-              triangulatedFairValue={fairValue ?? undefined}
-              analystTarget={analystTargetMean ?? undefined}
-              userModelFairValue={userModelFairValue ?? undefined}
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              period={period as any}
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              onPeriodChange={handlePeriodChange as any}
-              onPeriodReturnChange={handlePeriodReturnChange}
-            />
-          </div>
+          <PriceChart
+            ticker={ticker}
+            isDark={false}
+            noShell
+            triangulatedFairValue={fairValue ?? undefined}
+            analystTarget={analystTargetMean ?? undefined}
+            userModelFairValue={userModelFairValue ?? undefined}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            period={period as any}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            onPeriodChange={handlePeriodChange as any}
+            onPeriodReturnChange={handlePeriodReturnChange}
+          />
 
-          {/* Chart metrics footer — part of the same card */}
+          {/* Chart metrics footer — same card, below the chart */}
           <ChartMetricsSummary
             currency={currency}
             price={price}
