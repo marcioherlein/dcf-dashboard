@@ -107,7 +107,7 @@ interface SparkPoint { label: string; value: number }
 
 function MultipleChart({
   points,
-  currentValue,
+  currentValue: _currentValue,
   medianValue,
   color,
 }: {
@@ -119,25 +119,52 @@ function MultipleChart({
   if (points.length < 2) return null
 
   const allValues = points.map(p => p.value)
-  const min = Math.min(...allValues) * 0.92
-  const max = Math.max(...allValues) * 1.08
+  const min = Math.min(...allValues) * 0.88
+  const max = Math.max(...allValues) * 1.10
+
+  // Show every-other label when many points to avoid crowding
+  const labelStep = points.length > 8 ? 2 : 1
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const CustomDot = (props: any) => {
+    const { cx, cy, index, payload } = props
+    if (index % labelStep !== 0 && index !== points.length - 1) return null
+    const isLast = index === points.length - 1
+    const labelX = isLast ? cx - 2 : cx
+    const anchor = isLast ? 'end' : 'middle'
+    return (
+      <g key={`dot-${index}`}>
+        <circle cx={cx} cy={cy} r={2.5} fill={color} stroke="#fff" strokeWidth={1} />
+        <text
+          x={labelX}
+          y={cy - 6}
+          textAnchor={anchor}
+          fill={color}
+          fontSize={9}
+          fontWeight={600}
+          fontFamily="system-ui,-apple-system,sans-serif"
+        >
+          {payload.value.toFixed(1)}×
+        </text>
+      </g>
+    )
+  }
 
   return (
-    <div className="h-[68px] w-full mt-2">
+    <div className="h-[90px] w-full mt-1">
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={points} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+        <LineChart data={points} margin={{ top: 16, right: 8, left: 0, bottom: 0 }}>
           <XAxis dataKey="label" hide tick={false} axisLine={false} tickLine={false} />
           <YAxis domain={[min, max]} hide tick={false} axisLine={false} tickLine={false} />
-          <ReferenceLine y={medianValue} stroke="#E5E5E5" strokeWidth={1} strokeDasharray="3 3" />
-          <ReferenceLine y={currentValue} stroke={color} strokeWidth={1} strokeOpacity={0.25} />
+          <ReferenceLine y={medianValue} stroke="#CBD5E1" strokeWidth={1} strokeDasharray="3 3" />
           <Tooltip content={<ChartTooltip />} cursor={{ stroke: '#E5E5E5', strokeWidth: 1 }} />
           <Line
             type="monotone"
             dataKey="value"
             stroke={color}
             strokeWidth={1.5}
-            dot={false}
-            activeDot={{ r: 3, fill: color, stroke: '#fff', strokeWidth: 1.5 }}
+            dot={CustomDot}
+            activeDot={{ r: 3.5, fill: color, stroke: '#fff', strokeWidth: 1.5 }}
           />
         </LineChart>
       </ResponsiveContainer>
@@ -282,46 +309,30 @@ function RatioRow({ name, actual, median, isLast, chartPoints, chartColor }: Rat
   const hasChart = chartPoints.length >= 2
 
   return (
-    <div className={cn('py-3', !isLast && 'border-b border-[#E5E5E5]')}>
+    <div className={cn('py-2.5', !isLast && 'border-b border-[#E5E5E5]')}>
       <div className="flex items-center justify-between gap-2">
-        <span className="text-[12px] font-[600] text-[#111111] min-w-[64px] w-20 shrink-0 truncate" title={name}>
+        <span className="text-[12px] font-[600] text-[#111111] shrink-0">
           {name}
         </span>
-        <span className="text-[13px] font-[700] text-[#111111] tabular-nums font-mono flex-1 text-center">
+        <span className="text-[13px] font-[700] text-[#111111] tabular-nums font-mono">
           {fmtMultiple(actual)}
         </span>
-        <span className={cn('inline-flex items-center gap-0.5 rounded-full px-2.5 py-0.5 text-[11px] font-[600] shrink-0', badge.container)}>
+        <span className={cn('inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[10px] font-[600] shrink-0', badge.container)}>
           {badge.label}{badge.arrow ? ` ${badge.arrow}` : ''}
         </span>
       </div>
-      <div className="mt-1 pl-20">
-        <span className="text-[11px] text-[#6B6B6B]">
+      <div className="mt-0.5">
+        <span className="text-[10px] text-[#9B9B9B]">
           Sector median: <span className="font-mono">{fmtMultiple(median)}</span>
         </span>
       </div>
       {hasChart && (
-        <>
-          <MultipleChart
-            points={chartPoints}
-            currentValue={actual}
-            medianValue={median}
-            color={chartColor}
-          />
-          <div className="flex items-center justify-between mt-0.5">
-            <span className="text-[9px] text-[#9B9B9B]">{chartPoints[0]?.label}</span>
-            <div className="flex items-center gap-3">
-              <span className="flex items-center gap-1 text-[9px] text-[#9B9B9B]">
-                <span className="inline-block w-3" style={{ borderTop: `1.5px solid ${chartColor}` }} />
-                Actual
-              </span>
-              <span className="flex items-center gap-1 text-[9px] text-[#9B9B9B]">
-                <span className="inline-block w-3" style={{ borderTop: '1px dashed #E5E5E5' }} />
-                Sector median
-              </span>
-            </div>
-            <span className="text-[9px] text-[#9B9B9B]">{chartPoints[chartPoints.length - 1]?.label}</span>
-          </div>
-        </>
+        <MultipleChart
+          points={chartPoints}
+          currentValue={actual}
+          medianValue={median}
+          color={chartColor}
+        />
       )}
     </div>
   )
@@ -437,14 +448,14 @@ export default function ValuationRatiosCard({
             ))}
           </div>
         ) : (
-          <div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6">
             {applicable.map((est, i) => (
               <RatioRow
                 key={est.multiple}
                 name={est.multiple}
                 actual={est.actualValue}
                 median={est.sectorMedian}
-                isLast={i === applicable.length - 1}
+                isLast={i >= applicable.length - (applicable.length % 2 === 0 ? 2 : 1)}
                 chartPoints={chartSeries[est.multiple as keyof typeof chartSeries] ?? []}
                 chartColor={rowChartColor(est.actualValue, est.sectorMedian)}
               />
