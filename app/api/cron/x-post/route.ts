@@ -7,6 +7,7 @@ const VALID_MODES = [
   'market_close','after_hours','earnings_results',
   'weekly_wrap','question','sentiment','news',
   'theory_overnight','holiday_deep_dive','sector_scan',
+  'insider_buy','low_52w','top_undervalued','market_vs_model',
 ]
 
 export async function GET(req: NextRequest) {

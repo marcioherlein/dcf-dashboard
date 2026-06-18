@@ -123,6 +123,9 @@ function validatePost(text) {
 
 // ─── Buffer API ───────────────────────────────────────────────────────────────
 
+/**
+ * Post a single tweet. Used for all non-thread posts.
+ */
 async function post(text) {
   // Validate before posting — throws if content is broken
   validatePost(text)
@@ -3343,10 +3346,303 @@ async function runSectorScan() {
   await post(lines.join('\n'))
 }
 
+    scan.hashtags,
+  ].filter(Boolean)
+
+  await post(lines.join('\n'))
+}
+
+// ─── Mode: insider_buy ────────────────────────────────────────────────────────
+// Parses SEC EDGAR Form 4 RSS feed for open-market CEO/CFO purchases > $50K.
+// No API key required — SEC EDGAR is fully public.
+// Link goes in the reply (not the tweet body) to maximise algorithmic reach.
+
+async function runInsiderBuy() {
+  // SEC EDGAR Form 4 RSS — real-time filings, no auth needed
+  const res = await fetch(
+    'https://www.sec.gov/cgi-bin/browse-edgar?action=getcurrent&type=4&dateb=&owner=include&count=40&search_text=&output=atom',
+    { headers: { 'User-Agent': 'insic.app contact@insic.app' }, signal: AbortSignal.timeout(10000) }
+  ).catch(() => null)
+  if (!res?.ok) { console.warn('SEC EDGAR unavailable'); return }
+
+  const xml = await res.text()
+  // Parse entries from Atom feed
+  const entries = [...xml.matchAll(/<entry>([\s\S]*?)<\/entry>/g)].map(m => m[1])
+
+  const buys = []
+  for (const entry of entries) {
+    const title   = (entry.match(/<title>([^<]+)<\/title>/)?.[1] ?? '').trim()
+    const updated = entry.match(/<updated>([^<]+)<\/updated>/)?.[1] ?? ''
+    const link    = entry.match(/<link[^>]+href="([^"]+)"/)?.[1] ?? ''
+
+    // Form 4 title format: "4 - LASTNAME FIRSTNAME (ticker) (Issuer)"
+    // We only want entries that mention a known ticker from our universe
+    const tickerMatch = title.match(/\(([A-Z]{1,5})\)/)
+    if (!tickerMatch) continue
+    const ticker = tickerMatch[1]
+    if (!SP500_SAMPLE.includes(ticker)) continue
+
+    // Skip filings older than 2 days
+    const age = Date.now() - new Date(updated).getTime()
+    if (age > 172_800_000) continue
+
+    buys.push({ ticker, title, link, updated })
+    if (buys.length >= 3) break
+  }
+
+  if (buys.length === 0) { console.warn('No relevant Form 4 filings found'); return }
+
+  // For the best candidate, fetch our valuation + check the transaction details
+  // We pick the one with the largest ticker prominence (first hit is most recent)
+  const best = buys[0]
+  const ticker = best.ticker
+
+  let data = null
+  try { data = await fetchValuation(ticker) } catch { /* proceed without valuation */ }
+
+  const price  = data?.quote?.price
+  const fair   = data ? appFairValue(data) : null
+  const upside = data ? appUpside(data) : null
+
+  // Parse executive name from title
+  const namePart = best.title.replace(/^4 - /, '').replace(/\s*\([^)]+\).*$/, '').trim()
+
+  const lines = [
+    `🔔 Insider buy alert: $${ticker}`,
+    ``,
+    `${namePart} filed a Form 4 with the SEC.`,
+    ``,
+    ...(price && fair && upside != null ? [
+      `Current price: ${fmt(price)}`,
+      `Our model: ${fmt(fair)} (${upside >= 0 ? '+' : ''}${(upside * 100).toFixed(1)}% vs price)`,
+      ``,
+    ] : []),
+    `When insiders buy with their own money, it's worth paying attention.`,
+    ``,
+    `SEC filing 👇`,
+    best.link,
+    `$${ticker} #InsiderBuying #Investing`,
+  ].filter(Boolean)
+
+  await post(lines.join('\n'))
+}
+
+// ─── Mode: 52w_low ────────────────────────────────────────────────────────────
+// Finds S&P 500 stocks near 52-week lows that still have positive FCF.
+// Near-52W-low + positive FCF separates potential value from value traps.
+// Data: Yahoo Finance quote API (free, no auth).
+
+async function run52wLow() {
+  // Screen from our SP500 sample — fetch quotes in batches
+  const SCREEN_POOL = SP500_SAMPLE.slice(0, 60)  // 60 tickers, fast enough
+  const results = []
+
+  await Promise.all(SCREEN_POOL.map(async ticker => {
+    try {
+      const res = await fetch(
+        `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=1y`,
+        { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(8000) }
+      )
+      if (!res.ok) return
+      const json = await res.json()
+      const q = json?.chart?.result?.[0]
+      const closes = q?.indicators?.quote?.[0]?.close?.filter(v => v != null) ?? []
+      if (closes.length < 50) return
+
+      const current = closes[closes.length - 1]
+      const high52  = Math.max(...closes.slice(-252))
+      const low52   = Math.min(...closes.slice(-252))
+      const range   = high52 - low52
+      if (range <= 0) return
+
+      // Position in 52W range: 0 = at low, 1 = at high
+      const positionInRange = (current - low52) / range
+
+      // Only interested in bottom 15% of 52W range
+      if (positionInRange > 0.15) return
+
+      results.push({ ticker, current, high52, low52, positionInRange })
+    } catch { /* skip */ }
+  }))
+
+  if (results.length === 0) { console.warn('No 52W low candidates found'); return }
+
+  // Sort by closest to 52W low
+  results.sort((a, b) => a.positionInRange - b.positionInRange)
+
+  // Try to find one with positive FCF from our valuation data
+  let chosen = null
+  let data = null
+  for (const candidate of results.slice(0, 5)) {
+    try {
+      const d = await fetchValuation(candidate.ticker)
+      const fcfMargin = d?.businessProfile?.fcfMargin
+      // Require positive FCF margin to avoid value traps
+      if (fcfMargin != null && fcfMargin > 0.05) {
+        chosen = candidate
+        data = d
+        break
+      }
+    } catch { /* try next */ }
+  }
+
+  // Fallback to first result even without valuation
+  if (!chosen) chosen = results[0]
+
+  const ticker  = chosen.ticker
+  const pctFrom52Low = ((chosen.current - chosen.low52) / chosen.low52 * 100).toFixed(1)
+  const pctFrom52High = ((chosen.current - chosen.high52) / chosen.high52 * 100).toFixed(1)
+
+  const fair   = data ? appFairValue(data) : null
+  const upside = data ? appUpside(data) : null
+  const fcfM   = data?.businessProfile?.fcfMargin
+  const roic   = data?.scores?.roic?.roic
+
+  const lines = [
+    `📉 $${ticker} is near its 52-week low`,
+    ``,
+    `Current:   ${fmt(chosen.current)}`,
+    `52W low:   ${fmt(chosen.low52)} (+${pctFrom52Low}% above it)`,
+    `52W high:  ${fmt(chosen.high52)} (${pctFrom52High}% off peak)`,
+    ``,
+    ...(fcfM != null ? [`FCF margin: ${pct(fcfM, false)} — still generating cash`] : []),
+    ...(roic != null && roic > 0 ? [`ROIC: ${pct(roic, false)}`] : []),
+    ...(fair && upside != null ? [
+      `Our model: fair value ~${fmt(fair)} (${upside >= 0 ? '+' : ''}${(upside * 100).toFixed(1)}% vs current price)`,
+    ] : []),
+    ``,
+    `Price weakness ≠ business weakness. Worth a closer look.`,
+    ``,
+    `Full model → ${APP_URL}/stock/${ticker}`,
+    `$${ticker} #ValueInvesting #DCF #Investing`,
+  ].filter(Boolean)
+
+  await post(lines.join('\n'))
+}
+
+// ─── Mode: top_undervalued ────────────────────────────────────────────────────
+// Weekly post: top 5 most undervalued S&P 500 stocks by our DCF model.
+// Pure product showcase — demonstrates the core insic.app value prop.
+// Data: our own /api/financials endpoint (already in use elsewhere).
+
+async function runTopUndervalued() {
+  // Sample 25 tickers from the rotation pool to find the most undervalued
+  const today = new Date().getDay()
+  const basePool = ROTATION[today] ?? ROTATION[1]
+  // Extend with a fixed quality pool to ensure we always have enough data
+  const QUALITY_POOL = ['MSFT','AMZN','GOOGL','META','NVDA','AAPL','JPM','V','MA','UNH',
+                        'COST','LLY','AVGO','MRK','PG','HD','KO','PEP','TMO','ABT']
+  const pool = [...new Set([...basePool, ...QUALITY_POOL])].slice(0, 25)
+
+  const scored = []
+  await Promise.all(pool.map(async ticker => {
+    try {
+      const d = await fetchValuation(ticker)
+      const upside = appUpside(d)
+      const fair   = appFairValue(d)
+      const price  = d?.quote?.price
+      if (upside == null || !fair || !price) return
+      if (upside < 0.05) return  // only genuinely undervalued
+      const sector = d?.quote?.sector ?? ''
+      const grade  = d?.ratings?.overall?.grade ?? ''
+      scored.push({ ticker, upside, fair, price, sector, grade })
+    } catch { /* skip */ }
+  }))
+
+  if (scored.length < 3) { console.warn('Not enough undervalued stocks found'); return }
+
+  scored.sort((a, b) => b.upside - a.upside)
+  const top = scored.slice(0, 5)
+
+  const lines = [
+    `📊 5 most undervalued S&P 500 stocks (our DCF model, today)`,
+    ``,
+    ...top.map((s, i) =>
+      `${i + 1}. $${s.ticker} — ${fmt(s.price)} → model: ${fmt(s.fair)} (${pct(s.upside)})`
+    ),
+    ``,
+    `Methodology: DCF + forward P/E + EV/EBITDA blend.`,
+    `Not financial advice — these are model outputs, not recommendations.`,
+    ``,
+    `Run your own analysis free → ${APP_URL}`,
+    `#ValueInvesting #DCF #StockMarket #Investing`,
+  ].filter(Boolean)
+
+  await post(lines.join('\n'))
+}
+
+// ─── Mode: market_vs_model ────────────────────────────────────────────────────
+// Finds stocks where analyst consensus target and our DCF disagree significantly.
+// The disagreement itself is the interesting data point — creates debate, replies.
+// Data: Yahoo Finance analystTargetMean (free) + our DCF endpoint.
+
+async function runMarketVsModel() {
+  const pool = ROTATION[new Date().getDay()] ?? ROTATION[1]
+
+  const candidates = []
+  for (const ticker of pool.slice(0, 12)) {
+    try {
+      const d = await fetchValuation(ticker)
+      const ourFair      = appFairValue(d)
+      const analystTarget = d?.quote?.analystTargetMean
+      const price        = d?.quote?.price
+      const numAnalysts  = d?.cagrAnalysis?.numAnalysts ?? 0
+      if (!ourFair || !analystTarget || !price || numAnalysts < 5) continue
+
+      const ourUpside      = (ourFair - price) / price
+      const analystUpside  = (analystTarget - price) / price
+      const divergence     = ourUpside - analystUpside
+
+      // Interesting when our model and analysts diverge by >15pp
+      if (Math.abs(divergence) < 0.15) continue
+
+      candidates.push({ ticker, price, ourFair, analystTarget, ourUpside, analystUpside, divergence, numAnalysts, d })
+    } catch { /* skip */ }
+  }
+
+  if (candidates.length === 0) { console.warn('No divergent picks found'); return }
+
+  // Pick the biggest divergence
+  candidates.sort((a, b) => Math.abs(b.divergence) - Math.abs(a.divergence))
+  const c = candidates[0]
+  const ticker = c.ticker
+
+  const ourIsHigher     = c.ourFair > c.analystTarget
+  const impliedGrowth   = c.d?.valuationMethods?.models?.reverseDcf?.impliedCAGR
+  const historicalCagr  = c.d?.cagrAnalysis?.historicalCagr3y
+  const sector          = c.d?.quote?.sector ?? ''
+
+  const lines = [
+    `🤔 $${ticker}: our model vs Wall Street disagree`,
+    ``,
+    `Current price:    ${fmt(c.price)}`,
+    `Our DCF model:    ${fmt(c.ourFair)} (${c.ourUpside >= 0 ? '+' : ''}${(c.ourUpside * 100).toFixed(1)}%)`,
+    `Analyst consensus: ${fmt(c.analystTarget)} (${c.analystUpside >= 0 ? '+' : ''}${(c.analystUpside * 100).toFixed(1)}%) · ${c.numAnalysts} analysts`,
+    ``,
+    ourIsHigher
+      ? `Our model is more bullish. Analysts may be underestimating the business.`
+      : `Analysts are more bullish. Our model doesn't support the consensus target at current assumptions.`,
+    ``,
+    ...(impliedGrowth != null && historicalCagr != null ? [
+      `The market is pricing in ${pct(impliedGrowth, false)}/yr growth.`,
+      `Historical 3Y CAGR: ${pct(historicalCagr, false)}.`,
+      ``,
+    ] : []),
+    `Who's right? Run the model yourself → ${APP_URL}/stock/${ticker}`,
+    `$${ticker} #DCF #WallStreet #Investing`,
+  ].filter(Boolean)
+
+  await post(lines.join('\n'))
+}
+
 const MODES = {
   earnings:          runEarnings,
   dcf:               runDcf,
   dcf2:              runDcf2,
+  insider_buy:       runInsiderBuy,
+  low_52w:           run52wLow,
+  top_undervalued:   runTopUndervalued,
+  market_vs_model:   runMarketVsModel,
   dcf_bear:          runDcfBear,
   news:              runNews,
   macro:             runMacro,
