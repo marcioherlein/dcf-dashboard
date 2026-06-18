@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import StockIdentityHeader from './StockIdentityHeader'
+import OverviewLayout from './OverviewLayout'
 import RevenueChartCard from './RevenueChartCard'
 import FCFChartCard from './FCFChartCard'
 import GrowthOutlookCard from './GrowthOutlookCard'
@@ -140,7 +140,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 export default function SummaryTab({
   ticker, companyName, currency, sector,
-  description, industry, country, employees,
+  description, industry, country, employees: _employees,
   price, change, changePct, high52, low52,
   fairValue, upsidePct,
   sharesM, cashM, debtM, revenueM, fcfMargin: fcfMarginProp,
@@ -149,12 +149,12 @@ export default function SummaryTab({
   scenarios: _scenarios, ratings, scores, businessProfile, cagrAnalysis, statementsData,
   valuationMethods, quote, analystTargetMean,
   ratiosQuarterly, historicalMultiples,
-  analystTargetLow: analystTargetLow, analystTargetHigh: analystTargetHigh,
+  analystTargetLow: _analystTargetLow, analystTargetHigh: _analystTargetHigh,
   userModelFairValue,
-  marketCap, peRatio, beta, pegRatio: _pegRatio, evToEbitda, dividendYield,
+  marketCap, peRatio, beta, pegRatio: _pegRatio, evToEbitda, dividendYield: _dividendYield,
   holdingReturns,
   nextEarningsDate: _nextEarningsDate,
-  onViewValuation, onViewFinancials: _onViewFinancials, onViewConviction,
+  onViewValuation: _onViewValuation, onViewFinancials: _onViewFinancials, onViewConviction: _onViewConviction,
   onViewAssumptions: _onViewAssumptions, analystRecommendation,
   analystForwardEstimates, analystForwardPE, roe, roic, ownership, earningsSurprises, analystRatingTrend,
 }: SummaryTabProps) {
@@ -162,7 +162,7 @@ export default function SummaryTab({
   const isFinancialSector = ['Financial Services', 'Banks', 'Insurance', 'Financial'].includes(sector)
 
   // Build sparkline series from quarterly ratios for the metrics panel
-  const peSparkline = useMemo(() => {
+  const _peSparkline = useMemo(() => {
     const rq = (ratiosQuarterly ?? []) as Array<{ date: string; priceEarningsRatio?: number | null }>
     return [...rq]
       .sort((a, b) => a.date.localeCompare(b.date))
@@ -171,7 +171,7 @@ export default function SummaryTab({
       .filter((v): v is number => v != null && isFinite(v) && v > 0 && v < 500)
   }, [ratiosQuarterly])
 
-  const evSparkline = useMemo(() => {
+  const _evSparkline = useMemo(() => {
     const rq = (ratiosQuarterly ?? []) as Array<{ date: string; enterpriseValueMultiple?: number | null }>
     return [...rq]
       .sort((a, b) => a.date.localeCompare(b.date))
@@ -217,51 +217,33 @@ export default function SummaryTab({
   return (
     <div className="flex flex-col gap-3 sm:gap-5">
 
-      {/* ── 1. STOCK IDENTITY HEADER (Sections A + B) ───────────────────────── */}
-      <StockIdentityHeader
+      {/* ── 1. OVERVIEW LAYOUT (identity strip + chart + snapshot rail) ───────── */}
+      <OverviewLayout
         ticker={ticker}
         companyName={companyName}
         description={description}
         sector={sector}
         industry={industry}
         country={country}
-        employees={employees}
         currency={currency}
         price={price}
         change={change}
         changePct={changePct}
-        marketState={quote?.marketState ?? null}
-        preMarketPrice={quote?.preMarketPrice ?? null}
-        preMarketChangePct={quote?.preMarketChangePct ?? null}
-        postMarketPrice={quote?.postMarketPrice ?? null}
-        postMarketChangePct={quote?.postMarketChangePct ?? null}
+        high52={high52}
+        low52={low52}
         fairValue={fairValue}
         analystTargetMean={analystTargetMean ?? null}
-        analystTargetLow={analystTargetLow ?? null}
-        analystTargetHigh={analystTargetHigh ?? null}
-        numAnalysts={quote?.numAnalysts ?? null}
         userModelFairValue={userModelFairValue ?? null}
         marketCap={marketCap ?? null}
         peRatio={peRatio ?? null}
-        evToEbitda={evToEbitda ?? null}
-        roe={roe ?? null}
-        roic={roic ?? null}
-        beta={beta ?? null}
-        dividendYield={dividendYield ?? null}
-        fcfMargin={businessProfile?.fcfMargin ?? null}
-        grossMargin={businessProfile?.grossMargin ?? null}
-        netMargin={businessProfile?.netMargin ?? null}
-        high52={high52}
-        low52={low52}
-        nextEarningsDate={_nextEarningsDate ?? null}
-        revenueGrowth={cagrAnalysis?.historicalCagr3y ?? null}
         forwardPE={analystForwardPE ?? null}
         pegRatioValue={quote?.pegRatio ?? null}
-        peHistory={peSparkline.length >= 2 ? peSparkline : undefined}
-        evHistory={evSparkline.length >= 2 ? evSparkline : undefined}
-        earningsSurprises={earningsSurprises ?? null}
-        onViewValuation={onViewValuation}
-        onViewConviction={onViewConviction}
+        beta={beta ?? null}
+        evToEbitda={evToEbitda ?? null}
+        revenueGrowth={cagrAnalysis?.historicalCagr3y ?? null}
+        grossMargin={businessProfile?.grossMargin ?? null}
+        fcfMargin={businessProfile?.fcfMargin ?? null}
+        roic={roic ?? null}
       />
 
       {/* ── 2. FUNDAMENTALS SECTION LABEL ──────────────────────────────────── */}

@@ -19,7 +19,16 @@ interface ValuationLevels {
   analystTarget?: number | null
   userModelFairValue?: number | null
 }
-interface Props extends ValuationLevels { ticker: string; isDark?: boolean; initialPeriod?: Period }
+interface Props extends ValuationLevels {
+  ticker: string
+  isDark?: boolean
+  initialPeriod?: Period
+  /** Controlled period — when provided with onPeriodChange, overrides internal state */
+  period?: Period
+  onPeriodChange?: (p: Period) => void
+  /** Called whenever rawBars loads with the period return pct (null if unavailable) */
+  onPeriodReturnChange?: (pct: number | null) => void
+}
 
 interface OHLCVBar {
   time: Time
@@ -96,9 +105,14 @@ const VAL_LINES = [
 type SubPanel = 'volume' | 'rsi'
 
 // ─────────────────────────────────────────────────────────────────────────────
-export default function PriceChart({ ticker, triangulatedFairValue, analystTarget, userModelFairValue, initialPeriod }: Props) {
-  // state
-  const [period, setPeriod]             = useState<Period>(initialPeriod ?? '1y')
+export default function PriceChart({ ticker, triangulatedFairValue, analystTarget, userModelFairValue, initialPeriod, period: controlledPeriod, onPeriodChange, onPeriodReturnChange }: Props) {
+  // state — use controlled period if provided, else internal
+  const [internalPeriod, setInternalPeriod] = useState<Period>(controlledPeriod ?? initialPeriod ?? '1y')
+  const period = controlledPeriod ?? internalPeriod
+  const setPeriod = (p: Period) => {
+    if (onPeriodChange) onPeriodChange(p)
+    else setInternalPeriod(p)
+  }
   const [rawBars, setRawBars]           = useState<OHLCVBar[]>([])
   const [loading, setLoading]           = useState(true)
   const [activeMA, setActiveMA]         = useState<Set<MAKey>>(new Set(['sma50', 'sma200'] as MAKey[]))
@@ -318,6 +332,11 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
     if (!areaSeries.current || !rawBars.length) return
     const closes = rawBars.map(b => b.close)
     const up = closes[closes.length - 1] >= closes[0]
+    // Report period return to parent if callback provided
+    if (onPeriodReturnChange) {
+      const ret = closes.length >= 2 ? ((closes[closes.length - 1] - closes[0]) / closes[0]) * 100 : null
+      onPeriodReturnChange(ret)
+    }
     areaSeries.current.applyOptions({
       lineColor: up ? '#10b981' : '#ef4444',
       topColor:  up ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
@@ -350,7 +369,7 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
     rsiSeries.current?.setData(rawBars.filter((_, i) => rsiVals[i] != null).map((b) => {
       const idx = rawBars.indexOf(b); return { time: b.time, value: rsiVals[idx] as number }
     }))
-  }, [rawBars])
+  }, [rawBars, onPeriodReturnChange])
 
   // ── MA visibility ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -443,7 +462,7 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
   // ── Helpers ───────────────────────────────────────────────────────────────
   const firstClose = rawBars.length ? rawBars[0].close : null
   const lastClose  = rawBars.length ? rawBars[rawBars.length - 1].close : null
-  const changePct  = firstClose && lastClose ? ((lastClose - firstClose) / firstClose) * 100 : null
+  const _changePct  = firstClose && lastClose ? ((lastClose - firstClose) / firstClose) * 100 : null
   const isCompare  = compareTickers.length > 0
 
   const toggleMA = useCallback((key: MAKey) => {
@@ -474,59 +493,33 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="rounded-xl card flex flex-col">
+    <div className="bg-white rounded-2xl flex flex-col overflow-hidden" style={{ border: '1px solid rgba(15,23,42,0.08)', boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 8px 24px rgba(15,23,42,0.05)' }}>
 
-      {/* ── Row 1: Title + period return + valuation legend ── */}
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 sm:px-5 pt-4 pb-2">
-        <div className="flex items-center gap-2.5 flex-wrap min-w-0">
-          <h2 className="text-sm font-semibold text-[#06101F] whitespace-nowrap">Price Chart</h2>
-          {changePct != null && (
-            <span className="flex items-center gap-1 shrink-0">
-              <span className="text-[11px] text-[#8A95A6]">{PERIOD_LABELS[period]}</span>
-              <span className={`text-xs font-semibold tabular-nums ${changePct >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
-                {changePct >= 0 ? '+' : ''}{changePct.toFixed(2)}%
-              </span>
-            </span>
-          )}
-          {/* Valuation reference lines legend — inline on sm+ */}
-          {hasAnyLevel && !isCompare && (
-            <div className="hidden sm:flex items-center gap-3 flex-wrap">
-              {VAL_LINES.map(vl => {
-                const v = levels[vl.key]
-                if (!v) return null
-                return (
-                  <span key={vl.key} className="flex items-center gap-1.5 text-[10px]" style={{ color: vl.color }}>
-                    <span className="inline-block h-px w-4 border-t border-dashed" style={{ borderColor: vl.color }} />
-                    {vl.label} ${v.toFixed(2)}
-                  </span>
-                )
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Period selector */}
-        <div className="flex gap-0.5 sm:gap-1 shrink-0">
-          {PERIODS.map(p => (
-            <button key={p} onClick={() => setPeriod(p)}
-              className={`rounded-lg px-2.5 sm:px-3 py-2.5 min-h-[44px] text-xs font-medium transition-colors ${period === p ? 'bg-olive-100 text-olive-700' : 'text-[#566174] hover:bg-[#F4F3EF]'}`}>
-              {PERIOD_LABELS[p]}
-            </button>
-          ))}
-        </div>
+      {/* ── Row 1: Timeframe selector ── */}
+      <div className="flex items-center gap-1 px-5 pt-4 pb-2 flex-wrap">
+        {PERIODS.map(p => (
+          <button key={p} onClick={() => setPeriod(p)}
+            aria-pressed={period === p}
+            className={`rounded-xl px-3 py-1.5 text-[12px] font-[600] transition-colors min-h-[36px] ${period === p ? 'text-[#25310b]' : 'text-[#566174] border border-[#E5E5E5] bg-white hover:bg-[#F4F3EF] hover:border-[#CDD1C8]'}`}
+            style={period === p ? { background: '#e8f0d2', border: '1px solid #c8dba0' } : undefined}
+          >
+            {PERIOD_LABELS[p]}
+          </button>
+        ))}
       </div>
 
       {/* ── Row 2: Compare + Indicators ── */}
-      <div className="flex flex-wrap items-center gap-2 px-4 sm:px-5 pb-2">
+      <div className="flex items-center gap-2 px-5 pb-2 flex-wrap">
         {/* SPY quick-compare toggle */}
         {ticker.toUpperCase() !== 'SPY' && (() => {
           const spyOn = compareTickers.includes('SPY')
           return (
             <button
               onClick={() => spyOn ? removeCompareTicker('SPY') : addCompareTicker('SPY')}
-              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold border transition-all min-h-[32px] ${spyOn ? 'bg-[#f9731622] border-[#f97316] text-[#f97316]' : 'border-[#E3E1DA] text-[#566174] hover:border-[#CDD1C8] hover:bg-[#F4F3EF]'}`}
+              aria-pressed={spyOn}
+              className={`inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-[12px] font-[600] border transition-all min-h-[36px] ${spyOn ? 'bg-[#fff3e0] border-[#f97316] text-[#c2410c]' : 'border-[#E5E5E5] text-[#566174] hover:border-[#CDD1C8] hover:bg-[#F4F3EF]'}`}
             >
-              {spyOn ? <>SPY <span className="opacity-70">×</span></> : 'vs SPY'}
+              {spyOn ? <>vs SPY <span className="opacity-60 ml-0.5">×</span></> : 'vs SPY'}
             </button>
           )
         })()}
@@ -535,10 +528,10 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
         {compareTickers.filter(t => t !== 'SPY').map((ct) => {
           const i = compareTickers.indexOf(ct)
           return (
-            <span key={ct} className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold min-h-[32px]"
-              style={{ background: COMPARE_COLORS[i % 3] + '22', color: COMPARE_COLORS[i % 3] }}>
+            <span key={ct} className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[12px] font-[600] border min-h-[36px]"
+              style={{ background: COMPARE_COLORS[i % 3] + '22', color: COMPARE_COLORS[i % 3], borderColor: COMPARE_COLORS[i % 3] + '66' }}>
               {ct}
-              <button onClick={() => removeCompareTicker(ct)} className="opacity-70 hover:opacity-100 leading-none ml-0.5" aria-label={`Remove ${ct} comparison`}>×</button>
+              <button onClick={() => removeCompareTicker(ct)} className="opacity-60 hover:opacity-100 ml-0.5" aria-label={`Remove ${ct} comparison`}>×</button>
             </span>
           )
         })}
@@ -551,7 +544,7 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
               onBlur={() => { if (compareInput.trim()) addCompareTicker(compareInput) }}
               placeholder="+ Compare" maxLength={10}
               aria-label="Add ticker to compare"
-              className="text-xs bg-transparent border-b border-dashed border-[#CDD1C8] focus:outline-none focus:border-[#5F790B] w-20 py-0.5 placeholder:text-[#8A95A6] text-[#06101F]"
+              className="inline-flex items-center rounded-lg px-3 py-1.5 text-[12px] font-[600] border border-dashed border-[#CDD1C8] bg-white focus:outline-none focus:border-[#5F790B] w-24 min-h-[36px] placeholder:text-[#8A95A6] text-[#06101F]"
             />
           </form>
         )}
@@ -559,26 +552,26 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
         {/* % / $ mode when comparing */}
         {isCompare && (
           <button onClick={() => setCompareMode(p => p === 'price' ? 'percent' : 'price')}
-            className={`ml-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full border transition min-h-[32px] ${compareMode === 'percent' ? 'bg-olive-700 text-white border-olive-700' : 'border-[#E3E1DA] text-[#566174] hover:bg-[#F4F3EF]'}`}>
+            className={`text-[12px] font-[600] px-3 py-1.5 rounded-lg border transition min-h-[36px] ${compareMode === 'percent' ? 'bg-olive-700 text-white border-olive-700' : 'border-[#E5E5E5] text-[#566174] hover:bg-[#F4F3EF]'}`}>
             {compareMode === 'percent' ? '% Return' : '$ Price'}
           </button>
         )}
 
-        {/* Indicators dropdown — only in non-compare mode */}
+        {/* Indicators dropdown — right-aligned, only in non-compare mode */}
         {!isCompare && (
           <div className="relative ml-auto" ref={indicatorsRef}>
             <button
               onClick={() => setIndicatorsOpen(v => !v)}
               aria-expanded={indicatorsOpen}
               aria-haspopup="menu"
-              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold border transition-all min-h-[32px] ${indicatorsOpen || activeIndicators.length > 0 ? 'border-olive-400 text-olive-700 bg-olive-50' : 'border-[#E3E1DA] text-[#566174] hover:bg-[#F4F3EF]'}`}
+              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-[600] border transition-all min-h-[36px] ${indicatorsOpen || activeIndicators.length > 0 ? 'border-[#c8dba0] text-[#3d5a06] bg-[#f1f7e5]' : 'border-[#E5E5E5] text-[#566174] hover:bg-[#F4F3EF]'}`}
             >
-              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
               Indicators
               {activeIndicators.length > 0 && (
-                <span className="bg-olive-700 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none">
+                <span className="bg-[#5F790B] text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none">
                   {activeIndicators.length}
                 </span>
               )}
@@ -642,13 +635,21 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
         )}
       </div>
 
-      {/* Active indicator chips (compact, removable) */}
-      {!isCompare && activeIndicators.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5 px-4 sm:px-5 pb-2">
+      {/* ── Row 3: Active indicator chips + valuation legend ── */}
+      {(!isCompare && (activeIndicators.length > 0 || (hasAnyLevel))) && (
+        <div className="flex flex-wrap items-center gap-1.5 px-5 pb-2">
+          {/* Price chip — always present */}
+          <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-[600] border border-[#d1d5db] bg-white text-[#374151]">
+            <span className="w-2 h-2 rounded-full bg-[#10b981] shrink-0" />
+            Price
+          </span>
+
+          {/* Active MA/BB/RSI/Volume chips */}
           {activeIndicators.map(ind => (
             <span key={ind.key}
-              className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold border"
+              className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-[600] border"
               style={{ borderColor: ind.color + '66', background: ind.color + '14', color: ind.color }}>
+              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: ind.color }} />
               {ind.label}
               <button
                 onClick={() => {
@@ -658,10 +659,23 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
                   else toggleMA(ind.key as MAKey)
                 }}
                 aria-label={`Remove ${ind.label}`}
-                className="opacity-70 hover:opacity-100 ml-0.5 leading-none"
+                className="opacity-60 hover:opacity-100 ml-0.5 leading-none"
               >×</button>
             </span>
           ))}
+
+          {/* Valuation line chips */}
+          {hasAnyLevel && VAL_LINES.map(vl => {
+            const v = levels[vl.key]
+            if (!v) return null
+            return (
+              <span key={vl.key} className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-[600] border"
+                style={{ borderColor: vl.color + '55', background: vl.color + '12', color: vl.color }}>
+                <span className="inline-block h-px w-4 border-t-2 border-dashed shrink-0" style={{ borderColor: vl.color }} />
+                {vl.label}
+              </span>
+            )
+          })}
         </div>
       )}
 
@@ -670,11 +684,10 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center text-sm text-[#8A95A6] z-10">Loading…</div>
         )}
-        {/* Responsive height via CSS — 280px mobile → 380px desktop */}
         <div
           ref={mainRef}
           className="w-full"
-          style={{ height: 'clamp(260px, 38vw, 420px)' }}
+          style={{ height: 'clamp(320px, 42vw, 520px)' }}
         />
         <div ref={tooltipRef} className="pointer-events-none absolute z-20 hidden rounded-lg px-2.5 py-2 text-[11px]"
           style={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', minWidth: 120, lineHeight: 1.6 }} />
