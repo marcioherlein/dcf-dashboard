@@ -1,6 +1,5 @@
 'use client'
 
-import { cn } from '@/lib/utils'
 import { Target } from 'lucide-react'
 
 interface Props {
@@ -34,21 +33,21 @@ export default function TradingRangeCard({ high52, low52, price, currency = 'USD
         <div className="w-7 h-7 rounded-lg bg-[#F1F7E5] flex items-center justify-center shrink-0">
           <Target size={14} className="text-[#5F790B]" />
         </div>
-        <h3 className="text-[15px] font-[700] text-[#111827]">Trading Range (52-Week)</h3>
+        <h3 className="text-[15px] font-[700] text-[#111111]">Trading Range (52-Week)</h3>
       </div>
 
       {!isValid ? (
-        <p className="text-[13px] text-[#667085] text-center py-2">Range data unavailable</p>
+        <p className="text-[13px] text-[#6B6B6B] text-center py-2">Range data unavailable</p>
       ) : (
         <>
           {/* Low / High labels */}
           <div className="flex items-center justify-between mb-2">
             <div>
-              <p className="text-[12px] font-[700] text-[#111827] tabular-nums">{fmtP(low52, currency)}</p>
+              <p className="text-[12px] font-[700] text-[#111111] tabular-nums">{fmtP(low52, currency)}</p>
               <p className="text-[11px] text-[#9B9B9B]">52-Week Low</p>
             </div>
             <div className="text-right">
-              <p className="text-[12px] font-[700] text-[#111827] tabular-nums">{fmtP(high52, currency)}</p>
+              <p className="text-[12px] font-[700] text-[#111111] tabular-nums">{fmtP(high52, currency)}</p>
               <p className="text-[11px] text-[#9B9B9B]">52-Week High</p>
             </div>
           </div>
@@ -70,7 +69,7 @@ export default function TradingRangeCard({ high52, low52, price, currency = 'USD
           {/* Current price label */}
           <div className="mt-3 flex justify-center">
             <div className="text-center">
-              <p className={cn('text-[18px] font-[800] tabular-nums tracking-tight', 'text-[#5F790B]')}>
+              <p className="text-[18px] font-[800] tabular-nums tracking-tight text-[#5F790B]">
                 {fmtP(price, currency)}
               </p>
               <p className="text-[11px] text-[#9B9B9B]">Current</p>
