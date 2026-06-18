@@ -59,7 +59,7 @@ function fmtPrice(v: number, currency: string) {
 
 // ─── Identity strip ───────────────────────────────────────────────────────────
 
-function StockIdentityStrip({
+function _StockIdentityStrip({
   ticker, companyName, description, sector, industry, country, currency, price, change, changePct,
 }: Pick<Props, 'ticker' | 'companyName' | 'description' | 'sector' | 'industry' | 'country' | 'currency' | 'price' | 'change' | 'changePct'>) {
   const [logoErr, setLogoErr] = useState(false)
@@ -78,7 +78,7 @@ function StockIdentityStrip({
             className="rounded-xl border border-[rgba(15,23,42,0.08)] object-cover shrink-0"
             onError={() => setLogoErr(true)} />
         ) : (
-          <div className="w-10 h-10 rounded-xl bg-[#F1F7E5] border border-[rgba(15,23,42,0.08)] flex items-center justify-center shrink-0"
+          <div className="w-10 h-10 rounded-xl bg-[#EEF2FA] border border-[rgba(15,23,42,0.08)] flex items-center justify-center shrink-0"
             role="img" aria-label={`${companyName} logo`}>
             <span className="text-[13px] font-[800] text-[#5F790B]">{ticker.slice(0, 2)}</span>
           </div>
@@ -192,8 +192,8 @@ const PERIOD_LABELS: Record<string, string> = {
 }
 
 export default function OverviewLayout({
-  ticker, companyName, description, sector, industry, country, currency,
-  price, change, changePct, high52, low52,
+  ticker, companyName: _companyName, description: _description, sector: _sector, industry: _industry, country: _country, currency,
+  price, change: _change, changePct, high52, low52,
   fairValue, analystTargetMean, userModelFairValue,
   marketCap, peRatio, forwardPE, pegRatioValue, beta, evToEbitda,
   revenueGrowth, grossMargin, fcfMargin, roic,
@@ -245,21 +245,7 @@ export default function OverviewLayout({
 
   return (
     <div>
-      {/* Identity strip */}
-      <StockIdentityStrip
-        ticker={ticker}
-        companyName={companyName}
-        description={description}
-        sector={sector}
-        industry={industry}
-        country={country}
-        currency={currency}
-        price={price}
-        change={change}
-        changePct={changePct}
-      />
-
-      {/* Two-column grid */}
+      {/* Two-column grid — chart left, snapshot rail right */}
       <div className="grid gap-5 lg:grid-cols-[minmax(0,2.15fr)_minmax(300px,0.95fr)] items-start">
 
         {/* Left: Chart + footer as one unified card */}

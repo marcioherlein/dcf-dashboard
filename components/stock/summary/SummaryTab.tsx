@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
+import StockIdentityHeader from './StockIdentityHeader'
 import OverviewLayout from './OverviewLayout'
 import RevenueChartCard from './RevenueChartCard'
 import FCFChartCard from './FCFChartCard'
@@ -217,14 +218,57 @@ export default function SummaryTab({
   return (
     <div className="flex flex-col gap-3 sm:gap-5">
 
-      {/* ── 1. OVERVIEW LAYOUT (identity strip + chart + snapshot rail) ───────── */}
-      <OverviewLayout
+      {/* ── 1. HERO CARD — company identity, price, model estimate, analyst target ── */}
+      <StockIdentityHeader
         ticker={ticker}
         companyName={companyName}
         description={description}
         sector={sector}
         industry={industry}
         country={country}
+        employees={undefined}
+        currency={currency}
+        price={price}
+        change={change}
+        changePct={changePct}
+        marketState={quote?.marketState ?? null}
+        preMarketPrice={quote?.preMarketPrice ?? null}
+        preMarketChangePct={quote?.preMarketChangePct ?? null}
+        postMarketPrice={quote?.postMarketPrice ?? null}
+        postMarketChangePct={quote?.postMarketChangePct ?? null}
+        fairValue={fairValue}
+        analystTargetMean={analystTargetMean ?? null}
+        analystTargetLow={_analystTargetLow ?? null}
+        analystTargetHigh={_analystTargetHigh ?? null}
+        numAnalysts={quote?.numAnalysts ?? null}
+        userModelFairValue={userModelFairValue ?? null}
+        marketCap={marketCap ?? null}
+        peRatio={peRatio ?? null}
+        evToEbitda={evToEbitda ?? null}
+        roe={roe ?? null}
+        roic={roic ?? null}
+        beta={beta ?? null}
+        dividendYield={_dividendYield ?? null}
+        fcfMargin={businessProfile?.fcfMargin ?? null}
+        grossMargin={businessProfile?.grossMargin ?? null}
+        netMargin={businessProfile?.netMargin ?? null}
+        high52={high52}
+        low52={low52}
+        nextEarningsDate={_nextEarningsDate ?? null}
+        revenueGrowth={cagrAnalysis?.historicalCagr3y ?? null}
+        forwardPE={analystForwardPE ?? null}
+        pegRatioValue={quote?.pegRatio ?? null}
+        peHistory={undefined}
+        evHistory={undefined}
+        earningsSurprises={earningsSurprises ?? null}
+        onViewValuation={_onViewValuation}
+        onViewConviction={_onViewConviction}
+      />
+
+      {/* ── 2. CHART + SNAPSHOT RAIL (two-column grid) ──────────────────────── */}
+      <OverviewLayout
+        ticker={ticker}
+        companyName={companyName}
         currency={currency}
         price={price}
         change={change}

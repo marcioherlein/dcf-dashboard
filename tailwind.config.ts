@@ -37,13 +37,13 @@ const config: Config = {
           700: "#3E5206",
           600: "#4A6109",
           500: "#5C7410",
-          100: "#E6F0D4",
-          50:  "#F1F7E5",
+          100: "#DDE6F8",
+          50:  "#EEF2FA",
         },
 
-        // ── insic Brand: Neutral surfaces (warm off-white) ────────────────
-        'bg-warm':     '#FAF9F6',
-        'bg-soft':     '#F4F3EF',
+        // ── insic Brand: Neutral surfaces (cool blue-grey) ────────────────
+        'bg-warm':     '#F0F1F6',
+        'bg-soft':     '#F0F1F6',
         'surface':     '#FFFFFF',
         'surface-subtle': '#FBFAF7',
         'border-warm': '#E3E1DA',

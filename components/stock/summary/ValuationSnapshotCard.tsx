@@ -57,7 +57,7 @@ export default function ValuationSnapshotCard({
     >
       {/* Header */}
       <div className="flex items-center gap-2.5 mb-1">
-        <div className="w-7 h-7 rounded-lg bg-[#F1F7E5] flex items-center justify-center shrink-0">
+        <div className="w-7 h-7 rounded-lg bg-[#EEF2FA] flex items-center justify-center shrink-0">
           <DollarSign size={14} className="text-[#5F790B]" />
         </div>
         <h3 className="text-[15px] font-[700] text-[#111111]">Valuation Snapshot</h3>

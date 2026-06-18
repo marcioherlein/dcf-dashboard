@@ -11,7 +11,7 @@
 @layer base {
   :root {
     /* ── shadcn/ui CSS variable bridge (Tailwind v3) ─────────────────────── */
-    --background:          39 17% 97%;      /* #FAF9F6 warm off-white */
+    --background:          225 18% 96%;      /* #F0F1F6 cool blue-grey */
     --foreground:          218 73% 7%;      /* #06101F ink-950 */
     --card:                0 0% 100%;       /* #FFFFFF */
     --card-foreground:     218 73% 7%;
@@ -19,9 +19,9 @@
     --popover-foreground:  218 73% 7%;
     --primary:             76 83% 21%;      /* #4A6109 olive-600 */
     --primary-foreground:  0 0% 100%;
-    --secondary:           36 14% 95%;      /* #F4F3EF */
+    --secondary:           225 18% 96%;      /* #F0F1F6 */
     --secondary-foreground:218 73% 7%;
-    --muted:               36 14% 95%;      /* #F4F3EF */
+    --muted:               225 18% 96%;      /* #F0F1F6 */
     --muted-foreground:    220 15% 40%;     /* #566174 */
     --accent:              76 83% 21%;      /* olive-600 */
     --accent-foreground:   0 0% 100%;
@@ -92,11 +92,11 @@
   --color-ink-800: #111C2E;
   --color-ink-700: #1E2430;
 
-  /* Neutral surfaces — warm off-white */
-  --color-bg:              #FAF9F6;
-  --color-bg-soft:         #F4F3EF;
+  /* Neutral surfaces — cool blue-grey */
+  --color-bg:              #F0F1F6;
+  --color-bg-soft:         #F0F1F6;
   --color-surface:         #FFFFFF;
-  --color-surface-subtle:  #FBFAF7;
+  --color-surface-subtle:  #F0F1F6;
   --color-border:          #E3E1DA;
   --color-border-strong:   #CDD1C8;
 
@@ -111,8 +111,8 @@
   --color-olive-700:  #3E5206;
   --color-olive-600:  #4A6109;
   --color-olive-500:  #5C7410;
-  --color-olive-100:  #E6F0D4;
-  --color-olive-50:   #F1F7E5;
+  --color-olive-100:  #DDE6F8;
+  --color-olive-50:   #EEF2FA;
 
   /* Supporting blue — secondary actions, links, info */
   --color-blue-600:   #2563EB;
@@ -299,14 +299,14 @@ h3 {
   /* Olive tinted card (verdict: undervalued, selected state) */
   .card-olive {
     background: var(--color-olive-50);
-    border: 1px solid #BFD2A1;
+    border: 1px solid #B8CCF5;
     border-radius: 16px;
   }
 
   /* ── Verdict card surfaces ───────────────────────────────────────────────── */
   .verdict-undervalued {
     background: var(--color-olive-50);
-    border: 1px solid #BFD2A1;
+    border: 1px solid #B8CCF5;
     border-radius: 16px;
   }
   .verdict-fairly-valued {
@@ -429,11 +429,11 @@ h3 {
 
 /* ── Glass accessibility fallbacks ──────────────────────────────────────────── */
 @supports not (backdrop-filter: blur(1px)) {
-  .glass-toolbar          { background: #FAF9F6; will-change: auto; transform: none; -webkit-transform: none; }
+  .glass-toolbar          { background: #F0F1F6; will-change: auto; transform: none; -webkit-transform: none; }
   .glass-panel            { background: var(--color-surface-subtle); }
   .glass-card-light       { background: #ffffff; }
   .glass-accordion-header { background: #ffffff; }
-  .glass-bottom-nav       { background: #FAF9F6; will-change: auto; transform: none; -webkit-transform: none; }
+  .glass-bottom-nav       { background: #F0F1F6; will-change: auto; transform: none; -webkit-transform: none; }
 }
 
 @media (prefers-reduced-transparency: reduce) {
