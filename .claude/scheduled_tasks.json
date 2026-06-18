@@ -1,15 +1,3 @@
 {
-  "tasks": [
-    {
-      "id": "c1503086",
-      "cron": "0 9 * * 1",
-      "prompt": "Run the verdict consistency audit for the insic app by executing: cd /Users/i502042/Desktop/dcf-dashboard && node scripts/verdict-audit.mjs\n\nReport back with the results — which featured stocks are Undervalued, Fairly Valued, or Overvalued, and flag any errors or inconsistencies.",
-      "createdAt": 1780841618617,
-      "lastFiredAt": 1780921800471,
-      "recurring": true,
-      "createdBySessionId": "01528716-0f20-49e7-8d93-29680168f18e",
-      "createdByPid": 4024,
-      "createdByProcStart": "Fri Jun 12 15:12:00 2026"
-    }
-  ]
+  "tasks": []
 }

@@ -109,7 +109,9 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
   const [compareInput, setCompareInput]     = useState('')
   const [compareRaw, setCompareRaw]         = useState<Record<string, OHLCVBar[]>>({})
   const [compareMode, setCompareMode]       = useState<'price' | 'percent'>('price')
+  const [indicatorsOpen, setIndicatorsOpen] = useState(false)
   const compareInputRef = useRef<HTMLInputElement>(null)
+  const indicatorsRef   = useRef<HTMLDivElement>(null)
 
   // DOM refs
   const mainRef    = useRef<HTMLDivElement>(null)
@@ -133,6 +135,18 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
 
   // keep a ref of rawBars for tooltip access without re-creating the effect
   useEffect(() => { rawBarsRef.current = rawBars }, [rawBars])
+
+  // Close indicators dropdown on outside click
+  useEffect(() => {
+    if (!indicatorsOpen) return
+    function handleOutside(e: MouseEvent) {
+      if (indicatorsRef.current && !indicatorsRef.current.contains(e.target as Node)) {
+        setIndicatorsOpen(false)
+      }
+    }
+    document.addEventListener('pointerdown', handleOutside)
+    return () => document.removeEventListener('pointerdown', handleOutside)
+  }, [indicatorsOpen])
 
   // ── Fetch ────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -178,7 +192,7 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
     const mc = createChart(mainRef.current, {
       ...BASE_OPTS,
       width: mainRef.current.clientWidth,
-      height: 280,
+      height: mainRef.current.clientHeight || 340,
       rightPriceScale: { ...BASE_OPTS.rightPriceScale, scaleMargins: { top: 0.08, bottom: 0.04 } },
     })
     mainChart.current = mc
@@ -275,9 +289,12 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
       `
     })
 
-    // Resize observer
+    // Resize observer — update both chart width AND main chart height
     const ro = new ResizeObserver(() => {
-      if (mainRef.current) mc.applyOptions({ width: mainRef.current.clientWidth })
+      if (mainRef.current) {
+        const h = mainRef.current.clientHeight
+        mc.applyOptions({ width: mainRef.current.clientWidth, ...(h > 0 ? { height: h } : {}) })
+      }
       if (subRef.current)  sc.applyOptions({ width: subRef.current.clientWidth })
     })
     ro.observe(mainRef.current)
@@ -287,7 +304,8 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
     // (happens when the chart is inside a flex/grid container that hasn't painted)
     const raf = requestAnimationFrame(() => {
       if (mainRef.current && mainRef.current.clientWidth > 0) {
-        mc.applyOptions({ width: mainRef.current.clientWidth })
+        const h = mainRef.current.clientHeight
+        mc.applyOptions({ width: mainRef.current.clientWidth, ...(h > 0 ? { height: h } : {}) })
       }
     })
 
@@ -320,23 +338,28 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
       }))
     }
 
-    const bbs = calcBB(closes)
-    bbUpperRef.current?.setData(rawBars.filter((_, i) => bbs[i].upper != null).map(b => ({ time: b.time, value: bbs[rawBars.indexOf(b)].upper as number })))
-    bbLowerRef.current?.setData(rawBars.filter((_, i) => bbs[i].lower != null).map(b => ({ time: b.time, value: bbs[rawBars.indexOf(b)].lower as number })))
+    const bb = calcBB(closes)
+    bbUpperRef.current?.setData(rawBars.filter((_, i) => bb[i].upper != null).map((b) => {
+      const idx = rawBars.indexOf(b); return { time: b.time, value: bb[idx].upper as number }
+    }))
+    bbLowerRef.current?.setData(rawBars.filter((_, i) => bb[i].lower != null).map((b) => {
+      const idx = rawBars.indexOf(b); return { time: b.time, value: bb[idx].lower as number }
+    }))
 
     const rsiVals = calcRSI(closes)
-    rsiSeries.current?.setData(rawBars.filter((_, i) => rsiVals[i] != null).map(b => ({ time: b.time, value: rsiVals[rawBars.indexOf(b)] as number })))
-
-    mainChart.current?.timeScale().fitContent()
+    rsiSeries.current?.setData(rawBars.filter((_, i) => rsiVals[i] != null).map((b) => {
+      const idx = rawBars.indexOf(b); return { time: b.time, value: rsiVals[idx] as number }
+    }))
   }, [rawBars])
 
-  // ── MA / BB visibility ───────────────────────────────────────────────────
+  // ── MA visibility ────────────────────────────────────────────────────────
   useEffect(() => {
     for (const ind of MA_INDICATORS) {
       maSeries.current.get(ind.key)?.applyOptions({ visible: activeMA.has(ind.key) })
     }
   }, [activeMA])
 
+  // ── BB visibility ────────────────────────────────────────────────────────
   useEffect(() => {
     bbUpperRef.current?.applyOptions({ visible: showBB })
     bbLowerRef.current?.applyOptions({ visible: showBB })
@@ -441,24 +464,33 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
   const levels: Record<string, number | null | undefined> = { triangulatedFairValue, analystTarget, userModelFairValue }
   const hasAnyLevel = VAL_LINES.some(l => (levels[l.key] ?? 0) > 0)
 
+  // Active indicator chips (for display)
+  const activeIndicators = [
+    ...MA_INDICATORS.filter(ind => activeMA.has(ind.key)),
+    ...(showBB ? [{ key: 'bb' as const, label: 'BB (20,2)', color: '#a78bfa' }] : []),
+    ...(showSubPanel && subPanel === 'rsi' ? [{ key: 'rsi' as const, label: 'RSI (14)', color: '#8b5cf6' }] : []),
+    ...(showSubPanel && subPanel === 'volume' ? [{ key: 'vol' as const, label: 'Volume', color: '#64748b' }] : []),
+  ]
+
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="rounded-xl card">
+    <div className="rounded-xl card flex flex-col">
 
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-5 pt-4 pb-2">
-        <div className="flex items-center gap-3 flex-wrap">
-          <h2 className="text-sm font-semibold text-[#06101F]">Price Chart</h2>
+      {/* ── Row 1: Title + period return + valuation legend ── */}
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 sm:px-5 pt-4 pb-2">
+        <div className="flex items-center gap-2.5 flex-wrap min-w-0">
+          <h2 className="text-sm font-semibold text-[#06101F] whitespace-nowrap">Price Chart</h2>
           {changePct != null && (
-            <span className="flex items-center gap-1">
-              <span className="text-[11px] text-[#8A95A6]">{period}</span>
+            <span className="flex items-center gap-1 shrink-0">
+              <span className="text-[11px] text-[#8A95A6]">{PERIOD_LABELS[period]}</span>
               <span className={`text-xs font-semibold tabular-nums ${changePct >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
                 {changePct >= 0 ? '+' : ''}{changePct.toFixed(2)}%
               </span>
             </span>
           )}
+          {/* Valuation reference lines legend — inline on sm+ */}
           {hasAnyLevel && !isCompare && (
-            <div className="hidden sm:flex items-center gap-3">
+            <div className="hidden sm:flex items-center gap-3 flex-wrap">
               {VAL_LINES.map(vl => {
                 const v = levels[vl.key]
                 if (!v) return null
@@ -472,100 +504,180 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
             </div>
           )}
         </div>
-        <div className="flex gap-1">
+
+        {/* Period selector */}
+        <div className="flex gap-0.5 sm:gap-1 shrink-0">
           {PERIODS.map(p => (
             <button key={p} onClick={() => setPeriod(p)}
-              className={`rounded-lg px-3 py-2.5 min-h-[44px] text-xs font-medium transition ${period === p ? 'bg-olive-100 text-olive-700' : 'text-[#566174] hover:bg-[#F4F3EF]'}`}>
+              className={`rounded-lg px-2.5 sm:px-3 py-2.5 min-h-[44px] text-xs font-medium transition-colors ${period === p ? 'bg-olive-100 text-olive-700' : 'text-[#566174] hover:bg-[#F4F3EF]'}`}>
               {PERIOD_LABELS[p]}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Compare row */}
-      <div className="flex flex-wrap items-center gap-2 px-5 pb-1.5">
+      {/* ── Row 2: Compare + Indicators ── */}
+      <div className="flex flex-wrap items-center gap-2 px-4 sm:px-5 pb-2">
         {/* SPY quick-compare toggle */}
         {ticker.toUpperCase() !== 'SPY' && (() => {
           const spyOn = compareTickers.includes('SPY')
           return (
             <button
               onClick={() => spyOn ? removeCompareTicker('SPY') : addCompareTicker('SPY')}
-              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold border transition-all ${spyOn ? 'bg-[#f9731622] border-[#f97316] text-[#f97316]' : 'border-[#E3E1DA] text-[#566174] hover:border-[#CDD1C8] hover:bg-[#F4F3EF]'}`}
+              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold border transition-all min-h-[32px] ${spyOn ? 'bg-[#f9731622] border-[#f97316] text-[#f97316]' : 'border-[#E3E1DA] text-[#566174] hover:border-[#CDD1C8] hover:bg-[#F4F3EF]'}`}
             >
               {spyOn ? <>SPY <span className="opacity-70">×</span></> : 'vs SPY'}
             </button>
           )
         })()}
-        {/* Other (non-SPY) compare tickers */}
+
+        {/* Other compare tickers */}
         {compareTickers.filter(t => t !== 'SPY').map((ct) => {
           const i = compareTickers.indexOf(ct)
           return (
-            <span key={ct} className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold"
+            <span key={ct} className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold min-h-[32px]"
               style={{ background: COMPARE_COLORS[i % 3] + '22', color: COMPARE_COLORS[i % 3] }}>
               {ct}
-              <button onClick={() => removeCompareTicker(ct)} className="opacity-70 hover:opacity-100 leading-none ml-0.5">×</button>
+              <button onClick={() => removeCompareTicker(ct)} className="opacity-70 hover:opacity-100 leading-none ml-0.5" aria-label={`Remove ${ct} comparison`}>×</button>
             </span>
           )
         })}
+
+        {/* Compare input */}
         {compareTickers.length < 3 && (
           <form onSubmit={e => { e.preventDefault(); addCompareTicker(compareInput) }}>
             <input ref={compareInputRef} type="text" value={compareInput}
               onChange={e => setCompareInput(e.target.value.toUpperCase())}
               onBlur={() => { if (compareInput.trim()) addCompareTicker(compareInput) }}
               placeholder="+ Compare" maxLength={10}
+              aria-label="Add ticker to compare"
               className="text-xs bg-transparent border-b border-dashed border-[#CDD1C8] focus:outline-none focus:border-[#5F790B] w-20 py-0.5 placeholder:text-[#8A95A6] text-[#06101F]"
             />
           </form>
         )}
+
+        {/* % / $ mode when comparing */}
         {isCompare && (
           <button onClick={() => setCompareMode(p => p === 'price' ? 'percent' : 'price')}
-            className={`ml-auto text-[11px] font-bold px-2.5 py-0.5 rounded-full border transition ${compareMode === 'percent' ? 'bg-olive-700 text-white border-olive-700' : 'border-[#E3E1DA] text-[#566174] hover:bg-[#F4F3EF]'}`}>
+            className={`ml-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full border transition min-h-[32px] ${compareMode === 'percent' ? 'bg-olive-700 text-white border-olive-700' : 'border-[#E3E1DA] text-[#566174] hover:bg-[#F4F3EF]'}`}>
             {compareMode === 'percent' ? '% Return' : '$ Price'}
           </button>
         )}
+
+        {/* Indicators dropdown — only in non-compare mode */}
+        {!isCompare && (
+          <div className="relative ml-auto" ref={indicatorsRef}>
+            <button
+              onClick={() => setIndicatorsOpen(v => !v)}
+              aria-expanded={indicatorsOpen}
+              aria-haspopup="menu"
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold border transition-all min-h-[32px] ${indicatorsOpen || activeIndicators.length > 0 ? 'border-olive-400 text-olive-700 bg-olive-50' : 'border-[#E3E1DA] text-[#566174] hover:bg-[#F4F3EF]'}`}
+            >
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              Indicators
+              {activeIndicators.length > 0 && (
+                <span className="bg-olive-700 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none">
+                  {activeIndicators.length}
+                </span>
+              )}
+            </button>
+
+            {indicatorsOpen && (
+              <div
+                role="menu"
+                aria-label="Chart indicators"
+                className="absolute right-0 top-full mt-1.5 z-30 bg-white border border-[#E5E5E5] rounded-xl shadow-lg py-1.5 min-w-[200px]"
+              >
+                <p className="px-3 py-1 text-[10px] font-[700] text-[#9B9B9B] uppercase tracking-wider">Moving Averages</p>
+                {MA_INDICATORS.map(ind => {
+                  const on = activeMA.has(ind.key)
+                  return (
+                    <button key={ind.key} role="menuitemcheckbox" aria-checked={on}
+                      onClick={() => toggleMA(ind.key)}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-left hover:bg-[#F5F5F5] transition-colors min-h-[44px]"
+                    >
+                      <span className="w-3 h-3 rounded-full shrink-0 border-2 flex items-center justify-center"
+                        style={{ borderColor: ind.color, background: on ? ind.color : 'transparent' }}>
+                        {on && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                      </span>
+                      <span className="flex-1" style={{ color: on ? ind.color : '#6B6B6B' }}>{ind.label}</span>
+                    </button>
+                  )
+                })}
+
+                <p className="px-3 pt-2 pb-1 text-[10px] font-[700] text-[#9B9B9B] uppercase tracking-wider">Bands</p>
+                <button role="menuitemcheckbox" aria-checked={showBB}
+                  onClick={() => setShowBB(v => !v)}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-left hover:bg-[#F5F5F5] transition-colors min-h-[44px]"
+                >
+                  <span className="w-3 h-3 rounded-full shrink-0 border-2 flex items-center justify-center"
+                    style={{ borderColor: '#a78bfa', background: showBB ? '#a78bfa' : 'transparent' }}>
+                    {showBB && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                  </span>
+                  <span style={{ color: showBB ? '#a78bfa' : '#6B6B6B' }}>Bollinger Bands</span>
+                </button>
+
+                <p className="px-3 pt-2 pb-1 text-[10px] font-[700] text-[#9B9B9B] uppercase tracking-wider">Sub-panel</p>
+                {(['volume', 'rsi'] as SubPanel[]).map(sp => {
+                  const on = showSubPanel && subPanel === sp
+                  const color = sp === 'rsi' ? '#8b5cf6' : '#64748b'
+                  return (
+                    <button key={sp} role="menuitemcheckbox" aria-checked={on}
+                      onClick={() => { if (on) { setShowSubPanel(false) } else { setSubPanel(sp); setShowSubPanel(true) } }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-left hover:bg-[#F5F5F5] transition-colors min-h-[44px]"
+                    >
+                      <span className="w-3 h-3 rounded-full shrink-0 border-2 flex items-center justify-center"
+                        style={{ borderColor: color, background: on ? color : 'transparent' }}>
+                        {on && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                      </span>
+                      <span style={{ color: on ? color : '#6B6B6B' }}>{sp === 'volume' ? 'Volume' : 'RSI (14)'}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* MA / BB toggles */}
-      {!isCompare && (
-        <div className="flex flex-wrap items-center gap-1.5 px-5 pb-3">
-          {MA_INDICATORS.map(ind => {
-            const on = activeMA.has(ind.key)
-            return (
-              <button key={ind.key} onClick={() => toggleMA(ind.key)}
-                className={`rounded px-2 py-2.5 min-h-[44px] text-[10px] font-semibold transition border ${on ? 'opacity-100' : 'opacity-30'}`}
-                style={{ borderColor: ind.color, color: on ? ind.color : 'rgba(100,116,139,0.5)', background: on ? `${ind.color}18` : 'transparent' }}>
-                {ind.label}
-              </button>
-            )
-          })}
-          <button onClick={() => setShowBB(v => !v)}
-            className={`rounded px-2 py-2.5 min-h-[44px] text-[10px] font-semibold transition border ${showBB ? 'opacity-100' : 'opacity-30'}`}
-            style={{ borderColor: '#a78bfa', color: showBB ? '#a78bfa' : 'rgba(100,116,139,0.5)', background: showBB ? '#a78bfa18' : 'transparent' }}>
-            BB (20,2)
-          </button>
-          <div className="ml-auto flex items-center gap-1">
-            {(['volume', 'rsi'] as SubPanel[]).map(sp => (
-              <button key={sp} onClick={() => { setSubPanel(sp); setShowSubPanel(true) }}
-                className={`rounded px-2 py-0.5 text-[10px] font-medium transition ${showSubPanel && subPanel === sp ? 'bg-[#F4F3EF] text-[#06101F]' : 'text-[#8A95A6] hover:bg-[#F4F3EF]'}`}>
-                {sp.toUpperCase()}
-              </button>
-            ))}
-            <button onClick={() => setShowSubPanel(v => !v)}
-              className="rounded px-1.5 py-0.5 text-[10px] text-[#8A95A6] hover:bg-[#F4F3EF]">
-              {showSubPanel ? '↑' : '↓'}
-            </button>
-          </div>
+      {/* Active indicator chips (compact, removable) */}
+      {!isCompare && activeIndicators.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5 px-4 sm:px-5 pb-2">
+          {activeIndicators.map(ind => (
+            <span key={ind.key}
+              className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold border"
+              style={{ borderColor: ind.color + '66', background: ind.color + '14', color: ind.color }}>
+              {ind.label}
+              <button
+                onClick={() => {
+                  if (ind.key === 'bb') setShowBB(false)
+                  else if (ind.key === 'rsi') setShowSubPanel(false)
+                  else if (ind.key === 'vol') setShowSubPanel(false)
+                  else toggleMA(ind.key as MAKey)
+                }}
+                aria-label={`Remove ${ind.label}`}
+                className="opacity-70 hover:opacity-100 ml-0.5 leading-none"
+              >×</button>
+            </span>
+          ))}
         </div>
       )}
 
-      {/* Main chart */}
-      <div className="relative px-1">
+      {/* Main chart — flex-1 with responsive min-height */}
+      <div className="relative px-1 flex-1 min-h-0">
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center text-sm text-[#8A95A6] z-10">Loading…</div>
         )}
-        <div ref={mainRef} className="w-full" style={{ height: 280 }} />
+        {/* Responsive height via CSS — 280px mobile → 380px desktop */}
+        <div
+          ref={mainRef}
+          className="w-full"
+          style={{ height: 'clamp(260px, 38vw, 420px)' }}
+        />
         <div ref={tooltipRef} className="pointer-events-none absolute z-20 hidden rounded-lg px-2.5 py-2 text-[11px]"
-          style={{ background: '#FFFFFF', border: '1px solid #E3E1DA', minWidth: 120, lineHeight: 1.6 }} />
+          style={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', minWidth: 120, lineHeight: 1.6 }} />
       </div>
 
       {/* RSI sub-panel */}
