@@ -2,37 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import Image from 'next/image'
-import dynamic from 'next/dynamic'
-import { fmtLargeCurrency } from '@/lib/formatters'
-
-// ─── Tiny inline sparkline (SVG — no recharts needed) ───────────────────────
-
-function TinySparkline({ values, color = '#5F790B' }: { values: number[]; color?: string }) {
-  if (values.length < 2) return null
-  const w = 56; const h = 22
-  const min = Math.min(...values)
-  const max = Math.max(...values)
-  const range = max - min || 1
-  const pts = values.map((v, i) => {
-    const x = (i / (values.length - 1)) * w
-    const y = h - ((v - min) / range) * (h - 2) - 1
-    return `${x.toFixed(1)},${y.toFixed(1)}`
-  }).join(' ')
-  return (
-    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} aria-hidden="true" className="shrink-0">
-      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-}
-
-// ─── Dynamic import ───────────────────────────────────────────────────────────
-
-const PriceChart = dynamic(() => import('@/components/stock/PriceChart'), {
-  ssr: false,
-  loading: () => (
-    <div className="motion-safe:animate-pulse rounded-xl bg-[#F5F5F5] flex-1 min-h-[320px]" />
-  ),
-})
+import { fmtLargeCurrency as _fmtLargeCurrency } from '@/lib/formatters'
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -104,98 +74,7 @@ function initials(name: string): string {
   return name.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('')
 }
 
-type Sentiment = 'positive' | 'negative' | 'neutral'
-
-function MetricRow({
-  label, value, last, sentiment, spark, sparkColor,
-}: {
-  label: string; value: string; last?: boolean; sentiment?: Sentiment
-  spark?: number[]; sparkColor?: string
-}) {
-  const valueColor = sentiment === 'positive' ? 'text-[#11875D]' : sentiment === 'negative' ? 'text-[#D83B3B]' : 'text-[#111111]'
-  return (
-    <div className={`flex items-center justify-between py-2 gap-2 ${last ? '' : 'border-b border-[#F0F0F0]'}`}>
-      <span className="text-[11.5px] text-[#6B6B6B] leading-none min-w-0 shrink-0">{label}</span>
-      <div className="flex items-center gap-2 min-w-0">
-        {spark && spark.length >= 2 && (
-          <TinySparkline values={spark} color={sparkColor ?? '#5F790B'} />
-        )}
-        <span className={`text-[11.5px] font-[650] leading-none tabular-nums shrink-0 ${valueColor}`}>{value}</span>
-      </div>
-    </div>
-  )
-}
-
-// ─── Horizontal percent bar row ───────────────────────────────────────────────
-
-function PercentBarRow({
-  label, valuePct, cap = 100, last, sentiment,
-}: {
-  label: string
-  valuePct: number | null | undefined  // value as a fraction (e.g. 0.42 = 42%)
-  cap?: number                          // max % for bar width scaling (e.g. 60 means 60% fills the bar)
-  last?: boolean
-  sentiment?: Sentiment
-}) {
-  const displayStr = valuePct != null ? (valuePct * 100).toFixed(1) + '%' : '—'
-  const pct = valuePct != null ? Math.max(0, Math.min(100, (Math.abs(valuePct) * 100 / cap) * 100)) : 0
-  const isNeg = (valuePct ?? 0) < 0
-
-  // bar fill color based on sign + sentiment
-  const barColor = isNeg ? '#D83B3B'
-    : sentiment === 'positive' ? '#5F790B'
-    : sentiment === 'negative' ? '#D83B3B'
-    : '#9B9B9B'
-
-  const valueColor = sentiment === 'positive' ? 'text-[#11875D]'
-    : sentiment === 'negative' ? 'text-[#D83B3B]'
-    : isNeg ? 'text-[#D83B3B]'
-    : 'text-[#111111]'
-
-  return (
-    <div className={`py-2 ${last ? '' : 'border-b border-[#F0F0F0]'}`}>
-      <div className="flex items-center justify-between gap-2 mb-1.5">
-        <span className="text-[11.5px] text-[#6B6B6B] leading-none shrink-0">{label}</span>
-        <span className={`text-[11.5px] font-[650] leading-none tabular-nums shrink-0 ${valueColor}`}>{displayStr}</span>
-      </div>
-      <div className="h-1 rounded-full bg-[#F0F0F0] overflow-hidden">
-        {valuePct != null && (
-          <div
-            className="h-1 rounded-full transition-all duration-300"
-            style={{ width: `${pct}%`, background: barColor, opacity: 0.85 }}
-          />
-        )}
-      </div>
-    </div>
-  )
-}
-
-function RangeSlider({ low, high, current, currency, fairValue }: { low: number; high: number; current: number; currency: string; fairValue?: number | null }) {
-  const range = high - low
-  const pct   = range > 0 ? Math.max(0, Math.min(100, ((current   - low) / range) * 100)) : 50
-  const fvPct = fairValue != null && range > 0 ? Math.max(0, Math.min(100, ((fairValue - low) / range) * 100)) : null
-  return (
-    <div>
-      <div className="relative h-1.5 rounded-full bg-[#E5E5E5]"
-        role="meter" aria-label="52-week price range"
-        aria-valuemin={low} aria-valuemax={high} aria-valuenow={current}>
-        <div className="absolute left-0 top-0 h-1.5 rounded-full bg-[#5F790B]" style={{ width: `${pct}%` }} />
-        {fvPct != null && (
-          <div className="absolute top-1/2 -translate-y-1/2 w-0.5 h-3 bg-[#9B9B9B] rounded-full opacity-60" style={{ left: `${fvPct}%` }} title="Fair value" />
-        )}
-        <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 h-3.5 w-3.5 rounded-full bg-white border-2 border-[#5F790B]"
-          style={{ left: `${pct}%`, boxShadow: '0 1px 4px rgba(0,0,0,0.18)' }} />
-      </div>
-      <div className="mt-2 flex items-center justify-between">
-        <span className="text-[11px] font-mono tabular-nums text-[#9B9B9B]">{fmtPriceValue(low, currency)}</span>
-        <span className="text-[10.5px] font-[600] text-[#9B9B9B]">52-week range</span>
-        <span className="text-[11px] font-mono tabular-nums text-[#9B9B9B]">{fmtPriceValue(high, currency)}</span>
-      </div>
-    </div>
-  )
-}
-
-// ─── Price + Valuation panel (reused in both desktop and mobile) ─────────────
+// ─── Price + Valuation panel ─────────────────────────────────────────────────
 
 function PriceValuationPanel({
   currency, price, change, changePct,
@@ -373,13 +252,13 @@ export default function StockIdentityHeader({
   ticker, companyName, description, sector, industry, country, employees: _employees,
   currency, price, change, changePct,
   marketState, preMarketPrice, preMarketChangePct, postMarketPrice, postMarketChangePct,
-  fairValue, analystTargetMean, analystTargetLow, analystTargetHigh, numAnalysts, userModelFairValue,
-  marketCap, peRatio, evToEbitda, roe, roic, beta, dividendYield,
-  fcfMargin, grossMargin, netMargin: _netMargin, revenueGrowth,
-  forwardPE, pegRatioValue,
-  peHistory, evHistory,
-  earningsSurprises,
-  high52, low52, nextEarningsDate,
+  fairValue, analystTargetMean, analystTargetLow, analystTargetHigh, numAnalysts, userModelFairValue: _userModelFairValue,
+  marketCap: _marketCap, peRatio: _peRatio, evToEbitda: _evToEbitda, roe: _roe, roic: _roic, beta: _beta, dividendYield: _dividendYield,
+  fcfMargin: _fcfMargin, grossMargin: _grossMargin, netMargin: _netMargin, revenueGrowth: _revenueGrowth,
+  forwardPE: _forwardPE, pegRatioValue: _pegRatioValue,
+  peHistory: _peHistory, evHistory: _evHistory,
+  earningsSurprises: _earningsSurprises,
+  high52: _high52, low52: _low52, nextEarningsDate,
   onViewValuation, onViewConviction,
 }: Props) {
   const [logoError, setLogoError] = useState(false)
@@ -395,27 +274,15 @@ export default function StockIdentityHeader({
     return { days }
   }, [nextEarningsDate])
 
-  const divYieldStr = dividendYield != null && isFinite(dividendYield) && dividendYield > 0 ? (dividendYield * 100).toFixed(2) + '%' : '—'
-
-  // Tags: sector is already shown in the identity line; show only distinct tags
-  const tags = useMemo(() => {
-    const r: string[] = []
-    if (dividendYield != null && dividendYield > 0.005) r.push('Dividend')
-    if (marketCap != null && marketCap >= 200e9) r.push('Large Cap')
-    else if (marketCap != null && marketCap >= 10e9) r.push('Mid Cap')
-    return r
-  }, [dividendYield, marketCap])
-
   const companyType = industry ?? sector ?? 'Equity'
 
-  const peSentiment: Sentiment        = peRatio      == null ? 'neutral' : peRatio < 15      ? 'positive' : peRatio > 50      ? 'negative' : 'neutral'
-  const evSentiment: Sentiment        = evToEbitda   == null ? 'neutral' : evToEbitda < 10   ? 'positive' : evToEbitda > 30   ? 'negative' : 'neutral'
-  const revGrowthSentiment: Sentiment = revenueGrowth== null ? 'neutral' : revenueGrowth>.10 ? 'positive' : revenueGrowth < 0 ? 'negative' : 'neutral'
-  const grossSentiment: Sentiment     = grossMargin  == null ? 'neutral' : grossMargin > .40 ? 'positive' : 'neutral'
-  const fcfSentiment: Sentiment       = fcfMargin    == null ? 'neutral' : fcfMargin > .15   ? 'positive' : fcfMargin  < 0   ? 'negative' : 'neutral'
-  const divSentiment: Sentiment       = dividendYield != null && dividendYield > 0            ? 'positive' : 'neutral'
-  const roeSentiment: Sentiment       = roe          == null ? 'neutral' : roe  > .15        ? 'positive' : roe  < 0         ? 'negative' : 'neutral'
-  const roicSentiment: Sentiment      = roic         == null ? 'neutral' : roic > .12        ? 'positive' : roic < 0         ? 'negative' : 'neutral'
+  const tags = useMemo(() => {
+    const r: string[] = []
+    if (_dividendYield != null && _dividendYield > 0.005) r.push('Dividend')
+    if (_marketCap != null && _marketCap >= 200e9) r.push('Large Cap')
+    else if (_marketCap != null && _marketCap >= 10e9) r.push('Mid Cap')
+    return r
+  }, [_dividendYield, _marketCap])
 
   const priceValuationProps = {
     currency, price, change, changePct,
@@ -522,123 +389,6 @@ export default function StockIdentityHeader({
 
         </div>
       </div>
-
-      {/* ══ SECTION B: Chart (68–72%) + Metrics sidebar (28–32%) ═════════════ */}
-      <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,68%)_minmax(0,32%)] gap-3 sm:gap-4 items-start">
-
-        {/* Chart — fills its grid cell; PriceChart handles its own internal height */}
-        <div
-          className="bg-white border border-[#E3E1DA] rounded-xl overflow-hidden min-h-0"
-          style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}
-        >
-          <PriceChart
-            ticker={ticker}
-            isDark={false}
-            triangulatedFairValue={fairValue ?? undefined}
-            analystTarget={analystTargetMean ?? undefined}
-            userModelFairValue={userModelFairValue ?? undefined}
-            initialPeriod="3mo"
-          />
-          {/* Valuation legend below chart */}
-          {(fairValue != null || analystTargetMean != null || userModelFairValue != null) && (
-            <div className="flex items-center gap-4 px-4 py-2 border-t border-[#F0F0F0]">
-              {fairValue != null && (
-                <span className="flex items-center gap-1.5 text-[11px] text-[#6B6B6B]">
-                  <span className="w-3 h-0.5 rounded-full inline-block bg-[#8b5cf6]" />
-                  Model estimate
-                </span>
-              )}
-              {analystTargetMean != null && (
-                <span className="flex items-center gap-1.5 text-[11px] text-[#6B6B6B]">
-                  <span className="w-3 h-0.5 rounded-full inline-block bg-[#f59e0b]" />
-                  Analyst target
-                </span>
-              )}
-              {userModelFairValue != null && (
-                <span className="flex items-center gap-1.5 text-[11px] text-[#6B6B6B]">
-                  <span className="w-3 h-0.5 rounded-full inline-block bg-[#10b981]" />
-                  Your model
-                </span>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Metrics sidebar */}
-        <div
-          className="bg-white border border-[#E3E1DA] rounded-xl flex flex-col min-w-0 min-h-0"
-          style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}
-        >
-          {/* Valuation section */}
-          <div className="px-4 pt-4 pb-0">
-            <p className="text-[10px] font-[700] text-[#9B9B9B] uppercase tracking-wider mb-1">Valuation</p>
-            <MetricRow label="Market Cap"     value={fmtLargeCurrency(marketCap ?? null, currency)} />
-            <MetricRow label="P/E (TTM)"      value={peRatio != null ? peRatio.toFixed(1)+'×' : '—'}
-              sentiment={peSentiment}
-              spark={peHistory}
-              sparkColor={peSentiment === 'positive' ? '#11875D' : peSentiment === 'negative' ? '#D83B3B' : '#6B6B6B'}
-            />
-            {forwardPE != null && (
-              <MetricRow label="Fwd P/E"      value={forwardPE.toFixed(1)+'×'}
-                sentiment={forwardPE < 15 ? 'positive' : forwardPE > 40 ? 'negative' : 'neutral'}
-              />
-            )}
-            {pegRatioValue != null && (
-              <MetricRow label="PEG"          value={pegRatioValue.toFixed(2)}
-                sentiment={pegRatioValue < 1.5 ? 'positive' : pegRatioValue > 2.5 ? 'negative' : 'neutral'}
-              />
-            )}
-            <MetricRow label="EV/EBITDA"      value={evToEbitda != null ? evToEbitda.toFixed(1)+'×' : '—'}
-              sentiment={evSentiment}
-              spark={evHistory}
-              sparkColor={evSentiment === 'positive' ? '#11875D' : evSentiment === 'negative' ? '#D83B3B' : '#6B6B6B'}
-            />
-            <MetricRow label="Beta"           value={beta != null ? beta.toFixed(2) : '—'} />
-            {dividendYield != null && dividendYield > 0 && (
-              <MetricRow label="Dividend Yield" value={divYieldStr} sentiment={divSentiment} />
-            )}
-          </div>
-
-          {/* Quality section */}
-          <div className="px-4 pt-3 pb-0">
-            <p className="text-[10px] font-[700] text-[#9B9B9B] uppercase tracking-wider mb-0.5">Quality</p>
-            <PercentBarRow label="Revenue Growth" valuePct={revenueGrowth}    cap={30} sentiment={revGrowthSentiment} />
-            <PercentBarRow label="Gross Margin"   valuePct={grossMargin}      cap={80} sentiment={grossSentiment} />
-            <PercentBarRow label="FCF Margin"     valuePct={fcfMargin}        cap={40} sentiment={fcfSentiment} />
-            <PercentBarRow label="ROE"            valuePct={roe}              cap={50} sentiment={roeSentiment} />
-            <PercentBarRow label="ROIC"           valuePct={roic}             cap={40} sentiment={roicSentiment} last />
-          </div>
-
-          {/* Earnings beat/miss — last 4 quarters */}
-          {earningsSurprises && earningsSurprises.length > 0 && (
-            <div className="px-4 pt-3 pb-0">
-              <p className="text-[10px] font-[700] text-[#9B9B9B] uppercase tracking-wider mb-2">EPS Surprises</p>
-              <div className="flex items-center gap-1.5">
-                {earningsSurprises.slice(-4).map((s, i) => {
-                  const beat = (s.surprisePercent ?? 0) > 0
-                  const pct = s.surprisePercent != null ? `${beat ? '+' : ''}${s.surprisePercent.toFixed(1)}%` : null
-                  return (
-                    <div key={i} className="flex flex-col items-center gap-0.5" title={`${s.quarter ?? `Q${i+1}`}${pct ? ': ' + pct : ''}`}>
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-[800] ${beat ? 'bg-[#E8F7EF] text-[#11875D]' : 'bg-[#FCEAEA] text-[#D83B3B]'}`}>
-                        {beat ? '✓' : '✗'}
-                      </div>
-                      {pct && <span className={`text-[9px] font-[600] tabular-nums ${beat ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>{pct}</span>}
-                    </div>
-                  )
-                })}
-                <span className="text-[10px] text-[#9B9B9B] ml-1">last 4Q</span>
-              </div>
-            </div>
-          )}
-
-          {/* 52-week range */}
-          <div className="px-4 pb-4 pt-4 border-t border-[#F0F0F0] mt-auto">
-            <RangeSlider low={low52} high={high52} current={price} currency={currency} fairValue={fairValue} />
-          </div>
-        </div>
-
-      </div>
-
     </div>
   )
 }

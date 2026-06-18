@@ -265,7 +265,9 @@ export default function SummaryTab({
         onViewConviction={_onViewConviction}
       />
 
-      {/* ── 2. CHART + SNAPSHOT RAIL (two-column grid) ──────────────────────── */}
+      {/* ── 2. CHART + SNAPSHOT RAIL ────────────────────────────────────────── */}
+      {/* Right rail: ValuationSnapshot + QualitySnapshot + TradingRange */}
+      {/* (52W Range, P/E, Gross Margin etc shown only here — not in hero sidebar) */}
       <OverviewLayout
         ticker={ticker}
         companyName={companyName}
@@ -290,22 +292,39 @@ export default function SummaryTab({
         roic={roic ?? null}
       />
 
-      {/* ── 2. FUNDAMENTALS SECTION LABEL ──────────────────────────────────── */}
+      {/* ── 3. WHAT THE MARKET IS PRICING IN (Reverse DCF — full width) ─────── */}
+      {/* Placed directly after the chart so valuation context is immediately clear */}
+      <ReverseDCFCompactCard
+        price={price}
+        currency={currency}
+        sharesM={sharesM}
+        cashM={cashM}
+        debtM={debtM}
+        revenueM={revenueM}
+        fcfMargin={fcfMarginProp ?? businessProfile?.fcfMargin ?? null}
+        wacc={wacc}
+        terminalG={terminalG}
+        historicalCAGR={historicalCAGR ?? cagrAnalysis?.historicalCagr3y ?? null}
+        analystCAGR={analystCAGR ?? cagrAnalysis?.analystEstimate1y ?? null}
+        analystCAGR2y={cagrAnalysis?.analystEstimate2y ?? null}
+        fundamentalGrowth={cagrAnalysis?.fundamentalGrowth ?? null}
+        blendedCAGR={cagrAnalysis?.blended ?? null}
+        epsGrowthFwd={epsGrowthFwd}
+        numAnalysts={cagrAnalysis?.numAnalysts ?? null}
+        isEmergingMarket={isEmergingMarket}
+        isFinancialSector={isFinancialSector}
+        revenueHistory={revenueHistory}
+      />
+
+      {/* ── 4. FUNDAMENTALS ──────────────────────────────────────────────────── */}
       <SectionLabel>Fundamentals</SectionLabel>
 
-      {/* ── 3. 2-COL: [Revenue + FCF stacked] | [Growth Outlook + Cash Conversion stacked] */}
+      {/* Revenue + FCF | Growth Outlook + Cash Conversion */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 items-stretch">
-        {/* Left col: Revenue chart + FCF chart stacked */}
         <div className="flex flex-col gap-4">
-          {statementsData && (
-            <RevenueChartCard statementsData={statementsData} currency={currency} />
-          )}
-          {statementsData && (
-            <FCFChartCard statementsData={statementsData} currency={currency} />
-          )}
+          {statementsData && <RevenueChartCard statementsData={statementsData} currency={currency} />}
+          {statementsData && <FCFChartCard statementsData={statementsData} currency={currency} />}
         </div>
-
-        {/* Right col: Growth Outlook + Cash Conversion stacked */}
         <div className="flex flex-col gap-4">
           <GrowthOutlookCard
             historicalCagr3y={cagrAnalysis?.historicalCagr3y}
@@ -320,46 +339,12 @@ export default function SummaryTab({
         </div>
       </div>
 
-      {/* ── 4. 2-COL: Reverse DCF | Valuation Ratios ────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 items-stretch">
-        <ReverseDCFCompactCard
-          price={price}
-          currency={currency}
-          sharesM={sharesM}
-          cashM={cashM}
-          debtM={debtM}
-          revenueM={revenueM}
-          fcfMargin={fcfMarginProp ?? businessProfile?.fcfMargin ?? null}
-          wacc={wacc}
-          terminalG={terminalG}
-          historicalCAGR={historicalCAGR ?? cagrAnalysis?.historicalCagr3y ?? null}
-          analystCAGR={analystCAGR ?? cagrAnalysis?.analystEstimate1y ?? null}
-          analystCAGR2y={cagrAnalysis?.analystEstimate2y ?? null}
-          fundamentalGrowth={cagrAnalysis?.fundamentalGrowth ?? null}
-          blendedCAGR={cagrAnalysis?.blended ?? null}
-          epsGrowthFwd={epsGrowthFwd}
-          numAnalysts={cagrAnalysis?.numAnalysts ?? null}
-          isEmergingMarket={isEmergingMarket}
-          isFinancialSector={isFinancialSector}
-          revenueHistory={revenueHistory}
-        />
-        <ValuationRatiosCard
-          estimates={valuationMethods?.models?.multiples?.estimates}
-          pegRatio={quote?.pegRatio}
-          peRatio={peRatio}
-          sector={sector}
-          ratiosQuarterly={ratiosQuarterly}
-          historicalMultiples={historicalMultiples}
-          epsGrowthFwd={epsGrowthFwd}
-          analystForwardPE={analystForwardPE ?? null}
-        />
-      </div>
+      {/* ── 5. PROFITABILITY ─────────────────────────────────────────────────── */}
+      <SectionLabel>Profitability</SectionLabel>
 
-      {/* ── 5. 2×2 GRID: Profitability chart | Profitability text ──────────── */}
+      {/* Chart + text side by side — both about the same topic */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 items-stretch">
-        <ProfitabilityChartCard
-          statementsData={statementsData}
-        />
+        <ProfitabilityChartCard statementsData={statementsData} />
         <ProfitabilityTextCard
           grossMargin={businessProfile?.grossMargin}
           netMargin={businessProfile?.netMargin}
@@ -373,18 +358,29 @@ export default function SummaryTab({
         />
       </div>
 
-      {/* ── 6. 2-COL: ETF Exposure | Peer Valuation ─────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 items-stretch">
-        <ETFExposureCard ticker={ticker} />
-        <PeerValuationChart ticker={ticker} isFinancialSector={isFinancialSector} />
-      </div>
-
-      {/* ── 7. Holding Returns (if present) ─────────────────────────────────── */}
-      {holdingReturns && (
-        <HoldingReturns returns={holdingReturns} ticker={ticker} />
+      {/* Income flow waterfall — same section, full width */}
+      {statementsData && (
+        <IncomeFlowCard statementsData={statementsData} currency={currency} />
       )}
 
-      {/* ── 8. 2-COL: EPS Beat/Miss | Analyst Recommendations ───────────────── */}
+      {/* ── 6. VALUATION ANALYSIS ────────────────────────────────────────────── */}
+      <SectionLabel>Valuation Analysis</SectionLabel>
+
+      <ValuationRatiosCard
+        estimates={valuationMethods?.models?.multiples?.estimates}
+        pegRatio={quote?.pegRatio}
+        peRatio={peRatio}
+        sector={sector}
+        ratiosQuarterly={ratiosQuarterly}
+        historicalMultiples={historicalMultiples}
+        epsGrowthFwd={epsGrowthFwd}
+        analystForwardPE={analystForwardPE ?? null}
+      />
+
+      {/* ── 7. MARKET SIGNALS ────────────────────────────────────────────────── */}
+      <SectionLabel>Market Signals</SectionLabel>
+
+      {/* EPS Beat/Miss + Analyst Recommendations — only render when data exists */}
       {(earningsSurprises?.length || analystRatingTrend?.length) ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 items-stretch">
           {earningsSurprises && earningsSurprises.length > 0 && (
@@ -408,12 +404,21 @@ export default function SummaryTab({
         </div>
       ) : null}
 
-      {/* ── 6. INCOME FLOW CARD (Sankey, full width) ────────────────────────── */}
-      {statementsData && (
-        <IncomeFlowCard statementsData={statementsData} currency={currency} />
+      {/* Peer valuation — only when signals section has context */}
+      <PeerValuationChart ticker={ticker} isFinancialSector={isFinancialSector} />
+
+      {/* ── 8. CONTEXT ───────────────────────────────────────────────────────── */}
+      {/* ETF exposure + holding returns — additional context, not primary analysis */}
+      {(holdingReturns) && (
+        <HoldingReturns returns={holdingReturns} ticker={ticker} />
       )}
 
-      {/* ── 7. INVESTMENT VERDICT (expanded checklist, full width) ──────────── */}
+      {/* ETF exposure guarded — only render when it has data to show */}
+      <ETFExposureCard ticker={ticker} />
+
+      {/* ── 9. INVESTMENT CHECKLIST ──────────────────────────────────────────── */}
+      <SectionLabel>Investment Checklist</SectionLabel>
+
       {scores && (
         <InvestmentVerdict
           ticker={ticker}
