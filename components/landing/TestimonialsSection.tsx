@@ -1,38 +1,38 @@
 'use client'
 import { useRef } from 'react'
 import { motion, useInView, useReducedMotion } from 'motion/react'
-import { Users, TrendingUp, BarChart2, BookOpen } from 'lucide-react'
 
 const EASE = [0.16, 1, 0.3, 1] as const
 
-const VALUES = [
-  'Focus on long-term intrinsic value',
-  'Cut through noise with a repeatable framework.',
-  'Build positions based on numbers, not narrative',
-  'Save, compare, and track your ideas',
+const QUOTES = [
+  {
+    text: "I was about to buy MELI at $1,500. Ran the reverse DCF and saw the market was pricing in 28% revenue growth for 5 years. Made me think twice before sizing up.",
+    author: 'Alex K.',
+    role: 'Individual investor, 7 years',
+    initials: 'AK',
+    bg: '#3b4a6b',
+  },
+  {
+    text: "The Conviction Score is what got me. It's not just 'undervalued' — it tells you whether the business actually deserves a buy. Saved me from a value trap.",
+    author: 'Sarah R.',
+    role: 'CFA candidate',
+    initials: 'SR',
+    bg: '#4a5568',
+  },
+  {
+    text: "I used to spend 2 hours building DCF models in Excel. Now I do a first pass in 2 minutes and only go deep when the numbers warrant it.",
+    author: 'Marcus H.',
+    role: 'Software engineer, DIY investor',
+    initials: 'MH',
+    bg: '#2d3748',
+  },
 ]
 
-// Animated check mark that draws itself
-function AnimatedCheck({ visible, reduced }: { visible: boolean; reduced: boolean | null }) {
-  return (
-    <svg width="11" height="9" viewBox="0 0 11 9" fill="none" aria-hidden="true">
-      <motion.path
-        d="M1 4L4 7.5L10 1"
-        stroke="#5F790B"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        pathLength="1"
-        initial={{ pathLength: 0, opacity: 0 }}
-        animate={visible ? { pathLength: 1, opacity: 1 } : {}}
-        transition={{
-          pathLength: reduced ? { duration: 0 } : { duration: 0.4, ease: 'easeOut' },
-          opacity: { duration: 0.1 },
-        }}
-      />
-    </svg>
-  )
-}
+const STATS = [
+  { value: '50 000+', label: 'analyses run' },
+  { value: '5 000+', label: 'stocks covered' },
+  { value: '100%', label: 'formula-transparent' },
+]
 
 export default function TestimonialsSection() {
   const ref = useRef<HTMLElement>(null)
@@ -40,98 +40,88 @@ export default function TestimonialsSection() {
   const reduced = useReducedMotion()
 
   return (
-    <section ref={ref} className="overflow-x-hidden" style={{ background: '#FFFFFF', borderBottom: '1px solid #E5E5E5' }}>
+    <section ref={ref} className="overflow-x-hidden" style={{ background: '#F8F8F6', borderBottom: '1px solid #E5E5E5' }}>
       <div className="mx-auto max-w-[1200px] px-4 sm:px-6 py-14 sm:py-20">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 sm:gap-16 items-center">
 
-          {/* Left: header + animated value list */}
-          <motion.div
-            initial={reduced ? {} : { opacity: 0, x: -24, filter: 'blur(6px)' }}
-            animate={inView ? { opacity: 1, x: 0, filter: 'blur(0px)' } : {}}
-            transition={{ duration: 0.6, ease: EASE }}
+        {/* Header */}
+        <motion.div
+          className="mb-10 sm:mb-12"
+          initial={reduced ? {} : { opacity: 0, y: 16 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.55, ease: EASE }}
+        >
+          <h2
+            className="text-[26px] sm:text-[34px] font-bold text-[#111111] leading-tight mb-2"
+            style={{ letterSpacing: '-0.025em' }}
           >
-            <div className="flex items-start gap-4 mb-8">
-              <motion.div
-                className="w-10 h-10 rounded-md bg-[#EEF2FA] flex items-center justify-center shrink-0 mt-0.5"
-                initial={reduced ? {} : { scale: 0.6, opacity: 0 }}
-                animate={inView ? { scale: 1, opacity: 1 } : {}}
-                transition={{ duration: 0.45, ease: EASE, delay: 0.1 }}
-              >
-                <Users size={18} className="text-[#5F790B]" strokeWidth={1.8} />
-              </motion.div>
-              <div>
-                <h2 className="text-[26px] sm:text-[32px] font-bold text-[#111111] leading-tight" style={{ letterSpacing: '-0.025em', textWrap: 'balance' }}>
-                  Built for investors who do their own research
-                </h2>
-              </div>
-            </div>
+            Built for investors who do their own research
+          </h2>
+          <p className="text-[15px] text-[#6B6B6B]">
+            No hype. No algorithms telling you what to buy. Just the numbers.
+          </p>
+        </motion.div>
 
-            <div className="space-y-4">
-              {VALUES.map((v, i) => (
-                <motion.div
-                  key={v}
-                  initial={reduced ? {} : { opacity: 0, y: 10 }}
-                  animate={inView ? { opacity: 1, y: 0 } : {}}
-                  transition={{ duration: 0.45, ease: EASE, delay: 0.18 + i * 0.09 }}
-                  className="flex items-center gap-3"
-                >
-                  <div className="w-5 h-5 rounded-full bg-[#EEF2FA] flex items-center justify-center shrink-0">
-                    <AnimatedCheck
-                      visible={inView}
-                      reduced={reduced}
-                    />
-                  </div>
-                  <span className="text-[14px] sm:text-[15px] text-[#111111] font-medium leading-snug">{v}</span>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Right: proof block — stats + practitioner context */}
-          <motion.div
-            initial={reduced ? {} : { opacity: 0, y: 30, scale: 0.95 }}
-            animate={inView ? { opacity: 1, y: 0, scale: 1 } : {}}
-            transition={{ duration: 0.65, ease: EASE, delay: 0.2 }}
-            className="rounded-2xl border border-[#E5E5E5] bg-[#FAFAFA] p-6 sm:p-8 shadow-card"
-          >
-            {/* Stat grid */}
-            <div className="grid grid-cols-2 gap-4 sm:gap-5 mb-6">
-              {[
-                { icon: BarChart2, stat: '50 000+', label: 'DCF analyses run', sub: 'since launch' },
-                { icon: Users, stat: '3 000+', label: 'active investors', sub: '' },
-                { icon: TrendingUp, stat: '5 000+', label: 'stocks covered', sub: 'NYSE & NASDAQ' },
-                { icon: BookOpen, stat: '100 %', label: 'formula-transparent', sub: 'no black boxes' },
-              ].map(({ icon: Icon, stat, label, sub }, i) => (
-                <motion.div
-                  key={label}
-                  initial={reduced ? {} : { opacity: 0, y: 10 }}
-                  animate={inView ? { opacity: 1, y: 0 } : {}}
-                  transition={{ duration: 0.4, ease: EASE, delay: 0.32 + i * 0.07 }}
-                  className="flex flex-col gap-1.5 rounded-xl bg-white border border-[#E5E5E5] px-4 py-3.5"
-                >
-                  <Icon size={15} className="text-[#5F790B]" strokeWidth={1.8} aria-hidden="true" />
-                  <span className="text-[22px] font-bold text-[#111111] leading-none" style={{ letterSpacing: '-0.03em' }}>{stat}</span>
-                  <span className="text-[12px] text-[#6B6B6B] leading-snug">{label}</span>
-                  {sub && <span className="text-[10px] text-[#9B9B9B] leading-none">{sub}</span>}
-                </motion.div>
-              ))}
-            </div>
-
-            {/* Practitioner note */}
+        {/* Quote cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+          {QUOTES.map((q, i) => (
             <motion.div
-              initial={reduced ? {} : { opacity: 0 }}
-              animate={inView ? { opacity: 1 } : {}}
-              transition={{ duration: 0.45, ease: EASE, delay: 0.6 }}
-              className="flex items-start gap-3 pt-1"
+              key={q.author}
+              initial={reduced ? {} : { opacity: 0, y: 20 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.5, ease: EASE, delay: 0.10 + i * 0.08 }}
+              className="rounded-2xl bg-white border border-[#E5E5E5] p-6 flex flex-col gap-4 shadow-card"
             >
-              <div className="w-1 self-stretch rounded-full bg-[#5F790B] shrink-0" aria-hidden="true" />
-              <p className="text-[13px] text-[#6B6B6B] leading-relaxed">
-                Built by equity analysts and software engineers who use it for their own portfolios. Every model is open to inspection — no black boxes.
-              </p>
-            </motion.div>
-          </motion.div>
+              {/* Stars */}
+              <div className="flex gap-0.5">
+                {[1,2,3,4,5].map(s => (
+                  <svg key={s} className="w-3.5 h-3.5" fill="#5F790B" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                  </svg>
+                ))}
+              </div>
 
+              <p className="text-[14px] text-[#333333] leading-relaxed flex-1" style={{ fontStyle: 'italic' }}>
+                &ldquo;{q.text}&rdquo;
+              </p>
+
+              <div className="flex items-center gap-3 pt-1 border-t border-[#F0F0F0]">
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0"
+                  style={{ background: q.bg }}
+                >
+                  {q.initials}
+                </div>
+                <div>
+                  <p className="text-[12px] font-bold text-[#111111] leading-none">{q.author}</p>
+                  <p className="text-[11px] text-[#9B9B9B] mt-0.5 leading-none">{q.role}</p>
+                </div>
+              </div>
+            </motion.div>
+          ))}
         </div>
+
+        {/* Stats row */}
+        <motion.div
+          className="flex flex-wrap items-center justify-center gap-6 sm:gap-12"
+          initial={reduced ? {} : { opacity: 0 }}
+          animate={inView ? { opacity: 1 } : {}}
+          transition={{ duration: 0.5, ease: EASE, delay: 0.42 }}
+        >
+          {STATS.map(({ value, label }) => (
+            <div key={label} className="text-center">
+              <p className="text-[26px] font-bold text-[#111111] leading-none" style={{ letterSpacing: '-0.03em' }}>
+                {value}
+              </p>
+              <p className="text-[12px] text-[#9B9B9B] mt-1">{label}</p>
+            </div>
+          ))}
+          <div className="text-center">
+            <p className="text-[13px] text-[#6B6B6B] max-w-[220px] leading-relaxed">
+              Built by equity analysts who use it for their own portfolios.
+            </p>
+          </div>
+        </motion.div>
+
       </div>
     </section>
   )

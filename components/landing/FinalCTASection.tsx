@@ -127,10 +127,10 @@ export default function FinalCTASection() {
               marginBottom: '14px',
             }}
           >
-            Know what has to be true before you buy.
+            What is this stock actually betting on?
           </h2>
           <p className="text-base sm:text-[17px]" style={{ color: 'rgba(255,255,255,0.60)', lineHeight: 1.55, marginBottom: '28px' }}>
-            A first-pass valuation in seconds. Go deeper when it matters.
+            Type a ticker and see the growth rate baked into today&apos;s price — in seconds, free.
           </p>
 
           {/* Search */}

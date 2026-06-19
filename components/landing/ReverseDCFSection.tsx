@@ -102,6 +102,33 @@ export default function ReverseDCFSection() {
               Reverse DCF works backward from today&apos;s price to show the growth
               and profitability the market must be right about for you to break even.
             </p>
+
+            {/* Bullet points */}
+            <div className="space-y-3" style={{ maxWidth: '380px' }}>
+              {[
+                'See exactly what growth rate is already priced in',
+                'Compare market expectations vs the last 3 years of actual growth',
+                'Judge whether the implied assumptions are realistic — or optimistic',
+              ].map((point, i) => (
+                <motion.div
+                  key={i}
+                  className="flex items-start gap-3"
+                  initial={reduced !== false ? {} : { opacity: 0, x: -12 }}
+                  animate={inView ? { opacity: 1, x: 0 } : {}}
+                  transition={{ duration: 0.4, ease: EASE, delay: 0.5 + i * 0.07 }}
+                >
+                  <div
+                    className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5"
+                    style={{ background: '#EEF3D8', border: '1px solid #BFD2A1' }}
+                  >
+                    <svg width="9" height="9" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+                      <path d="M2 5l2.5 2.5 3.5-4" stroke="#5F790B" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                  <span className="text-[14px] text-[#444444] leading-snug">{point}</span>
+                </motion.div>
+              ))}
+            </div>
           </motion.div>
 
           {/* Right: stock cards — staggered scale zoom */}

@@ -1,10 +1,9 @@
 'use client'
 import { motion, useReducedMotion } from 'motion/react'
+import { useState, useEffect } from 'react'
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const
 
-// Verdict cards modelled after moby.co's stacked rotated performance cards
-// Each card represents a real-ish stock verdict with color derived from verdict
 const CARDS = [
   {
     ticker: 'AAPL',
@@ -12,74 +11,78 @@ const CARDS = [
     upside: '+31%',
     verdict: 'Undervalued',
     fairValue: '$247',
-    // Dark olive-green for positive
+    impliedCAGR: '7.7%',
+    cagrLabel: 'implied 5Y CAGR',
     bg: 'linear-gradient(135deg, #1e3a1e 0%, #2d5a2d 100%)',
-    rotate: -7,
-    x: 2,
-    y: 0,
-    z: 1,
+    rotate: -9,
+    xOffset: -12,
+    yOffset: -8,
   },
   {
     ticker: 'MSFT',
-    company: 'Microsoft',
+    company: 'Microsoft Corp.',
     upside: '+14%',
     verdict: 'Attractive',
     fairValue: '$472',
-    // Deep navy
+    impliedCAGR: '12.3%',
+    cagrLabel: 'implied 5Y CAGR',
     bg: 'linear-gradient(135deg, #0f1e3a 0%, #1a3158 100%)',
-    rotate: 3,
-    x: 5,
-    y: 28,
-    z: 2,
+    rotate: -3,
+    xOffset: -4,
+    yOffset: 0,
   },
   {
     ticker: 'NVDA',
-    company: 'NVIDIA',
+    company: 'NVIDIA Corp.',
     upside: '-9%',
-    verdict: 'Overvalued',
+    verdict: 'Overpriced',
     fairValue: '$187',
-    // Dark red
+    impliedCAGR: '45.4%',
+    cagrLabel: 'implied 5Y CAGR',
     bg: 'linear-gradient(135deg, #3a0f0f 0%, #5c1919 100%)',
-    rotate: -2,
-    x: 8,
-    y: 54,
-    z: 3,
+    rotate: 4,
+    xOffset: 4,
+    yOffset: 6,
   },
   {
     ticker: 'WMT',
-    company: 'Walmart',
+    company: 'Walmart Inc.',
     upside: '+22%',
     verdict: 'Undervalued',
     fairValue: '$115',
-    // Deep teal
+    impliedCAGR: '5.1%',
+    cagrLabel: 'implied 5Y CAGR',
     bg: 'linear-gradient(135deg, #0a2929 0%, #134040 100%)',
-    rotate: 8,
-    x: 11,
-    y: 12,
-    z: 4,
+    rotate: 10,
+    xOffset: 12,
+    yOffset: 12,
   },
 ]
 
-const container = {
-  hidden: {},
-  show: {
-    transition: { staggerChildren: 0.09, delayChildren: 0.1 },
-  },
+// Which card sits on top (active). Others fan behind it.
+function getFanConfig(activeIdx: number, cardIdx: number, totalCards: number) {
+  const offset = cardIdx - activeIdx
+  const wrapped = ((offset % totalCards) + totalCards) % totalCards
+  // 0 = active (top), 1 = one behind, 2 = two behind, 3 = furthest back
+  return {
+    zIndex: totalCards - wrapped,
+    behind: wrapped, // 0 = active
+  }
 }
-
-const cardVariant = (rotate: number) => ({
-  hidden: { opacity: 0, y: 56, rotate: 0, scale: 0.92 },
-  show: {
-    opacity: 1,
-    y: 0,
-    rotate,
-    scale: 1,
-    transition: { type: 'spring' as const, stiffness: 150, damping: 22 },
-  },
-})
 
 export default function FannedVerdictCards() {
   const reduced = useReducedMotion()
+  const [activeIdx, setActiveIdx] = useState(0)
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
+
+  // Auto-cycle every 2.8 s
+  useEffect(() => {
+    if (reduced) return
+    const id = setInterval(() => {
+      setActiveIdx(i => (i + 1) % CARDS.length)
+    }, 2800)
+    return () => clearInterval(id)
+  }, [reduced])
 
   return (
     <section
@@ -90,12 +93,12 @@ export default function FannedVerdictCards() {
         paddingBottom: 'clamp(72px, 10vw, 120px)',
       }}
     >
-      {/* Subtle radial glow */}
+      {/* Radial glow */}
       <div
         aria-hidden="true"
         className="absolute inset-0 pointer-events-none"
         style={{
-          backgroundImage: 'radial-gradient(ellipse 60% 50% at 75% 50%, rgba(95,121,11,0.08) 0%, transparent 70%)',
+          backgroundImage: 'radial-gradient(ellipse 60% 50% at 72% 50%, rgba(95,121,11,0.10) 0%, transparent 70%)',
         }}
       />
 
@@ -139,10 +142,10 @@ export default function FannedVerdictCards() {
               className="text-[16px] leading-relaxed mb-8"
               style={{ color: 'rgba(248,250,252,0.68)', maxWidth: '420px' }}
             >
-              Insic computes a fair value for any NYSE or NASDAQ stock in seconds — using DCF models, analyst consensus, and financial health scores.
+              Every card shows what the market is pricing in — the implied growth rate baked into today&apos;s price — so you can judge whether it&apos;s realistic.
             </motion.p>
 
-            {/* Stat pills — glassmorphism */}
+            {/* Stat pills */}
             <motion.div
               initial={reduced ? {} : { opacity: 0, y: 8 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -172,77 +175,142 @@ export default function FannedVerdictCards() {
             </motion.div>
           </div>
 
-          {/* Right — fanned cards */}
-          <div className="flex items-center justify-center">
-            <div className="relative" style={{ width: '320px', height: '320px' }}>
-              <motion.div
-                variants={container}
-                initial="hidden"
-                whileInView="show"
-                viewport={{ once: true, margin: '-60px' }}
-                className="absolute inset-0"
+          {/* Right — fanned card stack */}
+          <div className="flex flex-col items-center justify-center gap-6">
+            <motion.div
+              initial={reduced ? {} : { opacity: 0, x: 40 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, ease: EASE_OUT, delay: 0.1 }}
+            >
+              {/* Card stack */}
+              <div
+                className="relative cursor-pointer"
+                style={{ width: '280px', height: '200px' }}
+                onClick={() => setActiveIdx(i => (i + 1) % CARDS.length)}
+                role="region"
+                aria-label="Verdict card examples — click to cycle"
               >
-                {CARDS.map((card) => (
-                  <motion.div
-                    key={card.ticker}
-                    variants={cardVariant(reduced ? 0 : card.rotate)}
-                    className="absolute rounded-2xl px-5 py-4 select-none"
-                    style={{
-                      width: '220px',
-                      background: card.bg,
-                      boxShadow: '0 20px 48px rgba(0,0,0,0.45), 0 2px 8px rgba(0,0,0,0.3)',
-                      border: '1px solid rgba(255,255,255,0.08)',
-                      left: `${card.x}%`,
-                      top: `${card.y}px`,
-                      zIndex: card.z,
-                      transformOrigin: 'center bottom',
-                    }}
-                    whileHover={reduced ? {} : {
-                      scale: 1.04,
-                      zIndex: 10,
-                      boxShadow: '0 28px 64px rgba(0,0,0,0.55), 0 4px 12px rgba(0,0,0,0.4)',
-                      transition: { duration: 0.2 },
-                    }}
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <span
-                        className="text-[11px] font-[800] tracking-[0.08em] px-2 py-0.5 rounded-full"
-                        style={{
-                          background: 'rgba(255,255,255,0.12)',
-                          color: 'rgba(255,255,255,0.7)',
-                        }}
-                      >
-                        {card.ticker}
-                      </span>
-                      <span
-                        className="text-[10px] font-[650] px-2 py-0.5 rounded-full"
-                        style={{
-                          background: card.verdict === 'Overvalued'
-                            ? 'rgba(220,38,38,0.25)' : 'rgba(95,121,11,0.25)',
-                          color: card.verdict === 'Overvalued'
-                            ? '#fca5a5' : '#a3e635',
-                        }}
-                      >
-                        {card.verdict}
-                      </span>
-                    </div>
-                    <p
-                      className="font-[900] leading-none tabular-nums mb-1"
+                {CARDS.map((card, idx) => {
+                  const { zIndex, behind } = getFanConfig(activeIdx, idx, CARDS.length)
+                  const isActive = behind === 0
+                  const isHovered = hoveredIdx === idx
+
+                  // Fan positions: active = center, others spread behind
+                  const fanRotate = isActive ? 0 : behind === 1 ? -6 : behind === 2 ? -13 : -19
+                  const fanX = isActive ? 0 : behind === 1 ? -14 : behind === 2 ? -26 : -36
+                  const fanY = isActive ? 0 : behind === 1 ? 10 : behind === 2 ? 18 : 24
+                  const fanScale = isActive ? 1 : behind === 1 ? 0.95 : behind === 2 ? 0.90 : 0.85
+                  const fanOpacity = isActive ? 1 : behind === 1 ? 0.85 : behind === 2 ? 0.65 : 0.45
+
+                  return (
+                    <motion.div
+                      key={card.ticker}
+                      animate={reduced ? {} : {
+                        rotate: fanRotate,
+                        x: fanX,
+                        y: fanY,
+                        scale: isHovered && !isActive ? fanScale * 1.03 : fanScale,
+                        opacity: fanOpacity,
+                      }}
+                      transition={{ type: 'spring', stiffness: 200, damping: 26 }}
+                      onClick={e => { e.stopPropagation(); setActiveIdx(idx) }}
+                      onMouseEnter={() => setHoveredIdx(idx)}
+                      onMouseLeave={() => setHoveredIdx(null)}
+                      className="absolute rounded-2xl px-5 py-4 select-none"
                       style={{
-                        fontSize: '36px',
-                        color: card.upside.startsWith('-') ? '#fca5a5' : '#a3e635',
-                        letterSpacing: '-0.02em',
+                        width: '280px',
+                        background: card.bg,
+                        boxShadow: isActive
+                          ? '0 24px 56px rgba(0,0,0,0.55), 0 4px 12px rgba(0,0,0,0.35)'
+                          : '0 12px 32px rgba(0,0,0,0.35)',
+                        border: '1px solid rgba(255,255,255,0.10)',
+                        zIndex,
+                        top: 0,
+                        left: 0,
+                        transformOrigin: 'bottom center',
+                        cursor: isActive ? 'default' : 'pointer',
                       }}
                     >
-                      {card.upside}
-                    </p>
-                    <p className="text-[11px]" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                      Fair value {card.fairValue} · {card.company}
-                    </p>
-                  </motion.div>
+                      {/* Header row */}
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="text-[11px] font-[800] tracking-[0.08em] px-2.5 py-0.5 rounded-full"
+                            style={{ background: 'rgba(255,255,255,0.14)', color: 'rgba(255,255,255,0.85)' }}
+                          >
+                            {card.ticker}
+                          </span>
+                          <span className="text-[11px] text-[rgba(255,255,255,0.45)] truncate" style={{ maxWidth: 100 }}>
+                            {card.company}
+                          </span>
+                        </div>
+                        <span
+                          className="text-[10px] font-[700] px-2.5 py-0.5 rounded-full shrink-0"
+                          style={{
+                            background: card.verdict === 'Overpriced'
+                              ? 'rgba(220,38,38,0.22)' : 'rgba(95,121,11,0.28)',
+                            color: card.verdict === 'Overpriced' ? '#fca5a5' : '#a3e635',
+                            border: `1px solid ${card.verdict === 'Overpriced' ? 'rgba(220,38,38,0.30)' : 'rgba(95,121,11,0.40)'}`,
+                          }}
+                        >
+                          {card.verdict}
+                        </span>
+                      </div>
+
+                      {/* Upside number */}
+                      <p
+                        className="font-[900] leading-none tabular-nums mb-1"
+                        style={{
+                          fontSize: '42px',
+                          color: card.upside.startsWith('-') ? '#fca5a5' : '#a3e635',
+                          letterSpacing: '-0.03em',
+                        }}
+                      >
+                        {card.upside}
+                      </p>
+                      <p className="text-[11px] mb-3" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                        Fair value {card.fairValue} · vs current price
+                      </p>
+
+                      {/* Implied CAGR row */}
+                      <div
+                        className="flex items-center justify-between rounded-lg px-3 py-2"
+                        style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.08)' }}
+                      >
+                        <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                          {card.cagrLabel}
+                        </span>
+                        <span className="text-[13px] font-[800] tabular-nums" style={{ color: 'rgba(255,255,255,0.90)' }}>
+                          {card.impliedCAGR}
+                        </span>
+                      </div>
+                    </motion.div>
+                  )
+                })}
+              </div>
+
+              {/* Indicator dots */}
+              <div className="flex items-center justify-center gap-2 mt-6">
+                {CARDS.map((card, idx) => (
+                  <button
+                    key={card.ticker}
+                    onClick={() => setActiveIdx(idx)}
+                    aria-label={`Show ${card.ticker} card`}
+                    className="transition-all"
+                    style={{
+                      width: activeIdx === idx ? '20px' : '6px',
+                      height: '6px',
+                      borderRadius: '3px',
+                      background: activeIdx === idx ? '#7C9A19' : 'rgba(255,255,255,0.22)',
+                    }}
+                  />
                 ))}
-              </motion.div>
-            </div>
+              </div>
+              <p className="text-center text-[11px] mt-3" style={{ color: 'rgba(255,255,255,0.30)' }}>
+                Click a card or dot to explore
+              </p>
+            </motion.div>
           </div>
 
         </div>

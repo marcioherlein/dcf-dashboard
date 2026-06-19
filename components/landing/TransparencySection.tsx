@@ -2,6 +2,7 @@
 import { useRef } from 'react'
 import { motion, useInView, useReducedMotion } from 'motion/react'
 import { Eye, LayoutGrid, Database, TrendingUp } from 'lucide-react'
+import Link from 'next/link'
 
 const EASE = [0.16, 1, 0.3, 1] as const
 
@@ -65,11 +66,10 @@ export default function TransparencySection() {
             className="text-[28px] sm:text-[36px] lg:text-[clamp(30px,3vw,42px)] text-[#111111]"
             style={{ fontWeight: 700, lineHeight: 1.1, letterSpacing: '-0.025em', marginBottom: '12px', textWrap: 'balance' }}
           >
-            No black boxes. Every assumption is yours.
+            No black boxes. Every number is yours to inspect.
           </h2>
           <p className="text-[15px] sm:text-[17px] text-[#6B6B6B] mx-auto leading-relaxed" style={{ maxWidth: '520px' }}>
-            We believe investors deserve transparency in how fair value is derived.
-            Every model, source, and assumption is visible and adjustable.
+            Every model, source, and assumption is visible and adjustable — no parameter hidden behind a paywall.
           </p>
         </motion.div>
 
@@ -119,7 +119,7 @@ export default function TransparencySection() {
         </div>
 
         {/* Secondary tier — compact row list */}
-        <div className="grid sm:grid-cols-2 gap-3">
+        <div className="grid sm:grid-cols-2 gap-3 mb-8">
           {SECONDARY.map(({ Icon, iconColor, iconBg, title, detail }, i) => (
             <motion.div
               key={title}
@@ -146,6 +146,22 @@ export default function TransparencySection() {
             </motion.div>
           ))}
         </div>
+
+        {/* CTA */}
+        <motion.div
+          className="text-center"
+          initial={reduced ? {} : { opacity: 0, y: 8 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.4, ease: EASE, delay: 0.5 }}
+        >
+          <Link
+            href="/analyze"
+            className="inline-flex items-center justify-center rounded-md px-7 py-3.5 text-[14px] font-semibold text-white transition-all hover:-translate-y-px active:scale-95"
+            style={{ background: '#5F790B', boxShadow: '0 4px 14px rgba(95,121,11,0.28)', minHeight: '48px' }}
+          >
+            See it for free on any stock →
+          </Link>
+        </motion.div>
 
       </div>
     </section>

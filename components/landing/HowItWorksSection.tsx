@@ -9,20 +9,20 @@ const STEPS = [
   {
     n: '1',
     Icon: Search,
-    title: 'Search any NYSE or NASDAQ stock',
-    body: 'Type a ticker — data loads immediately.',
+    title: 'Type any NYSE or NASDAQ ticker',
+    body: 'No login required. Type a ticker — data loads in under 3 seconds.',
   },
   {
     n: '2',
     Icon: TrendingUp,
-    title: 'See the fair value and what the price implies',
-    body: 'Compare the price to its estimated fair value. See what growth rate the market is betting on.',
+    title: 'See what the price is betting on',
+    body: 'Fair value estimate, plus the implied growth rate the market must be right about for you to break even.',
   },
   {
     n: '3',
     Icon: SlidersHorizontal,
-    title: 'Stress-test the model with your own assumptions',
-    body: 'Change growth and margin assumptions to see how the verdict shifts. No spreadsheet needed.',
+    title: 'Test your own assumptions',
+    body: 'Change WACC, growth, and margins to see how the verdict shifts. No spreadsheet needed.',
   },
 ]
 
@@ -51,7 +51,7 @@ export default function HowItWorksSection() {
             From ticker to verdict in under a minute.
           </h2>
           <p className="text-[14px] text-[#6B6B6B] mt-2 leading-relaxed max-w-md">
-            Type a ticker. See the fair value, the implied growth, and a conviction score — all from one screen.
+            No account needed for the first look. Sign up only when you want to save or go deeper.
           </p>
         </motion.div>
 

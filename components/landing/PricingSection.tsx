@@ -50,8 +50,9 @@ export default function PricingSection() {
         {/* Header */}
         <div className="text-center mb-10">
           <h2 className="text-[28px] sm:text-[36px] font-bold text-[#111111] leading-tight mb-3" style={{ letterSpacing: '-0.025em' }}>
-            Simple pricing.<br />Everything you need.
+            Simple pricing.<br />Start free, upgrade when you&apos;re ready.
           </h2>
+          <p className="text-[15px] text-[#6B6B6B]">No credit card required to get started.</p>
         </div>
 
         {/* Cards */}
@@ -59,15 +60,12 @@ export default function PricingSection() {
 
           {/* Free */}
           <div className="rounded-2xl border border-[#E5E5E5] bg-white p-6 flex flex-col shadow-card relative">
-            <div className="absolute top-4 right-4 rounded-full bg-[#EEF2FA] border border-[#BFD2A1] text-[#5F790B] text-[10px] font-bold uppercase tracking-wider px-2.5 py-1">
-              Beta — free now
-            </div>
             <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-[#6B6B6B] mb-3">Free</p>
             <div className="flex items-baseline gap-1 mb-1">
               <span className="text-[44px] font-bold text-[#111111] leading-none tabular-nums">$0</span>
               <span className="text-[13px] text-[#6B6B6B] font-medium">/month</span>
             </div>
-            <p className="text-[12px] text-[#6B6B6B] mb-5">No credit card required. Free plan never expires.</p>
+            <p className="text-[12px] text-[#6B6B6B] mb-5">Free plan, no card required, never expires.</p>
             <button
               onClick={() => signIn('google')}
               className="w-full rounded-md border border-[#C8C8C8] py-3 text-[13.5px] font-semibold text-[#111111] hover:bg-[#F6FAEA] hover:border-[#5F790B] transition-colors mb-5 min-h-[48px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-offset-2"
