@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState, useCallback, useRef } from 'react'
-import Link from 'next/link'
+import { RefreshCw } from 'lucide-react'
 import { useInView, useReducedMotion } from 'motion/react'
 
 import IndexSnapshotGrid     from '@/components/markets/IndexSnapshotGrid'
@@ -29,14 +29,6 @@ function Sk({ h = 'h-32', className = '' }: { h?: string; className?: string }) 
   return <div className={`motion-safe:animate-pulse rounded-xl bg-[#EBEBEB] border border-[#E0E0E0] ${h} ${className}`} />
 }
 
-function pct(v: number | null) {
-  if (v == null) return ''
-  return (v >= 0 ? '+' : '') + v.toFixed(2) + '%'
-}
-function pctCls(v: number | null) {
-  if (v == null) return 'text-[#6B6B6B]'
-  return v > 0 ? 'text-[#11875D]' : v < 0 ? 'text-[#D83B3B]' : 'text-[#6B6B6B]'
-}
 function timeAgo(ts: number): string {
   const s = Math.floor((Date.now() - ts) / 1000)
   if (s < 10)  return 'just now'
@@ -131,15 +123,6 @@ export default function MarketsPage() {
   const tnx = mkt?.indices.find(i => i.symbol === '^TNX')        ?? null
   const dxy = mkt?.currencies.find(i => i.symbol === 'DX-Y.NYB') ?? null
 
-  const STRIP = [
-    { label: 'S&P 500',    sym: spx  },
-    { label: 'Nasdaq 100', sym: ndx  },
-    { label: 'Dow Jones',  sym: dji  },
-    { label: 'VIX',        sym: vix  },
-    { label: '10Y Yield',  sym: tnx, suffix: '%', rateMode: true },
-    { label: 'USD Index',  sym: dxy  },
-  ]
-
   const now = new Date()
   const etTime = now.toLocaleTimeString('en-US', {
     timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit', hour12: true,
@@ -170,59 +153,31 @@ export default function MarketsPage() {
           </div>
         )}
 
-        {/* ── Page Header ─────────────────────────────────────────────────── */}
-        <div className="flex items-center justify-between gap-2 mb-4">
-          <div>
-            <h1 className="text-[22px] sm:text-[24px] font-bold text-[#111111] leading-tight tracking-tight">Markets</h1>
-            <p className="text-[12px] text-[#6B6B6B] mt-0.5 hidden sm:block">Context and key drivers that influence valuation decisions.</p>
-          </div>
+        {/* ── Page Header — date/time only; title handled by TopBar ─────── */}
+        <div className="flex items-center justify-end gap-2 mb-4">
           <div className="flex items-center gap-2 shrink-0">
-            <span className="text-[11px] text-[#6B6B6B] hidden md:block">{etDate}, {etTime} ET</span>
+            <span className="text-[11px] text-[#6B6B6B]">{etDate}, {etTime} ET</span>
             {lastFetch > 0 && (
-              <span className="text-[11px] text-[#6B6B6B] hidden lg:block">· Updated {timeAgo(lastFetch)}</span>
+              <button
+                onClick={() => fetchAll()}
+                className="flex items-center gap-1 text-[11px] text-[#9B9B9B] hover:text-[#6B6B6B] transition-colors min-h-[44px] px-1"
+                aria-label="Refresh market data"
+              >
+                <RefreshCw size={11} />
+                {timeAgo(lastFetch)}
+              </button>
             )}
           </div>
         </div>
 
-        {/* ── Persistent: Indices strip ────────────────────────────────────── */}
-        <div className="flex items-center gap-4 sm:gap-5 overflow-x-auto scrollbar-hide glass-card-light rounded-xl px-4 py-2.5 min-h-[44px] mb-4">
-          <span className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full ${status.cls}`}>
-            {status.label}
-          </span>
-          <div className="w-px h-3.5 bg-[#E3E1DA] shrink-0" />
-          {STRIP.map(({ label, sym, suffix, rateMode }) => {
-            const price = sym?.price ?? null
-            const changeCls = rateMode
-              ? (sym?.changePct == null ? 'text-[#6B6B6B]' : sym.changePct > 0 ? 'text-[#B56A00]' : sym.changePct < 0 ? 'text-[#2563EB]' : 'text-[#6B6B6B]')
-              : pctCls(sym?.changePct ?? null)
-            const inner = (
-              <div className="flex items-center gap-1.5 shrink-0">
-                <span className="text-[10px] text-[#6B6B6B] font-medium">{label}</span>
-                <span className="text-[11px] font-semibold text-[#111111] tabular-nums">
-                  {price != null
-                    ? price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                    : '—'}
-                  {suffix ?? ''}
-                </span>
-                {sym?.changePct != null && (
-                  <span className={`text-[10px] font-medium tabular-nums ${changeCls}`}>
-                    {pct(sym.changePct)}
-                  </span>
-                )}
-              </div>
-            )
-            return sym ? (
-              <Link key={label} href={`/markets/${encodeURIComponent(sym.symbol)}`} className="hover:opacity-70 transition-opacity">
-                {inner}
-              </Link>
-            ) : (
-              <div key={label}>{inner}</div>
-            )
-          })}
-        </div>
-
         {/* ── Persistent: Index snapshot cards ────────────────────────────── */}
         <div className="mb-4">
+          {/* Market status + date row above the cards */}
+          <div className="flex items-center justify-between mb-2.5">
+            <span className={`text-[11px] font-[600] px-2.5 py-1 rounded-full ${status.cls}`}>
+              {status.label}
+            </span>
+          </div>
           {mkt ? (
             <IndexSnapshotGrid spx={spx} ndx={ndx} dji={dji} vix={vix} tnx={tnx} dxy={dxy} />
           ) : (
@@ -308,8 +263,7 @@ export default function MarketsPage() {
                   <div className="lg:col-span-3 flex flex-col">
                     <TopMoversCard />
                   </div>
-                </div>
-              </div>
+                </div>              </div>
 
               {/* Market News */}
               {mkt && mkt.news.length > 0 && (
