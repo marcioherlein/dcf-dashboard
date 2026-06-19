@@ -583,7 +583,8 @@ function MobileValuationRow({ entry, sparklines, onDelete, onTagUpdate, onGroupU
       {/* ── Collapsed row ── */}
       <button
         onClick={() => setExpanded(v => !v)}
-        className="w-full flex items-center gap-3 px-4 py-3 text-left active:bg-[#F8F8F8] transition-colors"
+        className="w-full flex items-center gap-3 px-4 py-3 text-left transition-colors active:bg-[#F0F4E8] active:scale-[0.99]"
+        style={{ WebkitTapHighlightColor: 'transparent' }}
       >
         {/* Logo */}
         <CompanyLogo ticker={entry.ticker} />
@@ -627,8 +628,11 @@ function MobileValuationRow({ entry, sparklines, onDelete, onTagUpdate, onGroupU
         </svg>
       </button>
 
-      {/* ── Expanded detail ── */}
-      {expanded && (
+      {/* ── Expanded detail — animated ── */}
+      <div
+        className="overflow-hidden transition-all duration-300 ease-in-out"
+        style={{ maxHeight: expanded ? '600px' : '0px', opacity: expanded ? 1 : 0 }}
+      >
         <div className="border-t border-[#F0F0F0] bg-[#FAFAFA] px-4 py-4">
           {/* Core metrics row */}
           <div className="grid grid-cols-3 gap-3 mb-4">
@@ -713,7 +717,7 @@ function MobileValuationRow({ entry, sparklines, onDelete, onTagUpdate, onGroupU
             <NoteEditorMobile entry={entry} onNoteSave={onNoteSave} />
           </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }

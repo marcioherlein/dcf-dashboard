@@ -218,7 +218,10 @@ export default function SummaryTab({
   return (
     <div className="flex flex-col gap-3 sm:gap-5">
 
-      {/* ── 1. HERO CARD — company identity, price, model estimate, analyst target ── */}
+      {/* ═══════════════════════════════════════════════════════════════════════
+          TIER 1 — HERO ZONE: Identity + Price chart + Snapshot metrics rail
+          Highest visual weight. No section labels. Full bleed feel.
+      ═══════════════════════════════════════════════════════════════════════ */}
       <StockIdentityHeader
         ticker={ticker}
         companyName={companyName}
@@ -265,9 +268,7 @@ export default function SummaryTab({
         onViewConviction={_onViewConviction}
       />
 
-      {/* ── 2. CHART + SNAPSHOT RAIL ────────────────────────────────────────── */}
-      {/* Right rail: ValuationSnapshot + QualitySnapshot + TradingRange */}
-      {/* (52W Range, P/E, Gross Margin etc shown only here — not in hero sidebar) */}
+      {/* ── 2. CHART + SNAPSHOT RAIL ─────────────────────────────────────────── */}
       <OverviewLayout
         ticker={ticker}
         companyName={companyName}
@@ -292,9 +293,13 @@ export default function SummaryTab({
         roic={roic ?? null}
       />
 
-      {/* ── 3. WHAT THE MARKET IS PRICING IN (Reverse DCF — full width) ─────── */}
-      {/* Placed directly after the chart so valuation context is immediately clear */}
-      <ReverseDCFCompactCard
+      {/* ═══════════════════════════════════════════════════════════════════════
+          TIER 2 — ANALYSIS ZONE: What the market prices in + Valuation ratios
+          Elevated treatment — slightly more top breathing room.
+      ═══════════════════════════════════════════════════════════════════════ */}
+      <div className="flex flex-col gap-3 sm:gap-4 mt-2 sm:mt-3">
+        {/* ── 3. WHAT THE MARKET IS PRICING IN (Reverse DCF — full width) ─── */}
+        <ReverseDCFCompactCard
         price={price}
         currency={currency}
         sharesM={sharesM}
@@ -316,7 +321,26 @@ export default function SummaryTab({
         revenueHistory={revenueHistory}
       />
 
-      {/* ── 4. FUNDAMENTALS ──────────────────────────────────────────────────── */}
+        {/* ── Valuation Analysis ─────────────────────────────────────────────── */}
+        <SectionLabel>Valuation Analysis</SectionLabel>
+        <ValuationRatiosCard
+          estimates={valuationMethods?.models?.multiples?.estimates}
+          pegRatio={quote?.pegRatio}
+          peRatio={peRatio}
+          sector={sector}
+          ratiosQuarterly={ratiosQuarterly}
+          historicalMultiples={historicalMultiples}
+          epsGrowthFwd={epsGrowthFwd}
+          analystForwardPE={analystForwardPE ?? null}
+        />
+      </div>{/* /Tier 2 analysis zone */}
+
+      {/* ═══════════════════════════════════════════════════════════════════════
+          TIER 3 — DETAIL ZONE: Fundamentals, Profitability, Market Signals
+          Standard card treatment. Section labels provide visual rhythm.
+      ═══════════════════════════════════════════════════════════════════════ */}
+
+      {/* ── FUNDAMENTALS ─────────────────────────────────────────────────────── */}
       <SectionLabel>Fundamentals</SectionLabel>
 
       {/* Revenue + FCF | Growth Outlook + Cash Conversion */}
@@ -339,10 +363,9 @@ export default function SummaryTab({
         </div>
       </div>
 
-      {/* ── 5. PROFITABILITY ─────────────────────────────────────────────────── */}
+      {/* ── PROFITABILITY ─────────────────────────────────────────────────────── */}
       <SectionLabel>Profitability</SectionLabel>
 
-      {/* Chart + text side by side — both about the same topic */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 items-stretch">
         <ProfitabilityChartCard statementsData={statementsData} />
         <ProfitabilityTextCard
@@ -358,29 +381,13 @@ export default function SummaryTab({
         />
       </div>
 
-      {/* Income flow waterfall — same section, full width */}
       {statementsData && (
         <IncomeFlowCard statementsData={statementsData} currency={currency} />
       )}
 
-      {/* ── 6. VALUATION ANALYSIS ────────────────────────────────────────────── */}
-      <SectionLabel>Valuation Analysis</SectionLabel>
-
-      <ValuationRatiosCard
-        estimates={valuationMethods?.models?.multiples?.estimates}
-        pegRatio={quote?.pegRatio}
-        peRatio={peRatio}
-        sector={sector}
-        ratiosQuarterly={ratiosQuarterly}
-        historicalMultiples={historicalMultiples}
-        epsGrowthFwd={epsGrowthFwd}
-        analystForwardPE={analystForwardPE ?? null}
-      />
-
-      {/* ── 7. MARKET SIGNALS ────────────────────────────────────────────────── */}
+      {/* ── MARKET SIGNALS ───────────────────────────────────────────────────── */}
       <SectionLabel>Market Signals</SectionLabel>
 
-      {/* EPS Beat/Miss + Analyst Recommendations — only render when data exists */}
       {(earningsSurprises?.length || analystRatingTrend?.length) ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 items-stretch">
           {earningsSurprises && earningsSurprises.length > 0 && (
