@@ -533,3 +533,72 @@ BABA: EV=$264.8B USD, EBITDA=¥186B CNY (= $27.6B USD). Yahoo returns 264.8/186 
 **Suggested check to add:** Phase 2C: check `multiples.EV/EBITDA.actualValue`. If < 3× for profitable company, flag as mixed-currency contamination. Compute ground-truth EV/EBITDA from IS data. Also check `multiples.blendedFairValue > currentPrice × 5` as a general contamination signal (any method with astronomical implied FV will inflate the blend).
 
 ---
+
+### Finding 22: companyType=None for StoneCo (STNE) — all fintech guards disabled
+**Agent:** audit-valuation
+**Date:** 2026-06-19
+**Ticker / Context:** STNE — Yahoo sector=Technology, industry=Software - Infrastructure. StoneCo is a Brazilian payment acquirer/digital bank operationally identical to Block or PagSeguro.
+**Run count:** 1
+**Status:** new
+
+**Observed:** `detectCompanyType.ts` has no match path for "Technology / Software - Infrastructure" + fintech keywords. Result: `companyType=None`. All fintech-specific guards disabled: NWC not zeroed (FY2025 NWC swing +$1.9B from receivables portfolio distorts ΔNWC), financial FCF guard (NI×0.80) off, no fintech CAGR cap, D&A/CapEx projected as standard tech.
+**Expected:** `companyType='fintech'`. StoneCo's revenue = interchange/MDR fees + NII + software subs. Balance sheet has large receivables advance portfolio. NWC should be zeroed; EBIT should be NI-derived; P/B is the relevant multiples anchor.
+**File / location:** `lib/dcf/detectCompanyType.ts` — classification logic
+**Suggested check to add:** Phase 1A: when `companyType=None` AND (`industry` contains "Software" or "Technology") AND (`businessProfile.description` or sector/industry context mentions "payment", "fintech", "acquirer", "banking"), flag as possible fintech misclassification. Cross-check: if `wacc.crp > 0` AND `companyType` is not financial/fintech AND `netDebt/equity > 0.5`, the company has EM+leverage characteristics of a fintech.
+
+---
+
+### Finding 23: netMargin assumptionAudit severity=ok despite 8× discrepancy from trailing margin
+**Agent:** audit-valuation
+**Date:** 2026-06-19
+**Ticker / Context:** STNE — projected NI%=3.2% (4yr avg), bp.netMargin=25.9%, ratio=8.1×
+**Run count:** 1
+**Status:** new
+
+**Observed:** `assumptionAudit.results` for `netMargin` shows `severity='ok'`, `signal='Consistent with trailing margin (25.9%)'`. But projected NI%=3.2% vs trailing=25.9% — a ratio of 8.1×, well above the F13 2.5× threshold. The audit's "consistent" check appears to fire incorrectly when the projected value and bp.netMargin both exist but are not actually close.
+**Expected:** When `bp.netMargin / projected_netMargin > 2.5×` (or < 0.4×), the audit should return `severity='warn'`. Same ratio threshold used in Phase 0E of the audit template.
+**File / location:** `lib/valuation/assumptions/deriveAssumptions.ts` — `assumptionAudit` generation for `netMargin` key
+**Suggested check to add:** Phase 2E: verify `assumptionAudit.netMargin.severity`. If `severity=ok` but `bp.netMargin / projected > 2.5×` or `< 0.4×`, the audit check is failing silently. Cross-check manually with `abs(bp.netMargin - projected) / bp.netMargin` and flag if >50% discrepancy. Confirmed: STNE 8.1× ratio with ok severity.
+
+---
+
+### Finding 24: terminalG assumptionAudit fires warn with wrong value in reason text
+**Agent:** audit-valuation
+**Date:** 2026-06-19
+**Ticker / Context:** STNE — actual terminalG=6.29%, audit reason says "Terminal growth of 3.0%", suggestedValue=5.5% (already exceeded)
+**Run count:** 1
+**Status:** new
+
+**Observed:** `assumptionAudit.results` for `terminalG`: `value=None` (not populated), `reason="Terminal growth of 3.0% assumes long-run developed-market GDP convergence..."`. Actual terminalG=6.29%. The suggestedValue=5.5% is already below the actual value — the warning fires even though the value has already exceeded the floor.
+**Expected:** (a) `value` field should contain actual seeded `terminalG`. (b) Guard: if `actual_terminalG ≥ suggestedValue`, do not fire warn. (c) Reason text should interpolate actual value, not hardcode 3.0%.
+**File / location:** `lib/valuation/assumptions/deriveAssumptions.ts` — `assumptionAudit` for `terminalG`
+**Suggested check to add:** Phase 2F / Phase 7: check `assumptionAudit.terminalG.value`. If `value=None`, the audit is not populated with the actual seeded value — flag as instrumentation gap. If `severity=warn` but `actual terminalG > suggestedValue`, flag as false-positive warn.
+
+---
+
+### Finding 25: analystForwardPE = USD price / BRL analyst EPS for non-USD EPS reporters
+**Agent:** audit-valuation
+**Date:** 2026-06-19
+**Ticker / Context:** STNE — analystForwardPE=0.8× (10.59 USD / 10.62 BRL analyst EPS). Real fwd P/E ≈ 5–6×.
+**Run count:** 1
+**Status:** new
+
+**Observed:** Yahoo returns analyst EPS estimates in local reporting currency for non-USD reporters. For STNE (financialCurrency=BRL), analyst 0y EPS avg=R$10.62. The model computes `analystForwardPE = price_USD / eps_BRL = 10.59 / 10.62 = 0.8×`. This flows into the exitPE audit signal: "Aggressive vs +1Y forward P/E (1×)" — making the exit P/E look wildly aggressive even when it's reasonable. The model's actual exitPE blend uses `currentPE` from Yahoo (3.86×, likely correctly USD-normalized), not `analystForwardPE`, so the blend itself may be correct. But the audit signal misleads the user.
+**Expected:** When `financialCurrency ≠ USD`: apply fxRate to convert analyst EPS before computing `analystForwardPE`. Guard: if `analystForwardPE < 1` and `financialCurrency ≠ 'USD'`, null out `analystForwardPE` to suppress contaminated comparison. Applies to: STNE (BRL), potentially other EM ADRs.
+**File / location:** `app/api/financials/route.ts` — where `analystForwardPE` is computed; `lib/valuation/assumptions/deriveAssumptions.ts` — where the exitPE audit uses it
+**Suggested check to add:** Phase 2B: check `analystForwardPE`. If `< 1` for a company with `wacc.financialCurrency ≠ 'USD'`, flag as BRL/USD contamination. The real forward P/E = `price / (analystForwardEPS_local / fxRate)`. State the corrected fwd P/E.
+
+---
+
+### Finding 26: CAGR driver says "historical discarded" but historical 35% weight still included in blend
+**Agent:** audit-valuation
+**Date:** 2026-06-19
+**Ticker / Context:** STNE — driver says BRL historical CAGR discarded, but manual check: 0.35*13.9% + 0.50*5.4% + 0.15*25.0% = 11.3% = exactly API blended value. Historical IS included.
+**Run count:** 1
+**Status:** new
+
+**Observed:** `cagrAnalysis.drivers[0]` = "Foreign reporting currency — historical local-currency CAGR discarded (inflation-distorted); USD analyst estimates used." But `cagrAnalysis.weights = {historical: 0.35, analyst: 0.50, fundamental: 0.15}` — the weights still include 35% historical. The driver text is inconsistent with the actual blend. If historical were truly discarded, blended = 0.054*(0.5/0.65) + 0.25*(0.15/0.65) = 9.9% (not 11.3%).
+**Expected:** Either (a) truly zero the historical weight and renormalize, updating driver text accordingly, or (b) keep historical at 35% but change driver text to "historical downweighted to 35% (vs 50% analyst primary)" and explicitly state the rationale. STNE's historical CAGR is in USD (Yahoo IS rows converted), not raw BRL, so using it at 35% may be correct — but the driver text must not say "discarded."
+**File / location:** `lib/dcf/projectCashFlows.ts` or `lib/dcf/cagrAnalysis.ts` — foreignCurrency CAGR weighting path
+**Suggested check to add:** Phase 2A: for foreign-currency reporters, verify that `weights.historical × historicalCagr3y + weights.analyst × analystCAGR + weights.fundamental × fundamentalGrowth = blended`. If the driver says "historical discarded" but the historical weight is non-zero, flag as driver/weight inconsistency.
+

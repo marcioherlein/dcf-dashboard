@@ -115,6 +115,8 @@ State:
 
 - **[Finding 10 — integrated]** For `Financial Services / Credit Services` (V, MA): verify whether the company takes actual credit risk. If `businessProfile.fcfMargin > 25%`, this is likely a pure payment network misclassified as `financial` via the `credit` keyword. P/B and LFCF anchors work reasonably but note the classification gap.
 
+- **[Finding 22 — new]** When `companyType = None` AND Yahoo `sector = 'Technology'` AND the company operates as a payment processor or digital bank: all fintech guards are disabled. Signals: CRP > 0 AND net interest income in revenue AND large receivables on BS AND D/E > 0.5. Confirmed: STNE (StoneCo) classified as Technology/Software-Infrastructure by Yahoo, but is a Brazilian payment acquirer/SME credit lender. Result: NWC not zeroed (FY2025 NWC +$1,448M from credit receivables), financial FCF guard off, EBIT uses NI fallback via the null-check rather than the financial branch. Add fintech-keyword check on `businessProfile.description` as override: if description contains "payment", "acquirer", "fintech", "neobank", or "digital bank", override sector-based type to `fintech`.
+
 ### 1B. COCKPIT_WEIGHTS
 
 State the active weight table and evaluate each method's validity. Does `getEffectiveWeights` modify the base (EBITDA margin < 8% → reduce ev_ebitda weight, fintech auto-promote)? Does it fire correctly here?
@@ -139,6 +141,7 @@ State the actual value for each assumption, then evaluate.
 - `cagrAnalysis.analystBaseEffect`: if True, analyst 1Y > 150% — base effect distortion, clamped.
 - foreignCurrency path: verify USD-converted CAGR for non-USD reporters (TSM=TWD÷rate, RMS=EUR÷rate). ARS exclusion must only fire for Argentina.
 - Is `cagr` in top-level consistent with `cagrAnalysis.blended`? If not, a `cagrOverride` was applied — state the override value and why.
+- **[Finding 26 — new]** For foreign-currency reporters: verify that `weights.historical × historicalCagr3y + weights.analyst × analystCAGR + weights.fundamental × fundamentalGrowth ≈ blended`. If `cagrAnalysis.drivers` says "historical discarded" but `weights.historical > 0`, the driver text is inconsistent with the blend — flag as instrumentation gap. Confirmed: STNE driver says "historical local-currency CAGR discarded" but manual calculation proves 35% historical weight still included (0.35×13.9% + 0.50×5.4% + 0.15×25.0% = 11.3% = API blended).
 
 ### 2B. Exit P/E (exitPE)
 
@@ -149,6 +152,7 @@ State the actual value for each assumption, then evaluate.
 - Fintech floor (22×). AI semi premium (38×, gated revenueM ≥ 100). Growth premium (CAGR > 25% fintech).
 - **[Finding 8 — integrated]** `currentPE / sectorPE > 3× AND netMargin > 15%` → blended exitPE embeds speculative premium uncapped. Cap should be `sectorPE × 2.5`. Confirmed: PLTR (107×), AMD (106.5×), ARM (252×). DDOG (P/E=600×) correctly excluded — nm=3.7% < 15%.
 - **[Finding 11 — integrated]** Auto Manufacturers (`isAutoIndustry`): check if `exitPE > sectorPE × 20`. The auto carve-out blocks the thin-margin cap entirely. TSLA: P/E=357×, sectorPE=10, exitPE=222× uncapped.
+- **[Finding 25 — new]** Check `analystForwardPE`. If `< 1` and `wacc.financialCurrency ≠ 'USD'`: this is USD price ÷ BRL/local analyst EPS → currency contamination. The audit signal will say "Aggressive vs 1× forward P/E" when exit P/E may actually be reasonable. Real forward P/E = `price / (analyst_eps_local / fxRate)`. Confirmed: STNE analystForwardPE=0.8× (BRL EPS 10.62 / USD price 10.59), real forward P/E ≈ 5–6×. The exitPE blend itself may still be correct (uses Yahoo TTM P/E, which Yahoo normalizes to USD); the contamination only affects the audit signal.
 - Is the final exitPE financially defensible for this company's stage and sector?
 
 ### 2C. Exit EV/EBITDA (exitMultiple)
@@ -185,6 +189,7 @@ State the actual value for each assumption, then evaluate.
 - CRP non-zero for: Brazil/LatAm (MELI ~1.25%), China (BABA/PDD ~3-4%), India (~2%), Turkey (~5%). Zero for US, Canada, most Western Europe.
 - `terminalG`: matches long-run nominal GDP for primary market. US: 2-3%. EM: 3-5%. Developed non-US: 1.5-2.5%.
 - WACC − terminalG spread ≥ 200bps enforced? State actual spread. If < 200bps: Gordon Growth denominator explodes.
+- **[Finding 24 — new]** Check `assumptionAudit.terminalG`: if `value = None`, the audit result was not populated with the actual seeded value — flag as instrumentation gap. Also check for false-positive warns: if `severity = 'warn'` but actual `terminalG ≥ assumptionAudit.terminalG.suggestedValue`, the guard fired incorrectly. Confirmed: STNE terminalG=6.29%, suggestedValue=5.5% → warn fires even though 6.29% > 5.5%. Additionally, the reason text may contain a hardcoded "3.0%" instead of the actual value — cross-check `reason` text against actual `terminalG`.
 - `dynamicTerminalFade` in Forward P/E method: CAGR>35%→8% fade, >25%→7%, >15%→5%, else terminalG. Verify max capped at min(ke−200bps, 10%).
 - growthModel: `three-stage` if CAGR > 15% or isNegativeFCF. `two-stage` otherwise. Correct for this company?
 - Ke vs WACC spread: Ke should be ≥ WACC for non-leveraged companies. If Ke ≈ WACC: debt is near-zero (asset-light tech) — correct. If Ke < WACC: data error.
