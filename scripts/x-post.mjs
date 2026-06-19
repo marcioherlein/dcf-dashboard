@@ -36,7 +36,6 @@ const US_MARKET_HOLIDAYS = new Set([
   '2026-02-16', // Presidents' Day
   '2026-04-03', // Good Friday
   '2026-05-25', // Memorial Day
-  '2026-06-19', // Juneteenth National Independence Day
   '2026-07-03', // Independence Day (observed — July 4 falls on Saturday)
   '2026-09-07', // Labor Day
   '2026-11-26', // Thanksgiving Day
@@ -47,7 +46,6 @@ const US_MARKET_HOLIDAYS = new Set([
   '2027-02-15', // Presidents' Day
   '2027-03-26', // Good Friday
   '2027-05-31', // Memorial Day
-  '2027-06-18', // Juneteenth (observed — June 19 falls on Friday, so observed same day; or Sat → Mon)
   '2027-07-05', // Independence Day (observed)
   '2027-09-06', // Labor Day
   '2027-11-25', // Thanksgiving
@@ -60,10 +58,8 @@ function isMarketHoliday(dateStr) {
 
 // Modes that require live intraday data — redirect to holiday content when closed
 const INTRADAY_MODES = new Set([
-  'morning_brief', 'earnings',
   'market_open', 'sector_spotlight', 'midday_pulse', 'etf_pulse',
   'pre_close', 'market_close', 'after_hours', 'economic_results',
-  'li_market_wrap',
 ])
 
 // Modes that are fine on holidays (use historical data or are purely educational)
@@ -4098,87 +4094,202 @@ async function runLiValuation() {
   }
   if (!data) { console.warn('li_valuation: no data — skipping'); return }
 
-  const price       = data.quote?.price
-  const fair        = appFairValue(data)
-  const upside      = appUpside(data)
-  const v           = verdictLabel(upside ?? 0)
-  const cagr        = data.cagr
-  const wacc        = data.wacc?.wacc
-  const roic        = data.scores?.roic?.roic
-  const roicSpread  = data.scores?.roic?.spread
-  const analyst1y   = data.cagrAnalysis?.analystEstimate1y
-  const numAnalysts = data.cagrAnalysis?.numAnalysts ?? 0
-  const rec         = data.analystRecommendation ?? ''
-  const recLabel    = rec === 'strong_buy' ? 'Strong Buy' : rec === 'buy' ? 'Buy' : rec === 'hold' ? 'Hold' : rec === 'sell' ? 'Sell' : null
-  const bear        = data.scenarios?.bear?.fairValue
-  const bull        = data.scenarios?.bull?.fairValue
-  const fwdPE       = data.analystForwardPE
+  // ── Pull every useful field ──────────────────────────────────────────────
+  const price         = data.quote?.price
+  const fair          = appFairValue(data)
+  const upside        = appUpside(data)
+  const v             = verdictLabel(upside ?? 0)
+  const cagr          = data.cagr
+  const wacc          = data.wacc?.wacc
+  const terminalG     = data.terminalG
+  const beta          = data.wacc?.inputs?.beta
+  const debtToEquity  = data.wacc?.inputs?.debtToEquity
+  const grossM        = data.businessProfile?.grossMargin
+  const netM          = data.businessProfile?.netMargin
+  const fcfM          = data.businessProfile?.fcfMargin
+  const revenueM      = data.businessProfile?.revenueM
+  const evEbitda      = data.businessProfile?.evToEbitda
+  const evRevenue     = data.businessProfile?.evToRevenue
+  const priceToBook   = data.businessProfile?.priceToBook
+  const priceToSales  = data.businessProfile?.priceToSales
+  const roe           = data.businessProfile?.roe
+  const roic          = data.scores?.roic?.roic
+  const roicSpread    = data.scores?.roic?.spread
+  const nopat         = data.scores?.roic?.nopat
+  const investedCap   = data.scores?.roic?.investedCapital
+  const analyst1y     = data.cagrAnalysis?.analystEstimate1y
+  const hist3y        = data.cagrAnalysis?.historicalCagr3y
+  const numAnalysts   = data.cagrAnalysis?.numAnalysts ?? 0
+  const rec           = data.analystRecommendation ?? ''
+  const recLabel      = rec === 'strong_buy' ? 'Strong Buy' : rec === 'buy' ? 'Buy' : rec === 'hold' ? 'Hold' : rec === 'sell' ? 'Sell' : null
   const analystTarget = data.quote?.analystTargetMean
-  const sector      = data.quote?.sector ?? ''
-  const fcfM        = data.businessProfile?.fcfMargin
+  const targetLow     = data.quote?.analystTargetLow
+  const targetHigh    = data.quote?.analystTargetHigh
+  const fwdPE         = data.analystForwardPE
+  const peRatio       = data.quote?.peRatio
+  const pegRatio      = data.quote?.pegRatio
+  const divYield      = data.quote?.dividendYield
+  const payoutRatio   = data.quote?.payoutRatio
+  const marketCap     = data.quote?.marketCap
+  const sector        = data.quote?.sector ?? ''
+  const industry      = data.quote?.industry ?? ''
+  const bear          = data.scenarios?.bear?.fairValue
+  const bull          = data.scenarios?.bull?.fairValue
   const impliedGrowth = data.valuationMethods?.models?.reverseDcf?.impliedCAGR
-  const beatCount   = (data.earningsSurprises ?? []).filter(s => (s.surprisePercent ?? 0) > 0).length
-  const totalQ      = data.earningsSurprises?.length ?? 0
+  const piotroski     = data.scores?.piotroski?.score
+  const piotroskiLbl  = data.scores?.piotroski?.label
+  const altmanZ       = data.scores?.altman?.zScore
+  const altmanZone    = data.scores?.altman?.zone
+  const beneishFlag   = data.scores?.beneish?.flag
+  const overallGrade  = data.ratings?.overall?.grade ?? ''
+  const overallLabel  = data.ratings?.overall?.label ?? ''
+  const insiderPct    = data.ownership?.insiderPct
+  const shortPct      = data.ownership?.shortPct
+  const stock1y       = data.holdingReturns?.stock1y
+  const spy1y         = data.holdingReturns?.spy1y
+  const surprises     = data.earningsSurprises ?? []
+  const beatCount     = surprises.filter(s => (s.surprisePercent ?? 0) > 0).length
+  const lastSurprise  = surprises[0]
+  // Last year of actual financials (non-projected)
+  const incomeRows    = (data.financialStatements?.incomeStatement ?? []).filter(r => !r.isProjected)
+  const cashFlowRows  = (data.financialStatements?.cashFlow ?? []).filter(r => !r.isProjected)
+  const lastIncome    = incomeRows[incomeRows.length - 1]
+  const lastCF        = cashFlowRows[cashFlowRows.length - 1]
+  const buybacks      = lastCF?.buybacks
+  const dividendsPaid = lastCF?.dividendsPaid
+  const capex         = lastCF?.capex
+  const eps           = lastIncome?.eps
+  const ebitda        = lastIncome?.ebitda
+  // Forward EPS estimate
+  const fwdEps        = data.analystForwardEstimates?.find(e => e.period === '+1y')?.eps?.avg
+  const fwdRevGrowth  = data.analystForwardEstimates?.find(e => e.period === '+1y')?.revenue?.growth
+  const fwdRevAnalysts = data.analystForwardEstimates?.find(e => e.period === '+1y')?.revenue?.analysts
 
-  // ── Opening hook — varies by what's most interesting about this stock ──────
-  const isOverpriced  = (upside ?? 0) < -0.10
-  const isAttractive  = (upside ?? 0) > 0.10
+  // ── Derived context signals ───────────────────────────────────────────────
+  const isOverpriced   = (upside ?? 0) < -0.10
+  const isAttractive   = (upside ?? 0) > 0.10
   const analystBullish = recLabel === 'Strong Buy' || recLabel === 'Buy'
-  const modelVsStreet = isOverpriced && analystBullish
-  const roicNeg       = roicSpread != null && roicSpread < 0
-  const roicPos       = roicSpread != null && roicSpread > 0.05
+  const modelVsStreet  = isOverpriced && analystBullish
+  const roicNeg        = roicSpread != null && roicSpread < 0
+  const roicPos        = roicSpread != null && roicSpread > 0.04
+  const hasDiv         = divYield != null && divYield > 0.005
+  const highShort      = shortPct != null && shortPct > 0.07
+  const mcapB          = marketCap != null ? (marketCap / 1e9).toFixed(1) : null
 
-  let hook = ''
+  // ── Opening hook ─────────────────────────────────────────────────────────
+  let hook
   if (impliedGrowth != null && isOverpriced) {
-    hook = `At ${fmt(price)}, owning $${ticker} means you believe revenue will grow at ~${pct(impliedGrowth, false)}/yr for the next five years. Our model, using ${pct(cagr, false)}, puts fair value at ${fmt(fair)} — a ${Math.abs(upside * 100).toFixed(0)}% gap from today's price.`
+    hook = `At ${fmt(price)}, owning $${ticker} means you believe revenue grows at ~${pct(impliedGrowth, false)}/yr for the next five years. Our model, using ${pct(cagr, false)}, puts fair value at ${fmt(fair)} — a ${Math.abs((upside ?? 0) * 100).toFixed(0)}% gap. That gap is the question worth asking.`
   } else if (impliedGrowth != null && isAttractive) {
-    hook = `The market is pricing $${ticker} as if revenue grows just ${pct(impliedGrowth, false)}/yr. Analysts expect ${analyst1y != null && numAnalysts >= 3 ? pct(analyst1y, false) : pct(cagr, false)}. If they're right, the stock looks underpriced at ${fmt(price)} vs our ${fmt(fair)} fair value estimate.`
+    hook = `The market is pricing $${ticker} as if revenue grows just ${pct(impliedGrowth, false)}/yr. Analysts expect ${analyst1y != null && numAnalysts >= 3 ? pct(analyst1y, false) : pct(cagr, false)}. If they're right, the stock looks underpriced at ${fmt(price)} against our ${fmt(fair)} fair value.`
   } else if (modelVsStreet) {
-    hook = `$${ticker} at ${fmt(price)}: Wall Street says ${recLabel}${analystTarget ? ` with a ${fmt(analystTarget)} target` : ''}. Our DCF says fair value is ${fmt(fair)}. One of them is wrong — here's the model's case.`
+    hook = `$${ticker} at ${fmt(price)}: Wall Street says ${recLabel}${analystTarget ? ` with a ${fmt(analystTarget)} consensus target` : ''}. Our DCF puts fair value at ${fmt(fair)}. That's a ${Math.abs((upside ?? 0) * 100).toFixed(0)}% gap. One of them is wrong — here's the model's case.`
   } else {
-    hook = `Running the DCF on $${ticker} today. At ${fmt(price)}, the model puts fair value at ${fmt(fair)} — ${isAttractive ? `suggesting the market is leaving something on the table` : isOverpriced ? `meaning a lot of optimism is already priced in` : `roughly in line with where it trades`}.`
+    hook = `Running the numbers on $${ticker}. At ${fmt(price)}, our DCF puts fair value at ${fmt(fair)} — ${isAttractive ? `suggesting the market is leaving something on the table` : isOverpriced ? `meaning significant optimism is already priced in` : `roughly in line with where it trades`}.`
   }
 
-  // ── Business quality paragraph ────────────────────────────────────────────
-  let qualityPara = ''
-  if (roicNeg) {
-    qualityPara = `One thing worth flagging: ROIC sits at ${pct(roic, false)}, below the ${pct(wacc, false)} cost of capital. The business is growing — but at this stage it's consuming more value than it creates. That's not a death sentence; many great companies go through this phase. But it does mean the bull case depends on margins improving, not just revenue.`
-  } else if (roicPos) {
-    qualityPara = `The business quality piece is solid: ROIC at ${pct(roic, false)} runs ${pct(Math.abs(roicSpread), false)} above the cost of capital. That spread is what compounding looks like — every dollar reinvested earns more than it costs. ${fcfM != null ? `FCF margin of ${pct(fcfM, false)} confirms the earnings aren't just accounting.` : ''}`
-  } else if (fcfM != null && fcfM > 0.12) {
-    qualityPara = `FCF margin is ${pct(fcfM, false)} — the business converts revenue to cash at a healthy rate. That's the foundation the valuation is built on.`
-  } else if (beatCount >= 3 && totalQ >= 4) {
-    qualityPara = `Execution track record: beat EPS estimates in ${beatCount} of the last ${totalQ} quarters. Consistency matters when your model depends on hitting growth targets.`
-  }
-
-  // ── Scenarios / range paragraph ───────────────────────────────────────────
-  let scenarioPara = ''
+  // ── Valuation context paragraph ───────────────────────────────────────────
+  const valParts = []
   if (bear && bull) {
     const bearGap = ((bear - price) / price * 100).toFixed(0)
     const bullGap = ((bull - price) / price * 100).toFixed(0)
-    scenarioPara = `Scenario range: ${fmt(bear)} bear → ${fmt(bull)} bull. That's ${bearGap}% downside to ${bullGap > 0 ? '+' : ''}${bullGap}% upside from here. The width of that band reflects how sensitive the model is to growth assumptions in ${sector || 'this sector'}.`
+    valParts.push(`Scenario range: ${fmt(bear)} (bear) to ${fmt(bull)} (bull) — ${bearGap}% downside to ${Number(bullGap) > 0 ? '+' : ''}${bullGap}% upside from here.`)
   }
+  if (fwdPE && peRatio) {
+    valParts.push(`Trading at ${fwdPE}× forward earnings vs ${peRatio.toFixed(1)}× trailing.`)
+  } else if (fwdPE) {
+    valParts.push(`Forward P/E: ${fwdPE}×.`)
+  }
+  if (evEbitda) valParts.push(`EV/EBITDA: ${evEbitda.toFixed(1)}×.`)
+  if (pegRatio && pegRatio > 0 && pegRatio < 10) valParts.push(`PEG: ${pegRatio.toFixed(2)} — ${pegRatio < 1 ? 'growth looks underpriced relative to earnings' : pegRatio > 2 ? 'growth premium is elevated' : 'reasonable relative to growth'}.`)
+  if (analystTarget && targetLow && targetHigh) {
+    valParts.push(`Analyst target range: ${fmt(targetLow)} – ${fmt(targetHigh)} (consensus: ${fmt(analystTarget)}).`)
+  }
+  const valPara = valParts.length > 0 ? valParts.join(' ') : null
 
-  // ── Closing observation ───────────────────────────────────────────────────
-  let closing = ''
+  // ── Business quality paragraph ────────────────────────────────────────────
+  const qualParts = []
+  if (roicNeg) {
+    qualParts.push(`ROIC sits at ${pct(roic, false)}, below the ${pct(wacc, false)} cost of capital — the business is consuming more value than it creates at the current scale.`)
+    if (grossM != null) qualParts.push(`Gross margin of ${pct(grossM, false)} shows the core product economics are workable${netM != null ? `; it's operating costs pulling the ROIC down` : ``}.`)
+  } else if (roicPos) {
+    qualParts.push(`ROIC is ${pct(roic, false)} against a ${pct(wacc, false)} WACC — a ${pct(roicSpread, false)} value-creation spread.`)
+    if (nopat && investedCap) qualParts.push(`That's ${fmt(nopat * 1e6)} of NOPAT on ${fmt(investedCap * 1e6)} of invested capital.`)
+  }
+  if (grossM != null && !roicNeg) qualParts.push(`Margins: gross ${pct(grossM, false)}${netM != null ? `, net ${pct(netM, false)}` : ''}${fcfM != null ? `, FCF ${pct(fcfM, false)}` : ''}.`)
+  if (roe != null) qualParts.push(`ROE: ${pct(roe, false)}.`)
+  if (revenueM != null) qualParts.push(`Revenue base: ${revenueM >= 1000 ? `$${(revenueM / 1000).toFixed(1)}B` : `$${revenueM.toFixed(0)}M`}.`)
+  const qualPara = qualParts.length > 0 ? qualParts.join(' ') : null
+
+  // ── Growth paragraph ──────────────────────────────────────────────────────
+  const growthParts = []
+  if (hist3y != null && analyst1y != null && numAnalysts >= 3) {
+    const accelerating = analyst1y > hist3y * 1.1
+    const decelerating = analyst1y < hist3y * 0.85
+    growthParts.push(`Historical 3Y revenue CAGR: ${pct(hist3y, false)}. ${numAnalysts} analysts project ${pct(analyst1y, false)} for the next year — ${accelerating ? 'an acceleration' : decelerating ? 'a deceleration' : 'a similar pace'}.`)
+  } else if (hist3y != null) {
+    growthParts.push(`3Y revenue CAGR: ${pct(hist3y, false)}. Model uses ${pct(cagr, false)}.`)
+  }
+  if (fwdRevGrowth != null && fwdRevAnalysts != null && fwdRevAnalysts >= 3) {
+    growthParts.push(`Forward revenue growth consensus: ${pct(fwdRevGrowth, false)} (${fwdRevAnalysts} analysts).`)
+  }
+  if (lastSurprise && surprises.length >= 3) {
+    const avgSurprise = surprises.reduce((s, q) => s + (q.surprisePercent ?? 0), 0) / surprises.length
+    growthParts.push(`EPS beat rate: ${beatCount}/${surprises.length} quarters, avg surprise ${avgSurprise >= 0 ? '+' : ''}${avgSurprise.toFixed(1)}%.`)
+  }
+  if (fwdEps && eps) {
+    growthParts.push(`EPS: ${fmt(eps)} TTM → ${fmt(fwdEps)} consensus estimate next year.`)
+  }
+  const growthPara = growthParts.length > 0 ? growthParts.join(' ') : null
+
+  // ── Capital allocation / balance sheet ───────────────────────────────────
+  const capParts = []
+  if (buybacks && buybacks > 100) capParts.push(`Returned ${fmt(buybacks * 1e6)} via buybacks last year.`)
+  if (hasDiv) {
+    capParts.push(`Dividend yield: ${pct(divYield, false)}${payoutRatio != null ? ` (${pct(payoutRatio, false)} payout ratio)` : ''}.`)
+  }
+  if (capex && revenueM) {
+    const capexPct = Math.abs(capex) / revenueM
+    if (capexPct > 0.05) capParts.push(`Capex intensity: ${pct(capexPct, false)} of revenue — ${capexPct > 0.15 ? 'capital-heavy business' : 'moderate reinvestment'}.`)
+  }
+  if (debtToEquity != null && debtToEquity > 0.5) capParts.push(`D/E ratio: ${debtToEquity.toFixed(2)}×.`)
+  const capPara = capParts.length > 0 ? capParts.join(' ') : null
+
+  // ── Risk signals ──────────────────────────────────────────────────────────
+  const riskParts = []
+  if (piotroski != null) riskParts.push(`Piotroski F-Score: ${piotroski}/9 (${piotroskiLbl ?? (piotroski >= 7 ? 'strong' : piotroski >= 4 ? 'mixed' : 'weak')}).`)
+  if (altmanZ != null && altmanZone) riskParts.push(`Altman Z-Score: ${altmanZ.toFixed(2)} — ${altmanZone} zone.`)
+  if (beneishFlag && beneishFlag !== 'Clean') riskParts.push(`Beneish M-Score flag: ${beneishFlag} — earnings quality worth checking.`)
+  if (highShort) riskParts.push(`Short interest: ${pct(shortPct, false)} of float — elevated.`)
+  if (beta != null) riskParts.push(`Beta: ${beta.toFixed(2)} vs S&P 500.`)
+  if (insiderPct != null && insiderPct > 0.05) riskParts.push(`Insider ownership: ${pct(insiderPct, false)}.`)
+  const riskPara = riskParts.length > 0 ? riskParts.join(' ') : null
+
+  // ── Closing ───────────────────────────────────────────────────────────────
+  let closing
   if (modelVsStreet) {
-    closing = `The tension: ${numAnalysts > 0 ? `${numAnalysts} analysts` : 'the Street'} vs a DCF. Markets can stay optimistic longer than models suggest. The question is whether the growth rate priced in today is achievable — or aspirational.`
+    closing = `The tension between model and consensus is real here. Analysts have channel access and short-term visibility; the DCF has the math. The question is whether the growth rate priced in today is achievable — or aspirational.`
   } else if (isAttractive && roicPos) {
-    closing = `A wide moat at a modest price. Those combinations don't show up often — worth understanding why the market is leaving the gap open.`
+    closing = `A business generating strong returns on capital at a price below model value. Worth understanding what the market is discounting.`
   } else if (isOverpriced && roicNeg) {
-    closing = `Expensive and still burning capital. The bull case here is a turnaround story — which can work, but needs margin improvement to show up in the numbers before the valuation comes back to Earth.`
+    closing = `Expensive and still burning capital. The bull case is a margin turnaround — which can work, but needs to show up in the numbers.`
+  } else if (hasDiv && isAttractive) {
+    closing = `Getting paid ${pct(divYield, false)} to wait while the gap to fair value potentially closes. That's a reasonable setup.`
   } else {
-    closing = `Every model has limits. The right move is to stress-test the assumptions that matter most: change the growth rate by 2% and the WACC by 1% and see how much the fair value moves. That range is the real answer.`
+    closing = `Every model has limits. The right move: stress-test the WACC and growth rate. The sensitivity tells you which assumption carries the most risk.`
   }
 
   const lines = [
     hook,
     ``,
-    ...(qualityPara ? [qualityPara, ``] : []),
-    ...(scenarioPara ? [scenarioPara, ``] : []),
+    ...(valPara   ? [valPara,   ``] : []),
+    ...(growthPara ? [growthPara, ``] : []),
+    ...(qualPara  ? [qualPara,  ``] : []),
+    ...(capPara   ? [capPara,   ``] : []),
+    ...(riskPara  ? [riskPara,  ``] : []),
     closing,
     ``,
-    `Full model (adjust WACC, growth, terminal rate yourself) → insic.app/stock/${ticker}`,
+    `Full interactive model (adjust WACC, growth, terminal rate) → insic.app/stock/${ticker}`,
     ``,
     `#${ticker} #DCF #Investing #Finance${sector ? ` #${sector.replace(/[^a-zA-Z]/g, '')}` : ''}`,
   ].filter(s => s !== undefined)
