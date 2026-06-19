@@ -382,6 +382,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
   const changePct    = apiData.quote?.changePct ?? null
   const sector       = apiData.quote?.sector ?? null
   const industry     = apiData.quote?.industry ?? null
+  const companyType: string = apiData.valuationMethods?.companyType ?? 'standard'
 
   const sectorBenchmarks = useMemo(() => {
     if (!industry && !sector) return null
@@ -579,6 +580,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
           onScrollToFullDCF={scrollToFullDCF}
           blendedFairValue={output.blendedFairValue}
           upsidePct={output.upsidePct}
+          companyType={companyType}
         />
       </div>
 

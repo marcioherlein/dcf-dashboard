@@ -20,6 +20,7 @@ import EpsBeatMissChart, { type EpsSurprise } from '@/components/stock/EpsBeatMi
 import AnalystRecommendationsChart, { type RatingPeriod } from '@/components/stock/AnalystRecommendationsChart'
 import { computeConvictionScore } from '@/lib/stock/computeConvictionScore'
 import { computeVerdict } from '@/lib/verdict/computeVerdict'
+import SummaryTabV2 from './SummaryTabV2'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -122,6 +123,8 @@ interface SummaryTabProps {
   ownership?: { insiderPct: number | null; shortPct: number | null } | null
   earningsSurprises?: EpsSurprise[]
   analystRatingTrend?: RatingPeriod[]
+  /** Hidden preview flag — render the aggressive v2 density redesign */
+  isV2?: boolean
 }
 
 // ─── Section heading ──────────────────────────────────────────────────────────
@@ -158,8 +161,11 @@ export default function SummaryTab({
   onViewValuation: _onViewValuation, onViewFinancials: _onViewFinancials, onViewConviction: _onViewConviction,
   onViewAssumptions: _onViewAssumptions, analystRecommendation,
   analystForwardEstimates, analystForwardPE, roe, roic, ownership, earningsSurprises, analystRatingTrend,
+  isV2,
 }: SummaryTabProps) {
 
+  // v2 density preview — rendered when isV2=true (set via ?v2=1 URL flag in page.tsx)
+  // All hooks below still run — V2 just short-circuits the return. Safe per Rules of Hooks.
   const isFinancialSector = ['Financial Services', 'Banks', 'Insurance', 'Financial'].includes(sector)
 
   // Build sparkline series from quarterly ratios for the metrics panel
@@ -214,6 +220,13 @@ export default function SummaryTab({
       ticker,
     })
   }, [ratings, scores, upsidePct, analystRecommendation, businessProfile, cagrAnalysis, ticker])
+
+  // v2 branch — after all hooks, safe per Rules of Hooks
+  if (isV2) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const v2props = { ticker, companyName, currency, sector, description, industry, country, price, change, changePct, high52, low52, fairValue, upsidePct, sharesM, cashM, debtM, revenueM, fcfMargin: fcfMarginProp, wacc, terminalG, historicalCAGR, analystCAGR, isEmergingMarket, revenueHistory, scenarios: _scenarios, ratings, scores, businessProfile, cagrAnalysis, statementsData, valuationMethods, quote, analystTargetMean, analystTargetLow: _analystTargetLow, analystTargetHigh: _analystTargetHigh, ratiosQuarterly, historicalMultiples, userModelFairValue, marketCap, peRatio, beta, pegRatio: _pegRatio, evToEbitda, dividendYield: _dividendYield, holdingReturns, nextEarningsDate: _nextEarningsDate, onViewValuation: _onViewValuation, onViewFinancials: _onViewFinancials, onViewConviction: _onViewConviction, onViewAssumptions: _onViewAssumptions, analystRecommendation, analystForwardEstimates, analystForwardPE, roe, roic, ownership, earningsSurprises, analystRatingTrend }
+    return <SummaryTabV2 {...(v2props as Parameters<typeof SummaryTabV2>[0])} />
+  }
 
   return (
     <div className="flex flex-col gap-3 sm:gap-5">
