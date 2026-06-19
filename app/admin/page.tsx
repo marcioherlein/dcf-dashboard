@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
-import { Search, Users, BarChart3, Mail, ChevronRight, CheckCircle, AlertCircle, MessageSquare } from 'lucide-react'
+import { Search, Users, BarChart3, Mail, ChevronRight, CheckCircle, AlertCircle, MessageSquare, Share2, Copy, RefreshCw, ExternalLink } from 'lucide-react'
 
 const ADMIN_EMAILS = (process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? 'marcioherlein@gmail.com')
   .split(',').map(e => e.trim())
@@ -72,13 +72,14 @@ function TableSkeleton({ rows = 8, cols = 5 }: { rows?: number; cols?: number })
   )
 }
 
-type Tab = 'users' | 'analytics' | 'broadcast' | 'feedback'
+type Tab = 'users' | 'analytics' | 'broadcast' | 'feedback' | 'reddit'
 
 const TABS: { id: Tab; label: string; Icon: React.ElementType }[] = [
   { id: 'users',     label: 'Users',     Icon: Users        },
   { id: 'analytics', label: 'Analytics', Icon: BarChart3    },
   { id: 'broadcast', label: 'Broadcast', Icon: Mail         },
   { id: 'feedback',  label: 'Feedback',  Icon: MessageSquare },
+  { id: 'reddit',    label: 'Reddit',    Icon: Share2        },
 ]
 
 // ── Shared input class ────────────────────────────────────────────────────────
@@ -110,6 +111,67 @@ export default function AdminPage() {
   const [sending, setSending]                 = useState(false)
   const [broadcastResult, setBroadcastResult] = useState<{ ok?: boolean; sent?: number; error?: string } | null>(null)
   const [confirmOpen, setConfirmOpen]         = useState(false)
+
+  // ── Reddit tab state ────────────────────────────────────────────────────
+  type RedditFormat = 'insight' | 'lesson' | 'observation'
+  type RedditSub    = 'stocks' | 'investing' | 'ValueInvesting' | 'SecurityAnalysis'
+
+  const REDDIT_LS_KEY = 'insic_admin_reddit_draft'
+  const [rdFormat,    setRdFormat]    = useState<RedditFormat>('insight')
+  const [rdSub,       setRdSub]       = useState<RedditSub>('stocks')
+  const [rdTicker,    setRdTicker]    = useState('')
+  const [rdTitle,     setRdTitle]     = useState('')
+  const [rdBody,      setRdBody]      = useState('')
+  const [rdLoading,   setRdLoading]   = useState(false)
+  const [rdError,     setRdError]     = useState<string | null>(null)
+  const [rdCopied,    setRdCopied]    = useState<'title'|'body'|'both'|null>(null)
+
+  // Load last draft from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(REDDIT_LS_KEY)
+      if (saved) {
+        const d = JSON.parse(saved)
+        if (d.title) setRdTitle(d.title)
+        if (d.body)  setRdBody(d.body)
+        if (d.format) setRdFormat(d.format)
+        if (d.sub)    setRdSub(d.sub)
+        if (d.ticker) setRdTicker(d.ticker)
+      }
+    } catch { /* ignore */ }
+  }, [])
+
+  const generateRedditPost = useCallback(async () => {
+    setRdLoading(true)
+    setRdError(null)
+    try {
+      const params = new URLSearchParams({ format: rdFormat, sub: rdSub })
+      if (rdTicker.trim()) params.set('ticker', rdTicker.trim().toUpperCase())
+      const res  = await fetch(`/api/reddit-post?${params}`)
+      const data = await res.json()
+      if (!res.ok || data.error) throw new Error(data.error ?? 'Generation failed')
+      setRdTitle(data.title ?? '')
+      setRdBody(data.body ?? '')
+      if (data.ticker) setRdTicker(data.ticker)
+      localStorage.setItem(REDDIT_LS_KEY, JSON.stringify({
+        title: data.title, body: data.body,
+        format: rdFormat, sub: rdSub, ticker: data.ticker ?? rdTicker,
+      }))
+    } catch (e) {
+      setRdError(e instanceof Error ? e.message : 'Unknown error')
+    } finally {
+      setRdLoading(false)
+    }
+  }, [rdFormat, rdSub, rdTicker])
+
+  const copyToClipboard = useCallback(async (what: 'title'|'body'|'both') => {
+    const text = what === 'title' ? rdTitle
+      : what === 'body' ? rdBody
+      : `${rdTitle}\n\n---\n\n${rdBody}`
+    await navigator.clipboard.writeText(text)
+    setRdCopied(what)
+    setTimeout(() => setRdCopied(null), 2000)
+  }, [rdTitle, rdBody])
 
   const isAdmin = ADMIN_EMAILS.includes(session?.user?.email ?? '')
 
@@ -553,6 +615,136 @@ export default function AdminPage() {
                   <p className="text-[13px] text-[#333333] leading-relaxed whitespace-pre-wrap">{item.message}</p>
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── REDDIT TAB ──────────────────────────────────────────────────── */}
+      {tab === 'reddit' && (
+        <div className="space-y-5 max-w-2xl">
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="flex flex-col gap-1">
+              <label className="text-[11px] font-semibold text-[#6B6B6B] uppercase tracking-wide">Format</label>
+              <select
+                value={rdFormat}
+                onChange={e => setRdFormat(e.target.value as RedditFormat)}
+                className="text-[13px] border border-[#E5E5E5] rounded-lg px-3 py-2 bg-white text-[#111111] focus:outline-none focus:border-[#5F790B]"
+              >
+                <option value="insight">Stock insight (OC)</option>
+                <option value="lesson">Valuation lesson</option>
+                <option value="observation">Market observation</option>
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-[11px] font-semibold text-[#6B6B6B] uppercase tracking-wide">Subreddit</label>
+              <select
+                value={rdSub}
+                onChange={e => setRdSub(e.target.value as RedditSub)}
+                className="text-[13px] border border-[#E5E5E5] rounded-lg px-3 py-2 bg-white text-[#111111] focus:outline-none focus:border-[#5F790B]"
+              >
+                <option value="stocks">r/stocks</option>
+                <option value="investing">r/investing</option>
+                <option value="ValueInvesting">r/ValueInvesting</option>
+                <option value="SecurityAnalysis">r/SecurityAnalysis</option>
+              </select>
+            </div>
+
+            {rdFormat !== 'lesson' && (
+              <div className="flex flex-col gap-1">
+                <label className="text-[11px] font-semibold text-[#6B6B6B] uppercase tracking-wide">Ticker (optional)</label>
+                <input
+                  type="text"
+                  value={rdTicker}
+                  onChange={e => setRdTicker(e.target.value.toUpperCase())}
+                  placeholder="e.g. NVDA"
+                  maxLength={6}
+                  className="text-[13px] border border-[#E5E5E5] rounded-lg px-3 py-2 bg-white text-[#111111] w-28 focus:outline-none focus:border-[#5F790B] font-mono uppercase"
+                />
+              </div>
+            )}
+
+            <button
+              onClick={generateRedditPost}
+              disabled={rdLoading}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#5F790B] hover:bg-[#526A08] text-white text-[13px] font-semibold disabled:opacity-50 transition-colors min-h-[38px]"
+            >
+              {rdLoading
+                ? <><RefreshCw size={13} className="animate-spin" /> Generating…</>
+                : <><RefreshCw size={13} /> {rdTitle ? 'Regenerate' : 'Generate'}</>
+              }
+            </button>
+          </div>
+
+          {rdError && (
+            <div className="rounded-lg border border-[#F0B8B8] bg-[#FCEAEA] px-4 py-3 text-[13px] text-[#D83B3B]">
+              {rdError}
+            </div>
+          )}
+
+          {rdLoading && (
+            <div className="space-y-3">
+              <div className="h-10 rounded-lg bg-[#F0F0F0] animate-pulse" />
+              <div className="h-48 rounded-lg bg-[#F0F0F0] animate-pulse" />
+            </div>
+          )}
+
+          {!rdLoading && rdTitle && (
+            <div className="space-y-3">
+              <div className="flex flex-col gap-1">
+                <label className="text-[11px] font-semibold text-[#6B6B6B] uppercase tracking-wide">Title</label>
+                <textarea
+                  value={rdTitle}
+                  onChange={e => setRdTitle(e.target.value)}
+                  rows={2}
+                  className="w-full text-[13px] border border-[#E5E5E5] rounded-lg px-3 py-2.5 bg-white text-[#111111] resize-none focus:outline-none focus:border-[#5F790B] leading-relaxed"
+                />
+                <p className="text-[11px] text-[#9B9B9B] tabular-nums">{rdTitle.length} chars</p>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-[11px] font-semibold text-[#6B6B6B] uppercase tracking-wide">Body</label>
+                <textarea
+                  value={rdBody}
+                  onChange={e => setRdBody(e.target.value)}
+                  rows={14}
+                  className="w-full text-[13px] border border-[#E5E5E5] rounded-lg px-3 py-2.5 bg-white text-[#111111] resize-y focus:outline-none focus:border-[#5F790B] leading-relaxed font-mono"
+                />
+                <p className="text-[11px] text-[#9B9B9B] tabular-nums">{rdBody.length} chars</p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                {(['title', 'body', 'both'] as const).map(what => (
+                  <button
+                    key={what}
+                    onClick={() => copyToClipboard(what)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#E5E5E5] text-[12px] font-medium text-[#333333] hover:border-[#5F790B] hover:text-[#5F790B] transition-colors"
+                  >
+                    {rdCopied === what
+                      ? <><CheckCircle size={12} className="text-[#5F790B]" /> Copied!</>
+                      : <><Copy size={12} /> Copy {what}</>
+                    }
+                  </button>
+                ))}
+                <a
+                  href={`https://www.reddit.com/r/${rdSub}/submit?title=${encodeURIComponent(rdTitle)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FF4500] hover:bg-[#E03D00] text-white text-[12px] font-semibold transition-colors"
+                >
+                  <ExternalLink size={12} />
+                  Open r/{rdSub} →
+                </a>
+              </div>
+            </div>
+          )}
+
+          {!rdLoading && !rdTitle && !rdError && (
+            <div className="rounded-xl border border-[#E5E5E5] px-6 py-12 text-center">
+              <Share2 size={24} className="mx-auto mb-3 text-[#C4C4C4]" />
+              <p className="text-sm font-medium text-[#111111] mb-1">No draft yet</p>
+              <p className="text-xs text-[#9B9B9B]">Choose a format and click Generate to create today&apos;s Reddit post.</p>
             </div>
           )}
         </div>
