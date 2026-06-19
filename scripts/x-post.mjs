@@ -4090,7 +4090,7 @@ async function runLiValuation() {
 
   let ticker = null, data = null
   for (let attempt = 0; attempt < Math.min(5, pool.length); attempt++) {
-    const candidate = pool[(dayOfYear + attempt + 7) % pool.length] // +7 offset from X to avoid same stock
+    const candidate = pool[(dayOfYear + attempt + 7) % pool.length]
     try {
       const result = await fetchValuation(candidate)
       if (result?.quote?.price && appFairValue(result)) { ticker = candidate; data = result; break }
@@ -4098,60 +4098,90 @@ async function runLiValuation() {
   }
   if (!data) { console.warn('li_valuation: no data — skipping'); return }
 
-  const price    = data.quote?.price
-  const fair     = appFairValue(data)
-  const upside   = appUpside(data)
-  const v        = verdictLabel(upside ?? 0)
-  const cagr     = data.cagr
-  const wacc     = data.wacc?.wacc
-  const terminalG = data.terminalG
-  const grossM   = data.businessProfile?.grossMargin
-  const netM     = data.businessProfile?.netMargin
-  const fcfM     = data.businessProfile?.fcfMargin
-  const roic     = data.scores?.roic?.roic
-  const roicSpread = data.scores?.roic?.spread
-  const analyst1y = data.cagrAnalysis?.analystEstimate1y
+  const price       = data.quote?.price
+  const fair        = appFairValue(data)
+  const upside      = appUpside(data)
+  const v           = verdictLabel(upside ?? 0)
+  const cagr        = data.cagr
+  const wacc        = data.wacc?.wacc
+  const roic        = data.scores?.roic?.roic
+  const roicSpread  = data.scores?.roic?.spread
+  const analyst1y   = data.cagrAnalysis?.analystEstimate1y
   const numAnalysts = data.cagrAnalysis?.numAnalysts ?? 0
-  const rec      = data.analystRecommendation ?? ''
-  const recLabel = rec === 'strong_buy' ? 'Strong Buy' : rec === 'buy' ? 'Buy' : rec === 'hold' ? 'Hold' : rec === 'sell' ? 'Sell' : null
-  const bear     = data.scenarios?.bear?.fairValue
-  const bull     = data.scenarios?.bull?.fairValue
-  const fwdPE    = data.analystForwardPE
+  const rec         = data.analystRecommendation ?? ''
+  const recLabel    = rec === 'strong_buy' ? 'Strong Buy' : rec === 'buy' ? 'Buy' : rec === 'hold' ? 'Hold' : rec === 'sell' ? 'Sell' : null
+  const bear        = data.scenarios?.bear?.fairValue
+  const bull        = data.scenarios?.bull?.fairValue
+  const fwdPE       = data.analystForwardPE
   const analystTarget = data.quote?.analystTargetMean
-  const sector   = data.quote?.sector ?? ''
-  const grade    = data.ratings?.overall?.grade ?? ''
+  const sector      = data.quote?.sector ?? ''
+  const fcfM        = data.businessProfile?.fcfMargin
+  const impliedGrowth = data.valuationMethods?.models?.reverseDcf?.impliedCAGR
+  const beatCount   = (data.earningsSurprises ?? []).filter(s => (s.surprisePercent ?? 0) > 0).length
+  const totalQ      = data.earningsSurprises?.length ?? 0
+
+  // ── Opening hook — varies by what's most interesting about this stock ──────
+  const isOverpriced  = (upside ?? 0) < -0.10
+  const isAttractive  = (upside ?? 0) > 0.10
+  const analystBullish = recLabel === 'Strong Buy' || recLabel === 'Buy'
+  const modelVsStreet = isOverpriced && analystBullish
+  const roicNeg       = roicSpread != null && roicSpread < 0
+  const roicPos       = roicSpread != null && roicSpread > 0.05
+
+  let hook = ''
+  if (impliedGrowth != null && isOverpriced) {
+    hook = `At ${fmt(price)}, owning $${ticker} means you believe revenue will grow at ~${pct(impliedGrowth, false)}/yr for the next five years. Our model, using ${pct(cagr, false)}, puts fair value at ${fmt(fair)} — a ${Math.abs(upside * 100).toFixed(0)}% gap from today's price.`
+  } else if (impliedGrowth != null && isAttractive) {
+    hook = `The market is pricing $${ticker} as if revenue grows just ${pct(impliedGrowth, false)}/yr. Analysts expect ${analyst1y != null && numAnalysts >= 3 ? pct(analyst1y, false) : pct(cagr, false)}. If they're right, the stock looks underpriced at ${fmt(price)} vs our ${fmt(fair)} fair value estimate.`
+  } else if (modelVsStreet) {
+    hook = `$${ticker} at ${fmt(price)}: Wall Street says ${recLabel}${analystTarget ? ` with a ${fmt(analystTarget)} target` : ''}. Our DCF says fair value is ${fmt(fair)}. One of them is wrong — here's the model's case.`
+  } else {
+    hook = `Running the DCF on $${ticker} today. At ${fmt(price)}, the model puts fair value at ${fmt(fair)} — ${isAttractive ? `suggesting the market is leaving something on the table` : isOverpriced ? `meaning a lot of optimism is already priced in` : `roughly in line with where it trades`}.`
+  }
+
+  // ── Business quality paragraph ────────────────────────────────────────────
+  let qualityPara = ''
+  if (roicNeg) {
+    qualityPara = `One thing worth flagging: ROIC sits at ${pct(roic, false)}, below the ${pct(wacc, false)} cost of capital. The business is growing — but at this stage it's consuming more value than it creates. That's not a death sentence; many great companies go through this phase. But it does mean the bull case depends on margins improving, not just revenue.`
+  } else if (roicPos) {
+    qualityPara = `The business quality piece is solid: ROIC at ${pct(roic, false)} runs ${pct(Math.abs(roicSpread), false)} above the cost of capital. That spread is what compounding looks like — every dollar reinvested earns more than it costs. ${fcfM != null ? `FCF margin of ${pct(fcfM, false)} confirms the earnings aren't just accounting.` : ''}`
+  } else if (fcfM != null && fcfM > 0.12) {
+    qualityPara = `FCF margin is ${pct(fcfM, false)} — the business converts revenue to cash at a healthy rate. That's the foundation the valuation is built on.`
+  } else if (beatCount >= 3 && totalQ >= 4) {
+    qualityPara = `Execution track record: beat EPS estimates in ${beatCount} of the last ${totalQ} quarters. Consistency matters when your model depends on hitting growth targets.`
+  }
+
+  // ── Scenarios / range paragraph ───────────────────────────────────────────
+  let scenarioPara = ''
+  if (bear && bull) {
+    const bearGap = ((bear - price) / price * 100).toFixed(0)
+    const bullGap = ((bull - price) / price * 100).toFixed(0)
+    scenarioPara = `Scenario range: ${fmt(bear)} bear → ${fmt(bull)} bull. That's ${bearGap}% downside to ${bullGap > 0 ? '+' : ''}${bullGap}% upside from here. The width of that band reflects how sensitive the model is to growth assumptions in ${sector || 'this sector'}.`
+  }
+
+  // ── Closing observation ───────────────────────────────────────────────────
+  let closing = ''
+  if (modelVsStreet) {
+    closing = `The tension: ${numAnalysts > 0 ? `${numAnalysts} analysts` : 'the Street'} vs a DCF. Markets can stay optimistic longer than models suggest. The question is whether the growth rate priced in today is achievable — or aspirational.`
+  } else if (isAttractive && roicPos) {
+    closing = `A wide moat at a modest price. Those combinations don't show up often — worth understanding why the market is leaving the gap open.`
+  } else if (isOverpriced && roicNeg) {
+    closing = `Expensive and still burning capital. The bull case here is a turnaround story — which can work, but needs margin improvement to show up in the numbers before the valuation comes back to Earth.`
+  } else {
+    closing = `Every model has limits. The right move is to stress-test the assumptions that matter most: change the growth rate by 2% and the WACC by 1% and see how much the fair value moves. That range is the real answer.`
+  }
 
   const lines = [
-    `${v.emoji} $${ticker} — DCF Valuation Update`,
+    hook,
     ``,
-    `${v.short.charAt(0).toUpperCase() + v.short.slice(1)}.`,
+    ...(qualityPara ? [qualityPara, ``] : []),
+    ...(scenarioPara ? [scenarioPara, ``] : []),
+    closing,
     ``,
-    `📊 The Numbers`,
-    `Current price: ${fmt(price)} | Fair value estimate: ${fmt(fair)}`,
-    `Implied upside/downside: ${pct(upside)} vs current price`,
-    ...(bear && bull ? [`Scenario range: ${fmt(bear)} (bear) → ${fmt(bull)} (bull)`] : []),
+    `Full model (adjust WACC, growth, terminal rate yourself) → insic.app/stock/${ticker}`,
     ``,
-    `⚙️ Model Assumptions`,
-    `WACC: ${pct(wacc, false)} | Revenue CAGR: ${pct(cagr, false)}${analyst1y && numAnalysts >= 3 ? ` (analysts: ${pct(analyst1y, false)}, n=${numAnalysts})` : ''}`,
-    ...(terminalG ? [`Terminal growth: ${pct(terminalG, false)}`] : []),
-    ``,
-    `🏢 Business Quality`,
-    ...(grossM != null ? [`Gross margin: ${pct(grossM, false)}`] : []),
-    ...(netM != null ? [`Net margin: ${pct(netM, false)}`] : []),
-    ...(fcfM != null ? [`FCF margin: ${pct(fcfM, false)}`] : []),
-    ...(roic != null ? [`ROIC: ${pct(roic, false)}${roicSpread != null ? ` (${roicSpread > 0 ? '+' : ''}${pct(roicSpread, false)} vs WACC — ${roicSpread > 0 ? 'creating value' : 'destroying value'})` : ''}`] : []),
-    ``,
-    `📈 Wall St. Consensus`,
-    ...(recLabel ? [`Recommendation: ${recLabel}`] : []),
-    ...(analystTarget ? [`Price target: ${fmt(analystTarget)}`] : []),
-    ...(fwdPE ? [`Forward P/E: ${fwdPE}×`] : []),
-    ``,
-    `Rating: ${grade} | Sector: ${sector}`,
-    ``,
-    `The full interactive model — where you can override WACC, growth, and terminal assumptions — is available free at insic.app/stock/${ticker}`,
-    ``,
-    `#Valuation #DCF #${ticker} #InvestmentAnalysis #Finance`,
-  ].filter(Boolean)
+    `#${ticker} #DCF #Investing #Finance${sector ? ` #${sector.replace(/[^a-zA-Z]/g, '')}` : ''}`,
+  ].filter(s => s !== undefined)
 
   await postLinkedIn(lines.join('\n'))
 }
