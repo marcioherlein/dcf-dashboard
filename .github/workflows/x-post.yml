@@ -12,7 +12,7 @@ on:
         required: true
         default: 'dcf'
         type: choice
-        options: [earnings, dcf, dcf2, dcf_bear, macro, news, feature, weekly_wrap, question, etf_pulse, sentiment, morning_brief, midday_pulse, market_close, market_open, sector_spotlight, pre_close, after_hours, theory_overnight, earnings_results, economic_results, holiday_deep_dive, sector_scan, insider_buy, low_52w, top_undervalued, market_vs_model]
+        options: [earnings, dcf, dcf2, dcf_bear, macro, news, feature, weekly_wrap, question, etf_pulse, sentiment, morning_brief, midday_pulse, market_close, market_open, sector_spotlight, pre_close, after_hours, theory_overnight, earnings_results, economic_results, holiday_deep_dive, sector_scan, insider_buy, low_52w, top_undervalued, market_vs_model, ratio_explained]
       ticker:
         description: 'Ticker override (dcf / dcf2 / dcf_bear modes only)'
         required: false
