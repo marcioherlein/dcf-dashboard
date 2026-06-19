@@ -36,6 +36,7 @@ const US_MARKET_HOLIDAYS = new Set([
   '2026-02-16', // Presidents' Day
   '2026-04-03', // Good Friday
   '2026-05-25', // Memorial Day
+  '2026-06-19', // Juneteenth National Independence Day
   '2026-07-03', // Independence Day (observed — July 4 falls on Saturday)
   '2026-09-07', // Labor Day
   '2026-11-26', // Thanksgiving Day
@@ -46,6 +47,7 @@ const US_MARKET_HOLIDAYS = new Set([
   '2027-02-15', // Presidents' Day
   '2027-03-26', // Good Friday
   '2027-05-31', // Memorial Day
+  '2027-06-18', // Juneteenth (observed — June 19 falls on Friday, so observed same day; or Sat → Mon)
   '2027-07-05', // Independence Day (observed)
   '2027-09-06', // Labor Day
   '2027-11-25', // Thanksgiving
@@ -58,8 +60,10 @@ function isMarketHoliday(dateStr) {
 
 // Modes that require live intraday data — redirect to holiday content when closed
 const INTRADAY_MODES = new Set([
+  'morning_brief', 'earnings',
   'market_open', 'sector_spotlight', 'midday_pulse', 'etf_pulse',
   'pre_close', 'market_close', 'after_hours', 'economic_results',
+  'li_market_wrap',
 ])
 
 // Modes that are fine on holidays (use historical data or are purely educational)
