@@ -3660,14 +3660,380 @@ async function runMarketVsModel() {
   await post(lines.join('\n'))
 }
 
+// ─── Mode: ratio_explained ────────────────────────────────────────────────────
+// Teaches one valuation ratio using a real stock's live numbers as the example.
+// Rotates through 10 ratios weekly. Each post: what the ratio is, how to read
+// it, what a high/low number means, and what the anchor stock's number says today.
+// Data: our /api/financials endpoint (already in use everywhere).
+//
+// Ratios covered (week % 10):
+//   0: P/E           1: Forward P/E   2: PEG
+//   3: EV/EBITDA     4: P/FCF         5: EV/Revenue
+//   6: P/B           7: Gross Margin  8: ROIC
+//   9: FCF Margin
+
+// Anchor stock per ratio — chosen because it's a canonical example of that ratio in action
+const RATIO_ANCHORS = [
+  'AAPL',  // P/E          — mature compounder, well-known P/E
+  'NVDA',  // Forward P/E  — high-growth, forward multiple story
+  'AMZN',  // PEG          — earnings growth + P/E interplay
+  'META',  // EV/EBITDA    — high-margin ad business
+  'MSFT',  // P/FCF        — exceptional cash converter
+  'CRM',   // EV/Revenue   — SaaS revenue multiple archetype
+  'JPM',   // P/B          — banks priced on book value
+  'GOOGL', // Gross Margin — high-margin platform business
+  'V',     // ROIC         — best-in-class capital returns
+  'COST',  // FCF Margin   — low-margin but strong cash flow machine
+]
+
+const RATIO_META = [
+  {
+    name: 'P/E ratio',
+    emoji: '📊',
+    hashtags: '#PE #Investing #StockValuation',
+    extract: (d) => {
+      const pe = d.quote?.peRatio
+      const price = d.quote?.price
+      const eps = d.quote?.price && d.quote?.peRatio ? d.quote.price / d.quote.peRatio : null
+      return pe > 0 ? { val: pe, extra: { price, eps } } : null
+    },
+    interpret: (val, ticker, extra) => {
+      const { price, eps } = extra ?? {}
+      const epsStr = eps != null ? `earning $${eps.toFixed(2)}/share` : 'currently earning'
+      return [
+        `$${ticker} has a P/E of ${val.toFixed(1)}×.`,
+        ``,
+        `That means you're paying ${val.toFixed(1)}× the company's annual earnings for each share.`,
+        `At ${price ? `$${price.toFixed(2)}` : 'current price'}, it's ${epsStr} — and the market is valuing those earnings at ${val.toFixed(1)}× today.`,
+        ``,
+        `A high P/E means investors expect fast earnings growth ahead.`,
+        `A low P/E means either the business is cheap — or growth is slowing.`,
+        ``,
+        `The P/E alone tells you what the market is paying. The DCF tells you what it should pay.`,
+        ``,
+        `P/E is a snapshot. FCF and growth assumptions are the movie.`,
+      ]
+    },
+  },
+  {
+    name: 'Forward P/E',
+    emoji: '🔭',
+    hashtags: '#ForwardPE #Earnings #Investing',
+    extract: (d) => {
+      const fpe = d.analystForwardPE
+      const pe  = d.quote?.peRatio
+      return fpe > 0 ? { val: fpe, extra: { pe } } : null
+    },
+    interpret: (val, ticker, extra) => {
+      const { pe } = extra ?? {}
+      const premium = pe && val ? ((pe - val) / val * 100).toFixed(0) : null
+      return [
+        `$${ticker}'s forward P/E is ${val.toFixed(1)}×.`,
+        ``,
+        `Forward P/E uses next year's consensus earnings estimate instead of trailing earnings.`,
+        `${pe && premium ? `Trailing P/E is ${pe.toFixed(1)}× — so analysts expect earnings to grow ~${premium}% in the next year.` : ''}`,
+        ``,
+        `Why it matters: if you believe the analyst estimate is right, you're buying at ${val.toFixed(1)}× those future earnings.`,
+        `If analysts are too optimistic, the real forward P/E is higher.`,
+        ``,
+        `The risk with forward P/E: consensus estimates are wrong about 40% of the time in magnitude, even when right on direction.`,
+        ``,
+        `Check insic's DCF model to see what growth rate is actually priced into the stock — not just what analysts expect.`,
+      ]
+    },
+  },
+  {
+    name: 'PEG ratio',
+    emoji: '📈',
+    hashtags: '#PEG #GrowthInvesting #Valuation',
+    extract: (d) => {
+      const peg = d.quote?.pegRatio
+      const pe  = d.quote?.peRatio
+      const g   = d.cagrAnalysis?.analystEstimate1y
+      return peg > 0 && peg < 10 ? { val: peg, extra: { pe, g } } : null
+    },
+    interpret: (val, ticker, extra) => {
+      const { pe, g } = extra ?? {}
+      const cheap = val < 1.0
+      const fair   = val >= 1.0 && val <= 2.0
+      return [
+        `$${ticker} has a PEG ratio of ${val.toFixed(2)}.`,
+        ``,
+        `PEG = P/E ÷ expected earnings growth rate.`,
+        `${pe && g ? `$${ticker}'s P/E is ${pe.toFixed(1)}× and analysts expect ~${(g*100).toFixed(0)}%/yr earnings growth — hence PEG ${val.toFixed(2)}.` : ''}`,
+        ``,
+        `How to read it:`,
+        `  PEG < 1.0 → potentially cheap relative to growth`,
+        `  PEG 1.0–2.0 → roughly fair`,
+        `  PEG > 2.0 → you're paying a premium for growth expectations`,
+        ``,
+        `$${ticker} at ${val.toFixed(2)} is ${cheap ? 'below 1 — the market may be undervaluing its growth' : fair ? 'in the "fair" range' : 'above 2 — growth expectations are richly priced'}.`,
+        ``,
+        `PEG is quick and useful. Its weakness: it relies on analyst growth estimates, which are often wrong.`,
+      ]
+    },
+  },
+  {
+    name: 'EV/EBITDA',
+    emoji: '🏭',
+    hashtags: '#EVEBITDA #EnterpriseValue #Valuation',
+    extract: (d) => {
+      const ev = d.valuationMethods?.models?.multiples?.estimates?.find(e => e.multiple === 'EV/EBITDA')?.actualValue
+      return ev > 0 && ev < 200 ? { val: ev, extra: {} } : null
+    },
+    interpret: (val, ticker, extra) => {
+      const cheap = val < 10
+      const rich  = val > 25
+      return [
+        `$${ticker} trades at ${val.toFixed(1)}× EV/EBITDA.`,
+        ``,
+        `EV/EBITDA compares the total value of the business (enterprise value = market cap + debt − cash) to its operating earnings before interest, taxes, depreciation, and amortisation.`,
+        ``,
+        `Why EV/EBITDA over P/E?`,
+        `It's capital-structure neutral — debt doesn't distort the comparison.`,
+        `It's more useful when comparing companies across different tax environments or leverage levels.`,
+        ``,
+        `How to read $${ticker} at ${val.toFixed(1)}×:`,
+        `${cheap ? `Below 10× is often considered value territory — either the business is genuinely cheap or the market sees risk ahead.` : rich ? `Above 25× means the market is pricing in meaningful growth or premium quality. Expensive if growth doesn't materialise.` : `10–25× is the typical range for profitable businesses. Normal, but worth checking the growth assumptions.`}`,
+        ``,
+        `In insic, we use EV/EBITDA as one of four models in the blended fair value — alongside DCF, forward P/E, and revenue multiples.`,
+      ]
+    },
+  },
+  {
+    name: 'P/FCF',
+    emoji: '💵',
+    hashtags: '#PFCF #FreeCashFlow #Investing',
+    extract: (d) => {
+      const price = d.quote?.price
+      const mcap  = d.quote?.marketCap
+      const fcf   = d.businessProfile?.fcfMargin && d.businessProfile?.revenueM
+        ? d.businessProfile.fcfMargin * d.businessProfile.revenueM * 1e6
+        : null
+      const shares = d.fairValue?.sharesOutstanding
+      if (!price || !fcf || !shares || shares <= 0) return null
+      const fcfPerShare = fcf / shares
+      const pfcf = price / fcfPerShare
+      return pfcf > 0 && pfcf < 200 ? { val: pfcf, extra: { fcfPerShare, price } } : null
+    },
+    interpret: (val, ticker, extra) => {
+      const { fcfPerShare, price } = extra ?? {}
+      return [
+        `$${ticker} trades at ${val.toFixed(1)}× price-to-free-cash-flow.`,
+        ``,
+        `P/FCF = share price ÷ free cash flow per share.`,
+        `${fcfPerShare ? `$${ticker} generates ~$${fcfPerShare.toFixed(2)}/share in free cash flow. At $${price?.toFixed(2)}, you're paying ${val.toFixed(1)}× that cash.` : ''}`,
+        ``,
+        `Why P/FCF is often better than P/E:`,
+        `Earnings can be manipulated with accounting choices.`,
+        `Free cash flow (operating cash − capex) is much harder to fake.`,
+        `It's the actual cash the business generated — available to pay debt, buy back shares, or invest in growth.`,
+        ``,
+        `How to read ${val.toFixed(1)}×:`,
+        `  Below 15× → potentially cheap for a profitable business`,
+        `  15–30× → normal range for quality companies`,
+        `  Above 30× → market expects strong FCF growth ahead`,
+        ``,
+        `Warren Buffett famously values businesses based on their owner earnings — which is essentially what P/FCF measures.`,
+      ]
+    },
+  },
+  {
+    name: 'EV/Revenue',
+    emoji: '📦',
+    hashtags: '#EVRevenue #SaaS #GrowthStocks',
+    extract: (d) => {
+      const ev = d.valuationMethods?.models?.multiples?.estimates?.find(e => e.multiple === 'EV/Revenue')?.actualValue
+      return ev > 0 && ev < 100 ? { val: ev, extra: {} } : null
+    },
+    interpret: (val, ticker, extra) => {
+      const high = val > 10
+      const low  = val < 3
+      return [
+        `$${ticker} trades at ${val.toFixed(1)}× EV/Revenue.`,
+        ``,
+        `EV/Revenue = enterprise value ÷ annual revenue.`,
+        `You're paying ${val.toFixed(1)}× each dollar of $${ticker}'s revenue.`,
+        ``,
+        `When is EV/Revenue useful?`,
+        `When a company is unprofitable or has inconsistent earnings.`,
+        `For SaaS and high-growth companies, it's often the primary valuation metric used by professionals.`,
+        ``,
+        `The catch: revenue doesn't equal profit.`,
+        `A company with 80% gross margins at 10× revenue is very different from a company with 20% gross margins at 10× revenue.`,
+        `Always pair EV/Revenue with gross margin.`,
+        ``,
+        `$${ticker} at ${val.toFixed(1)}× is ${high ? `high — the market expects significant margin expansion and sustained revenue growth to justify this multiple` : low ? `low — either the business is cheap or growth expectations are muted` : `in the moderate range — watch gross margin direction`}.`,
+      ]
+    },
+  },
+  {
+    name: 'Price-to-Book (P/B)',
+    emoji: '📒',
+    hashtags: '#PriceToBook #Banking #ValueInvesting',
+    extract: (d) => {
+      const pb = d.valuationMethods?.models?.multiples?.estimates?.find(e => e.multiple === 'P/Book')?.actualValue
+        ?? (d.quote?.price && d.businessProfile?.bookValuePerShare ? d.quote.price / d.businessProfile.bookValuePerShare : null)
+      return pb > 0 && pb < 50 ? { val: pb, extra: {} } : null
+    },
+    interpret: (val, ticker, extra) => {
+      return [
+        `$${ticker} trades at ${val.toFixed(2)}× book value (P/B).`,
+        ``,
+        `P/B = share price ÷ book value per share.`,
+        `Book value is what's left if the company sold all assets and paid all liabilities today.`,
+        ``,
+        `How to read it:`,
+        `  P/B < 1 → you're buying assets for less than their accounting value (common in distress)`,
+        `  P/B 1–3 → normal for asset-heavy businesses`,
+        `  P/B > 10 → the market values the brand/IP/talent far above the balance sheet`,
+        ``,
+        `$${ticker} at ${val.toFixed(2)}× means the market values the business at ${val.toFixed(2)}× its net assets.`,
+        ``,
+        `P/B is most relevant for banks, insurers, and asset-heavy businesses.`,
+        `For tech and service companies, intangible assets (brand, code, talent) don't appear on the balance sheet — making P/B less meaningful.`,
+        ``,
+        `The justified P/B formula: P/B = (ROE − g) / (Ke − g). If ROE is high, a high P/B makes sense.`,
+      ]
+    },
+  },
+  {
+    name: 'Gross Margin',
+    emoji: '🧾',
+    hashtags: '#GrossMargin #Profitability #Moat',
+    extract: (d) => {
+      const gm = d.businessProfile?.grossMargin
+      return gm > 0 && gm < 1 ? { val: gm * 100, extra: { sector: d.quote?.sector } } : null
+    },
+    interpret: (val, ticker, extra) => {
+      const { sector } = extra ?? {}
+      const high = val > 60
+      const mid  = val >= 30 && val <= 60
+      return [
+        `$${ticker} has a gross margin of ${val.toFixed(1)}%.`,
+        ``,
+        `Gross margin = (revenue − cost of goods sold) ÷ revenue.`,
+        `It's the percentage of each dollar of revenue that remains after paying for what you sold.`,
+        ``,
+        `Why it matters for valuation:`,
+        `High gross margin → pricing power → hard-to-replicate product or service → competitive moat.`,
+        `Low gross margin → commoditised → subject to price wars → harder to sustain long-term profitability.`,
+        ``,
+        `${val.toFixed(1)}% for $${ticker} is ${high ? `exceptional. Very few businesses sustain margins above 60%. It suggests strong pricing power — customers pay without much price resistance.` : mid ? `solid. Above the median for most industries. There's a real business here with room to generate profit after reinvestment.` : `tight. The business competes heavily on price or operates in a low-margin industry. Execution matters more at this margin level.`}`,
+        ``,
+        `Gross margin alone doesn't determine valuation — but it's one of the clearest indicators of whether a business has a moat.`,
+      ]
+    },
+  },
+  {
+    name: 'ROIC',
+    emoji: '🔄',
+    hashtags: '#ROIC #ReturnOnCapital #ValueCreation',
+    extract: (d) => {
+      const roic = d.scores?.roic?.roic
+      const wacc = d.wacc?.wacc
+      const spread = d.scores?.roic?.spread
+      return roic != null ? { val: roic * 100, extra: { wacc: wacc ? wacc * 100 : null, spread: spread ? spread * 100 : null } } : null
+    },
+    interpret: (val, ticker, extra) => {
+      const { wacc, spread } = extra ?? {}
+      const creating = spread != null ? spread > 0 : val > 10
+      return [
+        `$${ticker} earns a ${val.toFixed(1)}% return on invested capital (ROIC).`,
+        ``,
+        `ROIC = net operating profit after tax ÷ invested capital.`,
+        `It measures how efficiently the business turns invested dollars into profit.`,
+        ``,
+        `The WACC comparison:`,
+        `${wacc ? `$${ticker}'s WACC is ~${wacc.toFixed(1)}%. ROIC of ${val.toFixed(1)}% means ${spread ? `a ${Math.abs(spread).toFixed(1)}pp ${creating ? 'value-creating spread' : 'value-destroying gap'}` : 'it earns above its cost of capital'}.` : `Compare ROIC to WACC: if ROIC > WACC, the business creates value. If ROIC < WACC, it destroys it — even if it's profitable.`}`,
+        ``,
+        `${creating ? `$${ticker} is creating shareholder value with every dollar it reinvests. That's rare and powerful — it compounds over time.` : `$${ticker} earns less on its capital than investors require as a return. Growth in this scenario actually reduces intrinsic value.`}`,
+        ``,
+        `This is why ROIC matters more than growth rate alone.`,
+        `A business growing at 20% with ROIC of 5% is worth less than one growing at 10% with ROIC of 25%.`,
+      ]
+    },
+  },
+  {
+    name: 'FCF Margin',
+    emoji: '🏦',
+    hashtags: '#FCFMargin #CashFlow #QualityInvesting',
+    extract: (d) => {
+      const fcfm = d.businessProfile?.fcfMargin
+      return fcfm != null ? { val: fcfm * 100, extra: { netMargin: d.businessProfile?.netMargin ? d.businessProfile.netMargin * 100 : null } } : null
+    },
+    interpret: (val, ticker, extra) => {
+      const { netMargin } = extra ?? {}
+      const gap = netMargin != null ? val - netMargin : null
+      return [
+        `$${ticker} converts ${val.toFixed(1)}% of its revenue into free cash flow.`,
+        ``,
+        `FCF margin = free cash flow ÷ revenue.`,
+        `Free cash flow = operating cash flow − capital expenditures.`,
+        ``,
+        `It's the cash left after running the business and maintaining/growing its assets — cash that can be returned to shareholders or reinvested.`,
+        ``,
+        `${netMargin != null ? `$${ticker}'s net income margin is ${netMargin.toFixed(1)}%. FCF margin is ${val.toFixed(1)}%. ${gap > 2 ? 'FCF > net income often means the company has low capex and strong working capital management — quality signal.' : gap < -3 ? 'FCF < net income can mean heavy reinvestment (growing the business) or working capital strain — worth investigating.' : 'They track closely, which is typical for mature businesses.'}` : ''}`,
+        ``,
+        `How to read ${val.toFixed(1)}%:`,
+        `  Below 5% → thin cash generation, vulnerable to downturns`,
+        `  5–15% → solid`,
+        `  Above 15% → strong cash machine, often a quality compounder`,
+        ``,
+        `In our DCF model, FCF margin is one of the core assumptions — it directly determines how much cash we project the business will generate.`,
+      ]
+    },
+  },
+]
+
+async function runRatioExplained() {
+  const weekOfYear = Math.floor((Date.now() / 86400000 + 4) / 7)
+  const ratioIdx   = weekOfYear % RATIO_META.length
+  const meta       = RATIO_META[ratioIdx]
+  const anchorTicker = RATIO_ANCHORS[ratioIdx]
+
+  console.log(`Ratio explained: ${meta.name} using $${anchorTicker}`)
+
+  // Fetch live data for the anchor stock
+  let data = null
+  try { data = await fetchValuation(anchorTicker) } catch { /* proceed with generic */ }
+
+  const extracted = data ? meta.extract(data) : null
+
+  let bodyLines
+  if (extracted != null) {
+    bodyLines = meta.interpret(extracted.val, anchorTicker, extracted.extra ?? {})
+  } else {
+    // Generic fallback — no live numbers, still educational
+    bodyLines = [
+      `${meta.name} is one of the most-used ratios in equity analysis.`,
+      ``,
+      `This week we're breaking it down: what it measures, how to read it, and when it's useful vs misleading.`,
+      ``,
+      `(Live data temporarily unavailable — check ${APP_URL}/stock/${anchorTicker} for current numbers.)`,
+    ]
+  }
+
+  const lines = [
+    `${meta.emoji} ${meta.name} — explained with a real example ($${anchorTicker})`,
+    ``,
+    ...bodyLines,
+    ``,
+    `See every ratio for any stock, free → ${APP_URL}/stock/${anchorTicker}`,
+    meta.hashtags,
+  ].filter(l => l !== null && l !== undefined)
+
+  await post(lines.join('\n'))
+}
+
 const MODES = {
-  earnings:          runEarnings,
   dcf:               runDcf,
   dcf2:              runDcf2,
   insider_buy:       runInsiderBuy,
   low_52w:           run52wLow,
   top_undervalued:   runTopUndervalued,
   market_vs_model:   runMarketVsModel,
+  ratio_explained:   runRatioExplained,
   dcf_bear:          runDcfBear,
   news:              runNews,
   macro:             runMacro,

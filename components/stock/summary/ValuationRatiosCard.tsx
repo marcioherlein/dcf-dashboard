@@ -122,38 +122,18 @@ function MultipleChart({
   const min = Math.min(...allValues) * 0.88
   const max = Math.max(...allValues) * 1.10
 
-  // Show every-other label when many points to avoid crowding
-  const labelStep = points.length > 8 ? 2 : 1
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const CustomDot = (props: any) => {
-    const { cx, cy, index, payload } = props
-    if (index % labelStep !== 0 && index !== points.length - 1) return null
-    const isLast = index === points.length - 1
-    const labelX = isLast ? cx - 2 : cx
-    const anchor = isLast ? 'end' : 'middle'
-    return (
-      <g key={`dot-${index}`}>
-        <circle cx={cx} cy={cy} r={2.5} fill={color} stroke="#fff" strokeWidth={1} />
-        <text
-          x={labelX}
-          y={cy - 6}
-          textAnchor={anchor}
-          fill={color}
-          fontSize={9}
-          fontWeight={600}
-          fontFamily="system-ui,-apple-system,sans-serif"
-        >
-          {payload.value.toFixed(1)}×
-        </text>
-      </g>
-    )
+  const SimpleDot = (props: any) => {
+    const { cx, cy, index } = props
+    // Only show dot on last point (current value)
+    if (index !== points.length - 1) return null
+    return <circle key={`dot-${index}`} cx={cx} cy={cy} r={3} fill={color} stroke="#fff" strokeWidth={1.5} />
   }
 
   return (
-    <div className="h-[90px] w-full mt-1">
+    <div className="h-[72px] w-full mt-1">
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={points} margin={{ top: 16, right: 8, left: 0, bottom: 0 }}>
+        <LineChart data={points} margin={{ top: 8, right: 4, left: 0, bottom: 0 }}>
           <XAxis dataKey="label" hide tick={false} axisLine={false} tickLine={false} />
           <YAxis domain={[min, max]} hide tick={false} axisLine={false} tickLine={false} />
           <ReferenceLine y={medianValue} stroke="#CBD5E1" strokeWidth={1} strokeDasharray="3 3" />
@@ -163,7 +143,7 @@ function MultipleChart({
             dataKey="value"
             stroke={color}
             strokeWidth={1.5}
-            dot={CustomDot}
+            dot={SimpleDot}
             activeDot={{ r: 3.5, fill: color, stroke: '#fff', strokeWidth: 1.5 }}
           />
         </LineChart>
@@ -225,7 +205,7 @@ function PEGBlock({ peg, peRatioTTM, epsGrowthFwd, analystForwardPE }: PEGBlockP
                 style={{ background: 'linear-gradient(to right, #11875D 0%, #11875D 33%, #B56A00 50%, #D83B3B 100%)' }} />
               {/* needle */}
               <div className="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-white rounded-full border border-[#6B6B6B] shadow"
-                style={{ left: `calc(${Math.min(Math.max(displayPeg / 4, 0), 1) * 100}% - 3px)` }} />
+                style={{ left: `calc(${Math.min(Math.log(1 + Math.max(displayPeg, 0)) / Math.log(5), 1) * 100}% - 3px)` }} />
             </div>
             <div className="flex items-center justify-between w-28">
               <span className="text-[9px] text-[#9B9B9B]">0</span>

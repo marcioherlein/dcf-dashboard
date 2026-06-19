@@ -220,9 +220,9 @@ export default function ReverseDCFCompactCard({
             <BarRow
               label="Model Blended"
               labelTooltip="Blended revenue CAGR used in the DCF model — weighted mix of historical, analyst, and fundamental growth signals."
-              dotHex="#6366F1"
+              dotHex="#4F6BBA"
               value={blendedPct}
-              barColor="bg-[#6366F1]"
+              barColor="bg-[#4F6BBA]"
               widthPct={barWidth(blendedPct)}
               zeroLineLeft={minVal < 0 ? zeroLineLeft : null}
             />
@@ -242,9 +242,9 @@ export default function ReverseDCFCompactCard({
             <BarRow
               label="Analyst Rev. (2Y)"
               labelTooltip="2-year forward revenue growth consensus from analyst estimates."
-              dotHex="#A855F7"
+              dotHex="#9061E5"
               value={analyst2yPct}
-              barColor="bg-[#A855F7]"
+              barColor="bg-[#9061E5]"
               widthPct={barWidth(analyst2yPct)}
               zeroLineLeft={minVal < 0 ? zeroLineLeft : null}
             />
@@ -254,9 +254,9 @@ export default function ReverseDCFCompactCard({
             <BarRow
               label="Analyst EPS (1Y)"
               labelTooltip="Forward EPS growth consensus from analyst estimates (+1Y). Earnings growth can diverge from revenue growth due to margin expansion or compression."
-              dotHex="#EC4899"
+              dotHex="#B07CE8"
               value={epsPct}
-              barColor="bg-[#EC4899]"
+              barColor="bg-[#B07CE8]"
               widthPct={barWidth(epsPct)}
               zeroLineLeft={minVal < 0 ? zeroLineLeft : null}
             />

@@ -26,10 +26,10 @@ type SortDir = 'asc' | 'desc'
 type FilterGroup = 'all' | ETFGroup
 
 function SortIcon({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey; sortDir: SortDir }) {
-  if (col !== sortKey) return <ChevronsUpDown size={11} className="text-[#8A95A6]" />
+  if (col !== sortKey) return <ChevronsUpDown size={12} className="text-[#9B9B9B] opacity-60" />
   return sortDir === 'desc'
-    ? <ChevronDown size={11} className="text-olive-700" />
-    : <ChevronUp size={11} className="text-olive-700" />
+    ? <ChevronDown size={12} className="text-olive-700" />
+    : <ChevronUp size={12} className="text-olive-700" />
 }
 
 const groupBadge: Record<ETFGroup, string> = {
@@ -105,7 +105,7 @@ function Rankings({
                 'px-3 py-1.5 rounded-full text-[12px] font-[600] transition-colors border',
                 filter === f.id
                   ? 'bg-olive-700 text-white border-olive-700'
-                  : 'bg-white text-[#566174] border-[#E3E1DA] hover:border-[#BFD2A1] hover:text-olive-700',
+                  : 'bg-white text-[#566174] border-[#E3E1DA] hover:border-[#BFD2A1] hover:text-olive-700 hover:bg-[#F0F4E8]',
               )}
             >
               {f.label}

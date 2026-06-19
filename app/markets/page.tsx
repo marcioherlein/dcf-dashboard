@@ -26,7 +26,7 @@ import type { MarketContextPayload } from '@/lib/market-context/types'
 const REFRESH_INTERVAL_MS = 60_000
 
 function Sk({ h = 'h-32', className = '' }: { h?: string; className?: string }) {
-  return <div className={`motion-safe:animate-pulse rounded-xl bg-[#F5F5F5] border border-[#E5E5E5] ${h} ${className}`} />
+  return <div className={`motion-safe:animate-pulse rounded-xl bg-[#EBEBEB] border border-[#E0E0E0] ${h} ${className}`} />
 }
 
 function pct(v: number | null) {
@@ -44,12 +44,17 @@ function timeAgo(ts: number): string {
   return `${Math.floor(s / 60)}m ago`
 }
 function getMarketStatus(): { label: string; cls: string } {
-  const now  = new Date()
-  const utcH = now.getUTCHours()
-  const utcM = now.getUTCMinutes()
-  const day  = now.getUTCDay()
-  const et   = (utcH * 60 + utcM - 240 + 1440) % 1440
-  if (day === 0 || day === 6) return { label: 'Market Closed', cls: 'bg-[#F5F5F5] text-[#6B6B6B]' }
+  const now = new Date()
+  const etParts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    hour: 'numeric', minute: 'numeric', weekday: 'short', hour12: false,
+  }).formatToParts(now)
+  const weekday = etParts.find(p => p.type === 'weekday')?.value ?? ''
+  const h = parseInt(etParts.find(p => p.type === 'hour')?.value ?? '0', 10)
+  const m = parseInt(etParts.find(p => p.type === 'minute')?.value ?? '0', 10)
+  const et = h * 60 + m
+  const isWeekend = weekday === 'Sat' || weekday === 'Sun'
+  if (isWeekend) return { label: 'Market Closed', cls: 'bg-[#F5F5F5] text-[#6B6B6B]' }
   if (et >= 240  && et < 570)  return { label: 'Pre-Market',    cls: 'bg-[#FFF4DA] text-[#B56A00]' }
   if (et >= 570  && et < 960)  return { label: '● Market Open', cls: 'bg-[#E8F7EF] text-[#11875D] font-bold' }
   if (et >= 960  && et < 1200) return { label: 'After Hours',   cls: 'bg-[#EAF1FF] text-[#2563EB]' }
@@ -65,8 +70,9 @@ function SectionHeader({ title, subtitle, right }: { title: string; subtitle?: s
     <div ref={ref} className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between sm:gap-2 border-b border-[#E5E5E5] pb-2.5">
       <div
         style={{
-          clipPath: reduced ? 'none' : inView ? 'inset(0 0% 0 0)' : 'inset(0 100% 0 0)',
-          transition: reduced ? 'none' : 'clip-path 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+          opacity: reduced ? 1 : inView ? 1 : 0,
+          transform: reduced ? 'none' : inView ? 'translateY(0)' : 'translateY(6px)',
+          transition: reduced ? 'none' : 'opacity 0.5s ease, transform 0.5s ease',
         }}
       >
         <h2 className="text-[16px] font-bold text-[#111111] tracking-tight">{title}</h2>

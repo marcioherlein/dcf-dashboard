@@ -129,8 +129,8 @@ interface SummaryTabProps {
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-2.5">
-      <div className="w-0.5 h-4 rounded-full" style={{ background: 'linear-gradient(to bottom, #334155, #475569)' }} aria-hidden="true" />
-      <h2 className="text-[11px] font-[700] text-[#334155] uppercase tracking-wider">
+      <div className="w-[3px] h-4 rounded-full" style={{ background: 'linear-gradient(to bottom, #334155, #475569)' }} aria-hidden="true" />
+      <h2 className="text-[13px] font-[600] text-[#334155] tracking-normal">
         {children}
       </h2>
     </div>

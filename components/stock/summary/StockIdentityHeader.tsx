@@ -291,17 +291,22 @@ export default function StockIdentityHeader({
             {/* Description — CSS line-clamp (avoids layout shift on expand) */}
             {description && (
               <div>
-                <p
-                  className={`text-[13px] text-[#566174] leading-[1.6] ${descExpanded ? '' : 'line-clamp-3'}`}
-                  style={{ overflowWrap: 'break-word' }}
-                >
-                  {description}
-                </p>
+                <div className={`relative ${!descExpanded ? 'overflow-hidden' : ''}`}>
+                  <p
+                    className={`text-[13px] text-[#374151] leading-[1.6] ${descExpanded ? '' : 'line-clamp-3'}`}
+                    style={{ overflowWrap: 'break-word' }}
+                  >
+                    {description}
+                  </p>
+                  {!descExpanded && description.length > 300 && (
+                    <div className="absolute bottom-0 inset-x-0 h-6 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+                  )}
+                </div>
                 {description.length > 300 && (
                   <button
                     onClick={() => setDescExpanded(v => !v)}
                     aria-expanded={descExpanded}
-                    className="mt-1 text-[#5F790B] font-semibold text-[12px] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B] rounded"
+                    className="mt-0.5 min-h-[44px] flex items-center text-[#5F790B] font-semibold text-[12px] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B] rounded"
                   >
                     {descExpanded ? 'Show less' : 'Read more'}
                   </button>

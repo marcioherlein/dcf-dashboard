@@ -70,7 +70,7 @@ function formatColValue(val: number | null | undefined, format: ColDef['format']
 }
 
 function colValueClass(val: number | null | undefined, format: ColDef['format'], id: SortKey): string {
-  if (val == null) return 'text-[#9B9B9B]'
+  if (val == null) return 'text-[#C0C0C0]'
   if (format === 'pct_return') return val >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'
   if (id === 'peRatio')     return val > 50 ? 'text-[#D83B3B]' : val < 15 ? 'text-[#11875D]' : 'text-[#111111]'
   if (id === 'pegRatio')    return val > 2   ? 'text-[#D83B3B]' : val < 1  ? 'text-[#11875D]' : 'text-[#111111]'
@@ -640,7 +640,7 @@ function MobileValuationRow({ entry, sparklines, onDelete, onTagUpdate, onGroupU
             </div>
             <div>
               <p className="text-[10px] text-[#9B9B9B] font-semibold uppercase tracking-wide mb-0.5">Verdict</p>
-              <span className={cn('inline-block text-[10px] font-bold rounded-full px-2 py-0.5 border', vtInfo.cls)}>
+              <span className={cn('inline-flex items-center justify-center text-[10px] font-bold rounded-full px-2 py-0.5 border min-w-[88px] text-center', vtInfo.cls)}>
                 {verdict}
               </span>
             </div>
@@ -1006,7 +1006,7 @@ export function ValuationTable({ entries, sparklines, groups, sortKey, sortDir, 
 
                       {/* Verdict */}
                       <td className="px-3 py-1.5 text-right whitespace-nowrap">
-                        <span className={cn('text-[10px] font-semibold rounded-full px-1.5 py-0.5 border whitespace-nowrap', vtInfo.cls)}>
+                        <span className={cn('inline-flex items-center justify-center text-[10px] font-semibold rounded-full px-1.5 py-0.5 border whitespace-nowrap min-w-[88px]', vtInfo.cls)}>
                           {verdict}
                         </span>
                       </td>
@@ -1052,14 +1052,22 @@ export function ValuationTable({ entries, sparklines, groups, sortKey, sortDir, 
                         )
                       })}
 
-                      {/* Updated */}
+                      {/* Updated — with staleness indicator */}
                       <td className="px-3 py-1.5 text-right whitespace-nowrap">
-                        <span
-                          className="text-[11px] text-[#6B6B6B]"
-                          title={new Date(entry.updatedAt).toLocaleString()}
-                        >
-                          {relativeDate(entry.updatedAt)}
-                        </span>
+                        {(() => {
+                          const d = daysSince(entry.updatedAt)
+                          return (
+                            <span
+                              className={cn(
+                                'text-[11px]',
+                                d > 30 ? 'text-[#B56A00] font-semibold' : 'text-[#6B6B6B]',
+                              )}
+                              title={new Date(entry.updatedAt).toLocaleString()}
+                            >
+                              {d > 30 && '⚠ '}{relativeDate(entry.updatedAt)}
+                            </span>
+                          )
+                        })()}
                       </td>
 
                       {/* Actions */}

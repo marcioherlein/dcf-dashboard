@@ -765,8 +765,17 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
                   value={searchQuery}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search valuations…"
-                  className="w-full pl-8 pr-3 py-1.5 text-[16px] text-[#111111] bg-white border border-[#DDE6F2] rounded-xl focus:outline-none focus:border-[#5F790B] focus:ring-2 focus:ring-blue-100 transition-all placeholder-slate-400"
+                  className="w-full pl-8 pr-8 py-1.5 text-[16px] text-[#111111] bg-white border border-[#DDE6F2] rounded-xl focus:outline-none focus:border-[#5F790B] focus:ring-2 focus:ring-blue-100 transition-all placeholder-slate-400"
                 />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearch('')}
+                    aria-label="Clear search"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full bg-[#E5E5E5] hover:bg-[#D0D0D0] text-[#6B6B6B] transition-colors"
+                  >
+                    <span className="text-[11px] font-bold leading-none">×</span>
+                  </button>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <SortDropdown current={sortKey} dir={sortDir} onSort={handleSort} />
