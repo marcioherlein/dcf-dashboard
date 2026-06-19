@@ -319,6 +319,23 @@ function auditNetMargin(apiData: ApiData, assumptions: ValuationAssumptions): Au
     }
   }
 
+  // Seeded margin is far below trailing — full-history averaging collapsed profitable trajectory
+  // (e.g. STNE: volatile -5.5%/+13.3%/-11.4%/+16.4% averages to 3.2% vs trailing 25.9%)
+  if (current > 0 && baselineMargin > 0 && current < baselineMargin * 0.4) {
+    const suggested = Math.round(baselineMargin * 0.8 * 1000) / 1000
+    return {
+      key, label, currentValue: current, severity: 'warn',
+      signal: `Well below trailing margin (${pct(baselineMargin)})`,
+      reason: `Exit margin of ${pct(current)} is more than 60% below the trailing ` +
+        `${pct(baselineMargin)}. This can happen when the model averages volatile years ` +
+        `(e.g. loss years from provisions or FX) that obscure the current profitability. ` +
+        `Consider ${pct(suggested)} as a more representative base.`,
+      suggestedValue: suggested,
+      confidence: 'medium',
+      benchmark: { label: 'Trailing net margin', value: Math.round(baselineMargin * 1000) / 1000 },
+    }
+  }
+
   const benchmarkLabel = recentMargins.length >= 2
     ? `TTM avg margin (${recentMargins.length}Q)`
     : 'Trailing net margin'

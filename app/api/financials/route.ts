@@ -1634,6 +1634,9 @@ export async function GET(req: NextRequest) {
       // isHighGrowthSaaS boundary check. Without this, the gross margin check uses null
       // and the SaaS convergence branch never fires for companies like NOW.
       financialStatements: { incomeStatement },
+      // terminalG must be passed so the audit uses the actual computed value instead of
+      // falling back to seedAssumptions' default of 0.03 (causes false-positive EM floor warn).
+      terminalG,
     }
     const _seededAssumptions = seedAssumptions(_auditBundle)
     const assumptionAudit = runAssumptionAudit(_auditBundle, _seededAssumptions)
@@ -1642,9 +1645,13 @@ export async function GET(req: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const _fwd1y = analystForwardEstimates.find((e: any) => e.period === '+1y')
     const _fwdEPS: number | null = _fwd1y?.eps?.avg ?? null
+    // For non-USD reporters (e.g. STNE=BRL), Yahoo returns analyst EPS in local currency.
+    // Dividing USD price by local-currency EPS produces a nonsense P/E (e.g. 0.8× for STNE).
+    // Convert by dividing by fxRate to get USD EPS before computing forward P/E.
+    const _fwdEPSUSD = _fwdEPS != null && fxRate > 0 ? _fwdEPS * fxRate : _fwdEPS
     const analystForwardPE: number | null =
-      _fwdEPS != null && _fwdEPS > 0 && currentPrice > 0
-        ? Math.round((currentPrice / _fwdEPS) * 10) / 10
+      _fwdEPSUSD != null && _fwdEPSUSD > 0 && currentPrice > 0
+        ? Math.round((currentPrice / _fwdEPSUSD) * 10) / 10
         : null
 
     // Compute the cockpit blended fair value server-side so the analyze page and
