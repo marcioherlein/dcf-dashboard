@@ -21,6 +21,7 @@ const APP_URL             = (process.env.APP_URL            || 'https://insic.ap
 const DRY_RUN             = process.env.DRY_RUN             === 'true'
 const BUFFER_API_KEY      = process.env.BUFFER_API_KEY      || ''
 const BUFFER_CHANNEL_ID   = process.env.BUFFER_CHANNEL_ID   || ''
+const LINKEDIN_CHANNEL_ID = process.env.LINKEDIN_CHANNEL_ID || ''
 
 // ─── US Market Holidays ───────────────────────────────────────────────────────
 // NYSE is closed on these dates. Intraday modes (market_open, midday_pulse,
@@ -4026,6 +4027,421 @@ async function runRatioExplained() {
   await post(lines.join('\n'))
 }
 
+// ─── LinkedIn posting ─────────────────────────────────────────────────────────
+// Separate post() function for LinkedIn — same Buffer API, different channel ID.
+// LinkedIn audience: finance professionals, investors, career-oriented.
+// Format: longer, more narrative, no character limits, hashtags at end only.
+
+async function postLinkedIn(text) {
+  if (!LINKEDIN_CHANNEL_ID) {
+    console.warn('LINKEDIN_CHANNEL_ID not set — skipping LinkedIn post')
+    return
+  }
+  validatePost(text)
+  if (DRY_RUN) {
+    console.log('--- DRY RUN (LinkedIn) ---')
+    console.log(text)
+    console.log(`Length: ${text.length}`)
+    return
+  }
+  const res = await fetch('https://api.buffer.com', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${BUFFER_API_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      query: `mutation {
+        createPost(input: {
+          channelId: "${LINKEDIN_CHANNEL_ID}"
+          text: ${JSON.stringify(text)}
+          schedulingType: automatic
+          mode: shareNow
+        }) {
+          ... on PostActionSuccess { post { id status } }
+          ... on InvalidInputError { message }
+          ... on UnauthorizedError { message }
+          ... on LimitReachedError { message }
+          ... on RestProxyError    { message code }
+          ... on UnexpectedError   { message }
+        }
+      }`,
+    }),
+  })
+  const json = await res.json()
+  const result = json?.data?.createPost
+  if (result?.post?.status === 'sent' || result?.post?.status === 'buffer') {
+    console.log(`LinkedIn posted — Buffer post ID: ${result.post.id}`)
+  } else {
+    throw new Error(`LinkedIn post failed: ${result?.message ?? JSON.stringify(json)}`)
+  }
+}
+
+// ─── LinkedIn Modes ───────────────────────────────────────────────────────────
+// LinkedIn-specific content: longer, more analytical, thought-leadership tone.
+// 4 modes posted on weekdays + 2 on weekends.
+
+// Mode: li_valuation — LinkedIn version of DCF, more detailed with context
+async function runLiValuation() {
+  const day = new Date().getDay()
+  const pool = TICKER ? [TICKER] : (ROTATION[day] ?? ROTATION[1])
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+
+  let ticker = null, data = null
+  for (let attempt = 0; attempt < Math.min(5, pool.length); attempt++) {
+    const candidate = pool[(dayOfYear + attempt + 7) % pool.length] // +7 offset from X to avoid same stock
+    try {
+      const result = await fetchValuation(candidate)
+      if (result?.quote?.price && appFairValue(result)) { ticker = candidate; data = result; break }
+    } catch { /* try next */ }
+  }
+  if (!data) { console.warn('li_valuation: no data — skipping'); return }
+
+  const price    = data.quote?.price
+  const fair     = appFairValue(data)
+  const upside   = appUpside(data)
+  const v        = verdictLabel(upside ?? 0)
+  const cagr     = data.cagr
+  const wacc     = data.wacc?.wacc
+  const terminalG = data.terminalG
+  const grossM   = data.businessProfile?.grossMargin
+  const netM     = data.businessProfile?.netMargin
+  const fcfM     = data.businessProfile?.fcfMargin
+  const roic     = data.scores?.roic?.roic
+  const roicSpread = data.scores?.roic?.spread
+  const analyst1y = data.cagrAnalysis?.analystEstimate1y
+  const numAnalysts = data.cagrAnalysis?.numAnalysts ?? 0
+  const rec      = data.analystRecommendation ?? ''
+  const recLabel = rec === 'strong_buy' ? 'Strong Buy' : rec === 'buy' ? 'Buy' : rec === 'hold' ? 'Hold' : rec === 'sell' ? 'Sell' : null
+  const bear     = data.scenarios?.bear?.fairValue
+  const bull     = data.scenarios?.bull?.fairValue
+  const fwdPE    = data.analystForwardPE
+  const analystTarget = data.quote?.analystTargetMean
+  const sector   = data.quote?.sector ?? ''
+  const grade    = data.ratings?.overall?.grade ?? ''
+
+  const lines = [
+    `${v.emoji} $${ticker} — DCF Valuation Update`,
+    ``,
+    `${v.short.charAt(0).toUpperCase() + v.short.slice(1)}.`,
+    ``,
+    `📊 The Numbers`,
+    `Current price: ${fmt(price)} | Fair value estimate: ${fmt(fair)}`,
+    `Implied upside/downside: ${pct(upside)} vs current price`,
+    ...(bear && bull ? [`Scenario range: ${fmt(bear)} (bear) → ${fmt(bull)} (bull)`] : []),
+    ``,
+    `⚙️ Model Assumptions`,
+    `WACC: ${pct(wacc, false)} | Revenue CAGR: ${pct(cagr, false)}${analyst1y && numAnalysts >= 3 ? ` (analysts: ${pct(analyst1y, false)}, n=${numAnalysts})` : ''}`,
+    ...(terminalG ? [`Terminal growth: ${pct(terminalG, false)}`] : []),
+    ``,
+    `🏢 Business Quality`,
+    ...(grossM != null ? [`Gross margin: ${pct(grossM, false)}`] : []),
+    ...(netM != null ? [`Net margin: ${pct(netM, false)}`] : []),
+    ...(fcfM != null ? [`FCF margin: ${pct(fcfM, false)}`] : []),
+    ...(roic != null ? [`ROIC: ${pct(roic, false)}${roicSpread != null ? ` (${roicSpread > 0 ? '+' : ''}${pct(roicSpread, false)} vs WACC — ${roicSpread > 0 ? 'creating value' : 'destroying value'})` : ''}`] : []),
+    ``,
+    `📈 Wall St. Consensus`,
+    ...(recLabel ? [`Recommendation: ${recLabel}`] : []),
+    ...(analystTarget ? [`Price target: ${fmt(analystTarget)}`] : []),
+    ...(fwdPE ? [`Forward P/E: ${fwdPE}×`] : []),
+    ``,
+    `Rating: ${grade} | Sector: ${sector}`,
+    ``,
+    `The full interactive model — where you can override WACC, growth, and terminal assumptions — is available free at insic.app/stock/${ticker}`,
+    ``,
+    `#Valuation #DCF #${ticker} #InvestmentAnalysis #Finance`,
+  ].filter(Boolean)
+
+  await postLinkedIn(lines.join('\n'))
+}
+
+// Mode: li_market_wrap — LinkedIn end-of-day professional summary
+async function runLiMarketWrap() {
+  const dayName = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+
+  const [sp500, nasdaq, dow] = await Promise.all([
+    fetchYahooChart('^GSPC'), fetchYahooChart('^IXIC'), fetchYahooChart('^DJI'),
+  ])
+  await new Promise(r => setTimeout(r, 600))
+  const [tnx, oil, gold, dxy] = await Promise.all([
+    fetchYahooChart('^TNX'), fetchYahooChart('CL=F'),
+    fetchYahooChart('GC=F'), fetchYahooChart('DX-Y.NYB'),
+  ])
+  await new Promise(r => setTimeout(r, 600))
+
+  const sectorSymbols = [
+    { sym: 'XLK', name: 'Technology' }, { sym: 'XLE', name: 'Energy' },
+    { sym: 'XLF', name: 'Financials' }, { sym: 'XLV', name: 'Healthcare' },
+    { sym: 'XLU', name: 'Utilities' }, { sym: 'XLI', name: 'Industrials' },
+  ]
+  const sectors = []
+  for (const { sym, name } of sectorSymbols) {
+    const d = await fetchYahooChart(sym).catch(() => null)
+    if (d) sectors.push({ ...d, name })
+    await new Promise(r => setTimeout(r, 250))
+  }
+  sectors.sort((a, b) => b.changePct - a.changePct)
+
+  const best  = sectors[0]
+  const worst = sectors[sectors.length - 1]
+
+  const whatDrove = (() => {
+    const items = []
+    if (best && Math.abs(best.changePct) > 0.3) {
+      const riskOn = ['Technology', 'Energy', 'Industrials'].includes(best.name)
+      items.push(riskOn
+        ? `${best.name} led (+${best.changePct.toFixed(1)}%), reflecting a risk-on tone.`
+        : `${best.name} outperformed (+${best.changePct.toFixed(1)}%) as investors rotated into defensives.`)
+    }
+    if (worst && Math.abs(worst.changePct) > 0.3) items.push(`${worst.name} lagged (${worst.changePct.toFixed(1)}%).`)
+    if (tnx && Math.abs(tnx.changePct) > 0.5) items.push(tnx.changePct > 0
+      ? `Yields rose (+${tnx.changePct.toFixed(1)}bps) — adding pressure on rate-sensitive assets.`
+      : `Yields declined (${tnx.changePct.toFixed(1)}bps), providing relief for growth stocks.`)
+    if (oil && Math.abs(oil.changePct) > 1) items.push(oil.changePct < 0
+      ? `Oil fell ${Math.abs(oil.changePct).toFixed(1)}%.`
+      : `Oil gained ${oil.changePct.toFixed(1)}%.`)
+    return items.length > 0 ? items : ['Broad-based session without a clear dominant theme.']
+  })()
+
+  const lines = [
+    `📊 Market Close — ${dayName}`,
+    ``,
+    `🇺🇸 US Indices`,
+    sp500  ? `S&P 500:   ${sp500.changePct >= 0 ? '+' : ''}${sp500.changePct.toFixed(2)}% (${sp500.price.toFixed(0)})` : null,
+    nasdaq ? `Nasdaq:    ${nasdaq.changePct >= 0 ? '+' : ''}${nasdaq.changePct.toFixed(2)}% (${nasdaq.price.toFixed(0)})` : null,
+    dow    ? `Dow Jones: ${dow.changePct >= 0 ? '+' : ''}${dow.changePct.toFixed(2)}% (${dow.price.toFixed(0)})` : null,
+    ``,
+    `🏭 Sector Performance`,
+    ...sectors.map(s => `${s.changePct >= 0.5 ? '▲' : s.changePct <= -0.5 ? '▼' : '→'} ${s.name}: ${s.changePct >= 0 ? '+' : ''}${s.changePct.toFixed(2)}%`),
+    ``,
+    `📌 Rates & Commodities`,
+    tnx  ? `10Y Treasury: ${tnx.price.toFixed(3)}% (${tnx.changePct >= 0 ? '+' : ''}${tnx.changePct.toFixed(2)}%)` : null,
+    oil  ? `WTI Oil: $${oil.price.toFixed(2)} (${oil.changePct >= 0 ? '+' : ''}${oil.changePct.toFixed(2)}%)` : null,
+    gold ? `Gold: $${gold.price.toFixed(0)} (${gold.changePct >= 0 ? '+' : ''}${gold.changePct.toFixed(2)}%)` : null,
+    dxy  ? `US Dollar (DXY): ${dxy.price.toFixed(1)} (${dxy.changePct >= 0 ? '+' : ''}${dxy.changePct.toFixed(2)}%)` : null,
+    ``,
+    `🔍 What Drove It`,
+    ...whatDrove,
+    ``,
+    `The key question for investors: did today's move change the fundamental value of your positions, or just the price? Those are very different things.`,
+    ``,
+    `Run your DCF models → insic.app`,
+    ``,
+    `#MarketClose #Finance #Investing #StockMarket #DCF`,
+  ].filter(Boolean)
+
+  await postLinkedIn(lines.join('\n'))
+}
+
+// Mode: li_deep_dive — LinkedIn weekly thought leadership: one concept, deep analysis
+const LI_DEEP_DIVES = [
+  {
+    lines: [
+      `Why most investors confuse a great company with a great investment`,
+      ``,
+      `This is perhaps the most important distinction in investing — and most people get it wrong.`,
+      ``,
+      `A great company:`,
+      `→ Has durable competitive advantages`,
+      `→ Generates high returns on invested capital`,
+      `→ Grows revenue consistently`,
+      `→ Has a management team that allocates capital well`,
+      ``,
+      `A great investment:`,
+      `→ All of the above, purchased at a price below intrinsic value`,
+      ``,
+      `The difference is the margin of safety.`,
+      ``,
+      `Apple is objectively one of the greatest businesses ever built. But in 2000, buying it at the wrong multiple would have meant waiting 10 years to break even.`,
+      ``,
+      `Warren Buffett put it simply: "Price is what you pay. Value is what you get."`,
+      ``,
+      `The practical implication: before you invest in a company you admire, run the numbers. What growth rate does the current price assume? Is that achievable? What happens if it isn't?`,
+      ``,
+      `That's what a DCF model does — it converts admiration into a testable hypothesis.`,
+      ``,
+      `We built insic.app to make this analysis accessible to everyone, not just institutional analysts.`,
+      ``,
+      `#ValueInvesting #DCF #Finance #InvestmentStrategy #Buffett`,
+    ],
+  },
+  {
+    lines: [
+      `The one number that tells you if a company is truly creating value`,
+      ``,
+      `It's not revenue growth. It's not earnings per share. It's not even free cash flow.`,
+      ``,
+      `It's the spread between ROIC and WACC.`,
+      ``,
+      `ROIC (Return on Invested Capital) measures how much profit a business generates per dollar of capital deployed.`,
+      ``,
+      `WACC (Weighted Average Cost of Capital) measures what that capital costs — the minimum return investors require to stay invested.`,
+      ``,
+      `The spread between them is economic profit: the value actually created above and beyond what's required.`,
+      ``,
+      `A company earning ROIC = 25% with WACC = 10% is creating 15 cents of economic value per dollar invested.`,
+      `A company earning ROIC = 8% with WACC = 10% is destroying shareholder value — even if it reports positive earnings.`,
+      ``,
+      `This framework is why Buffett focuses on businesses with durable competitive advantages. A true moat means ROIC > WACC sustained for a decade or more — and that compounds into extraordinary returns.`,
+      ``,
+      `Every stock on insic.app shows this spread in real time. It's one of the first things I check.`,
+      ``,
+      `#ROIC #WACC #ValueCreation #Finance #InvestmentAnalysis`,
+    ],
+  },
+  {
+    lines: [
+      `What the Fed actually does to your stock portfolio (the mechanics most investors miss)`,
+      ``,
+      `When the Federal Reserve changes interest rates, most investors think: "rates up = stocks down."`,
+      ``,
+      `That's too simple. Here's the actual mechanism:`,
+      ``,
+      `1. The Fed changes the federal funds rate`,
+      `↓`,
+      `2. This affects the risk-free rate (typically 10Y Treasury yield)`,
+      `↓`,
+      `3. The risk-free rate is the foundation of every discount rate (WACC)`,
+      `↓`,
+      `4. WACC determines how much future cash flows are worth today`,
+      `↓`,
+      `5. Every DCF fair value estimate changes`,
+      ``,
+      `The impact is not equal across all stocks:`,
+      ``,
+      `High-growth stocks (long duration) — most sensitive. When most of a company's value lies in cash flows 10+ years out, even a small increase in WACC dramatically reduces present value.`,
+      ``,
+      `Value stocks (short duration) — less sensitive. If most cash flows arrive in the next 3–5 years, the discount rate matters less.`,
+      ``,
+      `This is the math behind why tech stocks fell 30–40% in 2022 while energy and financials held up. It wasn't sentiment — it was arithmetic.`,
+      ``,
+      `Understanding this lets you anticipate how your portfolio responds to rate decisions before they happen.`,
+      ``,
+      `#FederalReserve #InterestRates #WACC #DCF #PortfolioManagement`,
+    ],
+  },
+  {
+    lines: [
+      `Why analysts' price targets are less useful than most investors think`,
+      ``,
+      `There are roughly 5,000 sell-side analysts on Wall Street, collectively producing hundreds of thousands of price targets each year.`,
+      ``,
+      `Here's what the academic research consistently finds about them:`,
+      ``,
+      `1. Price targets cluster near the current price (anchoring bias). Analysts rarely deviate by more than 20% in either direction.`,
+      ``,
+      `2. They are revised reactively, not predictively. After a stock rises 20%, price targets get raised. After a drop, they get cut.`,
+      ``,
+      `3. 12-month accuracy is poor. Studies find that analyst price targets outperform a random walk by a statistically insignificant margin.`,
+      ``,
+      `4. They reflect consensus — by definition, not contrarian.`,
+      ``,
+      `None of this means sell-side research is worthless. EPS estimates, sector analysis, and management channel checks are genuinely valuable.`,
+      ``,
+      `But the price target itself? It's a prediction about what other investors will pay in 12 months — not what the business is actually worth.`,
+      ``,
+      `DCF intrinsic value is different. It asks: if I owned this business forever and collected all its cash flows, what would I pay for it today? That's a more honest question.`,
+      ``,
+      `The difference matters, especially when markets are moving fast and analyst targets are chasing the price.`,
+      ``,
+      `#FinancialAnalysis #ValueInvesting #PriceTargets #DCF #InvestmentResearch`,
+    ],
+  },
+  {
+    lines: [
+      `The terminal value problem: why 70% of your DCF is based on one assumption`,
+      ``,
+      `If you've ever built a DCF model, you've encountered the terminal value — the lump-sum estimate of all cash flows beyond your explicit forecast period.`,
+      ``,
+      `Here's the uncomfortable truth: for most growth companies, 60–80% of the total valuation comes from this single terminal value estimate.`,
+      ``,
+      `You spend hours modeling years 1–5 in detail. You get the margins right, the capex right, the working capital right.`,
+      ``,
+      `Then you apply one number — the terminal growth rate — and it determines most of the answer.`,
+      ``,
+      `A 2% terminal growth rate vs. 3% can change a company's fair value by 30%.`,
+      ``,
+      `Academic guidance (Damodaran):`,
+      `→ Terminal growth should not exceed long-run nominal GDP growth of the company's home market`,
+      `→ For US companies, this is typically 2–2.5%`,
+      `→ Emerging market companies may justify slightly higher, but still anchored to country GDP`,
+      ``,
+      `The practical takeaway: always run your DCF at multiple terminal growth rates (1.5%, 2.0%, 2.5%). If the investment case only works at the high end, you're making a bet, not an investment.`,
+      ``,
+      `This is why scenario analysis — bear, base, bull — is more honest than a single point estimate.`,
+      ``,
+      `#DCF #TerminalValue #Damodaran #Finance #InvestmentModeling`,
+    ],
+  },
+]
+
+async function runLiDeepDive() {
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+  const content = LI_DEEP_DIVES[dayOfYear % LI_DEEP_DIVES.length]
+  await postLinkedIn(content.lines.join('\n'))
+}
+
+// Mode: li_sector_scan — LinkedIn version of sector scan, more detailed narrative
+async function runLiSectorScan() {
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+  const weekOfYear = Math.floor(dayOfYear / 7)
+  const scan = SECTOR_SCANS[weekOfYear % SECTOR_SCANS.length]
+  const dateStr = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+
+  const results = await Promise.allSettled(scan.tickers.map(t => fetchValuation(t)))
+  const rows = []
+  for (let i = 0; i < results.length; i++) {
+    const r = results[i]
+    if (r.status !== 'fulfilled') continue
+    const d = r.value
+    const fwdPE      = d.analystForwardPE
+    const evEbitda   = d.businessProfile?.evToEbitda ?? null
+    const revGrowth  = d.cagrAnalysis?.analystEstimate1y ?? null
+    const roicSpread = d.scores?.roic?.spread ?? null
+    const fair       = appFairValue(d)
+    const upside     = appUpside(d)
+    const price      = d.quote?.price
+    if (!price || !fwdPE) continue
+    const v = verdictLabel(upside ?? 0)
+    rows.push({ ticker: scan.tickers[i], price, fwdPE, evEbitda, revGrowth, roicSpread, fair, upside, v })
+  }
+
+  if (rows.length === 0) throw new Error('No sector scan data')
+  rows.sort((a, b) => (a.fwdPE ?? 999) - (b.fwdPE ?? 999))
+
+  const cheapest   = rows[0]
+  const richest    = rows[rows.length - 1]
+  const bestROIC   = [...rows].sort((a, b) => (b.roicSpread ?? -99) - (a.roicSpread ?? -99))[0]
+
+  const tableLines = rows.map(r => {
+    const fwdStr   = r.fwdPE    != null ? `${r.fwdPE.toFixed(0)}×` : 'N/A'
+    const evStr    = r.evEbitda != null ? `${r.evEbitda.toFixed(0)}×` : '—'
+    const growthStr = r.revGrowth != null ? `${(r.revGrowth * 100).toFixed(0)}%` : '—'
+    return `$${r.ticker} | Fwd P/E: ${fwdStr} | EV/EBITDA: ${evStr} | Rev growth: ${growthStr} | ${r.v.short}`
+  })
+
+  const lines = [
+    `${scan.emoji} ${scan.name} Sector — Valuation Analysis`,
+    `${dateStr}`,
+    ``,
+    scan.context,
+    ``,
+    `━━━ VALUATION BREAKDOWN ━━━`,
+    `Ticker | Fwd P/E | EV/EBITDA | Rev Growth | Model View`,
+    ...tableLines,
+    ``,
+    `📌 Key Findings`,
+    cheapest  ? `Lowest Fwd P/E: $${cheapest.ticker} at ${cheapest.fwdPE?.toFixed(0)}× — cheapest on this metric in the group` : null,
+    richest   ? `Richest valuation: $${richest.ticker} at ${richest.fwdPE?.toFixed(0)}× — pricing in significant growth delivery` : null,
+    bestROIC && bestROIC.roicSpread != null ? `Strongest moat signal: $${bestROIC.ticker} with ROIC ${(bestROIC.roicSpread * 100).toFixed(0)}% above WACC` : null,
+    ``,
+    `A low Fwd P/E doesn't mean cheap if growth is decelerating. A high Fwd P/E doesn't mean expensive if the ROIC spread is wide and durable. Context matters.`,
+    ``,
+    `Full interactive DCF models for each → insic.app`,
+    ``,
+    `#${scan.name.replace(/[^a-zA-Z]/g, '')} #Valuation #SectorAnalysis #DCF #Finance`,
+  ].filter(Boolean)
+
+  await postLinkedIn(lines.join('\n'))
+}
+
 const MODES = {
   dcf:               runDcf,
   dcf2:              runDcf2,
@@ -4054,6 +4470,10 @@ const MODES = {
   economic_results:  runEconomicResults,
   holiday_deep_dive: runHolidayDeepDive,
   sector_scan:       runSectorScan,
+  li_valuation:      runLiValuation,
+  li_market_wrap:    runLiMarketWrap,
+  li_deep_dive:      runLiDeepDive,
+  li_sector_scan:    runLiSectorScan,
 }
 
 if (!MODES[MODE]) {

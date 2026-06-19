@@ -147,6 +147,22 @@
     {
       "path": "/api/cron/x-post?mode=theory_overnight",
       "schedule": "0 2 * * 0"
+    },
+    {
+      "path": "/api/cron/x-post?mode=li_valuation",
+      "schedule": "0 16 * * 1-5"
+    },
+    {
+      "path": "/api/cron/x-post?mode=li_market_wrap",
+      "schedule": "30 20 * * 1-5"
+    },
+    {
+      "path": "/api/cron/x-post?mode=li_deep_dive",
+      "schedule": "0 17 * * 3"
+    },
+    {
+      "path": "/api/cron/x-post?mode=li_sector_scan",
+      "schedule": "0 16 * * 0"
     }
   ]
 }

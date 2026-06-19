@@ -8,6 +8,7 @@ const VALID_MODES = [
   'weekly_wrap','question','sentiment','news',
   'theory_overnight','holiday_deep_dive','sector_scan',
   'insider_buy','low_52w','top_undervalued','market_vs_model','ratio_explained',
+  'li_valuation','li_market_wrap','li_deep_dive','li_sector_scan',
 ]
 
 export async function GET(req: NextRequest) {
