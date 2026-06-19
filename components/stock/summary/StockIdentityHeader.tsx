@@ -293,7 +293,7 @@ export default function StockIdentityHeader({
               <div>
                 <div className={`relative ${!descExpanded ? 'overflow-hidden' : ''}`}>
                   <p
-                    className={`text-[13px] text-[#374151] leading-[1.6] ${descExpanded ? '' : 'line-clamp-3'}`}
+                    className={`text-[13px] text-[#374151] leading-[1.6] max-w-[56ch] ${descExpanded ? '' : 'line-clamp-3'}`}
                     style={{ overflowWrap: 'break-word' }}
                   >
                     {description}
