@@ -30,6 +30,8 @@ interface Props extends ValuationLevels {
   onPeriodReturnChange?: (pct: number | null) => void
   /** When true, renders without the outer card shell (bg, border, shadow, rounded) */
   noShell?: boolean
+  /** Override the main chart panel height (default: clamp(260px, 36vw, 420px)) */
+  chartHeight?: number | string
 }
 
 interface OHLCVBar {
@@ -107,7 +109,7 @@ const VAL_LINES = [
 type SubPanel = 'volume' | 'rsi'
 
 // ─────────────────────────────────────────────────────────────────────────────
-export default function PriceChart({ ticker, triangulatedFairValue, analystTarget, userModelFairValue, initialPeriod, period: controlledPeriod, onPeriodChange, onPeriodReturnChange, noShell }: Props) {
+export default function PriceChart({ ticker, triangulatedFairValue, analystTarget, userModelFairValue, initialPeriod, period: controlledPeriod, onPeriodChange, onPeriodReturnChange, noShell, chartHeight: chartHeightProp }: Props) {
   // state — use controlled period if provided, else internal
   const [internalPeriod, setInternalPeriod] = useState<Period>(controlledPeriod ?? initialPeriod ?? '1y')
   const period = controlledPeriod ?? internalPeriod
@@ -696,7 +698,7 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
         <div
           ref={mainRef}
           className="w-full"
-          style={{ height: 'clamp(260px, 36vw, 420px)' }}
+          style={{ height: chartHeightProp ?? 'clamp(260px, 36vw, 420px)' }}
         />
         <div ref={tooltipRef} className="pointer-events-none absolute z-20 hidden rounded-lg px-2.5 py-2 text-[11px]"
           style={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', minWidth: 120, lineHeight: 1.6 }} />

@@ -153,6 +153,7 @@ export default function OverviewLayoutV2({
           ticker={ticker}
           isDark={false}
           noShell
+          chartHeight={260}
           triangulatedFairValue={fairValue ?? undefined}
           analystTarget={analystTargetMean ?? undefined}
           userModelFairValue={userModelFairValue ?? undefined}
