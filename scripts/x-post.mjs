@@ -462,22 +462,17 @@ async function runEarnings() {
     const verdictText  = v.short
 
     if (fair && price) {
-      const parts = [
-        ``,
-        ``,
-        `Model view:  ${verdictEmoji} ${verdictText}`,
-        `Price:       ${fmt(price)}`,
-        `Fair Value:  ${fmt(fair)}  (${pct(upside)} vs current price)`,
-        ...(bear && bull ? [`Range:      ${fmt(bear)} bear → ${fmt(bull)} bull`] : []),
-        ``,
-        `Model inputs: WACC ${pct(wacc, false)} · CAGR ${pct(cagr, false)}${analyst1y != null && numAnalysts >= 3 ? ` (analysts: ${pct(analyst1y, false)}, n=${numAnalysts})` : ''}`,
-        ...(grossM != null ? [`Gross margin ${pct(grossM, false)} · Net margin ${netM != null ? pct(netM, false) : 'N/A'} · ROIC ${roic != null ? pct(roic, false) : 'N/A'}`] : []),
-        ...(recLabel ? [`Wall St: ${recLabel}`] : []),
-        ``,
-        `Rating: ${grade ?? ''} ${label ?? ''}`,
-        `Full model → ${APP_URL}/stock/${ticker}`,
-      ]
-      dcfBlock = parts.join('\n')
+      const impliedG = data.valuationMethods?.models?.reverseDcf?.impliedCAGR
+      const line1 = impliedG != null
+        ? `At ${fmt(price)}, the market is pricing in ~${pct(impliedG, false)}/yr growth. Our model uses ${pct(cagr, false)} and lands at ${fmt(fair)} (${pct(upside)} from here).`
+        : `Our model puts fair value at ${fmt(fair)} — ${pct(upside)} vs today's ${fmt(price)}.`
+      const line2 = bear && bull
+        ? `Downside case: ${fmt(bear)}. Bull case: ${fmt(bull)}.`
+        : null
+      const line3 = recLabel && roic != null
+        ? `Wall St says ${recLabel}. ROIC is ${pct(roic, false)} vs ${pct(wacc, false)} WACC.`
+        : recLabel ? `Wall St says ${recLabel}.` : null
+      dcfBlock = [line1, line2, line3].filter(Boolean).join('\n')
     }
   } catch (e) {
     console.warn('Could not fetch DCF for featured ticker:', e.message)
@@ -492,15 +487,19 @@ async function runEarnings() {
   const whenVerb = featuredDate === yesterdayStr ? 'reported' : 'reports'
 
   const lines = [
-    `📊 $${ticker} ${whenVerb} earnings ${whenStr}`,
+    whenStr === 'tomorrow'
+      ? `$${ticker} reports earnings tomorrow.`
+      : whenStr === 'today'
+      ? `$${ticker} is reporting today.`
+      : `$${ticker} reported yesterday after hours.`,
     ``,
-    dcfBlock || `Full model → ${APP_URL}/stock/${ticker}`,
+    dcfBlock || `See the model before the number → ${APP_URL}/stock/${ticker}`,
     ``,
-    ...(others.length > 0 ? [`Also ${whenVerb} ${whenStr}: ${others.join(' · ')}`] : []),
+    ...(others.length > 0 ? [`Also on deck: ${others.join(' · ')}`] : []),
     ``,
-    `Before the number: does the current price require a beat to be fairly valued, or is it cheap enough to miss?`,
+    `The number moves the price. The model tells you whether the business actually changed.`,
     `${APP_URL}/stock/${ticker}`,
-    `$${ticker} #Earnings #DCF #StockMarket`,
+    `$${ticker} #Earnings #DCF`,
   ].filter(Boolean)
 
   await post(lines.join('\n'))
@@ -1239,24 +1238,26 @@ async function runWeeklyWrap() {
   // Sort: most undervalued first, most overvalued last — shows the spread
   stocks.sort((a, b) => (b.upside ?? 0) - (a.upside ?? 0))
 
-  const lines = [
-    `How does the market value these 3 stocks vs what our DCF model says?`,
-    ``,
-  ]
+  const lines = []
+  const verdicts = stocks.map(s => verdictLabel(s.upside))
+  const allBullish = verdicts.every(v => (s => s.upside > 0.05)(stocks[verdicts.indexOf(v)]))
+
+  lines.push(`3 stocks. Same DCF engine. The market gets at least one of them wrong.`)
+  lines.push(``)
 
   for (const s of stocks) {
     const v = verdictLabel(s.upside)
     const impliedG = s.data?.valuationMethods?.models?.reverseDcf?.impliedCAGR
-    lines.push(`${v.emoji} $${s.ticker}: price ${fmt(s.price)} · model ${fmt(s.fair)} (${pct(s.upside)})`)
+    const upsideStr = (s.upside * 100).toFixed(0)
+    const direction = s.upside > 0.05 ? `model sees ${upsideStr}% upside` : s.upside < -0.05 ? `model sees ${Math.abs(upsideStr)}% downside` : `model says fair`
+    lines.push(`${v.emoji} $${s.ticker} — ${fmt(s.price)} → ${fmt(s.fair)} · ${direction}`)
     if (impliedG != null) lines.push(`   Market pricing in ~${pct(impliedG, false)}/yr growth`)
     lines.push(``)
   }
 
-  lines.push(`All three run through the same DCF engine. The inputs drive the output.`)
+  lines.push(`Which one is the market most wrong about?`)
   lines.push(``)
-  lines.push(`Which one do you think the market has most wrong?`)
-  lines.push(``)
-  lines.push(`Free models on every S&P 500 stock → ${APP_URL}`)
+  lines.push(`${APP_URL}`)
   lines.push(`#DCF #Investing #ValueInvesting`)
 
   await post(lines.join('\n'))
@@ -1532,22 +1533,23 @@ async function runEtfPulse() {
     }
 
     const sentiment = vix ? vixSentiment(vix.price) : null
-    const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    const today = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+
+    const spyStr = spy ? `SPY ${spy.changePct >= 0 ? '+' : ''}${spy.changePct.toFixed(2)}%` : null
+    const qqqStr = qqq ? `QQQ ${qqq.changePct >= 0 ? '+' : ''}${qqq.changePct.toFixed(2)}%` : null
+    const iwmStr = iwm ? `IWM ${iwm.changePct >= 0 ? '+' : ''}${iwm.changePct.toFixed(2)}%` : null
+
     const lines = [
-      `📊 Market Pulse — ${today}`,
+      today,
       ``,
-      fmtEtf(spy),
-      fmtEtf(qqq),
-      fmtEtf(iwm),
+      [spyStr, qqqStr, iwmStr].filter(Boolean).join(' · '),
     ]
     if (sentiment && vix) {
-      lines.push(``)
-      lines.push(`VIX: ${vix.price.toFixed(1)} — ${sentiment.label}`)
-      lines.push(sentiment.note)
+      lines.push(`VIX ${vix.price.toFixed(1)} — ${sentiment.label.toLowerCase()}`)
+      lines.push(``, sentiment.note)
     }
-    lines.push(``)
-    lines.push(`How does this affect your valuations? → ${APP_URL}`)
-    lines.push(`#SPY #QQQ #MarketSentiment #Investing`)
+    lines.push(``, `${APP_URL}`)
+    lines.push(`#SPY #QQQ #Markets #Investing`)
 
     await post(lines.join('\n'))
 
@@ -1562,26 +1564,28 @@ async function runEtfPulse() {
 
     const best  = sectors[0]
     const worst = sectors[sectors.length - 1]
-    const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+
+    const gap = best.changePct - worst.changePct
+    const rotationRead = gap > 2
+      ? `${gap.toFixed(1)}pp spread — strong rotation signal.`
+      : gap > 1 ? `Directional rotation, not extreme.`
+      : `Tight day — no clear conviction in the market.`
+
+    const today = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
 
     const lines = [
-      `🔄 Sector Rotation — ${today}`,
-      ``,
-      `🏆 Best: ${ETF_NAMES[best.symbol]} (${best.symbol}) ${best.changePct >= 0 ? '+' : ''}${best.changePct.toFixed(2)}%`,
-      `📉 Worst: ${ETF_NAMES[worst.symbol]} (${worst.symbol}) ${worst.changePct >= 0 ? '+' : ''}${worst.changePct.toFixed(2)}%`,
+      `${ETF_NAMES[best.symbol]} leading, ${ETF_NAMES[worst.symbol]} lagging — ${today}`,
       ``,
     ]
 
-    // Add all sectors sorted
     for (const s of sectors) {
-      const sign = s.changePct >= 0 ? '+' : ''
-      const dot = s.changePct >= 0.5 ? '🟢' : s.changePct <= -0.5 ? '🔴' : '🟡'
-      lines.push(`${dot} ${ETF_NAMES[s.symbol]}: ${sign}${s.changePct.toFixed(2)}%`)
+      const e = s.changePct >= 0.5 ? '▲' : s.changePct <= -0.5 ? '▼' : '→'
+      lines.push(`${e} ${ETF_NAMES[s.symbol]} ${s.changePct >= 0 ? '+' : ''}${s.changePct.toFixed(2)}%`)
     }
 
-    lines.push(``)
-    lines.push(`Money is rotating into ${ETF_NAMES[best.symbol].toLowerCase()} — see which stocks benefit → ${APP_URL}`)
-    lines.push(`#SectorRotation #ETF #StockMarket`)
+    lines.push(``, rotationRead)
+    lines.push(``, `${APP_URL}`)
+    lines.push(`#SectorRotation #${ETF_NAMES[best.symbol].replace(/\s/g,'')} #Markets`)
 
     await post(lines.join('\n'))
   }
@@ -1922,23 +1926,22 @@ async function runMorningBrief() {
     vix    ? `VIX ${vix.price.toFixed(1)}` : null,
   ].filter(Boolean).join(' · ')
 
-  const lines = [`🌅 Good Morning — ${dayName}`, ``, openTone + vixNote]
+  const lines = [`Good morning — ${dayName}`, ``, openTone + vixNote]
   if (usIndicesLine) lines.push(usIndicesLine)
 
-
   const overnightItems = [
-    dax    ? `🇩🇪 DAX ${dax.changePct >= 0 ? '+' : ''}${dax.changePct.toFixed(2)}%` : null,
-    ftse   ? `🇬🇧 FTSE ${ftse.changePct >= 0 ? '+' : ''}${ftse.changePct.toFixed(2)}%` : null,
-    nikkei ? `🇯🇵 Nikkei ${nikkei.changePct >= 0 ? '+' : ''}${nikkei.changePct.toFixed(2)}%` : null,
+    dax    ? `DAX ${dax.changePct >= 0 ? '+' : ''}${dax.changePct.toFixed(1)}%` : null,
+    ftse   ? `FTSE ${ftse.changePct >= 0 ? '+' : ''}${ftse.changePct.toFixed(1)}%` : null,
+    nikkei ? `Nikkei ${nikkei.changePct >= 0 ? '+' : ''}${nikkei.changePct.toFixed(1)}%` : null,
   ].filter(Boolean)
   const commodityItems = [
-    oil  ? `Oil (WTI) $${oil.price.toFixed(2)} ${oil.changePct >= 0 ? '+' : ''}${oil.changePct.toFixed(2)}%` : null,
-    gold ? `Gold $${gold.price.toFixed(0)} ${gold.changePct >= 0 ? '+' : ''}${gold.changePct.toFixed(2)}%` : null,
+    oil  ? `Oil $${oil.price.toFixed(0)} (${oil.changePct >= 0 ? '+' : ''}${oil.changePct.toFixed(1)}%)` : null,
+    gold ? `Gold $${gold.price.toFixed(0)} (${gold.changePct >= 0 ? '+' : ''}${gold.changePct.toFixed(1)}%)` : null,
   ].filter(Boolean)
 
   if (overnightItems.length > 0 || commodityItems.length > 0) {
     lines.push(``)
-    if (overnightItems.length > 0) lines.push(overnightItems.join('  '))
+    if (overnightItems.length > 0) lines.push(overnightItems.join(' · '))
     if (commodityItems.length > 0) lines.push(commodityItems.join(' · '))
   }
 
@@ -1955,15 +1958,13 @@ async function runMorningBrief() {
     if (earningsNarrative) lines.push(earningsNarrative)
   }
 
-  // Earnings this week (excluding today)
   if (earningsWeek.length > 0) {
-    // Group by date
     const byDate = {}
     for (const e of earningsWeek.slice(0, 8)) {
       if (!byDate[e.date]) byDate[e.date] = []
       byDate[e.date].push(`$${e.symbol}`)
     }
-    lines.push(`Earnings this week:`)
+    lines.push(``, `Earnings this week:`)
     for (const [date, tickers] of Object.entries(byDate)) {
       const dayLabel = new Date(date + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
       lines.push(`${dayLabel}: ${tickers.join(' · ')}`)
@@ -1972,10 +1973,9 @@ async function runMorningBrief() {
 
   if (tomorrowNote) lines.push(``, tomorrowNote)
 
-  // Process-oriented CTA — unique to a valuation tool
-  lines.push(``, `Before the open: does your model still support your positions at today's prices?`)
+  lines.push(``, `Does your model still support your positions at today's prices?`)
   lines.push(`${APP_URL}`)
-  lines.push(`#GoodMorning #DCF #Investing`)
+  lines.push(`#GoodMorning #Markets #Investing`)
 
   await post(lines.join('\n'))
 }
@@ -2065,31 +2065,33 @@ async function runMiddayPulse() {
     'This rotation has a story behind it. What\'s your read?',
   ]
 
-  const lines = [`📊 Midday Pulse — ${dayName}`, ``, indexLine]
-  if (vix) lines.push(`VIX: ${vix.price.toFixed(1)} — ${vixSentiment(vix.price).label}`)
+  const lines = [`Midday — ${dayName}`, ``, indexLine]
+  if (vix) lines.push(`VIX ${vix.price.toFixed(1)} — ${vixSentiment(vix.price).label.toLowerCase()}`)
 
   if (sectorData.length > 0) {
     lines.push(``)
     sectorData.forEach(s => {
-      const emoji = s.changePct >= 1 ? '🟢' : s.changePct <= -1 ? '🔴' : '🟡'
-      lines.push(`${emoji} ${s.name}: ${s.changePct >= 0 ? '+' : ''}${s.changePct.toFixed(2)}%`)
+      const e = s.changePct >= 1 ? '▲' : s.changePct <= -1 ? '▼' : '→'
+      lines.push(`${e} ${s.name} ${s.changePct >= 0 ? '+' : ''}${s.changePct.toFixed(2)}%`)
     })
-    if (rotationNote) lines.push(``, `→ ${rotationNote}`)
+    if (rotationNote) lines.push(``, rotationNote)
   }
 
   if (tnx || oil || gold || dxy) {
     lines.push(``)
     if (yieldNote) lines.push(yieldNote)
-    if (oil)  lines.push(`Oil (WTI): $${oil.price.toFixed(2)} ${oil.changePct >= 0 ? '+' : ''}${oil.changePct.toFixed(2)}%${oil.changePct < -1 ? ' — energy under pressure' : oil.changePct > 1 ? ' — crude rallying' : ''}`)
-    if (gold) lines.push(`Gold: $${gold.price.toFixed(0)} ${gold.changePct >= 0 ? '+' : ''}${gold.changePct.toFixed(2)}%${gold.changePct > 0.5 ? ' — safe-haven demand intact' : ''}`)
-    if (dxy)  lines.push(`Dollar (DXY): ${dxy.price.toFixed(1)} ${dxy.changePct >= 0 ? '+' : ''}${dxy.changePct.toFixed(2)}%${dxy.changePct < -0.3 ? ' — weak dollar helps multinationals' : ''}`)
+    if (oil) {
+      const oilNote = oil.changePct < -1 ? ` — energy under pressure` : oil.changePct > 1 ? ` — crude rallying` : ``
+      lines.push(`Oil $${oil.price.toFixed(0)} (${oil.changePct >= 0 ? '+' : ''}${oil.changePct.toFixed(1)}%)${oilNote}`)
+    }
+    if (gold) lines.push(`Gold $${gold.price.toFixed(0)} (${gold.changePct >= 0 ? '+' : ''}${gold.changePct.toFixed(1)}%)`)
     if (oilEnergyNote) lines.push(oilEnergyNote)
   }
 
   if (macroNote.length > 0) lines.push(``, ...macroNote)
 
-  lines.push(``, hooks[weekOfYear % hooks.length], ``, `Check the model for any stock → ${APP_URL}`)
-  lines.push(`#Midday #StockMarket #Investing #WallStreet`)
+  lines.push(``, hooks[weekOfYear % hooks.length], ``, `${APP_URL}`)
+  lines.push(`#Markets #StockMarket #Investing`)
 
   await post(lines.join('\n'))
 }
@@ -2170,46 +2172,51 @@ async function runMarketClose() {
 
   const weekOfYear = Math.floor((Date.now() / 86400000 + 4) / 7)
   const hooks = [
-    'Did today\'s move change the fundamental case for any position, or just the price?',
-    'One stock moved significantly today. Did the business change, or just the market\'s mood?',
-    'Before tomorrow\'s open: did anything today shift your WACC or growth assumptions?',
-    'The market priced something in today. Was it already in your model?',
+    `Did today's move change the fundamental case for any position, or just the price?`,
+    `One stock moved big today. Did the business change, or just the market's mood?`,
+    `Before tomorrow's open: did anything today shift your growth or WACC assumptions?`,
+    `The market priced something in today. Was it already in your model?`,
   ]
 
+  const sp = sp500 ? `S&P ${sp500.changePct >= 0 ? '+' : ''}${sp500.changePct.toFixed(2)}%` : null
+  const nq = nasdaq ? `Nasdaq ${nasdaq.changePct >= 0 ? '+' : ''}${nasdaq.changePct.toFixed(2)}%` : null
+  const dj = dow ? `Dow ${dow.changePct >= 0 ? '+' : ''}${dow.changePct.toFixed(2)}%` : null
+  const indexLine = [sp, nq, dj].filter(Boolean).join(' · ')
+
   const lines = [
-    `🔔 Markets Closed — ${dayName}`, ``,
-    sp500  ? `S&P 500: ${sp500.changePct >= 0 ? '+' : ''}${sp500.changePct.toFixed(2)}%` : null,
-    nasdaq ? `Nasdaq:  ${nasdaq.changePct >= 0 ? '+' : ''}${nasdaq.changePct.toFixed(2)}%` : null,
-    dow    ? `Dow:     ${dow.changePct >= 0 ? '+' : ''}${dow.changePct.toFixed(2)}%` : null,
-    vix    ? `VIX: ${vix.price.toFixed(1)} — ${vixSentiment(vix.price).label}` : null,
+    `Markets closed — ${dayName}`,
+    ``,
+    indexLine,
+    vix ? `VIX ${vix.price.toFixed(1)} — ${vixSentiment(vix.price).label.toLowerCase()}` : null,
+    ``,
   ].filter(Boolean)
 
   if (sectorData.length > 0) {
-    lines.push(``)
     sectorData.forEach((s, i) => {
-      const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : s.changePct < 0 ? '📉' : '  '
-      lines.push(`${medal} ${s.name} ${s.changePct >= 0 ? '+' : ''}${s.changePct.toFixed(2)}%`)
+      const e = i === 0 ? '▲' : s.changePct < 0 ? '▼' : '→'
+      lines.push(`${e} ${s.name} ${s.changePct >= 0 ? '+' : ''}${s.changePct.toFixed(2)}%`)
     })
+    lines.push(``)
   }
 
   if (tnx || oil || gold || dxy) {
-    lines.push(``)
-    if (tnx)  lines.push(`10Y Yield: ${tnx.price.toFixed(3)}% (${tnx.changePct >= 0 ? '+' : ''}${tnx.changePct.toFixed(2)}%)`)
-    if (oil)  lines.push(`Oil: $${oil.price.toFixed(2)} (${oil.changePct >= 0 ? '+' : ''}${oil.changePct.toFixed(2)}%)`)
-    if (gold) lines.push(`Gold: $${gold.price.toFixed(0)} (${gold.changePct >= 0 ? '+' : ''}${gold.changePct.toFixed(2)}%)`)
-    if (dxy)  lines.push(`DXY: ${dxy.price.toFixed(1)} (${dxy.changePct >= 0 ? '+' : ''}${dxy.changePct.toFixed(2)}%)`)
+    const parts = []
+    if (tnx)  parts.push(`10Y ${tnx.price.toFixed(2)}% (${tnx.changePct >= 0 ? '+' : ''}${tnx.changePct.toFixed(2)}%)`)
+    if (oil)  parts.push(`Oil $${oil.price.toFixed(0)} (${oil.changePct >= 0 ? '+' : ''}${oil.changePct.toFixed(1)}%)`)
+    if (gold) parts.push(`Gold $${gold.price.toFixed(0)}`)
+    if (dxy)  parts.push(`DXY ${dxy.price.toFixed(1)}`)
+    lines.push(parts.join(' · '), ``)
   }
 
-  lines.push(``)
   whatDroveIt.forEach(l => lines.push(l))
 
   if (watchTomorrow.length > 0) {
-    lines.push(``, `Tomorrow:`)
+    lines.push(``, `Tomorrow watch:`)
     watchTomorrow.forEach(w => lines.push(`→ ${w}`))
   }
 
   lines.push(``, hooks[weekOfYear % hooks.length], ``, `${APP_URL}`)
-  lines.push(`#MarketClose #Investing #WallStreet #StockMarket`)
+  lines.push(`#MarketClose #Investing #StockMarket`)
 
   await post(lines.join('\n'))
 }
@@ -2233,27 +2240,30 @@ async function runMarketOpen() {
 
   // Process-oriented insight, not just price reporting
   const processNote = spChg > 1.0
-    ? 'Strong open. Before you act: did anything change fundamentally, or is this momentum?'
+    ? `Strong open. Something shifted sentiment overnight — before you act, ask what changed fundamentally.`
     : spChg > 0.2
-    ? 'Positive open. Good time to run a quick check: does today\'s move change your thesis on any position?'
+    ? `Positive start. Does today's gap up change anything in your models, or is it just noise?`
     : spChg > -0.2
-    ? 'Flat open. Low conviction day. Use this time to update your models, not chase noise.'
+    ? `Flat open. Low conviction. Good day to update your assumptions, not chase moves.`
     : spChg > -1.0
-    ? 'Soft open. Risk-off tone. If defensives lead, check your WACC assumptions — rate expectations may be shifting.'
-    : 'Risk-off open. Volatility spike likely. The model doesn\'t panic. Do your positions still have margin of safety at today\'s prices?'
+    ? `Soft open. Risk-off tone. If defensives are leading, rate expectations may be quietly shifting.`
+    : `Risk-off open. The model doesn't panic — do your positions still have a margin of safety at today's price?`
+
+  const sp = sp500 ? `S&P ${sp500.changePct >= 0 ? '+' : ''}${sp500.changePct.toFixed(2)}%` : null
+  const nq = nasdaq ? `Nasdaq ${nasdaq.changePct >= 0 ? '+' : ''}${nasdaq.changePct.toFixed(2)}%` : null
+  const dj = dow ? `Dow ${dow.changePct >= 0 ? '+' : ''}${dow.changePct.toFixed(2)}%` : null
+  const indexLine = [sp, nq, dj].filter(Boolean).join(' · ')
 
   const lines = [
-    `${openEmoji} NYSE Open — ${dayName}`,
+    `${openEmoji} Opening bell — ${dayName}`,
     ``,
-    `S&P 500: ${sp500?.changePct >= 0 ? '+' : ''}${sp500?.changePct.toFixed(2) ?? 'N/A'}% · ${sp500?.price.toFixed(0) ?? ''}`,
-    `Nasdaq:  ${nasdaq?.changePct >= 0 ? '+' : ''}${nasdaq?.changePct.toFixed(2) ?? 'N/A'}%`,
-    `Dow:     ${dow?.changePct >= 0 ? '+' : ''}${dow?.changePct.toFixed(2) ?? 'N/A'}%`,
-    vix ? `VIX: ${vix.price.toFixed(1)} — ${vixSentiment(vix.price).label}` : null,
+    indexLine,
+    vix ? `VIX ${vix.price.toFixed(1)} — ${vixSentiment(vix.price).label.toLowerCase()}` : null,
     ``,
     processNote,
     ``,
     `${APP_URL}`,
-    `#NYSE #OpeningBell #Investing`,
+    `#OpeningBell #Markets #Investing`,
   ].filter(Boolean)
 
   await post(lines.join('\n'))
@@ -2298,24 +2308,29 @@ async function runSectorSpotlight() {
   const narrative = SECTOR_NARRATIVES[best.symbol] ?? 'Sector rotation underway.'
   const stocks = SECTOR_STOCKS[best.symbol] ?? []
 
+  const gap = best.changePct - worst.changePct
+  const gapStr = gap > 2
+    ? `A ${gap.toFixed(1)}pp spread between best and worst — rotation is running hard today.`
+    : gap > 1
+    ? `${gap.toFixed(1)}pp gap between top and bottom — directional but not extreme.`
+    : `Tight spread across sectors. Markets not showing strong conviction in either direction.`
+
   const lines = [
-    `📌 Sector Spotlight — ${dayName}`,
-    ``,
-    `🏆 Leading: ${sectorName[best.symbol] ?? best.symbol} ${best.changePct >= 0 ? '+' : ''}${best.changePct.toFixed(2)}%`,
-    `📉 Lagging:  ${sectorName[worst.symbol] ?? worst.symbol} ${worst.changePct >= 0 ? '+' : ''}${worst.changePct.toFixed(2)}%`,
+    `${sectorName[best.symbol] ?? best.symbol} leading, ${sectorName[worst.symbol] ?? worst.symbol} lagging — ${dayName}`,
     ``,
     narrative,
     ``,
-    ``,
     ...sectorData.map(s => {
-      const e = s.changePct >= 1 ? '🟢' : s.changePct <= -1 ? '🔴' : '🟡'
-      return `${e} ${sectorName[s.symbol] ?? s.symbol}: ${s.changePct >= 0 ? '+' : ''}${s.changePct.toFixed(2)}%`
+      const e = s.changePct >= 1 ? '🟢' : s.changePct <= -1 ? '🔴' : '→'
+      return `${e} ${sectorName[s.symbol] ?? s.symbol} ${s.changePct >= 0 ? '+' : ''}${s.changePct.toFixed(2)}%`
     }),
     ``,
-    `Key names in ${sectorName[best.symbol]}: ${stocks.slice(0, 3).map(t => `$${t}`).join(' · ')}`,
-    `Run their DCF models → ${APP_URL}`,
-    `#${best.symbol} #SectorRotation #StockMarket`,
-  ]
+    gapStr,
+    stocks.length > 0 ? `Names to watch in ${sectorName[best.symbol]}: ${stocks.slice(0, 3).map(t => `$${t}`).join(' · ')}` : null,
+    ``,
+    `${APP_URL}`,
+    `#SectorRotation #${sectorName[best.symbol]?.replace(/\s/g,'') ?? best.symbol} #Investing`,
+  ].filter(Boolean)
 
   await post(lines.join('\n'))
 }
@@ -2442,24 +2457,25 @@ async function runPreClose() {
     ? spChg > 0 ? 'Buyers holding control into the close.' : 'Sellers maintaining pressure into the close.'
     : 'Choppy session. Close will matter for tomorrow\'s open.'
 
+  const sp = sp500 ? `S&P ${sp500?.changePct >= 0 ? '+' : ''}${sp500?.changePct.toFixed(2)}%` : null
+  const nq = nasdaq ? `Nasdaq ${nasdaq?.changePct >= 0 ? '+' : ''}${nasdaq?.changePct.toFixed(2)}%` : null
+  const indexLine2 = [sp, nq, tnx ? `10Y ${tnx.price.toFixed(2)}%` : null].filter(Boolean).join(' · ')
+
   const lines = [
-    `⏰ 30 Min to Close — ${dayName}`,
+    `30 minutes to close — ${dayName}`,
     ``,
-    `S&P 500: ${sp500?.changePct >= 0 ? '+' : ''}${sp500?.changePct.toFixed(2) ?? 'N/A'}% · ${sp500?.price.toFixed(0) ?? ''}`,
-    `Nasdaq:  ${nasdaq?.changePct >= 0 ? '+' : ''}${nasdaq?.changePct.toFixed(2) ?? 'N/A'}%`,
-    tnx ? `10Y Yield: ${tnx.price.toFixed(3)}%` : null,
-    ``,
+    indexLine2,
     ``,
     ...sectors.map(s => {
-      const e = s.changePct >= 0.5 ? '🟢' : s.changePct <= -0.5 ? '🔴' : '🟡'
-      return `${e} ${s.name}: ${s.changePct >= 0 ? '+' : ''}${s.changePct.toFixed(2)}%`
+      const e = s.changePct >= 0.5 ? '▲' : s.changePct <= -0.5 ? '▼' : '→'
+      return `${e} ${s.name} ${s.changePct >= 0 ? '+' : ''}${s.changePct.toFixed(2)}%`
     }),
     ``,
     lateSignal,
     ...(macroTomorrow.length > 0 ? [``, `Tomorrow: ${macroTomorrow.map(e => e.label).join(' · ')}`] : []),
     ``,
     `${APP_URL}`,
-    `#StockMarket #MarketClose #Investing`,
+    `#Markets #PreClose #Investing`,
   ].filter(Boolean)
 
   await post(lines.join('\n'))
@@ -2506,35 +2522,39 @@ async function runAfterHours() {
   const macroTomorrow = MACRO_CALENDAR.filter(e => e.date === tomorrowUtc)
 
   const spChg = sp500?.changePct ?? 0
-  const sessionSummary = spChg > 1 ? 'Strong session.' : spChg > 0 ? 'Modest gains.' : spChg > -1 ? 'Mild losses.' : 'Significant selling pressure today.'
+  const sessionSummary = spChg > 1 ? `Strong session — S&P closed up ${spChg.toFixed(2)}%.`
+    : spChg > 0.1 ? `Markets edged higher — S&P +${spChg.toFixed(2)}% at the close.`
+    : spChg > -0.1 ? `Flat day — markets went nowhere in particular.`
+    : spChg > -1 ? `Modest selling today — S&P finished ${spChg.toFixed(2)}%.`
+    : `Heavy selling session — S&P ${spChg.toFixed(2)}%.`
+
+  const sp = sp500 ? `S&P ${sp500.changePct >= 0 ? '+' : ''}${sp500.changePct.toFixed(2)}%` : null
+  const nq = nasdaq ? `Nasdaq ${nasdaq.changePct >= 0 ? '+' : ''}${nasdaq.changePct.toFixed(2)}%` : null
+  const dj = dow ? `Dow ${dow.changePct >= 0 ? '+' : ''}${dow.changePct.toFixed(2)}%` : null
+  const ahIndexLine = [sp, nq, dj].filter(Boolean).join(' · ')
 
   const lines = [
-    `🔔 After Hours — ${dayName}`,
+    `After hours — ${dayName}`,
     ``,
-    ``,
-    `S&P 500: ${sp500?.changePct >= 0 ? '+' : ''}${sp500?.changePct.toFixed(2) ?? 'N/A'}% · ${sp500?.price.toFixed(0) ?? ''}`,
-    `Nasdaq:  ${nasdaq?.changePct >= 0 ? '+' : ''}${nasdaq?.changePct.toFixed(2) ?? 'N/A'}%`,
-    `Dow:     ${dow?.changePct >= 0 ? '+' : ''}${dow?.changePct.toFixed(2) ?? 'N/A'}%`,
+    ahIndexLine,
     ``,
     sessionSummary,
   ]
 
   if (todayEarners.length > 0) {
-    lines.push(``, `Reporting after hours:`)
-    todayEarners.forEach(t => lines.push(`📊 $${t.symbol} — run the model before results: ${APP_URL}/stock/${t.symbol}`))
+    lines.push(``, `Reporting tonight: ${todayEarners.map(t => `$${t.symbol}`).join(' · ')}`)
+    lines.push(`Worth checking the model before the number drops.`)
   }
 
   if (tomorrowEarners.length > 0) {
-    lines.push(``, `Tomorrow's earnings:`)
-    lines.push(tomorrowEarners.map(t => `$${t.symbol}`).join(' · '))
+    lines.push(``, `On deck tomorrow: ${tomorrowEarners.map(t => `$${t.symbol}`).join(' · ')}`)
   }
 
   if (macroTomorrow.length > 0) {
-    lines.push(``, `Tomorrow:`)
-    macroTomorrow.forEach(e => lines.push(`📅 ${e.label}`))
+    lines.push(``, `Tomorrow: ${macroTomorrow.map(e => e.label).join(' · ')}`)
   }
 
-  lines.push(``, `${APP_URL}`, `#AfterHours #StockMarket #Earnings #Investing`)
+  lines.push(``, `${APP_URL}`, `#AfterHours #Earnings #Markets #Investing`)
 
   await post(lines.join('\n'))
 }
@@ -2940,15 +2960,33 @@ async function runEarningsResults() {
         : `After-hours: ${ahPct.toFixed(1)}% — market punished despite the ${beatWord}.`
       : null
 
+    const beat = surprisePct != null && surprisePct >= 0
+    const miss = surprisePct != null && surprisePct < 0
+
+    const openLine = beat
+      ? `$${c.ticker} beat — EPS $${c.epsActual?.toFixed(2)} vs $${c.epsEstimate?.toFixed(2)} expected${surprisePct != null ? ` (+${surprisePct.toFixed(1)}%)` : ''}.`
+      : miss
+      ? `$${c.ticker} missed — EPS $${c.epsActual?.toFixed(2)} vs $${c.epsEstimate?.toFixed(2)} expected${surprisePct != null ? ` (${surprisePct.toFixed(1)}%)` : ''}.`
+      : `$${c.ticker} reported — EPS $${c.epsActual?.toFixed(2)}.`
+
+    const revLine = c.revenueActual != null
+      ? `Revenue: ${fmt(c.revenueActual)}${c.revenueEstimate != null ? ` vs ${fmt(c.revenueEstimate)} est` : ''}.`
+      : null
+
+    const reactionLine = ahPct != null
+      ? Math.abs(ahPct) < 1.0
+        ? `After-hours move was muted — the market already had this priced in.`
+        : ahPct > 0
+        ? `After-hours ${beat ? 'rewarding the beat' : 'buying despite the miss'}: +${ahPct.toFixed(1)}%.`
+        : `After-hours selling ${beat ? 'despite the beat' : 'on the miss'}: ${ahPct.toFixed(1)}%. Something in the detail spooked the market.`
+      : null
+
     const lines = [
-      `📊 $${c.ticker} earnings`,
+      openLine,
+      revLine,
+      reactionLine,
       ``,
-      `EPS: $${c.epsActual?.toFixed(2)} vs $${c.epsEstimate?.toFixed(2)} est ${beatEmoji} ${beatWord}${surprisePct != null ? ` (${surprisePct > 0 ? '+' : ''}${surprisePct.toFixed(1)}%)` : ''}`,
-      ...(c.revenueActual != null ? [`Revenue: ${fmt(c.revenueActual)}${c.revenueEstimate != null ? ` vs ${fmt(c.revenueEstimate)} est` : ''}`] : []),
-      ...(ahContext ? [ahContext] : []),
-      ``,
-      `The real question: did this change the intrinsic value, or just the price?`,
-      `See updated fair value → ${APP_URL}/stock/${c.ticker}`,
+      `Did the business actually change, or just the price? Fair value → ${APP_URL}/stock/${c.ticker}`,
       `#${c.ticker} #Earnings #DCF`,
     ].filter(Boolean)
 
@@ -3005,23 +3043,42 @@ async function runEconomicResults() {
 
   const chg = d.latestVal - d.previousVal
   const chgStr = `${chg >= 0 ? '+' : ''}${chg.toFixed(2)}`
-
-  const typeEmoji = { CPI: '📊', NFP: '💼', FOMC: '🏦' }
-  const unitMap = { CPI: 'index', NFP: 'K jobs', FOMC: '%' }
+  const dp = todayEvent.type === 'FOMC' ? 2 : 1
+  const unitMap = { CPI: '%', NFP: 'K jobs', FOMC: '%' }
   const unit = unitMap[todayEvent.type] ?? ''
 
+  // Narrative reaction — not just the number
+  const narrative = (() => {
+    if (todayEvent.type === 'CPI') {
+      const hot = chg > 0.1
+      const cool = chg < -0.1
+      const spReact = sp500 ? (sp500.changePct > 0.5 ? 'markets rallied' : sp500.changePct < -0.5 ? 'markets sold off' : 'markets shrugged') : null
+      const tnxReact = tnx ? (tnx.changePct > 0.3 ? 'yields climbed' : tnx.changePct < -0.3 ? 'yields fell' : null) : null
+      const reactions = [spReact, tnxReact].filter(Boolean)
+      if (hot) return `A hotter print. That moves the Fed's calculus — and through it, every discount rate in your model.${reactions.length > 0 ? ` ${reactions.join(', ')}.` : ''}`
+      if (cool) return `A cooler print. Rate cut expectations will adjust — watch what that does to growth stock valuations.${reactions.length > 0 ? ` ${reactions.join(', ')}.` : ''}`
+      return `In line with trend. No major surprise — but the cumulative direction still matters for WACC.${reactions.length > 0 ? ` ${reactions.join(', ')}.` : ''}`
+    }
+    if (todayEvent.type === 'NFP') {
+      const strong = chg > 50
+      const weak = chg < -50
+      if (strong) return `Strong jobs number. Fed stays cautious — rate cuts aren't imminent.${sp500 ? ` S&P ${sp500.changePct >= 0 ? '+' : ''}${sp500.changePct.toFixed(2)}%.` : ''}`
+      if (weak) return `Weak jobs number. Opens the door for rate cuts — good for growth valuations if inflation cooperates.${sp500 ? ` S&P ${sp500.changePct >= 0 ? '+' : ''}${sp500.changePct.toFixed(2)}%.` : ''}`
+      return `Jobs data came in broadly as expected.${sp500 ? ` S&P ${sp500.changePct >= 0 ? '+' : ''}${sp500.changePct.toFixed(2)}%.` : ''}`
+    }
+    if (todayEvent.type === 'FOMC') {
+      return `Fed held at ${d.latestVal.toFixed(2)}%.${chg !== 0 ? ` That's a ${Math.abs(chg * 100).toFixed(0)}bps ${chg > 0 ? 'hike' : 'cut'} from ${d.previousVal.toFixed(2)}%.` : ''} Every DCF model in the market just updated.${sp500 ? ` S&P ${sp500.changePct >= 0 ? '+' : ''}${sp500.changePct.toFixed(2)}%.` : ''}`
+    }
+    return `${todayEvent.label} came in at ${d.latestVal.toFixed(dp)}${unit} vs ${d.previousVal.toFixed(dp)} prior.`
+  })()
+
   const lines = [
-    `${typeEmoji[todayEvent.type] ?? '📅'} ${todayEvent.label} — Results`,
+    `${todayEvent.label}: ${d.latestVal.toFixed(dp)}${unit ? ` ${unit}` : ''} (prior: ${d.previousVal.toFixed(dp)}, ${chgStr} change)`,
     ``,
-    `Actual: ${d.latestVal.toFixed(todayEvent.type === 'FOMC' ? 2 : 1)}${unit ? ' ' + unit : ''}`,
-    `Prior:  ${d.previousVal.toFixed(todayEvent.type === 'FOMC' ? 2 : 1)} (${chgStr} change)`,
-    ``,
-    `Market reaction:`,
-    ...(sp500 ? [`S&P 500: ${sp500.changePct >= 0 ? '+' : ''}${sp500.changePct.toFixed(2)}%`] : []),
-    ...(tnx ? [`10Y Yield: ${tnx.changePct >= 0 ? '+' : ''}${tnx.changePct.toFixed(2)}%`] : []),
+    narrative,
     ``,
     `${APP_URL}`,
-    `#${todayEvent.type} #Macro #Fed #Investing`,
+    `#${todayEvent.type} #Macro #Investing`,
   ].filter(Boolean)
 
   const tweetText = lines.join('\n')
@@ -3433,19 +3490,16 @@ async function runInsiderBuy() {
   // Parse executive name from title
   const namePart = best.title.replace(/^4 - /, '').replace(/\s*\([^)]+\).*$/, '').trim()
 
+  const modelLine = price && fair && upside != null
+    ? `Our model puts fair value at ${fmt(fair)} — ${upside >= 0 ? `${(upside * 100).toFixed(0)}% above` : `${Math.abs(upside * 100).toFixed(0)}% below`} today's price.`
+    : null
+
   const lines = [
-    `🔔 Insider buy alert: $${ticker}`,
+    `${namePart} just filed a Form 4 on $${ticker}.`,
     ``,
-    `${namePart} filed a Form 4 with the SEC.`,
+    `Executives buy with their own money for one reason.`,
+    modelLine,
     ``,
-    ...(price && fair && upside != null ? [
-      `Current price: ${fmt(price)}`,
-      `Our model: ${fmt(fair)} (${upside >= 0 ? '+' : ''}${(upside * 100).toFixed(1)}% vs price)`,
-      ``,
-    ] : []),
-    `When insiders buy with their own money, it's worth paying attention.`,
-    ``,
-    `SEC filing 👇`,
     best.link,
     `$${ticker} #InsiderBuying #Investing`,
   ].filter(Boolean)
@@ -3525,22 +3579,18 @@ async function run52wLow() {
   const roic   = data?.scores?.roic?.roic
 
   const lines = [
-    `📉 $${ticker} is near its 52-week low`,
+    `$${ticker} is trading ${pctFrom52Low}% above its 52-week low. ${pctFrom52High}% off the peak.`,
     ``,
-    `Current:   ${fmt(chosen.current)}`,
-    `52W low:   ${fmt(chosen.low52)} (+${pctFrom52Low}% above it)`,
-    `52W high:  ${fmt(chosen.high52)} (${pctFrom52High}% off peak)`,
-    ``,
-    ...(fcfM != null ? [`FCF margin: ${pct(fcfM, false)} — still generating cash`] : []),
-    ...(roic != null && roic > 0 ? [`ROIC: ${pct(roic, false)}`] : []),
-    ...(fair && upside != null ? [
-      `Our model: fair value ~${fmt(fair)} (${upside >= 0 ? '+' : ''}${(upside * 100).toFixed(1)}% vs current price)`,
-    ] : []),
+    fair && upside != null
+      ? `Our model sees ${upside >= 0 ? `${(upside * 100).toFixed(0)}% upside` : `${Math.abs(upside * 100).toFixed(0)}% downside`} to fair value of ${fmt(fair)}.`
+      : null,
+    fcfM != null ? `FCF margin ${pct(fcfM, false)} — still generating cash despite the drop.` : null,
+    roic != null && roic > 0 ? `ROIC ${pct(roic, false)} — the business hasn't deteriorated.` : null,
     ``,
     `Price weakness ≠ business weakness. Worth a closer look.`,
     ``,
-    `Full model → ${APP_URL}/stock/${ticker}`,
-    `$${ticker} #ValueInvesting #DCF #Investing`,
+    `${APP_URL}/stock/${ticker}`,
+    `$${ticker} #ValueInvesting #DCF`,
   ].filter(Boolean)
 
   await post(lines.join('\n'))
@@ -3638,24 +3688,27 @@ async function runMarketVsModel() {
   const historicalCagr  = c.d?.cagrAnalysis?.historicalCagr3y
   const sector          = c.d?.quote?.sector ?? ''
 
+  const gapPct = Math.abs((c.ourFair - c.analystTarget) / c.analystTarget * 100).toFixed(0)
+  const growthContext = impliedGrowth != null && historicalCagr != null
+    ? `The market is pricing in ${pct(impliedGrowth, false)}/yr growth — historical 3Y was ${pct(historicalCagr, false)}.`
+    : null
+
   const lines = [
-    `🤔 $${ticker}: our model vs Wall Street disagree`,
-    ``,
-    `Current price:    ${fmt(c.price)}`,
-    `Our DCF model:    ${fmt(c.ourFair)} (${c.ourUpside >= 0 ? '+' : ''}${(c.ourUpside * 100).toFixed(1)}%)`,
-    `Analyst consensus: ${fmt(c.analystTarget)} (${c.analystUpside >= 0 ? '+' : ''}${(c.analystUpside * 100).toFixed(1)}%) · ${c.numAnalysts} analysts`,
-    ``,
     ourIsHigher
-      ? `Our model is more bullish. Analysts may be underestimating the business.`
-      : `Analysts are more bullish. Our model doesn't support the consensus target at current assumptions.`,
+      ? `Our DCF on $${ticker} is more bullish than the ${c.numAnalysts}-analyst consensus. Here's the gap.`
+      : `${c.numAnalysts} analysts have a higher target on $${ticker} than our DCF. One of them is wrong.`,
     ``,
-    ...(impliedGrowth != null && historicalCagr != null ? [
-      `The market is pricing in ${pct(impliedGrowth, false)}/yr growth.`,
-      `Historical 3Y CAGR: ${pct(historicalCagr, false)}.`,
-      ``,
-    ] : []),
-    `Who's right? Run the model yourself → ${APP_URL}/stock/${ticker}`,
-    `$${ticker} #DCF #WallStreet #Investing`,
+    `Our model: ${fmt(c.ourFair)} (${c.ourUpside >= 0 ? '+' : ''}${(c.ourUpside * 100).toFixed(0)}%)`,
+    `Street consensus: ${fmt(c.analystTarget)} (${c.analystUpside >= 0 ? '+' : ''}${(c.analystUpside * 100).toFixed(0)}%)`,
+    `Gap: ${gapPct}%`,
+    ``,
+    growthContext,
+    ourIsHigher
+      ? `If analysts are anchored to near-term estimates and the model captures longer-term economics better, the gap is an opportunity.`
+      : `If the model's growth assumptions are too conservative, the Street is right. If they're too optimistic, the consensus target doesn't hold.`,
+    ``,
+    `Run the assumptions yourself → ${APP_URL}/stock/${ticker}`,
+    `$${ticker} #DCF #Valuation #Investing`,
   ].filter(Boolean)
 
   await post(lines.join('\n'))
