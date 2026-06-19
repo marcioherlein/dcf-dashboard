@@ -49,7 +49,9 @@ export function loadSavedCols(): SortKey[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return DEFAULT_COLS
-    return JSON.parse(raw) as SortKey[]
+    const parsed = JSON.parse(raw) as SortKey[]
+    const validIds = new Set(OPTIONAL_COLUMNS.map(c => c.id))
+    return parsed.filter(key => validIds.has(key))
   } catch { return DEFAULT_COLS }
 }
 
@@ -176,6 +178,7 @@ export function ColumnPicker({
 export interface ValuationTableProps {
   entries:        WatchlistEntry[]
   sparklines:     Record<string, number[] | null>
+  livePrices?:    Record<string, number | null>
   groups:         string[]
   sortKey:        SortKey
   sortDir:        'asc' | 'desc'
@@ -794,7 +797,7 @@ function NoteEditorMobile({ entry, onNoteSave }: {
 
 // ── Main Table ─────────────────────────────────────────────────────────────────
 
-export function ValuationTable({ entries, sparklines, groups, sortKey, sortDir, onSort, onDelete, onTagUpdate, onGroupUpdate, onNoteSave, selectedCols = [] }: ValuationTableProps) {
+export function ValuationTable({ entries, sparklines, livePrices = {}, groups, sortKey, sortDir, onSort, onDelete, onTagUpdate, onGroupUpdate, onNoteSave, selectedCols = [] }: ValuationTableProps) {
   const [expandedTicker, setExpandedTicker] = useState<string | null>(null)
   const activeCols = OPTIONAL_COLUMNS.filter(c => selectedCols.includes(c.id))
 
@@ -884,8 +887,17 @@ export function ValuationTable({ entries, sparklines, groups, sortKey, sortDir, 
                 const verdict     = getVerdict(entry)
                 const vtInfo      = verdictInfo(verdict)
                 const tInfo       = tagInfo(entry.listTag)
-                const upside      = entry.snapshot.upsidePct
                 const isExpanded  = expandedTicker === entry.ticker
+
+                // Use live price from API if available, fall back to snapshot
+                const livePrice   = livePrices[entry.ticker] ?? null
+                const displayPrice = livePrice ?? entry.snapshot.price
+                const isLivePrice  = livePrice != null
+
+                // Upside: recalculate against live price when available
+                const upside = livePrice != null && entry.snapshot.fairValue != null
+                  ? (entry.snapshot.fairValue - livePrice) / livePrice
+                  : entry.snapshot.upsidePct
 
                 // Since Save: current sparkline price vs saved price
                 const currentPrice = prices?.[prices.length - 1] ?? null
@@ -968,25 +980,28 @@ export function ValuationTable({ entries, sparklines, groups, sortKey, sortDir, 
                         </div>
                       </td>
 
-                      {/* Price */}
+                      {/* Price — live when available, snapshot with "saved" label when not */}
                       <td className="px-3 py-1.5 text-right whitespace-nowrap">
                         <div>
-                          <p className="text-[12px] font-medium text-[#111111] tabular-nums">
-                            {fmtPrice(entry.snapshot.price, 'USD')}
+                          <p className={cn('text-[12px] font-medium tabular-nums', isLivePrice ? 'text-[#111111]' : 'text-[#6B6B6B]')}>
+                            {displayPrice != null ? fmtPrice(displayPrice, 'USD') : '—'}
                           </p>
-                          {(() => {
-                            const livePrice = prices?.[prices.length - 1] ?? null
-                            const prevPrice  = prices?.[prices.length - 2] ?? null
-                            if (livePrice != null && prevPrice != null && prevPrice > 0) {
-                              const d = (livePrice - prevPrice) / prevPrice
-                              return (
-                                <p className={cn('text-[11px] tabular-nums font-semibold', d >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
-                                  {d >= 0 ? '+' : ''}{(d * 100).toFixed(2)}%
-                                </p>
-                              )
-                            }
-                            return null
-                          })()}
+                          {isLivePrice ? (
+                            (() => {
+                              const prevPrice = prices?.[prices.length - 2] ?? null
+                              if (livePrice != null && prevPrice != null && prevPrice > 0) {
+                                const d = (livePrice - prevPrice) / prevPrice
+                                return (
+                                  <p className={cn('text-[11px] tabular-nums font-semibold', d >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
+                                    {d >= 0 ? '+' : ''}{(d * 100).toFixed(2)}%
+                                  </p>
+                                )
+                              }
+                              return null
+                            })()
+                          ) : (
+                            <p className="text-[9px] text-[#9B9B9B] font-medium">saved</p>
+                          )}
                         </div>
                       </td>
 

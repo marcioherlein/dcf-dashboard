@@ -10,7 +10,6 @@ import {
 } from 'lucide-react'
 import { loadWatchlist, saveWatchlistEntry, deleteWatchlistEntry } from '@/lib/simplifier/watchlistStore'
 import type { WatchlistEntry, ListTag } from '@/lib/simplifier/types'
-import { fmtPct } from '@/lib/formatters'
 import { upsideZone } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 import { ValuationTable, ColumnPicker, loadSavedCols, type SortKey } from '@/components/valuations/ValuationTable'
@@ -66,8 +65,11 @@ function applyFilters(
 
 function sortEntries(entries: WatchlistEntry[], key: SortKey, dir: 'asc' | 'desc'): WatchlistEntry[] {
   return [...entries].sort((a, b) => {
-    let va: string | number = -Infinity
-    let vb: string | number = -Infinity
+    // String keys need string defaults, numeric keys need -Infinity
+    const isStringKey = key === 'ticker' || key === 'updatedAt'
+    const emptyVal = isStringKey ? '' : -Infinity
+    let va: string | number = emptyVal
+    let vb: string | number = emptyVal
     switch (key) {
       case 'ticker':       va = a.ticker;                           vb = b.ticker;                           break
       case 'upsidePct':    va = a.snapshot.upsidePct ?? -Infinity;  vb = b.snapshot.upsidePct ?? -Infinity;  break
@@ -81,8 +83,11 @@ function sortEntries(entries: WatchlistEntry[], key: SortKey, dir: 'asc' | 'desc
         vb = (typeof b.snapshot[k] === 'number' ? b.snapshot[k] : null) ?? -Infinity
       }
     }
-    if (va < vb) return dir === 'asc' ? -1 : 1
-    if (va > vb) return dir === 'asc' ?  1 : -1
+    if (typeof va === 'string' && typeof vb === 'string')
+      return dir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va)
+    const na = va as number, nb = vb as number
+    if (na < nb) return dir === 'asc' ? -1 : 1
+    if (na > nb) return dir === 'asc' ?  1 : -1
     return 0
   })
 }
@@ -264,9 +269,13 @@ function SortDropdown({ current, dir, onSort }: {
 
 // ── Grid Card ──────────────────────────────────────────────────────────────────
 
-function GridCard({ entry }: { entry: WatchlistEntry }) {
+function GridCard({ entry, livePrices }: { entry: WatchlistEntry; livePrices: Record<string, number | null> }) {
   const verdict     = getVerdict(entry)
-  const upside      = entry.snapshot.upsidePct
+  const livePrice   = livePrices[entry.ticker] ?? null
+  const fairValue   = entry.snapshot.fairValue
+  const upside      = livePrice != null && fairValue != null
+    ? (fairValue - livePrice) / livePrice
+    : entry.snapshot.upsidePct
   const verdictCls  = verdict === 'Undervalued'
     ? 'bg-[#E8F7EF] text-[#11875D] border-[#A3D9BE]'
     : verdict === 'Overvalued'
@@ -291,9 +300,11 @@ function GridCard({ entry }: { entry: WatchlistEntry }) {
 
       <div className="grid grid-cols-2 gap-2">
         <div className="bg-[#F5F5F5] rounded-xl px-3 py-2.5">
-          <p className="text-[11px] text-[#6B6B6B] font-semibold mb-1">Price</p>
+          <p className="text-[11px] text-[#6B6B6B] font-semibold mb-1">
+            {livePrice != null ? 'Live Price' : 'Price (saved)'}
+          </p>
           <p className="text-[13px] font-bold text-[#111111] tabular-nums">
-            {entry.snapshot.price != null ? `$${entry.snapshot.price.toFixed(2)}` : '—'}
+            {(livePrice ?? entry.snapshot.price) != null ? `$${(livePrice ?? entry.snapshot.price)!.toFixed(2)}` : '—'}
           </p>
         </div>
         <div className={cn('rounded-xl px-3 py-2.5', upside != null ? (upside >= 0 ? 'bg-[#E8F7EF]' : 'bg-[#FCEAEA]') : 'bg-[#F5F5F5]')}>
@@ -549,6 +560,8 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
   const [entries,    setEntries]    = useState<WatchlistEntry[]>([])
   const [loading,    setLoading]    = useState(true)
   const [sparklines, setSparklines] = useState<Record<string, number[] | null>>({})
+  // Live prices fetched from 1mo historical — last close is the live price
+  const [livePrices, setLivePrices] = useState<Record<string, number | null>>({})
 
   // UI state
   const [activeTab,         setActiveTab]         = useState<TabId>('all')
@@ -581,19 +594,24 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
             .catch(() => ({ ticker: e.ticker, prices: [] })),
         ),
       ).then((results) => {
-        const map: Record<string, number[] | null> = {}
+        const sparkMap: Record<string, number[] | null> = {}
+        const priceMap: Record<string, number | null> = {}
         for (const r of results) {
           if (r.status === 'fulfilled') {
-            map[r.value.ticker] = r.value.prices.length >= 2 ? r.value.prices : null
+            const prices = r.value.prices
+            sparkMap[r.value.ticker] = prices.length >= 2 ? prices : null
+            // Last close is the live price
+            priceMap[r.value.ticker] = prices.length > 0 ? prices[prices.length - 1] : null
           }
         }
-        setSparklines(map)
+        setSparklines(sparkMap)
+        setLivePrices(priceMap)
       })
     })
   }, [userEmail])
 
   // KPI calculations
-  const kpi = useMemo(() => {
+  const _kpi = useMemo(() => {
     const tracked    = entries.length
     const withUpside = entries.filter((e) => e.snapshot.upsidePct != null)
     const avgUpside  = withUpside.length > 0
@@ -639,16 +657,26 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
   }
 
   const handleTagUpdate = async (ticker: string, tag: ListTag) => {
-    setEntries((prev) => prev.map((e) => e.ticker === ticker ? { ...e, listTag: tag } : e))
-    const entry = entries.find((e) => e.ticker === ticker)
-    if (entry) await saveWatchlistEntry({ ...entry, listTag: tag }, userEmail)
+    // Use functional updater to avoid stale closure
+    setEntries((prev) => {
+      const updated = prev.map((e) => e.ticker === ticker ? { ...e, listTag: tag } : e)
+      const entry = updated.find((e) => e.ticker === ticker)
+      if (entry) saveWatchlistEntry(entry, userEmail).catch(() => {
+        // Revert on save failure
+        setEntries((p) => p.map((e) => e.ticker === ticker ? { ...e, listTag: e.listTag } : e))
+      })
+      return updated
+    })
   }
 
   const handleGroupUpdate = async (ticker: string, groupName: string | null) => {
-    setEntries((prev) => prev.map((e) => e.ticker === ticker ? { ...e, groupName: groupName ?? undefined } : e))
+    setEntries((prev) => {
+      const updated = prev.map((e) => e.ticker === ticker ? { ...e, groupName: groupName ?? undefined } : e)
+      const entry = updated.find((e) => e.ticker === ticker)
+      if (entry) saveWatchlistEntry(entry, userEmail).catch(() => {})
+      return updated
+    })
     if (groupName) setPendingGroups((prev) => prev.filter((g) => g !== groupName))
-    const entry = entries.find((e) => e.ticker === ticker)
-    if (entry) await saveWatchlistEntry({ ...entry, groupName: groupName ?? undefined }, userEmail)
   }
 
   const handleNoteSave = useCallback(async (ticker: string, note: string) => {
@@ -672,70 +700,9 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
   return (
     <div className="min-h-dvh bg-background px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
 
-      {/* Page header */}
-      <div className="flex items-center justify-between gap-4 mb-5">
-        <div className="flex items-center gap-1 p-1 bg-[#F5F5F5] rounded-xl shrink-0">
-          <button
-            onClick={() => setView('table')}
-            title="Table view"
-            aria-label="Table view"
-            className={cn('p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center', view === 'table' ? 'bg-white text-olive-700 shadow-sm' : 'text-[#9B9B9B] hover:text-[#6B6B6B]')}
-          >
-            <List size={16} />
-          </button>
-          <button
-            onClick={() => setView('grid')}
-            title="Grid view"
-            aria-label="Grid view"
-            className={cn('p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center', view === 'grid' ? 'bg-white text-olive-700 shadow-sm' : 'text-[#9B9B9B] hover:text-[#6B6B6B]')}
-          >
-            <LayoutGrid size={16} />
-          </button>
-        </div>
-      </div>
-
-      {/* KPI cards — own row, not nested inside the header */}
-      {!loading && entries.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
-          <KpiCard
-            icon={Bookmark}
-            iconCls="bg-[#EAF1FF] text-[#2563EB]"
-            label="Tracked"
-            value={kpi.tracked}
-            sub="companies"
-          />
-          <KpiCard
-            icon={TrendingUp}
-            iconCls={kpi.avgUpside != null && kpi.avgUpside >= 0 ? 'bg-[#E8F7EF] text-[#11875D]' : 'bg-[#FCEAEA] text-[#D83B3B]'}
-            label="Avg Upside"
-            value={kpi.avgUpside != null ? fmtPct(kpi.avgUpside) : '—'}
-            sub="across all"
-          />
-          <KpiCard
-            icon={CheckCircle}
-            iconCls="bg-[#E8F7EF] text-[#11875D]"
-            label="Undervalued"
-            value={kpi.undervalued}
-            sub="companies"
-          />
-          <KpiCard
-            icon={Clock}
-            iconCls="bg-[#FFF4DA] text-[#B56A00]"
-            label="Needs Review"
-            value={kpi.needsReview}
-            sub={kpi.needsReview === 0 ? 'all valuations complete' : 'missing fair value data'}
-          />
-        </div>
-      )}
-
       {/* Loading skeletons */}
       {loading && (
         <div className="space-y-4">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-24 bg-white border border-[#E5E5E5] rounded-xl motion-safe:animate-pulse" />
-            ))}
-          </div>
           <div className="h-96 bg-white border border-[#E5E5E5] rounded-xl motion-safe:animate-pulse" />
         </div>
       )}
@@ -756,7 +723,7 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
               </div>
             </div>
 
-            {/* Search + Sort + Clear */}
+            {/* Search + Sort + View toggle + Clear */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-4 py-3 border-t border-[#EDF2F7]">
               <div className="relative flex-1 min-w-0 sm:min-w-[180px] sm:max-w-xs">
                 <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9B9B9B] pointer-events-none" />
@@ -765,13 +732,13 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
                   value={searchQuery}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search valuations…"
-                  className="w-full pl-8 pr-8 py-1.5 text-[16px] text-[#111111] bg-white border border-[#DDE6F2] rounded-xl focus:outline-none focus:border-[#5F790B] focus:ring-2 focus:ring-blue-100 transition-all placeholder-slate-400"
+                  className="w-full pl-8 pr-8 py-2.5 text-[16px] text-[#111111] bg-white border border-[#DDE6F2] rounded-xl focus:outline-none focus:border-[#5F790B] focus:ring-2 focus:ring-blue-100 transition-all placeholder-slate-400 min-h-[44px]"
                 />
                 {searchQuery && (
                   <button
                     onClick={() => setSearch('')}
                     aria-label="Clear search"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full bg-[#E5E5E5] hover:bg-[#D0D0D0] text-[#6B6B6B] transition-colors"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full bg-[#E5E5E5] hover:bg-[#D0D0D0] text-[#6B6B6B] transition-colors"
                   >
                     <span className="text-[11px] font-bold leading-none">×</span>
                   </button>
@@ -782,6 +749,27 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
                 {view === 'table' && (
                   <ColumnPicker selected={selectedCols} onChange={setSelectedCols} />
                 )}
+                {/* View toggle — co-located with other content controls */}
+                <div className="flex items-center gap-0.5 p-0.5 bg-[#F5F5F5] rounded-xl shrink-0">
+                  <button
+                    onClick={() => setView('table')}
+                    title="Table view"
+                    aria-label="Table view"
+                    aria-pressed={view === 'table'}
+                    className={cn('p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center', view === 'table' ? 'bg-white text-olive-700 shadow-sm' : 'text-[#9B9B9B] hover:text-[#6B6B6B]')}
+                  >
+                    <List size={15} />
+                  </button>
+                  <button
+                    onClick={() => setView('grid')}
+                    title="Grid view"
+                    aria-label="Grid view"
+                    aria-pressed={view === 'grid'}
+                    className={cn('p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center', view === 'grid' ? 'bg-white text-olive-700 shadow-sm' : 'text-[#9B9B9B] hover:text-[#6B6B6B]')}
+                  >
+                    <LayoutGrid size={15} />
+                  </button>
+                </div>
                 {hasFilters && (
                   <button
                     className="flex items-center gap-1.5 px-3 py-2 text-[12px] font-semibold border rounded-xl transition-colors min-h-[44px] bg-olive-50 border-olive-700 text-olive-700"
@@ -800,6 +788,7 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
             <ValuationTable
               entries={paginatedEntries}
               sparklines={sparklines}
+              livePrices={livePrices}
               groups={allGroups}
               sortKey={sortKey}
               sortDir={sortDir}
@@ -813,7 +802,7 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {paginatedEntries.map((entry) => (
-                <GridCard key={entry.ticker} entry={entry} />
+                <GridCard key={entry.ticker} entry={entry} livePrices={livePrices} />
               ))}
               {paginatedEntries.length === 0 && (
                 <div className="col-span-full bg-white border border-[#E5E5E5] rounded-xl p-10 text-center">
