@@ -95,7 +95,7 @@ function PriceValuationPanel({
     <div className="flex flex-col gap-0">
       {/* Price block — tighter padding */}
       <div
-        className="rounded-xl px-3 py-2.5 -mx-3 mb-1"
+        className="rounded-xl px-3 py-2 -mx-3 mb-1"
         style={{
           background: isPositive
             ? 'linear-gradient(135deg, rgba(17,135,93,0.06) 0%, rgba(17,135,93,0.02) 60%, transparent 100%)'
@@ -103,7 +103,7 @@ function PriceValuationPanel({
         }}
       >
         <p className="text-[11px] text-[#9B9B9B] mb-0.5 leading-none">Current price</p>
-        <p className="text-[30px] font-bold leading-none text-[#111111] tracking-tight">
+        <p className="text-[26px] font-bold leading-none text-[#111111] tracking-tight">
           {prefix}{price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </p>
         <div className={`mt-1 flex items-center gap-1 text-[13px] font-semibold ${isPositive ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
@@ -139,7 +139,7 @@ function PriceValuationPanel({
 
       {/* Model estimate only — analyst target moved to Market Signals section */}
       {fairValue != null && upside != null && (
-        <div className="mt-3 pt-3 border-t border-[#F0F0F0]">
+        <div className="mt-2 pt-2 border-t border-[#F0F0F0]">
           <button onClick={onViewValuation}
             className="group w-full flex items-center justify-between gap-2 text-left hover:bg-[#F5F5F5] rounded-lg px-2 py-2 -mx-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-olive-700 focus-visible:rounded-lg"
             aria-label="View valuation details"
@@ -230,13 +230,13 @@ export default function StockIdentityHeader({
       {/* ══ SECTION A: Company Summary Hero ═══════════════════════════════════ */}
       {/* Two-column on sm+: ~63% left / ~37% right. Single column on mobile. */}
       <div
-        className="bg-white border border-[#E3E1DA] rounded-xl p-4 sm:p-5"
+        className="bg-white border border-[#E3E1DA] rounded-xl p-3 sm:p-4"
         style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}
       >
-        <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_minmax(0,37%)] gap-5 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_minmax(0,37%)] gap-4 items-start">
 
           {/* ── Left: Company identity ── */}
-          <div className="min-w-0 flex flex-col gap-3">
+          <div className="min-w-0 flex flex-col gap-2">
 
             {/* Logo + name row */}
             <div className="flex items-start gap-3.5">
@@ -306,7 +306,7 @@ export default function StockIdentityHeader({
                   <button
                     onClick={() => setDescExpanded(v => !v)}
                     aria-expanded={descExpanded}
-                    className="mt-0.5 min-h-[44px] flex items-center text-[#5F790B] font-semibold text-[12px] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B] rounded"
+                    className="mt-0.5 flex items-center text-[#5F790B] font-semibold text-[12px] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B] rounded py-1"
                   >
                     {descExpanded ? 'Show less' : 'Read more'}
                   </button>
@@ -315,7 +315,7 @@ export default function StockIdentityHeader({
             )}
 
             {/* Mobile-only: price + valuation panel (below description) */}
-            <div className="sm:hidden border-t border-[#F0F0F0] pt-4">
+            <div className="sm:hidden border-t border-[#F0F0F0] pt-3">
               <PriceValuationPanel {...priceValuationProps} />
             </div>
           </div>
