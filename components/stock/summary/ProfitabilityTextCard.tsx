@@ -172,7 +172,7 @@ export default function ProfitabilityTextCard({
   }, [ratingsGrade])
 
   // ─── Margins row value ─────────────────────────────────────────────────────
-  const marginsValue = useMemo(() => {
+  const _marginsValue = useMemo(() => {
     const parts: string[] = []
     if (grossMargin != null) parts.push(`GM ${(grossMargin * 100).toFixed(1)}%`)
     if (netMargin   != null) parts.push(`NM ${(netMargin   * 100).toFixed(1)}%`)
@@ -181,7 +181,7 @@ export default function ProfitabilityTextCard({
   }, [grossMargin, netMargin, fcfMargin])
 
   // ─── Returns row value ─────────────────────────────────────────────────────
-  const returnsValue = useMemo(() => {
+  const _returnsValue = useMemo(() => {
     const parts: string[] = []
     if (roe  != null) parts.push(`ROE ${(roe  * 100).toFixed(1)}%`)
     if (roic != null) parts.push(`ROIC ${(roic * 100).toFixed(1)}%`)
@@ -252,25 +252,67 @@ export default function ProfitabilityTextCard({
           </Bullet>
         )}
 
-        {/* Bullet 5 — Margins metrics row */}
-        {marginsValue && (
-          <li className="flex items-start gap-2">
-            <div aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-[#5F790B] shrink-0 mt-[5px]" />
-            <span className="text-[12px] text-[#566174] leading-snug break-words min-w-0">
-              <span className="font-medium">Margins</span>{' '}
-              <span className="font-mono">{marginsValue}</span>
-            </span>
-          </li>
-        )}
+        {/* Metrics bars — Margins + Returns */}
+        {(grossMargin != null || netMargin != null || fcfMargin != null || roe != null || roic != null) && (
+          <li className="pt-1">
+            <div className="space-y-2" aria-label="Margin and return metrics">
+              {/* ── Margins ── */}
+              {[
+                { label: 'GM',  value: grossMargin, cap: 1.0,  color: '#5F790B' },
+                { label: 'NM',  value: netMargin,   cap: 0.5,  color: '#2563EB' },
+                { label: 'FCF', value: fcfMargin,   cap: 0.5,  color: '#6D28D9' },
+              ].filter(m => m.value != null).map(({ label, value, cap, color }) => {
+                const pct = Math.max(0, Math.min(100, (Math.abs(value!) / cap) * 100))
+                const isNeg = (value ?? 0) < 0
+                const barColor = isNeg ? '#D83B3B' : color
+                const textColor = isNeg ? '#D83B3B' : (value! > 0.15 ? '#06101F' : '#566174')
+                return (
+                  <div key={label} className="flex items-center gap-2">
+                    <span className="text-[10px] font-[700] text-[#9B9B9B] w-7 shrink-0 leading-none">{label}</span>
+                    <div className="flex-1 h-1.5 rounded-full bg-[#F0F0F0] overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{ width: `${pct}%`, background: barColor }}
+                      />
+                    </div>
+                    <span className="text-[11px] font-[650] tabular-nums shrink-0 w-11 text-right leading-none" style={{ color: textColor }}>
+                      {isNeg ? '' : ''}{(value! * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                )
+              })}
 
-        {/* Bullet 6 — Returns metrics row */}
-        {returnsValue && (
-          <li className="flex items-start gap-2">
-            <div aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-[#5F790B] shrink-0 mt-[5px]" />
-            <span className="text-[12px] text-[#566174] leading-snug break-words min-w-0">
-              <span className="font-medium">Returns</span>{' '}
-              <span className="font-mono">{returnsValue}</span>
-            </span>
+              {/* Divider between margins and returns */}
+              {(roe != null || roic != null) && (grossMargin != null || netMargin != null || fcfMargin != null) && (
+                <div className="h-px bg-[#F5F5F5] my-1" />
+              )}
+
+              {/* ── Returns ── */}
+              {[
+                { label: 'ROE',  value: roe,  cap: 0.5,  color: '#B56A00' },
+                { label: 'ROIC', value: roic, cap: 0.5,  color: '#11875D' },
+              ].filter(m => m.value != null).map(({ label, value, cap, color }) => {
+                const cappedPct = Math.max(0, Math.min(100, (Math.abs(value!) / cap) * 100))
+                const isNeg = (value ?? 0) < 0
+                const barColor = isNeg ? '#D83B3B' : color
+                const textColor = isNeg ? '#D83B3B' : (value! > 0.12 ? '#06101F' : '#566174')
+                // Cap bar at 100% visually but show real number — values like 135% are common
+                return (
+                  <div key={label} className="flex items-center gap-2">
+                    <span className="text-[10px] font-[700] text-[#9B9B9B] w-7 shrink-0 leading-none">{label}</span>
+                    <div className="flex-1 h-1.5 rounded-full bg-[#F0F0F0] overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{ width: `${cappedPct}%`, background: barColor }}
+                      />
+                    </div>
+                    <span className="text-[11px] font-[650] tabular-nums shrink-0 w-11 text-right leading-none" style={{ color: textColor }}>
+                      {(value! * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
           </li>
         )}
       </ul>

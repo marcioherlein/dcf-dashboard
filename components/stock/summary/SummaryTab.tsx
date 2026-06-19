@@ -2,12 +2,9 @@
 
 import { useMemo } from 'react'
 import StockIdentityHeader from './StockIdentityHeader'
-import OverviewLayout from './OverviewLayout'
+import OverviewLayoutV2 from './OverviewLayoutV2'
 import RevenueChartCard from './RevenueChartCard'
 import FCFChartCard from './FCFChartCard'
-import GrowthOutlookCard from './GrowthOutlookCard'
-import CashConversionCard from './CashConversionCard'
-import ProfitabilityChartCard from './ProfitabilityChartCard'
 import ProfitabilityTextCard from './ProfitabilityTextCard'
 import PeerValuationChart from './PeerValuationChart'
 import ValuationRatiosCard from './ValuationRatiosCard'
@@ -229,221 +226,141 @@ export default function SummaryTab({
   }
 
   return (
-    <div className="flex flex-col gap-3 sm:gap-5">
+    <div className="flex flex-col gap-2 sm:gap-3">
 
-      {/* ═══════════════════════════════════════════════════════════════════════
-          TIER 1 — HERO ZONE: Identity + Price chart + Snapshot metrics rail
-          Highest visual weight. No section labels. Full bleed feel.
-      ═══════════════════════════════════════════════════════════════════════ */}
+      {/* 1. Hero */}
       <StockIdentityHeader
-        ticker={ticker}
-        companyName={companyName}
-        description={description}
-        sector={sector}
-        industry={industry}
-        country={country}
-        employees={undefined}
-        currency={currency}
-        price={price}
-        change={change}
-        changePct={changePct}
+        ticker={ticker} companyName={companyName} description={description}
+        sector={sector} industry={industry} country={country} employees={undefined}
+        currency={currency} price={price} change={change} changePct={changePct}
         marketState={quote?.marketState ?? null}
         preMarketPrice={quote?.preMarketPrice ?? null}
         preMarketChangePct={quote?.preMarketChangePct ?? null}
         postMarketPrice={quote?.postMarketPrice ?? null}
         postMarketChangePct={quote?.postMarketChangePct ?? null}
-        fairValue={fairValue}
-        analystTargetMean={analystTargetMean ?? null}
-        analystTargetLow={_analystTargetLow ?? null}
-        analystTargetHigh={_analystTargetHigh ?? null}
-        numAnalysts={quote?.numAnalysts ?? null}
-        userModelFairValue={userModelFairValue ?? null}
-        marketCap={marketCap ?? null}
-        peRatio={peRatio ?? null}
-        evToEbitda={evToEbitda ?? null}
-        roe={roe ?? null}
-        roic={roic ?? null}
-        beta={beta ?? null}
-        dividendYield={_dividendYield ?? null}
-        fcfMargin={businessProfile?.fcfMargin ?? null}
-        grossMargin={businessProfile?.grossMargin ?? null}
-        netMargin={businessProfile?.netMargin ?? null}
-        high52={high52}
-        low52={low52}
-        nextEarningsDate={_nextEarningsDate ?? null}
-        revenueGrowth={cagrAnalysis?.historicalCagr3y ?? null}
-        forwardPE={analystForwardPE ?? null}
-        pegRatioValue={quote?.pegRatio ?? null}
-        peHistory={undefined}
-        evHistory={undefined}
-        earningsSurprises={earningsSurprises ?? null}
-        onViewValuation={_onViewValuation}
-        onViewConviction={_onViewConviction}
+        fairValue={fairValue} analystTargetMean={analystTargetMean ?? null}
+        analystTargetLow={_analystTargetLow ?? null} analystTargetHigh={_analystTargetHigh ?? null}
+        numAnalysts={quote?.numAnalysts ?? null} userModelFairValue={userModelFairValue ?? null}
+        marketCap={marketCap ?? null} peRatio={peRatio ?? null} evToEbitda={evToEbitda ?? null}
+        roe={roe ?? null} roic={roic ?? null} beta={beta ?? null} dividendYield={_dividendYield ?? null}
+        fcfMargin={businessProfile?.fcfMargin ?? null} grossMargin={businessProfile?.grossMargin ?? null}
+        netMargin={businessProfile?.netMargin ?? null} high52={high52} low52={low52}
+        nextEarningsDate={_nextEarningsDate ?? null} revenueGrowth={cagrAnalysis?.historicalCagr3y ?? null}
+        forwardPE={analystForwardPE ?? null} pegRatioValue={quote?.pegRatio ?? null}
+        peHistory={undefined} evHistory={undefined} earningsSurprises={earningsSurprises ?? null}
+        onViewValuation={_onViewValuation} onViewConviction={_onViewConviction}
       />
 
-      {/* ── 2. CHART + SNAPSHOT RAIL ─────────────────────────────────────────── */}
-      <OverviewLayout
-        ticker={ticker}
-        companyName={companyName}
-        currency={currency}
-        price={price}
-        change={change}
-        changePct={changePct}
-        high52={high52}
-        low52={low52}
-        fairValue={fairValue}
-        analystTargetMean={analystTargetMean ?? null}
-        userModelFairValue={userModelFairValue ?? null}
-        marketCap={marketCap ?? null}
-        peRatio={peRatio ?? null}
-        forwardPE={analystForwardPE ?? null}
-        pegRatioValue={quote?.pegRatio ?? null}
-        beta={beta ?? null}
-        evToEbitda={evToEbitda ?? null}
+      {/* 2. Chart + compact sidebar */}
+      <OverviewLayoutV2
+        ticker={ticker} currency={currency} price={price} change={change} changePct={changePct}
+        high52={high52} low52={low52} fairValue={fairValue}
+        analystTargetMean={analystTargetMean ?? null} userModelFairValue={userModelFairValue ?? null}
+        marketCap={marketCap ?? null} peRatio={peRatio ?? null} forwardPE={analystForwardPE ?? null}
+        pegRatioValue={quote?.pegRatio ?? null} beta={beta ?? null} evToEbitda={evToEbitda ?? null}
         revenueGrowth={cagrAnalysis?.historicalCagr3y ?? null}
         grossMargin={businessProfile?.grossMargin ?? null}
-        fcfMargin={businessProfile?.fcfMargin ?? null}
-        roic={roic ?? null}
+        fcfMargin={businessProfile?.fcfMargin ?? null} roic={roic ?? null}
       />
 
-      {/* ═══════════════════════════════════════════════════════════════════════
-          TIER 2 — ANALYSIS ZONE: What the market prices in + Valuation ratios
-          Elevated treatment — slightly more top breathing room.
-      ═══════════════════════════════════════════════════════════════════════ */}
-      <div className="flex flex-col gap-3 sm:gap-4 mt-2 sm:mt-3">
-        {/* ── 3. WHAT THE MARKET IS PRICING IN (Reverse DCF — full width) ─── */}
-        <ReverseDCFCompactCard
-        price={price}
-        currency={currency}
-        sharesM={sharesM}
-        cashM={cashM}
-        debtM={debtM}
-        revenueM={revenueM}
-        fcfMargin={fcfMarginProp ?? businessProfile?.fcfMargin ?? null}
-        wacc={wacc}
-        terminalG={terminalG}
-        historicalCAGR={historicalCAGR ?? cagrAnalysis?.historicalCagr3y ?? null}
-        analystCAGR={analystCAGR ?? cagrAnalysis?.analystEstimate1y ?? null}
-        analystCAGR2y={cagrAnalysis?.analystEstimate2y ?? null}
-        fundamentalGrowth={cagrAnalysis?.fundamentalGrowth ?? null}
-        blendedCAGR={cagrAnalysis?.blended ?? null}
-        epsGrowthFwd={epsGrowthFwd}
-        numAnalysts={cagrAnalysis?.numAnalysts ?? null}
-        isEmergingMarket={isEmergingMarket}
-        isFinancialSector={isFinancialSector}
-        revenueHistory={revenueHistory}
-      />
-
-        {/* ── Valuation Analysis ─────────────────────────────────────────────── */}
-        <SectionLabel>Valuation Analysis</SectionLabel>
+      {/* 3-4. Valuation Ratios | Reverse DCF */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3 items-stretch">
         <ValuationRatiosCard
           estimates={valuationMethods?.models?.multiples?.estimates}
-          pegRatio={quote?.pegRatio}
-          peRatio={peRatio}
-          sector={sector}
-          ratiosQuarterly={ratiosQuarterly}
-          historicalMultiples={historicalMultiples}
-          epsGrowthFwd={epsGrowthFwd}
-          analystForwardPE={analystForwardPE ?? null}
+          pegRatio={quote?.pegRatio} peRatio={peRatio} sector={sector}
+          ratiosQuarterly={ratiosQuarterly} historicalMultiples={historicalMultiples}
+          epsGrowthFwd={epsGrowthFwd} analystForwardPE={analystForwardPE ?? null}
         />
-      </div>{/* /Tier 2 analysis zone */}
-
-      {/* ═══════════════════════════════════════════════════════════════════════
-          TIER 3 — DETAIL ZONE: Fundamentals, Profitability, Market Signals
-          Standard card treatment. Section labels provide visual rhythm.
-      ═══════════════════════════════════════════════════════════════════════ */}
-
-      {/* ── FUNDAMENTALS ─────────────────────────────────────────────────────── */}
-      <SectionLabel>Fundamentals</SectionLabel>
-
-      {/* Revenue + FCF | Growth Outlook + Cash Conversion */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 items-stretch">
-        <div className="flex flex-col gap-4">
-          {statementsData && <RevenueChartCard statementsData={statementsData} currency={currency} />}
-          {statementsData && <FCFChartCard statementsData={statementsData} currency={currency} />}
-        </div>
-        <div className="flex flex-col gap-4">
-          <GrowthOutlookCard
-            historicalCagr3y={cagrAnalysis?.historicalCagr3y}
-            analystEstimate1y={cagrAnalysis?.analystEstimate1y}
-            epsGrowthFwd={epsGrowthFwd}
-            drivers={cagrAnalysis?.drivers}
-          />
-          <CashConversionCard
-            fcfMargin={businessProfile?.fcfMargin}
-            statementsData={statementsData}
-          />
-        </div>
-      </div>
-
-      {/* ── PROFITABILITY ─────────────────────────────────────────────────────── */}
-      <SectionLabel>Profitability</SectionLabel>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 items-stretch">
-        <ProfitabilityChartCard statementsData={statementsData} />
-        <ProfitabilityTextCard
-          grossMargin={businessProfile?.grossMargin}
-          netMargin={businessProfile?.netMargin}
-          fcfMargin={businessProfile?.fcfMargin}
-          roe={roe ?? null}
-          roic={roic ?? null}
-          ratingsGrade={ratings?.overall?.grade}
-          ratingsSummary={ratings?.overall?.summary}
-          ratingsLabel={ratings?.overall?.label}
-          cagrDrivers={cagrAnalysis?.drivers}
+        <ReverseDCFCompactCard
+          price={price} currency={currency} sharesM={sharesM} cashM={cashM}
+          debtM={debtM} revenueM={revenueM}
+          fcfMargin={fcfMarginProp ?? businessProfile?.fcfMargin ?? null}
+          wacc={wacc} terminalG={terminalG}
+          historicalCAGR={historicalCAGR ?? cagrAnalysis?.historicalCagr3y ?? null}
+          analystCAGR={analystCAGR ?? cagrAnalysis?.analystEstimate1y ?? null}
+          analystCAGR2y={cagrAnalysis?.analystEstimate2y ?? null}
+          fundamentalGrowth={cagrAnalysis?.fundamentalGrowth ?? null}
+          blendedCAGR={cagrAnalysis?.blended ?? null} epsGrowthFwd={epsGrowthFwd}
+          numAnalysts={cagrAnalysis?.numAnalysts ?? null} isEmergingMarket={isEmergingMarket}
+          isFinancialSector={isFinancialSector} revenueHistory={revenueHistory}
         />
       </div>
 
-      {statementsData && (
-        <IncomeFlowCard statementsData={statementsData} currency={currency} />
-      )}
-
-      {/* ── MARKET SIGNALS ───────────────────────────────────────────────────── */}
-      <SectionLabel>Market Signals</SectionLabel>
-
-      {(earningsSurprises?.length || analystRatingTrend?.length) ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 items-stretch">
-          {earningsSurprises && earningsSurprises.length > 0 && (
-            <EpsBeatMissChart
-              surprises={earningsSurprises}
-              currency={currency}
-              epsGrowthYoy={cagrAnalysis?.epsGrowthYoy ?? null}
+      {/* 5. Fundamentals + Profitability */}
+      <div className="bg-white rounded-xl border border-[#E3E1DA] overflow-hidden"
+        style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+        <div className="px-3 pt-3 pb-2 border-b border-[#F5F5F5]">
+          <p className="text-[10px] font-[700] uppercase tracking-[0.08em] text-[#9B9B9B]">Fundamentals &amp; Profitability</p>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 divide-y lg:divide-y-0 lg:divide-x divide-[#F5F5F5]">
+          <div className="divide-y divide-[#F5F5F5]">
+            <div className="p-3">
+              {statementsData && <RevenueChartCard statementsData={statementsData} currency={currency} chartHeight={200} barCategoryGap="8%" />}
+            </div>
+            <div className="p-3">
+              {statementsData && <FCFChartCard statementsData={statementsData} currency={currency} chartHeight={200} barCategoryGap="8%" />}
+            </div>
+          </div>
+          <div className="p-3 flex flex-col gap-3">
+            <ReverseDCFCompactCard
+              price={price} currency={currency} sharesM={sharesM} cashM={cashM}
+              debtM={debtM} revenueM={revenueM}
+              fcfMargin={fcfMarginProp ?? businessProfile?.fcfMargin ?? null}
+              wacc={wacc} terminalG={terminalG}
+              historicalCAGR={historicalCAGR ?? cagrAnalysis?.historicalCagr3y ?? null}
+              analystCAGR={analystCAGR ?? cagrAnalysis?.analystEstimate1y ?? null}
+              analystCAGR2y={cagrAnalysis?.analystEstimate2y ?? null}
+              fundamentalGrowth={cagrAnalysis?.fundamentalGrowth ?? null}
+              blendedCAGR={cagrAnalysis?.blended ?? null} epsGrowthFwd={epsGrowthFwd}
+              numAnalysts={cagrAnalysis?.numAnalysts ?? null} isEmergingMarket={isEmergingMarket}
+              isFinancialSector={isFinancialSector} revenueHistory={revenueHistory}
             />
+            <ProfitabilityTextCard
+              grossMargin={businessProfile?.grossMargin} netMargin={businessProfile?.netMargin}
+              fcfMargin={businessProfile?.fcfMargin} roe={roe ?? null} roic={roic ?? null}
+              ratingsGrade={ratings?.overall?.grade} ratingsSummary={ratings?.overall?.summary}
+              ratingsLabel={ratings?.overall?.label} cagrDrivers={cagrAnalysis?.drivers}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* 6. Market Signals */}
+      {(earningsSurprises?.length || analystRatingTrend?.length) ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3 items-stretch">
+          {earningsSurprises && earningsSurprises.length > 0 && (
+            <EpsBeatMissChart surprises={earningsSurprises} currency={currency} epsGrowthYoy={cagrAnalysis?.epsGrowthYoy ?? null} />
           )}
           {analystRatingTrend && analystRatingTrend.length > 0 && (
             <AnalystRecommendationsChart
-              trend={analystRatingTrend}
-              numAnalysts={quote?.numAnalysts ?? null}
-              currentPrice={price}
-              targetMean={analystTargetMean ?? null}
-              targetLow={_analystTargetLow ?? null}
-              targetHigh={_analystTargetHigh ?? null}
+              trend={analystRatingTrend} numAnalysts={quote?.numAnalysts ?? null}
+              currentPrice={price} targetMean={analystTargetMean ?? null}
+              targetLow={_analystTargetLow ?? null} targetHigh={_analystTargetHigh ?? null}
               currency={currency}
             />
           )}
         </div>
       ) : null}
 
-      {/* Peer valuation — only when signals section has context */}
-      <PeerValuationChart ticker={ticker} isFinancialSector={isFinancialSector} />
+      {/* 7. Peer Comparison + ETF Exposure */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3 items-stretch">
+        <PeerValuationChart ticker={ticker} isFinancialSector={isFinancialSector} />
+        <ETFExposureCard ticker={ticker} />
+      </div>
 
-      {/* ── 8. CONTEXT ───────────────────────────────────────────────────────── */}
-      {/* ETF exposure + holding returns — additional context, not primary analysis */}
-      {(holdingReturns) && (
-        <HoldingReturns returns={holdingReturns} ticker={ticker} />
-      )}
+      {/* 8. Valuation Ratios + If You Had Held */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3 items-stretch">
+        {holdingReturns ? (
+          <HoldingReturns returns={holdingReturns} ticker={ticker} />
+        ) : <div />}
+        <IncomeFlowCard statementsData={statementsData} currency={currency} />
+      </div>
 
-      {/* ETF exposure guarded — only render when it has data to show */}
-      <ETFExposureCard ticker={ticker} />
-
-      {/* ── 9. INVESTMENT CHECKLIST ──────────────────────────────────────────── */}
+      {/* 9. Investment Checklist */}
       <SectionLabel>Investment Checklist</SectionLabel>
-
       {scores && (
         <InvestmentVerdict
-          ticker={ticker}
-          upsidePct={upsidePct}
-          scores={scores}
+          ticker={ticker} upsidePct={upsidePct} scores={scores}
           analystRecommendation={analystRecommendation ?? null}
           fcfMargin={businessProfile?.fcfMargin ?? null}
           grossMargin={businessProfile?.grossMargin ?? null}
