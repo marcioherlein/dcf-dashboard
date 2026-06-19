@@ -33,6 +33,7 @@ interface Props {
   // Ratio context for historical + NTM display inside each method card
   analystForwardPE?: number | null
   ntmEVRevenue?: number | null
+  companyType?: string | null
 }
 
 type IconComp = React.ComponentType<{ size?: number; className?: string }>
@@ -142,6 +143,129 @@ export const CONFIDENCE_CHIP = {
   high:   { bg: 'bg-[#E8F7EF] border-[#A7D7C0]', text: 'text-[#11875D]', label: 'High confidence'   },
   medium: { bg: 'bg-[#FFF4DA] border-[#F3D391]', text: 'text-[#B56A00]', label: 'Medium confidence' },
   low:    { bg: 'bg-[#FFF4DA] border-[#F3D391]', text: 'text-[#B56A00]', label: 'Low confidence'    },
+}
+
+// ─── Weight rationale by company type ────────────────────────────────────────
+
+const WEIGHT_RATIONALE: Record<string, Record<string, string>> = {
+  standard: {
+    forward_pe:       'Tech and consumer companies have reliable earnings estimates, making forward P/E a strong anchor.',
+    ev_ebitda:        'Capital-structure-neutral and comparable to peer acquisition multiples — a key cross-check for most businesses.',
+    revenue_multiple: 'Used as a secondary cross-check; revenue is less volatile than earnings but ignores margin differences.',
+    core_dcf:         'Discounts projected free cash flows at WACC — the fundamental building block of intrinsic value.',
+    epv:              'A conservative zero-growth floor. Useful for mature businesses where growth assumptions are uncertain.',
+    ddm:              'Relevant only when dividends are a primary return mechanism and are sustainable.',
+    price_to_book:    'Less informative for asset-light businesses; included as a sanity check on asset values.',
+    p_ffo:            'Not the primary driver for standard companies; included for completeness.',
+  },
+  high_growth: {
+    forward_pe:       'Early-stage companies often lack consistent earnings, making P/E less reliable as a standalone anchor.',
+    ev_ebitda:        'EBITDA may not exist yet for pre-profit growth companies; weighted lower accordingly.',
+    revenue_multiple: 'Revenue is typically the most reliable metric for high-growth businesses where margins are still ramping.',
+    core_dcf:         'Long-duration cash flows amplify WACC sensitivity — used as a directional check, not the primary anchor.',
+    epv:              'Zero-growth floor is not informative for businesses in aggressive expansion; low weight.',
+    ddm:              'High-growth companies rarely pay dividends; excluded or minimal.',
+    price_to_book:    'Asset-light growth businesses are not well-described by book value.',
+    p_ffo:            'Not applicable.',
+  },
+  financial: {
+    forward_pe:       'Banks and insurers are best valued on earnings power — P/E is a primary anchor for financials.',
+    ev_ebitda:        'EV/EBITDA is less meaningful for financials where debt is a product input, not pure leverage.',
+    revenue_multiple: 'Revenue multiples are uncommon for financial firms; interest income and fee income differ structurally.',
+    core_dcf:         'FCFF DCF is complex for financials due to regulatory capital constraints; treated as a secondary check.',
+    epv:              'Earnings Power Value works well for banks — normalized earnings at cost of equity.',
+    ddm:              'Dividends are a primary shareholder return mechanism for regulated banks; DDM is highly relevant.',
+    price_to_book:    'Book value reflects tangible equity; P/B is a core valuation anchor for all financial institutions.',
+    p_ffo:            'Not applicable to banks or insurers.',
+  },
+  reit: {
+    forward_pe:       'Net income is distorted by depreciation for REITs; forward P/E is a weaker signal.',
+    ev_ebitda:        'EV/EBITDA is useful but NOI-based metrics are more common in real estate analysis.',
+    revenue_multiple: 'Revenue multiples are uncommon for REITs; income yield is the preferred metric.',
+    core_dcf:         'AFFO-based DCF is the industry standard for REIT intrinsic value.',
+    epv:              'Earnings Power Value adapted for REITs using NOI.',
+    ddm:              'Dividend yield is a primary return metric for income-oriented REIT investors.',
+    price_to_book:    'P/B is a secondary check; NAV-based analysis is preferred.',
+    p_ffo:            'P/FFO is the primary REIT valuation anchor — FFO adds back depreciation to reflect true cash earnings.',
+  },
+  utility: {
+    forward_pe:       'Utilities have stable regulated earnings; P/E is a reasonable anchor.',
+    ev_ebitda:        'EV/EBITDA is widely used for regulated utilities given predictable EBITDA.',
+    revenue_multiple: 'Revenue multiples are not standard for regulated utilities.',
+    core_dcf:         'Rate-base DCF is the regulatory-approved method; FCFF DCF is a cross-check.',
+    epv:              'Normalized earnings at WACC — works well for utilities with stable returns on equity.',
+    ddm:              'Utilities are dividend payers; DDM captures the income component of total return.',
+    price_to_book:    'Rate-base P/B is common in utility valuation.',
+    p_ffo:            'Not standard for traditional utilities.',
+  },
+  cyclical: {
+    forward_pe:       'Earnings estimates at cyclical peaks are unreliable; P/E can appear cheap just before a downturn.',
+    ev_ebitda:        'Mid-cycle EV/EBITDA normalizes for cyclical swings better than point-in-time P/E.',
+    revenue_multiple: 'Revenue is more stable through cycles than earnings for commodity-linked businesses.',
+    core_dcf:         'Mid-cycle FCF assumption reduces peak/trough distortion.',
+    epv:              'Normalized NOPAT using 5Y average reduces cyclical noise; given higher weight for cyclicals.',
+    ddm:              'Dividends are volatile for cyclicals; DDM is a weak anchor in this sector.',
+    price_to_book:    'Asset replacement value is meaningful for capital-intensive cyclical businesses.',
+    p_ffo:            'Not standard.',
+  },
+  bdc: {
+    forward_pe:       'Net investment income (NII) is a better earnings proxy than GAAP EPS for BDCs.',
+    ev_ebitda:        'Not applicable to BDCs.',
+    revenue_multiple: 'Revenue multiples are uncommon for BDCs.',
+    core_dcf:         'BDC intrinsic value is best estimated via NII yield, not FCFF DCF.',
+    epv:              'Earnings power reflects sustainable NII; relevant for BDC valuation.',
+    ddm:              'BDC distributions are required by law (90%+ of income); DDM is the primary anchor.',
+    price_to_book:    'P/NAV (price-to-net-asset-value) is the dominant BDC multiple.',
+    p_ffo:            'Not applicable.',
+  },
+  mreeit: {
+    forward_pe:       'GAAP earnings are distorted by mark-to-market for mortgage REITs; P/E is unreliable.',
+    ev_ebitda:        'Not meaningful for leveraged mortgage portfolios.',
+    revenue_multiple: 'Not applicable.',
+    core_dcf:         'Net interest spread DCF is used as a secondary check.',
+    epv:              'Normalized NII-based EPV.',
+    ddm:              'Distributions are the primary return; DDM is highly relevant for mREITs.',
+    price_to_book:    'P/Book (book = tangible equity) is the primary mREIT anchor — reflects leverage and write-down risk.',
+    p_ffo:            'Not applicable.',
+  },
+  mining: {
+    forward_pe:       'Earnings are commodity-price-sensitive; forward P/E at spot may be misleading.',
+    ev_ebitda:        'EV/EBITDA at mid-cycle commodity price is the industry standard for miners.',
+    revenue_multiple: 'Revenue multiples are sometimes used on a per-unit-of-production basis.',
+    core_dcf:         'NAV DCF using reserve life is the primary intrinsic value method for miners.',
+    epv:              'Normalized NOPAT using mid-cycle prices reduces commodity distortion.',
+    ddm:              'Dividends vary with commodity prices; DDM is a secondary input.',
+    price_to_book:    'P/NAV is the preferred version; tangible book is a fallback.',
+    p_ffo:            'Not applicable.',
+  },
+  insurance: {
+    forward_pe:       'Combined ratio and reserve adequacy drive earnings quality — P/E requires careful normalization.',
+    ev_ebitda:        'EBITDA is not a standard metric for insurance; operating earnings are preferred.',
+    revenue_multiple: 'Premiums earned multiples exist but are uncommon in equity analysis.',
+    core_dcf:         'Embedded value or free capital generation DCF is industry practice.',
+    epv:              'Normalized earnings at cost of equity; useful for stable P&C books.',
+    ddm:              'Dividends are a key signal of capital adequacy; DDM carries weight for insurers.',
+    price_to_book:    'P/B to tangible equity (adjusted for unrealized gains) is the primary anchor.',
+    p_ffo:            'Not applicable.',
+  },
+}
+
+function getWeightRationale(methodId: string, companyType: string): string {
+  const byType = WEIGHT_RATIONALE[companyType] ?? WEIGHT_RATIONALE.standard
+  return byType[methodId] ?? WEIGHT_RATIONALE.standard[methodId] ?? 'Weight reflects data availability and model reliability for this company type.'
+}
+
+// ─── Per-method formula one-liner ────────────────────────────────────────────
+
+const METHOD_FORMULA: Record<string, string> = {
+  forward_pe:       'FV = (Revenue × netMargin × exitPE) ÷ (1 + Ke)⁵',
+  ev_ebitda:        'FV = (EBITDA × exitMultiple − netDebt) ÷ shares',
+  revenue_multiple: 'FV = (Revenue × exitEVRevenue − netDebt) ÷ shares',
+  core_dcf:         'FV = Σ FCFt ÷ (1+WACC)ᵗ + TV ÷ (1+WACC)ⁿ − netDebt ÷ shares',
+  epv:              'FV = NOPAT ÷ WACC − netDebt ÷ shares  (zero-growth floor)',
+  ddm:              'FV = DPS × (1+g) ÷ (Ke − g)  (Gordon Growth)',
+  price_to_book:    'FV = BookValue per share × targetP/B',
+  p_ffo:            'FV = FFO per share × targetP/FFO',
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -287,22 +411,31 @@ export function TinyLineChart({
 
 export function FieldStepper({
   label, value, unit, step, min, max, onChange, hint, color,
+  sectorBenchmark, analystValue,
 }: {
   label: string; value: number; unit: '%' | 'x'
   step: number; min: number; max: number
   onChange: (v: number) => void
   hint?: string | null; color: string
+  sectorBenchmark?: number | null
+  analystValue?: number | null
 }) {
   const atMin = value <= min
   const atMax = value >= max
   const dec = () => { if (!atMin) onChange(Math.max(min, parseFloat((value - step).toFixed(6)))) }
   const inc = () => { if (!atMax) onChange(Math.min(max, parseFloat((value + step).toFixed(6)))) }
 
+  const provenanceParts: string[] = []
+  if (hint) provenanceParts.push(hint)
+  if (sectorBenchmark != null) provenanceParts.push(`Sector: ${fmt(sectorBenchmark, unit)}`)
+  if (analystValue != null) provenanceParts.push(`Analysts: ${fmt(analystValue, unit)}`)
+  const provenanceLine = provenanceParts.join(' · ')
+
   return (
     <div className="flex items-center justify-between gap-2">
       <div className="min-w-0">
         <p className="text-[10px] text-[#6B6B6B] leading-none">{label}</p>
-        {hint && <p className="text-[11px] text-[#9B9B9B] mt-0.5 tabular-nums">{hint}</p>}
+        {provenanceLine && <p className="text-[11px] text-[#9B9B9B] mt-0.5 tabular-nums">{provenanceLine}</p>}
       </div>
       <div className="flex items-center gap-0.5 shrink-0">
         <button
@@ -693,13 +826,14 @@ export default function ValuationMethodCards({
   fcfMargin, ttmEbitdaDollars,
   assumptions, historicalData,
   onChange, onReset, onUndo, canUndo,
-  sensitivity: _sensitivity, sectorBenchmarks: _sectorBenchmarks,
+  sensitivity: _sensitivity, sectorBenchmarks,
   onScrollToFullDCF,
   fcfMarginSeries,
   blendedFairValue,
   upsidePct,
   analystForwardPE,
   ntmEVRevenue,
+  companyType,
 }: Props) {
   const validTotal = methods
     .filter(m => m.fairValue != null && m.fairValue > 0)
@@ -878,6 +1012,16 @@ export default function ValuationMethodCards({
                   </div>
                 </div>
 
+                {/* Level 2 — model description + formula */}
+                {hasValue && m.description && (
+                  <div className="rounded-lg bg-[#F9F8F6] border border-[#E3E1DA] px-3 py-2 space-y-1">
+                    <p className="text-[11px] text-[#566174] leading-relaxed">{m.description}</p>
+                    {METHOD_FORMULA[m.id] && (
+                      <p className="text-[10px] text-[#9B9B9B] font-mono leading-tight">{METHOD_FORMULA[m.id]}</p>
+                    )}
+                  </div>
+                )}
+
                 {/* Unavailable: consistent-height placeholder */}
                 {!hasValue && (
                   <div className="flex-1 min-h-[80px] flex flex-col items-center justify-center gap-1.5">
@@ -923,6 +1067,11 @@ export default function ValuationMethodCards({
                       const hist = historicalData?.[f.chartKey ?? f.key]
                       const hint = historicalHint(hist, f.unit)
                       const fValue = assumptions[f.key] as number ?? (f.unit === '%' ? 0 : 1)
+                      const sectorBenchmark =
+                        f.key === 'exitPE'         ? (sectorBenchmarks?.exitPE ?? null) :
+                        f.key === 'exitMultiple'    ? (sectorBenchmarks?.exitMultiple ?? null) :
+                        f.key === 'revenueMultiple' ? (sectorBenchmarks?.revenueMultiple ?? null) :
+                        null
                       return (
                         <FieldStepper
                           key={String(f.key)}
@@ -935,6 +1084,7 @@ export default function ValuationMethodCards({
                           onChange={v => change(f.key, v)}
                           hint={hint}
                           color={cfg?.chartHex ?? '#566174'}
+                          sectorBenchmark={sectorBenchmark}
                         />
                       )
                     })}
@@ -1008,7 +1158,10 @@ export default function ValuationMethodCards({
                 {/* Blend weight bar */}
                 <div className="pt-3 border-t border-[#E3E1DA]">
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[10px] text-[#9B9B9B]">Effective Blend Weight</span>
+                    <span className="flex items-center gap-1 text-[10px] text-[#9B9B9B]">
+                      Effective Blend Weight
+                      <InfoTooltip content={getWeightRationale(m.id, companyType ?? 'standard')} />
+                    </span>
                     <span className={`text-[11px] font-bold tabular-nums ${
                       hasValue ? (cfg?.valueText ?? 'text-[#6B6B6B]') : 'text-[#9B9B9B]'
                     }`}>

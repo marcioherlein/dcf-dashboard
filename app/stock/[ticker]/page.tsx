@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { useParams } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import NewsPanel from '@/components/stock/NewsPanel'
 import HealthSection from '@/components/stock/HealthSection'
 import { type TabId } from '@/components/stock/TabNav'
@@ -22,6 +22,7 @@ import SaveToWatchlistDialog, { type WatchlistSavePayload } from '@/components/w
 import ShareCardModal from '@/components/valuation/ShareCardModal'
 import ValuationNotAvailableCard from '@/components/stock/ValuationNotAvailableCard'
 import SummaryTab from '@/components/stock/summary/SummaryTab'
+import SummaryTabV2 from '@/components/stock/summary/SummaryTabV2'
 import StockOrientationStrip from '@/components/onboarding/StockOrientationStrip'
 import { LoginGateProvider } from '@/components/auth/LoginGateProvider'
 import TabErrorBoundary from '@/components/stock/TabErrorBoundary'
@@ -189,6 +190,8 @@ export default function StockPage() {
 
 function StockPageBody() {
   const { ticker } = useParams<{ ticker: string }>()
+  const searchParams = useSearchParams()
+  const isV2 = searchParams.get('v2') === '1'
   const { data: session } = useSession()
   const [data, setData]             = useState<FinancialsData | null>(null)
   const [statementsData, setStatementsData] = useState<StatementsData | null>(null)
@@ -568,8 +571,10 @@ function StockPageBody() {
                   transition={{ type: 'spring', duration: 0.32, bounce: 0.1 }}
                 >
                   <TabErrorBoundary tabName="Overview">
-                  {/* Summary tab */}
-                  <SummaryTab
+                  {/* Summary tab — append ?v2=1 to preview the high-density redesign */}
+                  {(() => {
+                    const TabComponent = isV2 ? SummaryTabV2 : SummaryTab
+                    return <TabComponent
                     ticker={data.ticker}
                     companyName={data.companyName}
                     description={data.businessProfile?.description ?? undefined}
@@ -647,6 +652,7 @@ function StockPageBody() {
                       }, 400)
                     }}
                   />
+                  })()}
                   </TabErrorBoundary>
                   <NextTabBanner currentTab="overview" onNavigate={handleTabChange} />
                 </motion.div>
