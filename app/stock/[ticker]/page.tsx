@@ -447,6 +447,7 @@ function StockPageBody() {
       <TabNav activeTab={activeTab} onChange={handleTabChange} isAuthed={!!session?.user} />
 
 <div className="px-4 sm:px-6 lg:px-8 pb-[calc(120px+env(safe-area-inset-bottom,0px))] lg:pb-16">
+        <div className="mx-auto max-w-[1280px]">
         {/* First-visit orientation — shown once, then dismissed to localStorage */}
         <div className="pt-4">
           <StockOrientationStrip />
@@ -782,7 +783,7 @@ function StockPageBody() {
         )}
 
         {/* ── Investment disclaimer ── */}
-        <div className="px-4 sm:px-6 lg:px-8 pt-2 pb-[calc(72px+env(safe-area-inset-bottom,0px))] lg:pb-8">
+        <div className="pt-2 pb-[calc(72px+env(safe-area-inset-bottom,0px))] lg:pb-8">
           <p className="text-[11px] text-[#566174] leading-relaxed text-center max-w-3xl mx-auto">
             <strong className="font-semibold text-[#566174]">Not financial advice.</strong>{' '}
             All outputs — DCF estimates, fair values, health scores, and scenarios — are model results
@@ -795,6 +796,7 @@ function StockPageBody() {
           </p>
         </div>
 
+        </div>{/* end max-w-[1280px] */}
       </div>
     </div>
 
