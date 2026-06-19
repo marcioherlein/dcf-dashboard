@@ -16,7 +16,7 @@ import StockIdentityHeader from './StockIdentityHeader'
 import OverviewLayoutV2 from './OverviewLayoutV2'
 import RevenueChartCard from './RevenueChartCard'
 import FCFChartCard from './FCFChartCard'
-import GrowthOutlookCard from './GrowthOutlookCard'
+// GrowthOutlookCard removed — ReverseDCFCompactCard replaces it in fundamentals right col
 import ProfitabilityTextCard from './ProfitabilityTextCard'
 import ValuationRatiosCard from './ValuationRatiosCard'
 import { ETFExposureCard } from './ETFExposureCard'
@@ -178,82 +178,50 @@ export default function SummaryTabV2({
         roic={roic ?? null}
       />
 
-      {/* ── 3-5. VALUATION RATIOS + REVERSE DCF in 2-col, then FUNDAMENTALS ──── */}
-
-      {/* Row: ValuationRatios | ReverseDCF — two analysis views side-by-side */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3 items-stretch">
-        <ValuationRatiosCard
-          estimates={valuationMethods?.models?.multiples?.estimates}
-          pegRatio={quote?.pegRatio}
-          peRatio={peRatio}
-          sector={sector}
-          ratiosQuarterly={ratiosQuarterly}
-          historicalMultiples={historicalMultiples}
-          epsGrowthFwd={epsGrowthFwd}
-          analystForwardPE={analystForwardPE ?? null}
-        />
-        <ReverseDCFCompactCard
-          price={price} currency={currency}
-          sharesM={sharesM} cashM={cashM} debtM={debtM} revenueM={revenueM}
-          fcfMargin={fcfMarginProp ?? businessProfile?.fcfMargin ?? null}
-          wacc={wacc} terminalG={terminalG}
-          historicalCAGR={historicalCAGR ?? cagrAnalysis?.historicalCagr3y ?? null}
-          analystCAGR={analystCAGR ?? cagrAnalysis?.analystEstimate1y ?? null}
-          analystCAGR2y={cagrAnalysis?.analystEstimate2y ?? null}
-          fundamentalGrowth={cagrAnalysis?.fundamentalGrowth ?? null}
-          blendedCAGR={cagrAnalysis?.blended ?? null}
-          epsGrowthFwd={epsGrowthFwd}
-          numAnalysts={cagrAnalysis?.numAnalysts ?? null}
-          isEmergingMarket={isEmergingMarket}
-          isFinancialSector={isFinancialSector}
-          revenueHistory={revenueHistory}
-        />
-      </div>
-
-      {/* FUNDAMENTALS + PROFITABILITY — 2-col: [Revenue stacked FCF] | [Growth + Profitability] */}
+      {/* ── FUNDAMENTALS + PROFITABILITY ─────────────────────────────────────── */}
+      {/* Right col now uses ReverseDCF (replaces GrowthOutlook to eliminate white space) */}
       <div className="bg-white rounded-xl border border-[#E3E1DA] overflow-hidden"
         style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
         <div className="px-3 pt-3 pb-2 border-b border-[#F5F5F5]">
           <Eyebrow>Fundamentals &amp; Profitability</Eyebrow>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 divide-y lg:divide-y-0 lg:divide-x divide-[#F5F5F5]">
-          {/* Left col: Revenue + FCF stacked with compact charts */}
+          {/* Left: Revenue stacked above FCF */}
           <div className="divide-y divide-[#F5F5F5]">
             <div className="p-3">
               {statementsData && (
-                <RevenueChartCard
-                  statementsData={statementsData}
-                  currency={currency}
-                  chartHeight={200}
-                  barCategoryGap="8%"
-                />
+                <RevenueChartCard statementsData={statementsData} currency={currency} chartHeight={200} barCategoryGap="8%" />
               )}
             </div>
             <div className="p-3">
               {statementsData && (
-                <FCFChartCard
-                  statementsData={statementsData}
-                  currency={currency}
-                  chartHeight={200}
-                  barCategoryGap="8%"
-                />
+                <FCFChartCard statementsData={statementsData} currency={currency} chartHeight={200} barCategoryGap="8%" />
               )}
             </div>
           </div>
-          {/* Right col: Growth Outlook + Profitability — fills height of left col */}
+          {/* Right: ReverseDCF (fills space tightly) + Profitability */}
           <div className="p-3 flex flex-col gap-3">
-            <GrowthOutlookCard
-              historicalCagr3y={cagrAnalysis?.historicalCagr3y}
-              analystEstimate1y={cagrAnalysis?.analystEstimate1y}
+            <ReverseDCFCompactCard
+              price={price} currency={currency}
+              sharesM={sharesM} cashM={cashM} debtM={debtM} revenueM={revenueM}
+              fcfMargin={fcfMarginProp ?? businessProfile?.fcfMargin ?? null}
+              wacc={wacc} terminalG={terminalG}
+              historicalCAGR={historicalCAGR ?? cagrAnalysis?.historicalCagr3y ?? null}
+              analystCAGR={analystCAGR ?? cagrAnalysis?.analystEstimate1y ?? null}
+              analystCAGR2y={cagrAnalysis?.analystEstimate2y ?? null}
+              fundamentalGrowth={cagrAnalysis?.fundamentalGrowth ?? null}
+              blendedCAGR={cagrAnalysis?.blended ?? null}
               epsGrowthFwd={epsGrowthFwd}
-              drivers={cagrAnalysis?.drivers}
+              numAnalysts={cagrAnalysis?.numAnalysts ?? null}
+              isEmergingMarket={isEmergingMarket}
+              isFinancialSector={isFinancialSector}
+              revenueHistory={revenueHistory}
             />
             <ProfitabilityTextCard
               grossMargin={businessProfile?.grossMargin}
               netMargin={businessProfile?.netMargin}
               fcfMargin={businessProfile?.fcfMargin}
-              roe={roe ?? null}
-              roic={roic ?? null}
+              roe={roe ?? null} roic={roic ?? null}
               ratingsGrade={ratings?.overall?.grade}
               ratingsSummary={ratings?.overall?.summary}
               ratingsLabel={ratings?.overall?.label}
@@ -263,35 +231,43 @@ export default function SummaryTabV2({
         </div>
       </div>
 
-      {/* ── 6. MARKET SIGNALS ───────────────────────────────────────────────── */}
+      {/* ── MARKET SIGNALS ───────────────────────────────────────────────────── */}
       {(earningsSurprises?.length || analystRatingTrend?.length) && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3 items-stretch">
           {earningsSurprises && earningsSurprises.length > 0 && (
-            <EpsBeatMissChart
-              surprises={earningsSurprises} currency={currency}
-              epsGrowthYoy={cagrAnalysis?.epsGrowthYoy ?? null}
-            />
+            <EpsBeatMissChart surprises={earningsSurprises} currency={currency} epsGrowthYoy={cagrAnalysis?.epsGrowthYoy ?? null} />
           )}
           {analystRatingTrend && analystRatingTrend.length > 0 && (
             <AnalystRecommendationsChart
-              trend={analystRatingTrend}
-              numAnalysts={quote?.numAnalysts ?? null}
-              currentPrice={price}
-              targetMean={analystTargetMean ?? null}
-              targetLow={_analystTargetLow ?? null}
-              targetHigh={_analystTargetHigh ?? null}
+              trend={analystRatingTrend} numAnalysts={quote?.numAnalysts ?? null}
+              currentPrice={price} targetMean={analystTargetMean ?? null}
+              targetLow={_analystTargetLow ?? null} targetHigh={_analystTargetHigh ?? null}
               currency={currency}
             />
           )}
         </div>
       )}
 
-      {/* ── 7. PEER VALUATION ───────────────────────────────────────────────── */}
-      <PeerValuationChart ticker={ticker} isFinancialSector={isFinancialSector} />
+      {/* ── PEER COMPARISON + ETF EXPOSURE — same row ────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3 items-stretch">
+        <PeerValuationChart ticker={ticker} isFinancialSector={isFinancialSector} />
+        <ETFExposureCard ticker={ticker} />
+      </div>
 
-      {/* ── 8. CONTEXT ─────────────────────────────────────────────────────── */}
-      {holdingReturns && <HoldingReturns returns={holdingReturns} ticker={ticker} />}
-      <ETFExposureCard ticker={ticker} />
+      {/* ── VALUATION RATIOS + IF YOU HAD HELD — same row ───────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3 items-stretch">
+        <ValuationRatiosCard
+          estimates={valuationMethods?.models?.multiples?.estimates}
+          pegRatio={quote?.pegRatio} peRatio={peRatio} sector={sector}
+          ratiosQuarterly={ratiosQuarterly} historicalMultiples={historicalMultiples}
+          epsGrowthFwd={epsGrowthFwd} analystForwardPE={analystForwardPE ?? null}
+        />
+        {holdingReturns ? (
+          <HoldingReturns returns={holdingReturns} ticker={ticker} />
+        ) : (
+          <div />
+        )}
+      </div>
 
       {/* ── 9. INVESTMENT CHECKLIST ─────────────────────────────────────────── */}
       {scores && (

@@ -398,16 +398,12 @@ export default function ValuationRatiosCard({
   }
 
   return (
-    <div className="border border-[#E2E8F0] rounded-xl overflow-hidden flex flex-col h-full">
-      
-      <div
-        className="px-4 py-3 shrink-0"
-        
-      >
+    <div className="border border-[#E3E1DA] rounded-xl overflow-hidden flex flex-col h-full bg-white"
+      style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+      <div className="px-4 py-3 border-b border-[#F5F5F5] shrink-0">
         <p className="text-[13px] font-[700] text-[#111111]">Valuation Ratios</p>
       </div>
-
-      <div className="bg-white flex-1 p-4 sm:p-5 flex flex-col">
+      <div className="flex-1 p-4 sm:p-5 flex flex-col">
         <PEGBlock
           peg={pegRatio}
           peRatioTTM={peRatio}
