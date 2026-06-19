@@ -107,7 +107,7 @@ export default function CompactSnapshotSidebar({
 
   return (
     <div
-      className="bg-white rounded-xl px-3 py-2.5 flex flex-col"
+      className="bg-white rounded-xl px-3 py-2.5 flex flex-col h-full"
       style={{
         border: '1px solid rgba(15,23,42,0.08)',
         boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 4px 12px rgba(15,23,42,0.05)',

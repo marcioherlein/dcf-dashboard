@@ -70,18 +70,20 @@ const FCFBar = dynamic(
         useB,
         hasNeg,
         height = 168,
+        barCategoryGap = '28%',
       }: {
         points: Array<{ label: string; fcf: number }>
         useB: boolean
         hasNeg: boolean
         height?: number
+        barCategoryGap?: string
       }) {
         return (
           <ResponsiveContainer width="100%" height={height}>
             <BarChart
               data={points}
               margin={{ top: 34, right: 4, left: 0, bottom: 0 }}
-              barCategoryGap="28%"
+              barCategoryGap={barCategoryGap}
             >
               <CartesianGrid {...CHART_GRID} />
               <XAxis
@@ -122,6 +124,10 @@ type AnyRecord = Record<string, any>
 interface Props {
   statementsData: any // { annual: { cashFlow: Array<{year,operatingCashFlow,capitalExpenditures}> }, quarterly: { cashFlow: Array<{...}> } }
   currency?: string
+  /** Override chart height */
+  chartHeight?: number
+  /** Override bar category gap (default "28%") */
+  barCategoryGap?: string
 }
 
 type PeriodTab = 'Q' | 'Y'
@@ -185,7 +191,7 @@ function buildQuarterlyPoints(statementsData: any): ChartPoint[] {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function FCFChartCard({ statementsData, currency: _currency = 'USD' }: Props) {
+export default function FCFChartCard({ statementsData, currency: _currency = 'USD', chartHeight: chartHeightProp, barCategoryGap }: Props) {
   const [period, setPeriod] = useState<PeriodTab>('Y')
 
   const points = useMemo<ChartPoint[]>(() => {
@@ -215,9 +221,9 @@ export default function FCFChartCard({ statementsData, currency: _currency = 'US
     )
   }
 
-  const chartHeight = typeof window !== 'undefined' && window.innerWidth < CHART_MOBILE_BREAKPOINT
+  const chartHeight = chartHeightProp ?? (typeof window !== 'undefined' && window.innerWidth < CHART_MOBILE_BREAKPOINT
     ? CHART_HEIGHTS.sm
-    : CHART_HEIGHTS.md
+    : CHART_HEIGHTS.md)
 
   return (
     <div className="border border-[#E2E8F0] rounded-xl overflow-hidden flex flex-col">
@@ -259,7 +265,7 @@ export default function FCFChartCard({ statementsData, currency: _currency = 'US
           role="img"
           aria-label={`Free cash flow bar chart, ${period === 'Y' ? 'annual' : 'quarterly'}`}
         >
-          <FCFBar points={points} useB={useB} hasNeg={hasNeg} height={chartHeight} />
+          <FCFBar points={points} useB={useB} hasNeg={hasNeg} height={chartHeight} barCategoryGap={barCategoryGap} />
         </div>
         <div className="flex items-center gap-2 sm:gap-4 mt-1 flex-wrap">
           <span className="flex items-center gap-1.5 text-[10px] text-[#6B6B6B]">

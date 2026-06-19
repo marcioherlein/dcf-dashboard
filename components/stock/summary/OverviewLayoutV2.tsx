@@ -142,7 +142,7 @@ export default function OverviewLayoutV2({
   const vsSpyPct = spyReturn != null ? effectiveChangePct - spyReturn : null
 
   return (
-    <div className="grid gap-3 lg:grid-cols-[1fr_260px] items-start">
+    <div className="grid gap-3 lg:grid-cols-[1fr_260px] items-stretch">
 
       {/* ── Chart card ─────────────────────────────────────────────────────── */}
       <div

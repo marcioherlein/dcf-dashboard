@@ -178,41 +178,70 @@ export default function SummaryTabV2({
         roic={roic ?? null}
       />
 
-      {/* ── 3. WHAT THE MARKET PRICES IN ────────────────────────────────────── */}
-      <ReverseDCFCompactCard
-        price={price} currency={currency}
-        sharesM={sharesM} cashM={cashM} debtM={debtM} revenueM={revenueM}
-        fcfMargin={fcfMarginProp ?? businessProfile?.fcfMargin ?? null}
-        wacc={wacc} terminalG={terminalG}
-        historicalCAGR={historicalCAGR ?? cagrAnalysis?.historicalCagr3y ?? null}
-        analystCAGR={analystCAGR ?? cagrAnalysis?.analystEstimate1y ?? null}
-        analystCAGR2y={cagrAnalysis?.analystEstimate2y ?? null}
-        fundamentalGrowth={cagrAnalysis?.fundamentalGrowth ?? null}
-        blendedCAGR={cagrAnalysis?.blended ?? null}
-        epsGrowthFwd={epsGrowthFwd}
-        numAnalysts={cagrAnalysis?.numAnalysts ?? null}
-        isEmergingMarket={isEmergingMarket}
-        isFinancialSector={isFinancialSector}
-        revenueHistory={revenueHistory}
-      />
+      {/* ── 3-5. VALUATION RATIOS + REVERSE DCF in 2-col, then FUNDAMENTALS ──── */}
 
-      {/* ── 4. FUNDAMENTALS + PROFITABILITY — merged 3-col grid ─────────────── */}
+      {/* Row: ValuationRatios | ReverseDCF — two analysis views side-by-side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3 items-stretch">
+        <ValuationRatiosCard
+          estimates={valuationMethods?.models?.multiples?.estimates}
+          pegRatio={quote?.pegRatio}
+          peRatio={peRatio}
+          sector={sector}
+          ratiosQuarterly={ratiosQuarterly}
+          historicalMultiples={historicalMultiples}
+          epsGrowthFwd={epsGrowthFwd}
+          analystForwardPE={analystForwardPE ?? null}
+        />
+        <ReverseDCFCompactCard
+          price={price} currency={currency}
+          sharesM={sharesM} cashM={cashM} debtM={debtM} revenueM={revenueM}
+          fcfMargin={fcfMarginProp ?? businessProfile?.fcfMargin ?? null}
+          wacc={wacc} terminalG={terminalG}
+          historicalCAGR={historicalCAGR ?? cagrAnalysis?.historicalCagr3y ?? null}
+          analystCAGR={analystCAGR ?? cagrAnalysis?.analystEstimate1y ?? null}
+          analystCAGR2y={cagrAnalysis?.analystEstimate2y ?? null}
+          fundamentalGrowth={cagrAnalysis?.fundamentalGrowth ?? null}
+          blendedCAGR={cagrAnalysis?.blended ?? null}
+          epsGrowthFwd={epsGrowthFwd}
+          numAnalysts={cagrAnalysis?.numAnalysts ?? null}
+          isEmergingMarket={isEmergingMarket}
+          isFinancialSector={isFinancialSector}
+          revenueHistory={revenueHistory}
+        />
+      </div>
+
+      {/* FUNDAMENTALS + PROFITABILITY — 2-col: [Revenue stacked FCF] | [Growth + Profitability] */}
       <div className="bg-white rounded-xl border border-[#E3E1DA] overflow-hidden"
         style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
         <div className="px-3 pt-3 pb-2 border-b border-[#F5F5F5]">
           <Eyebrow>Fundamentals &amp; Profitability</Eyebrow>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0 divide-y md:divide-y-0 md:divide-x divide-[#F5F5F5]">
-          {/* Revenue */}
-          <div className="p-3 min-h-0">
-            {statementsData && <RevenueChartCard statementsData={statementsData} currency={currency} />}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 divide-y lg:divide-y-0 lg:divide-x divide-[#F5F5F5]">
+          {/* Left col: Revenue + FCF stacked with compact charts */}
+          <div className="divide-y divide-[#F5F5F5]">
+            <div className="p-3">
+              {statementsData && (
+                <RevenueChartCard
+                  statementsData={statementsData}
+                  currency={currency}
+                  chartHeight={200}
+                  barCategoryGap="8%"
+                />
+              )}
+            </div>
+            <div className="p-3">
+              {statementsData && (
+                <FCFChartCard
+                  statementsData={statementsData}
+                  currency={currency}
+                  chartHeight={200}
+                  barCategoryGap="8%"
+                />
+              )}
+            </div>
           </div>
-          {/* FCF */}
-          <div className="p-3 min-h-0">
-            {statementsData && <FCFChartCard statementsData={statementsData} currency={currency} />}
-          </div>
-          {/* Growth + Profitability text (no chart) */}
-          <div className="p-3 flex flex-col gap-3 min-h-0">
+          {/* Right col: Growth Outlook + Profitability — fills height of left col */}
+          <div className="p-3 flex flex-col gap-3">
             <GrowthOutlookCard
               historicalCagr3y={cagrAnalysis?.historicalCagr3y}
               analystEstimate1y={cagrAnalysis?.analystEstimate1y}
@@ -233,18 +262,6 @@ export default function SummaryTabV2({
           </div>
         </div>
       </div>
-
-      {/* ── 5. VALUATION ANALYSIS ───────────────────────────────────────────── */}
-      <ValuationRatiosCard
-        estimates={valuationMethods?.models?.multiples?.estimates}
-        pegRatio={quote?.pegRatio}
-        peRatio={peRatio}
-        sector={sector}
-        ratiosQuarterly={ratiosQuarterly}
-        historicalMultiples={historicalMultiples}
-        epsGrowthFwd={epsGrowthFwd}
-        analystForwardPE={analystForwardPE ?? null}
-      />
 
       {/* ── 6. MARKET SIGNALS ───────────────────────────────────────────────── */}
       {(earningsSurprises?.length || analystRatingTrend?.length) && (

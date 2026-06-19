@@ -16,11 +16,13 @@ const BarChartComponents = dynamic(
         unit,
         height = 180,
         periodMode = 'annual',
+        barCategoryGap = '28%',
       }: {
         data: Array<{ label: string; value: number; isProjected?: boolean }>
         unit: 'B' | 'M'
         height?: number
         periodMode?: 'annual' | 'quarterly'
+        barCategoryGap?: string
       }) {
         // YoY lookback: 1 for annual, 4 for quarterly (same quarter last year)
         const yoyLookback = periodMode === 'quarterly' ? 4 : 1
@@ -79,7 +81,7 @@ const BarChartComponents = dynamic(
 
         return (
           <ResponsiveContainer width="100%" height={height}>
-            <BarChart data={data} margin={{ top: 34, right: 8, left: 8, bottom: 4 }} barCategoryGap="28%">
+            <BarChart data={data} margin={{ top: 34, right: 8, left: 8, bottom: 4 }} barCategoryGap={barCategoryGap}>
               <CartesianGrid {...CHART_GRID} />
               <XAxis
                 dataKey="label"
@@ -118,6 +120,10 @@ interface Props {
     isProjected: boolean
   }>
   currency?: string
+  /** Override chart bar height (default 180) */
+  chartHeight?: number
+  /** Override bar category gap — tighter = more columns visible (default "28%") */
+  barCategoryGap?: string
 }
 
 type ViewMode = 'annual' | 'quarterly'
@@ -147,6 +153,8 @@ export default function RevenueChartCard({
   statementsData,
   financialStatements,
   currency = 'USD',
+  chartHeight,
+  barCategoryGap,
 }: Props) {
   const [view, setView] = useState<ViewMode>('annual')
 
@@ -234,10 +242,10 @@ export default function RevenueChartCard({
       </div>
       {hasData ? (
         <div role="img" aria-label={`Revenue bar chart, ${view} view, values in ${unitLabel}`}>
-          <BarChartComponents data={chartData} unit={unit} periodMode={view} />
+          <BarChartComponents data={chartData} unit={unit} periodMode={view} height={chartHeight} barCategoryGap={barCategoryGap} />
         </div>
       ) : (
-        <div className="flex items-center justify-center h-[180px]">
+        <div className="flex items-center justify-center" style={{ height: chartHeight ?? 180 }}>
           <p className="text-[11px] text-[#8A95A6]">No data available</p>
         </div>
       )}
