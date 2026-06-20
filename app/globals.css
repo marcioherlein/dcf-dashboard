@@ -67,11 +67,16 @@
     /* Prevent iOS Safari viewport zoom on input focus — any input < 16px triggers it */
     input, select, textarea { font-size: max(16px, 1em); }
   }
-  /* iOS Retina legibility floor — text-[9px] renders ~6.75pt on 3x screens */
+  /* iOS Retina legibility floor — small text classes render poorly on 3x screens */
   @media (max-width: 767px) {
-    .text-\[9px\] { font-size: 10px; }
+    .text-\[9px\]  { font-size: 10px; }
+    .text-\[10px\] { font-size: 12px; }
+    .text-\[11px\] { font-size: 12px; }
   }
-  /* Android/iOS touch target floor — HIG and Material require 44px / 48dp */
+  /* Android/iOS touch target floor — HIG and Material require 44px / 48dp.
+     NOTE: placed in @layer base so Tailwind utilities can still override when needed
+     via data-no-min-h attribute. For cases where a specific element MUST be smaller,
+     use data-no-min-h on the element. */
   @media (max-width: 1023px) {
     button:not([data-no-min-h]),
     [role="button"]:not([data-no-min-h]),
@@ -630,6 +635,36 @@ h3 {
   .shadow-card     { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06); }
   .shadow-card-md  { box-shadow: 0 12px 32px rgba(0, 0, 0, 0.09); }
   .scrollbar-hide  { scrollbar-width: none; -ms-overflow-style: none; }
+
+  /* iOS touch target enforcement — utilities layer wins over component min-h classes */
+  @media (max-width: 1023px) {
+    .touch-target {
+      min-height: 44px;
+      min-width: 44px;
+    }
+  }
+
+  /* iOS Safari webkit prefix for backdrop-blur — required before Safari 15.4 */
+  .backdrop-blur-xs {
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+  }
+  .backdrop-blur-sm {
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+  }
+  .backdrop-blur-md {
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+  .backdrop-blur-lg {
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+  }
+  .backdrop-blur-xl {
+    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(24px);
+  }
   .scrollbar-hide::-webkit-scrollbar { display: none; }
   .pb-safe         { padding-bottom: env(safe-area-inset-bottom, 0px); }
   .pt-safe         { padding-top: env(safe-area-inset-top, 0px); }
