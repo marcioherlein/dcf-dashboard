@@ -118,10 +118,15 @@ export async function GET(req: NextRequest) {
 
         {/* ── HEADER ── */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
-          {/* insic logo */}
+          {/* insic logo — navy bg, green dot, white bars, green bar */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ display: 'flex', width: 30, height: 30, borderRadius: 8, background: BRAND.olive700, alignItems: 'center', justifyContent: 'center' }}>
-              <div style={{ display: 'flex', width: 10, height: 10, borderRadius: 5, background: '#fff' }} />
+            <div style={{ display: 'flex', width: 30, height: 30, borderRadius: 7, background: '#1B2E4B', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 2, padding: '4px 5px' }}>
+              <div style={{ display: 'flex', width: 8, height: 8, borderRadius: 4, background: '#8CC63F' }} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 1.5, width: '100%' }}>
+                <div style={{ display: 'flex', width: '100%', height: 2, borderRadius: 1, background: '#FFFFFF' }} />
+                <div style={{ display: 'flex', width: '100%', height: 2, borderRadius: 1, background: '#FFFFFF' }} />
+                <div style={{ display: 'flex', width: '100%', height: 2, borderRadius: 1, background: '#8CC63F' }} />
+              </div>
             </div>
             <span style={{ fontSize: 22, fontWeight: 800, color: BRAND.ink900, letterSpacing: '-0.03em' }}>insic</span>
           </div>

@@ -12,24 +12,26 @@ type MarkProps = {
 };
 
 function InsicMark({ className, style, mono = false, title = "insic" }: MarkProps) {
-  const olive = mono ? "#FFFFFF" : "#5F790B";
-  const ink   = mono ? "#FFFFFF" : "#000000";
+  // Matches finalLogo.png: navy bg, green dot, white bars, green bottom bar
+  const green = "#8CC63F";
+  const white = mono ? "#FFFFFF" : "#FFFFFF";
+  const bg    = mono ? "transparent" : "#1B2E4B";
   return (
     <svg
       className={className}
       style={style}
-      viewBox="93 68 70 106"
+      viewBox="0 0 32 32"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
       {title && <title>{title}</title>}
-      <circle cx="127.7" cy="79.9"  r="11.1"  fill={olive} />
-      <rect   x="110.4"  y="102.5" width="34.7" height="9.4" rx="1.69" fill={ink} />
-      <rect   x="110.4"  y="118.2" width="28.4" height="9.4" rx="1.69" fill={ink} />
-      <rect   x="110.4"  y="133.7" width="37.2" height="9.2" rx="1.65" fill={ink} />
-      <rect   x="110.4"  y="149.2" width="36.3" height="9.2" rx="1.65" fill={ink} />
-      <rect   x="110.4"  y="164.1" width="28.4" height="9.2" rx="1.65" fill={ink} />
+      <rect width="32" height="32" rx="7" fill={bg} />
+      <circle cx="16" cy="6.5" r="3.0" fill={green} />
+      <rect x="8.5" y="12.5" width="15" height="2.5" rx="1.25" fill={white} />
+      <rect x="8.5" y="16.5" width="15" height="2.5" rx="1.25" fill={white} />
+      <rect x="8.5" y="20.5" width="15" height="2.5" rx="1.25" fill={white} />
+      <rect x="8.5" y="24.5" width="15" height="2.5" rx="1.25" fill={green} />
     </svg>
   );
 }
