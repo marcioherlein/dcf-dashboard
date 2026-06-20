@@ -263,28 +263,13 @@ export default function SummaryTab({
         fcfMargin={businessProfile?.fcfMargin ?? null} roic={roic ?? null}
       />
 
-      {/* 3-4. Valuation Ratios | Reverse DCF */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3 items-stretch">
-        <ValuationRatiosCard
-          estimates={valuationMethods?.models?.multiples?.estimates}
-          pegRatio={quote?.pegRatio} peRatio={peRatio} sector={sector}
-          ratiosQuarterly={ratiosQuarterly} historicalMultiples={historicalMultiples}
-          epsGrowthFwd={epsGrowthFwd} analystForwardPE={analystForwardPE ?? null}
-        />
-        <ReverseDCFCompactCard
-          price={price} currency={currency} sharesM={sharesM} cashM={cashM}
-          debtM={debtM} revenueM={revenueM}
-          fcfMargin={fcfMarginProp ?? businessProfile?.fcfMargin ?? null}
-          wacc={wacc} terminalG={terminalG}
-          historicalCAGR={historicalCAGR ?? cagrAnalysis?.historicalCagr3y ?? null}
-          analystCAGR={analystCAGR ?? cagrAnalysis?.analystEstimate1y ?? null}
-          analystCAGR2y={cagrAnalysis?.analystEstimate2y ?? null}
-          fundamentalGrowth={cagrAnalysis?.fundamentalGrowth ?? null}
-          blendedCAGR={cagrAnalysis?.blended ?? null} epsGrowthFwd={epsGrowthFwd}
-          numAnalysts={cagrAnalysis?.numAnalysts ?? null} isEmergingMarket={isEmergingMarket}
-          isFinancialSector={isFinancialSector} revenueHistory={revenueHistory}
-        />
-      </div>
+      {/* 3. Valuation Ratios — full width */}
+      <ValuationRatiosCard
+        estimates={valuationMethods?.models?.multiples?.estimates}
+        pegRatio={quote?.pegRatio} peRatio={peRatio} sector={sector}
+        ratiosQuarterly={ratiosQuarterly} historicalMultiples={historicalMultiples}
+        epsGrowthFwd={epsGrowthFwd} analystForwardPE={analystForwardPE ?? null}
+      />
 
       {/* 5. Fundamentals + Profitability */}
       <div className="bg-white rounded-xl border border-[#E3E1DA] overflow-hidden"
