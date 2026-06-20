@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useParams, useSearchParams } from 'next/navigation'
 import NewsPanel from '@/components/stock/NewsPanel'
@@ -372,34 +372,6 @@ function StockPageBody() {
     if (data) track('tab_changed', { ticker, tab })
   }
 
-  // ── Horizontal swipe to navigate tabs on mobile ───────────────────────────
-  const swipeTouchX = useRef<number | null>(null)
-  const swipeTouchY = useRef<number | null>(null)
-
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    swipeTouchX.current = e.touches[0].clientX
-    swipeTouchY.current = e.touches[0].clientY
-  }, [])
-
-  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    if (swipeTouchX.current === null || swipeTouchY.current === null) return
-    const dx = e.changedTouches[0].clientX - swipeTouchX.current
-    const dy = e.changedTouches[0].clientY - swipeTouchY.current
-    swipeTouchX.current = null
-    swipeTouchY.current = null
-    // Ignore if primarily a vertical scroll or too short
-    if (Math.abs(dx) < 48 || Math.abs(dy) > Math.abs(dx) * 0.9) return
-    const currentIdx = TAB_ORDER.indexOf(activeTab)
-    if (dx < 0) {
-      // swipe left → next tab
-      if (currentIdx < TAB_ORDER.length - 1) handleTabChange(TAB_ORDER[currentIdx + 1])
-    } else {
-      // swipe right → previous tab
-      if (currentIdx > 0) handleTabChange(TAB_ORDER[currentIdx - 1])
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab])
-
   return (
     <>
     <div className={`min-h-dvh transition-colors duration-300 ${activeTab === 'overview' ? 'bg-[#E8EAF2]' : 'bg-[#F0F1F6]'}`}>
@@ -477,11 +449,7 @@ function StockPageBody() {
 
       <TabNav activeTab={activeTab} onChange={handleTabChange} isAuthed={!!session?.user} />
 
-<div
-        className="px-4 sm:px-6 lg:px-8 pb-[calc(120px+env(safe-area-inset-bottom,0px))] lg:pb-16"
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-      >
+<div className="px-4 sm:px-6 lg:px-8 pb-[calc(120px+env(safe-area-inset-bottom,0px))] lg:pb-16">
         <div className="mx-auto max-w-[1280px]">
         {/* First-visit orientation — shown once, then dismissed to localStorage */}
         <div className="pt-4">

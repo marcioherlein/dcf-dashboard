@@ -79,70 +79,88 @@ export const METHOD_CFG: Record<string, {
   iconBg: string; iconText: string
   barBg: string; valueBg: string; valueText: string
   chartHex: string
+  cardBg: string      // dark gradient background like landing cards
+  cardBorder: string  // subtle border on dark bg
   Icon: IconComp
 }> = {
-  // Forward P/E — blue (secondary/informational)
+  // Forward P/E — deep navy
   forward_pe: {
-    iconBg: 'bg-[#EAF1FF]', iconText: 'text-[#2563EB]',
-    barBg: 'bg-[#2563EB]', valueBg: 'bg-[#F4F7FF]', valueText: 'text-[#2563EB]',
-    chartHex: '#2563EB',
+    iconBg: 'bg-[#1a2d4a]', iconText: 'text-[#7eb8f7]',
+    barBg: 'bg-[#3b82f6]', valueBg: 'bg-[#1a2d4a]', valueText: 'text-[#7eb8f7]',
+    chartHex: '#3b82f6',
+    cardBg: 'linear-gradient(145deg, #0f1e3a 0%, #1a3158 100%)',
+    cardBorder: 'rgba(59,130,246,0.20)',
     Icon: TrendingUp as IconComp,
   },
-  // EV/EBITDA — ink-tinted olive
+  // EV/EBITDA — dark olive (brand primary)
   ev_ebitda: {
-    iconBg: 'bg-[#EEF2FA]', iconText: 'text-[#5F790B]',
-    barBg: 'bg-[#6F8F12]', valueBg: 'bg-[#F6FAEA]', valueText: 'text-[#5F790B]',
-    chartHex: '#6F8F12',
+    iconBg: 'bg-[#1e2e0a]', iconText: 'text-[#a3e635]',
+    barBg: 'bg-[#6F8F12]', valueBg: 'bg-[#1e2e0a]', valueText: 'text-[#a3e635]',
+    chartHex: '#7C9A19',
+    cardBg: 'linear-gradient(145deg, #1a2a06 0%, #2d4a0f 100%)',
+    cardBorder: 'rgba(124,154,25,0.22)',
     Icon: BarChart2 as IconComp,
   },
-  // Revenue multiple — neutral blue
+  // Revenue multiple — dark slate-blue
   revenue_multiple: {
-    iconBg: 'bg-[#EAF1FF]', iconText: 'text-[#2563EB]',
-    barBg: 'bg-[#2563EB]', valueBg: 'bg-[#F4F7FF]', valueText: 'text-[#1D4ED8]',
-    chartHex: '#1D4ED8',
+    iconBg: 'bg-[#1a2540]', iconText: 'text-[#93c5fd]',
+    barBg: 'bg-[#2563EB]', valueBg: 'bg-[#1a2540]', valueText: 'text-[#93c5fd]',
+    chartHex: '#60a5fa',
+    cardBg: 'linear-gradient(145deg, #141e36 0%, #1e2f52 100%)',
+    cardBorder: 'rgba(96,165,250,0.18)',
     Icon: BarChart as IconComp,
   },
-  // Price-to-book — warm amber (distinct from olive)
+  // Price-to-book — dark amber
   price_to_book: {
-    iconBg: 'bg-[#FFF4DA]', iconText: 'text-[#B56A00]',
-    barBg: 'bg-[#B56A00]', valueBg: 'bg-[#FFF4DA]', valueText: 'text-[#B56A00]',
-    chartHex: '#B56A00',
+    iconBg: 'bg-[#2e1a00]', iconText: 'text-[#fcd34d]',
+    barBg: 'bg-[#d97706]', valueBg: 'bg-[#2e1a00]', valueText: 'text-[#fcd34d]',
+    chartHex: '#f59e0b',
+    cardBg: 'linear-gradient(145deg, #271500 0%, #3d2200 100%)',
+    cardBorder: 'rgba(245,158,11,0.20)',
     Icon: BookOpen as IconComp,
   },
-  // P/FFO — warm amber/orange
+  // P/FFO — dark amber-teal
   p_ffo: {
-    iconBg: 'bg-[#FFF4DA]', iconText: 'text-[#B56A00]',
-    barBg: 'bg-[#B56A00]', valueBg: 'bg-[#FFF4DA]', valueText: 'text-[#B56A00]',
-    chartHex: '#B56A00',
+    iconBg: 'bg-[#0a2929]', iconText: 'text-[#5eead4]',
+    barBg: 'bg-[#0d9488]', valueBg: 'bg-[#0a2929]', valueText: 'text-[#5eead4]',
+    chartHex: '#14b8a6',
+    cardBg: 'linear-gradient(145deg, #0a2929 0%, #134040 100%)',
+    cardBorder: 'rgba(20,184,166,0.20)',
     Icon: Building2 as IconComp,
   },
-  // DDM — positive green
+  // DDM — dark green
   ddm: {
-    iconBg: 'bg-[#E8F7EF]', iconText: 'text-[#11875D]',
-    barBg: 'bg-[#11875D]', valueBg: 'bg-[#E8F7EF]', valueText: 'text-[#11875D]',
-    chartHex: '#11875D',
+    iconBg: 'bg-[#0a2218]', iconText: 'text-[#4ade80]',
+    barBg: 'bg-[#16a34a]', valueBg: 'bg-[#0a2218]', valueText: 'text-[#4ade80]',
+    chartHex: '#22c55e',
+    cardBg: 'linear-gradient(145deg, #0a1f12 0%, #133d20 100%)',
+    cardBorder: 'rgba(34,197,94,0.18)',
     Icon: Coins as IconComp,
   },
-  // Earnings Power Value — deep indigo (semantically distinct from all other methods)
+  // EPV — dark indigo
   epv: {
-    iconBg: 'bg-[#EDE9FE]', iconText: 'text-[#6D28D9]',
-    barBg: 'bg-[#6D28D9]', valueBg: 'bg-[#F5F3FF]', valueText: 'text-[#6D28D9]',
-    chartHex: '#6D28D9',
+    iconBg: 'bg-[#1a0a3a]', iconText: 'text-[#c4b5fd]',
+    barBg: 'bg-[#7c3aed]', valueBg: 'bg-[#1a0a3a]', valueText: 'text-[#c4b5fd]',
+    chartHex: '#8b5cf6',
+    cardBg: 'linear-gradient(145deg, #130828 0%, #1e0f3d 100%)',
+    cardBorder: 'rgba(139,92,246,0.22)',
     Icon: Sigma as IconComp,
   },
-  // Core DCF — olive (brand primary, most trusted model)
+  // Core DCF — dark olive (brand, highest trust)
   core_dcf: {
-    iconBg: 'bg-[#EEF2FA]', iconText: 'text-[#5F790B]',
-    barBg: 'bg-[#5F790B]', valueBg: 'bg-[#F6FAEA]', valueText: 'text-[#5F790B]',
+    iconBg: 'bg-[#1e2e0a]', iconText: 'text-[#a3e635]',
+    barBg: 'bg-[#5F790B]', valueBg: 'bg-[#1e2e0a]', valueText: 'text-[#a3e635]',
     chartHex: '#5F790B',
+    cardBg: 'linear-gradient(145deg, #1e3a1e 0%, #2d5a2d 100%)',
+    cardBorder: 'rgba(95,121,11,0.28)',
     Icon: Target as IconComp,
   },
 }
 
 export const CONFIDENCE_CHIP = {
-  high:   { bg: 'bg-[#E8F7EF] border-[#A7D7C0]', text: 'text-[#11875D]', label: 'High confidence'   },
-  medium: { bg: 'bg-[#FFF4DA] border-[#F3D391]', text: 'text-[#B56A00]', label: 'Medium confidence' },
-  low:    { bg: 'bg-[#FFF4DA] border-[#F3D391]', text: 'text-[#B56A00]', label: 'Low confidence'    },
+  high:   { bg: 'bg-[rgba(74,222,128,0.15)] border-[rgba(74,222,128,0.30)]',  text: 'text-[#4ade80]', label: 'High confidence'   },
+  medium: { bg: 'bg-[rgba(252,211,77,0.15)] border-[rgba(252,211,77,0.30)]',  text: 'text-[#fcd34d]', label: 'Medium confidence' },
+  low:    { bg: 'bg-[rgba(252,165,165,0.15)] border-[rgba(252,165,165,0.25)]', text: 'text-[#fca5a5]', label: 'Low confidence'    },
 }
 
 // ─── Weight rationale by company type ────────────────────────────────────────
@@ -434,26 +452,26 @@ export function FieldStepper({
   return (
     <div className="flex items-center justify-between gap-2">
       <div className="min-w-0">
-        <p className="text-[10px] text-[#6B6B6B] leading-none">{label}</p>
-        {provenanceLine && <p className="text-[11px] text-[#9B9B9B] mt-0.5 tabular-nums">{provenanceLine}</p>}
+        <p className="text-[10px] text-[rgba(255,255,255,0.50)] leading-none">{label}</p>
+        {provenanceLine && <p className="text-[11px] text-[rgba(255,255,255,0.30)] mt-0.5 tabular-nums">{provenanceLine}</p>}
       </div>
       <div className="flex items-center gap-0.5 shrink-0">
         <button
           onClick={dec}
           disabled={atMin}
           aria-label={`Decrease ${label}`}
-          className="w-11 h-11 flex items-center justify-center rounded-full disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-offset-1"
+          className="w-11 h-11 flex items-center justify-center rounded-full disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C9A19] focus-visible:ring-offset-1"
         >
-          <span className={`w-6 h-6 rounded-full border flex items-center justify-center text-[13px] font-bold shadow-sm select-none transition-colors ${
+          <span className={`w-6 h-6 rounded-full border flex items-center justify-center text-[13px] font-bold select-none transition-colors ${
             atMin
-              ? 'border-[#E3E1DA] bg-[#F5F5F5] text-[#9B9B9B]'
-              : 'border-[#E3E1DA] bg-white text-[#6B6B6B] hover:bg-[#F5F5F5]'
+              ? 'border-[rgba(255,255,255,0.10)] bg-[rgba(255,255,255,0.04)] text-[rgba(255,255,255,0.20)]'
+              : 'border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.08)] text-[rgba(255,255,255,0.70)] hover:bg-[rgba(255,255,255,0.15)]'
           }`}>
             −
           </span>
         </button>
         <span
-          className="text-[13px] font-[750] tabular-nums text-[#111111] w-[52px] text-center"
+          className="text-[13px] font-[750] tabular-nums w-[52px] text-center text-white"
           style={{ color: value !== min ? color : undefined }}
         >
           {fmt(value, unit)}
@@ -462,12 +480,12 @@ export function FieldStepper({
           onClick={inc}
           disabled={atMax}
           aria-label={`Increase ${label}`}
-          className="w-11 h-11 flex items-center justify-center rounded-full disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-offset-1"
+          className="w-11 h-11 flex items-center justify-center rounded-full disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C9A19] focus-visible:ring-offset-1"
         >
-          <span className={`w-6 h-6 rounded-full border flex items-center justify-center text-[13px] font-bold shadow-sm select-none transition-colors ${
+          <span className={`w-6 h-6 rounded-full border flex items-center justify-center text-[13px] font-bold select-none transition-colors ${
             atMax
-              ? 'border-[#E3E1DA] bg-[#F5F5F5] text-[#9B9B9B]'
-              : 'border-[#E3E1DA] bg-white text-[#6B6B6B] hover:bg-[#F5F5F5]'
+              ? 'border-[rgba(255,255,255,0.10)] bg-[rgba(255,255,255,0.04)] text-[rgba(255,255,255,0.20)]'
+              : 'border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.08)] text-[rgba(255,255,255,0.70)] hover:bg-[rgba(255,255,255,0.15)]'
           }`}>
             +
           </span>
@@ -936,8 +954,8 @@ export default function ValuationMethodCards({
           const effectivePct = hasValue && validTotal > 0
             ? Math.round((m.weight / validTotal) * 100) : 0
           const upColor = m.upsidePct != null
-            ? (m.upsidePct >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')
-            : 'text-[#9B9B9B]'
+            ? (m.upsidePct >= 0 ? 'text-[#4ade80]' : 'text-[#fca5a5]')
+            : 'text-[rgba(255,255,255,0.40)]'
           const isCoreDCF = m.id === 'core_dcf'
           const isEPV = m.id === 'epv'
           const epvMeta = isEPV ? m.meta : null
@@ -948,9 +966,15 @@ export default function ValuationMethodCards({
           return (
             <div
               key={m.id}
-              className={`relative rounded-xl border flex flex-col w-[62vw] sm:min-w-0 sm:w-auto snap-start flex-shrink-0 sm:flex-shrink overflow-hidden ${
-                hasValue ? 'border-[#E3E1DA] bg-white' : 'border-[#E3E1DA] bg-[#F5F5F5]/50'
-              }`}
+              className="relative rounded-xl flex flex-col w-[62vw] sm:min-w-0 sm:w-auto snap-start flex-shrink-0 sm:flex-shrink overflow-hidden"
+              style={hasValue && cfg ? {
+                background: cfg.cardBg,
+                border: `1px solid ${cfg.cardBorder}`,
+                boxShadow: '0 4px 20px rgba(0,0,0,0.28)',
+              } : {
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.08)',
+              }}
               role="article"
               aria-label={`${m.method} valuation model`}
             >
@@ -958,12 +982,12 @@ export default function ValuationMethodCards({
               {cfg && (
                 <div
                   className="h-[3px] w-full shrink-0"
-                  style={{ backgroundColor: cfg.chartHex }}
+                  style={{ backgroundColor: cfg.chartHex, opacity: 0.85 }}
                 />
               )}
 
               {/* Mobile numbered badge */}
-              <span className="sm:hidden absolute top-3 right-3 w-5 h-5 rounded-full bg-[#5F790B] text-white text-[9px] font-[800] flex items-center justify-center z-10 pointer-events-none">
+              <span className="sm:hidden absolute top-3 right-3 w-5 h-5 rounded-full bg-[rgba(255,255,255,0.12)] text-white text-[9px] font-[800] flex items-center justify-center z-10 pointer-events-none">
                 {idx + 1}
               </span>
 
@@ -977,7 +1001,7 @@ export default function ValuationMethodCards({
                         <cfg.Icon size={13} className={cfg.iconText} />
                       </div>
                     )}
-                    <span className={`text-sm font-bold truncate ${hasValue ? 'text-[#111111]' : 'text-[#9B9B9B]'}`}>
+                    <span className={`text-sm font-bold truncate ${hasValue ? 'text-white' : 'text-[rgba(255,255,255,0.35)]'}`}>
                       {m.method}
                     </span>
                   </div>
@@ -986,7 +1010,7 @@ export default function ValuationMethodCards({
                       {conf.label}
                     </span>
                   ) : (
-                    <span className="flex items-center gap-0.5 text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0 bg-[#F5F5F5] border-[#E3E1DA] text-[#9B9B9B]">
+                    <span className="flex items-center gap-0.5 text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0 bg-[rgba(255,255,255,0.08)] border-[rgba(255,255,255,0.12)] text-[rgba(255,255,255,0.45)]">
                       Unavailable
                       <InfoTooltip content={m.errors[0] ?? 'Insufficient data to compute this model.'} />
                     </span>
@@ -995,9 +1019,9 @@ export default function ValuationMethodCards({
 
                 {/* Fair value */}
                 <div aria-live="polite" aria-atomic="true">
-                  <p className="text-[10px] text-[#6B6B6B] mb-0.5">Fair Value</p>
+                  <p className="text-[10px] text-[rgba(255,255,255,0.45)] mb-0.5">Fair Value</p>
                   <div className="flex items-baseline gap-2 flex-wrap">
-                    <span className="text-2xl font-bold tabular-nums text-[#111111] leading-none">
+                    <span className="text-2xl font-bold tabular-nums text-white leading-none">
                       {m.fairValue != null ? fmtPrice(m.fairValue, currency) : '—'}
                     </span>
                     {m.upsidePct != null && (
@@ -1005,19 +1029,19 @@ export default function ValuationMethodCards({
                         <span className={`text-xs font-semibold tabular-nums leading-tight ${upColor}`}>
                           {m.upsidePct >= 0 ? '+' : ''}{(m.upsidePct * 100).toFixed(1)}%
                         </span>
-                        <span className="text-[10px] text-[#9B9B9B] leading-tight">vs current price</span>
+                        <span className="text-[10px] text-[rgba(255,255,255,0.35)] leading-tight">vs current price</span>
                       </div>
                     )}
-                    {!hasValue && <span className="text-sm text-[#9B9B9B]">N/A</span>}
+                    {!hasValue && <span className="text-sm text-[rgba(255,255,255,0.30)]">N/A</span>}
                   </div>
                 </div>
 
                 {/* Level 2 — model description + formula */}
                 {hasValue && m.description && (
-                  <div className="rounded-lg bg-[#F9F8F6] border border-[#E3E1DA] px-3 py-2 space-y-1">
-                    <p className="text-[11px] text-[#566174] leading-relaxed">{m.description}</p>
+                  <div className="rounded-lg bg-[rgba(0,0,0,0.20)] border border-[rgba(255,255,255,0.08)] px-3 py-2 space-y-1">
+                    <p className="text-[11px] text-[rgba(255,255,255,0.55)] leading-relaxed">{m.description}</p>
                     {METHOD_FORMULA[m.id] && (
-                      <p className="text-[10px] text-[#9B9B9B] font-mono leading-tight">{METHOD_FORMULA[m.id]}</p>
+                      <p className="text-[10px] text-[rgba(255,255,255,0.30)] font-mono leading-tight">{METHOD_FORMULA[m.id]}</p>
                     )}
                   </div>
                 )}
@@ -1025,10 +1049,10 @@ export default function ValuationMethodCards({
                 {/* Unavailable: consistent-height placeholder */}
                 {!hasValue && (
                   <div className="flex-1 min-h-[80px] flex flex-col items-center justify-center gap-1.5">
-                    <svg className="w-5 h-5 text-[#CDD1C8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <svg className="w-5 h-5 text-[rgba(255,255,255,0.20)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <circle cx="12" cy="12" r="9" /><path strokeLinecap="round" d="M12 8v4M12 16h.01" />
                     </svg>
-                    <p className="text-[11px] text-[#9B9B9B] italic text-center leading-snug px-2">
+                    <p className="text-[11px] text-[rgba(255,255,255,0.30)] italic text-center leading-snug px-2">
                       {m.errors[0] ?? 'Insufficient data. Excluded from the blend.'}
                     </p>
                   </div>
@@ -1056,11 +1080,11 @@ export default function ValuationMethodCards({
 
                 {/* Inputs — editable method cards (not Core DCF, not EPV) */}
                 {hasValue && !isCoreDCF && !isEPV && fields.length > 0 && (
-                  <div className="space-y-1 pt-1 border-t border-[#E3E1DA]">
+                  <div className="space-y-1 pt-1 border-t border-[rgba(255,255,255,0.10)]">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-[10px] font-[600] text-[#9B9B9B]">Assumptions</p>
+                      <p className="text-[10px] font-[600] text-[rgba(255,255,255,0.40)]">Assumptions</p>
                       {fields.some(f => ['exitPE', 'exitMultiple', 'revenueMultiple', 'priceToBookMultiple'].includes(String(f.key))) && (
-                        <span className="text-[10px] text-[#9B9B9B]">Damodaran Jan 2025</span>
+                        <span className="text-[10px] text-[rgba(255,255,255,0.30)]">Damodaran Jan 2025</span>
                       )}
                     </div>
                     {fields.map(f => {
@@ -1083,7 +1107,7 @@ export default function ValuationMethodCards({
                           max={f.max}
                           onChange={v => change(f.key, v)}
                           hint={hint}
-                          color={cfg?.chartHex ?? '#566174'}
+                          color={cfg?.chartHex ?? '#7C9A19'}
                           sectorBenchmark={sectorBenchmark}
                         />
                       )
@@ -1093,14 +1117,14 @@ export default function ValuationMethodCards({
 
                 {/* Core DCF card — link to full model */}
                 {isCoreDCF && hasValue && (
-                  <div className="pt-1 border-t border-[#E3E1DA] space-y-2">
-                    <p className="text-[10px] text-[#6B6B6B] leading-relaxed">
+                  <div className="pt-1 border-t border-[rgba(255,255,255,0.10)] space-y-2">
+                    <p className="text-[10px] text-[rgba(255,255,255,0.45)] leading-relaxed">
                       Uses WACC, CAGR, terminal growth, and net margin. Edit these in the Full DCF Model below.
                     </p>
                     <DcfDriverRow fcfMargin={fcfMargin} ttmEbitdaDollars={ttmEbitdaDollars} />
                     <button
                       onClick={onScrollToFullDCF}
-                      className="w-full text-[11px] font-[650] text-[#5F790B] bg-[#F6FAEA] border border-[#BFD2A1] rounded-lg py-2 hover:bg-[#EEF2FA] transition-colors"
+                      className="w-full text-[11px] font-[650] text-[#a3e635] bg-[rgba(95,121,11,0.20)] border border-[rgba(95,121,11,0.35)] rounded-lg py-2 hover:bg-[rgba(95,121,11,0.30)] transition-colors"
                     >
                       Edit assumptions in Full DCF ↓
                     </button>
@@ -1109,14 +1133,14 @@ export default function ValuationMethodCards({
 
                 {/* EPV card — read-only data display */}
                 {isEPV && hasValue && (
-                  <div className="pt-1 border-t border-[#E3E1DA] space-y-2.5">
+                  <div className="pt-1 border-t border-[rgba(255,255,255,0.10)] space-y-2.5">
                     {/* NOPAT display */}
                     {epvMeta?.effectiveNopatM != null && epvMeta.effectiveNopatM > 0 && (
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] text-[#6B6B6B]">
+                        <span className="text-[10px] text-[rgba(255,255,255,0.45)]">
                           {epvMeta.isCyclical ? 'Normalized NOPAT' : 'NOPAT (TTM)'}
                         </span>
-                        <span className="text-[11px] font-[650] text-[#111111] tabular-nums">
+                        <span className="text-[11px] font-[650] text-white tabular-nums">
                           {epvMeta.effectiveNopatM >= 1000
                             ? `$${(epvMeta.effectiveNopatM / 1000).toFixed(1)}B`
                             : `$${epvMeta.effectiveNopatM.toFixed(0)}M`
@@ -1127,13 +1151,13 @@ export default function ValuationMethodCards({
                     {/* Growth premium pill */}
                     {epvMeta?.growthPremiumPct != null && (
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] text-[#6B6B6B]">Growth premium</span>
+                        <span className="text-[10px] text-[rgba(255,255,255,0.45)]">Growth premium</span>
                         <span className={`text-[11px] font-[650] tabular-nums px-2 py-0.5 rounded-full border ${
                           epvMeta.growthPremiumPct < 0.15
-                            ? 'bg-[#E8F7EF] border-[#A3D9BE] text-[#11875D]'
+                            ? 'bg-[rgba(34,197,94,0.15)] border-[rgba(34,197,94,0.30)] text-[#4ade80]'
                             : epvMeta.growthPremiumPct < 0.40
-                            ? 'bg-[#FFF4DA] border-[#F3D391] text-[#B56A00]'
-                            : 'bg-[#FCEAEA] border-[#F0B8B8] text-[#D83B3B]'
+                            ? 'bg-[rgba(245,158,11,0.15)] border-[rgba(245,158,11,0.30)] text-[#fcd34d]'
+                            : 'bg-[rgba(239,68,68,0.15)] border-[rgba(239,68,68,0.30)] text-[#fca5a5]'
                         }`}>
                           {(epvMeta.growthPremiumPct * 100).toFixed(0)}% of price
                         </span>
@@ -1141,12 +1165,12 @@ export default function ValuationMethodCards({
                     )}
                     {/* Cyclical warning */}
                     {epvMeta?.isCyclical && epvMeta.cyclicalWarning && (
-                      <div className="flex items-start gap-1.5 rounded-lg bg-[#FFF4DA] border border-[#F3D391] px-2.5 py-1.5">
-                        <span className="text-[#B56A00] shrink-0 text-[11px] leading-tight mt-px">⚠</span>
-                        <span className="text-[10px] text-[#B56A00] leading-tight">{epvMeta.cyclicalWarning}</span>
+                      <div className="flex items-start gap-1.5 rounded-lg bg-[rgba(245,158,11,0.12)] border border-[rgba(245,158,11,0.25)] px-2.5 py-1.5">
+                        <span className="text-[#fcd34d] shrink-0 text-[11px] leading-tight mt-px">⚠</span>
+                        <span className="text-[10px] text-[#fcd34d] leading-tight">{epvMeta.cyclicalWarning}</span>
                       </div>
                     )}
-                    <p className="text-[10px] text-[#9B9B9B] leading-relaxed">
+                    <p className="text-[10px] text-[rgba(255,255,255,0.30)] leading-relaxed">
                       NOPAT ÷ WACC. Zero-growth floor (Greenwald). Inputs: WACC and operating income.
                     </p>
                   </div>
@@ -1156,31 +1180,31 @@ export default function ValuationMethodCards({
                 {hasValue && <div className="flex-1" />}
 
                 {/* Blend weight bar */}
-                <div className="pt-3 border-t border-[#E3E1DA]">
+                <div className="pt-3 border-t border-[rgba(255,255,255,0.10)]">
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="flex items-center gap-1 text-[10px] text-[#9B9B9B]">
+                    <span className="flex items-center gap-1 text-[10px] text-[rgba(255,255,255,0.40)]">
                       Effective Blend Weight
                       <InfoTooltip content={getWeightRationale(m.id, companyType ?? 'standard')} />
                     </span>
                     <span className={`text-[11px] font-bold tabular-nums ${
-                      hasValue ? (cfg?.valueText ?? 'text-[#6B6B6B]') : 'text-[#9B9B9B]'
+                      hasValue ? (cfg?.valueText ?? 'text-[rgba(255,255,255,0.60)]') : 'text-[rgba(255,255,255,0.30)]'
                     }`}>
                       {effectivePct}%
                     </span>
                   </div>
-                  <div className="h-2 rounded-full bg-[#F5F5F5] overflow-hidden">
+                  <div className="h-2 rounded-full bg-[rgba(255,255,255,0.08)] overflow-hidden">
                     <div
-                      className={`h-full rounded-full transition-all ${cfg?.barBg ?? 'bg-[#CDD1C8]'}`}
+                      className={`h-full rounded-full transition-all ${cfg?.barBg ?? 'bg-[rgba(255,255,255,0.20)]'}`}
                       style={{ width: `${effectivePct}%` }}
                     />
                   </div>
                 </div>
 
-                {/* View details button — Core DCF scrolls to full model; others are a no-op placeholder */}
+                {/* View details button — Core DCF scrolls to full model */}
                 {hasValue && isCoreDCF && (
                   <button
                     onClick={onScrollToFullDCF}
-                    className="mt-1 text-[11px] font-[650] text-[#5F790B] hover:text-[#3d5007] transition-colors text-left"
+                    className="mt-1 text-[11px] font-[650] text-[#a3e635] hover:text-white transition-colors text-left"
                   >
                     View details →
                   </button>
@@ -1208,14 +1232,14 @@ export default function ValuationMethodCards({
             <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <circle cx="12" cy="12" r="10" /><path strokeLinecap="round" d="M12 16v-4M12 8h.01" />
             </svg>
-            Unavailable models are excluded from the blend. Remaining weights are redistributed proportionally.
+            Unavailable models are excluded from the blend. Weights redistributed proportionally.
           </p>
         )}
         <p className="text-[11px] text-[#9B9B9B] flex items-center gap-1.5">
           <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <circle cx="12" cy="12" r="10" /><path strokeLinecap="round" d="M12 16v-4M12 8h.01" />
           </svg>
-          Weights reflect our conviction in each model&apos;s reliability given current data quality and market context.
+          Weights reflect model reliability given current data quality.
         </p>
       </div>
     </div>
