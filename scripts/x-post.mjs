@@ -4640,6 +4640,407 @@ async function runLiSectorScan() {
   await postLinkedIn(lines.join('\n'))
 }
 
+// ─── li_morning_brief ─────────────────────────────────────────────────────────
+// 7:45 AM ART (10:45 UTC) Mon–Fri. Pre-market setup for LinkedIn's morning
+// professional audience. Leads with what matters most today, ends with a
+// valuation question that links to the app.
+
+async function runLiMorningBrief() {
+  const dayName = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+  const todayUtc = new Date().toISOString().split('T')[0]
+  const tomorrowUtc = new Date(Date.now() + 86400000).toISOString().split('T')[0]
+
+  const [sp500, nasdaq, tnx] = await Promise.all([
+    fetchYahooChart('^GSPC').catch(() => null),
+    fetchYahooChart('^IXIC').catch(() => null),
+    fetchYahooChart('^TNX').catch(() => null),
+  ])
+  await new Promise(r => setTimeout(r, 600))
+  const [dax, nikkei, oil, gold] = await Promise.all([
+    fetchYahooChart('^GDAXI').catch(() => null),
+    fetchYahooChart('^N225').catch(() => null),
+    fetchYahooChart('CL=F').catch(() => null),
+    fetchYahooChart('GC=F').catch(() => null),
+  ])
+  await new Promise(r => setTimeout(r, 600))
+  const vix = await fetchEtfQuote('VIX').catch(() => null)
+
+  const macroToday    = MACRO_CALENDAR.filter(e => e.date === todayUtc)
+  const macroTomorrow = MACRO_CALENDAR.filter(e => e.date === tomorrowUtc)
+
+  // Overnight read
+  const overnightParts = []
+  if (dax)    overnightParts.push(`DAX ${dax.changePct >= 0 ? '+' : ''}${dax.changePct.toFixed(1)}%`)
+  if (nikkei) overnightParts.push(`Nikkei ${nikkei.changePct >= 0 ? '+' : ''}${nikkei.changePct.toFixed(1)}%`)
+  const spFutures = sp500 ? `S&P futures ${sp500.changePct >= 0 ? '+' : ''}${sp500.changePct.toFixed(2)}%` : null
+  const nqFutures = nasdaq ? `Nasdaq ${nasdaq.changePct >= 0 ? '+' : ''}${nasdaq.changePct.toFixed(2)}%` : null
+
+  // Yield context
+  const yieldContext = tnx ? (() => {
+    const y = tnx.price
+    if (y >= 4.5) return `10Y Treasury at ${y.toFixed(2)}% — elevated. Growth stock discount rates are under pressure.`
+    if (y >= 4.0) return `10Y Treasury at ${y.toFixed(2)}%. Watching for a breakout above 4.5% — that's the level that changes WACC meaningfully.`
+    return `10Y Treasury at ${y.toFixed(2)}% — benign for valuations right now.`
+  })() : null
+
+  // What matters most today
+  const topItem = (() => {
+    if (macroToday.length > 0) {
+      const e = macroToday[0]
+      if (e.type === 'FOMC') return `Fed decision today. Whatever they say, update your WACC. A 25bps move changes fair values across the board.`
+      if (e.type === 'CPI')  return `CPI out this morning. Watch the core print — that's what moves the Fed's calculus, and through it every discount rate in your model.`
+      if (e.type === 'NFP')  return `Jobs report this morning. A strong number keeps the Fed on hold. A weak one opens the door to cuts — watch what that does to growth valuations.`
+      return `${e.label} today.`
+    }
+    if (macroTomorrow.length > 0) {
+      const e = macroTomorrow[0]
+      return `${e.label} tomorrow. Markets will start positioning today — good time to check your WACC assumptions before the number drops.`
+    }
+    if (oil && Math.abs(oil.changePct) > 1.5) {
+      return oil.changePct > 0
+        ? `Oil up ${oil.changePct.toFixed(1)}% overnight. Energy sector will be in play early.`
+        : `Oil down ${Math.abs(oil.changePct).toFixed(1)}% overnight — macro demand concerns creeping in.`
+    }
+    if (vix && vix.price > 22) return `VIX at ${vix.price.toFixed(1)} — elevated fear reading. Not a time to be adding risk without checking your margin of safety.`
+    return null
+  })()
+
+  // Valuation hook — drives to app
+  const day = new Date().getDay()
+  const pool = ROTATION[day] ?? ROTATION[1]
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+  let focusTicker = null, focusData = null
+  for (let i = 0; i < Math.min(4, pool.length); i++) {
+    const t = pool[(dayOfYear + i + 3) % pool.length]
+    try {
+      const d = await fetchValuation(t)
+      if (d?.quote?.price && appFairValue(d)) { focusTicker = t; focusData = d; break }
+    } catch { /* try next */ }
+  }
+
+  const valuationHook = focusData && focusTicker ? (() => {
+    const fair   = appFairValue(focusData)
+    const upside = appUpside(focusData)
+    const price  = focusData.quote?.price
+    const impliedG = focusData.valuationMethods?.models?.reverseDcf?.impliedCAGR
+    if (impliedG != null && Math.abs(upside ?? 0) > 0.08) {
+      return (upside ?? 0) > 0
+        ? `One to watch: $${focusTicker} at ${fmt(price)}. Market pricing in ~${pct(impliedG, false)}/yr growth — our model sees ${pct(upside)} upside. → insic.app/stock/${focusTicker}`
+        : `One to watch: $${focusTicker} at ${fmt(price)}. Market pricing in ~${pct(impliedG, false)}/yr growth to justify this price — that's a lot to deliver. → insic.app/stock/${focusTicker}`
+    }
+    return Math.abs(upside ?? 0) > 0.08
+      ? `One to watch today: $${focusTicker}. Our model puts fair value at ${fmt(fair)} — ${pct(upside)} ${(upside ?? 0) > 0 ? 'above' : 'below'} current price. → insic.app/stock/${focusTicker}`
+      : null
+  })() : null
+
+  const lines = [
+    `Good morning — ${dayName}`,
+    ``,
+    [spFutures, nqFutures].filter(Boolean).join(' · '),
+    overnightParts.length > 0 ? overnightParts.join(' · ') : null,
+    [
+      oil  ? `Oil $${oil.price.toFixed(0)} (${oil.changePct >= 0 ? '+' : ''}${oil.changePct.toFixed(1)}%)` : null,
+      gold ? `Gold $${gold.price.toFixed(0)} (${gold.changePct >= 0 ? '+' : ''}${gold.changePct.toFixed(1)}%)` : null,
+    ].filter(Boolean).join(' · ') || null,
+    ``,
+    yieldContext,
+    topItem ? `\n${topItem}` : null,
+    valuationHook ? `\n${valuationHook}` : null,
+    ``,
+    `Full market models → insic.app`,
+    ``,
+    `#GoodMorning #Finance #Investing #Markets`,
+  ].filter(Boolean)
+
+  await postLinkedIn(lines.join('\n'))
+}
+
+// ─── li_divergence ────────────────────────────────────────────────────────────
+// Tue/Thu 12:30 PM ART. Finds 3 stocks where our DCF and Wall St consensus
+// disagree the most. The tension drives engagement and visits.
+
+async function runLiDivergence() {
+  const POOL = [
+    'AAPL','MSFT','GOOGL','META','AMZN','NVDA','TSLA','JPM','V','MA',
+    'UNH','LLY','AVGO','ORCL','CRM','ADBE','NOW','COST','HD','WMT',
+    'JNJ','PFE','MRK','ABBV','BAC','GS','MS','AMD','INTC','QCOM',
+  ]
+
+  const candidates = []
+  await Promise.all(POOL.map(async ticker => {
+    try {
+      const d = await fetchValuation(ticker)
+      const ourFair     = appFairValue(d)
+      const price       = d?.quote?.price
+      const analystTarget = d?.quote?.analystTargetMean
+      const numAnalysts   = d?.cagrAnalysis?.numAnalysts ?? 0
+      if (!ourFair || !price || !analystTarget || numAnalysts < 5) return
+      const ourUpside     = (ourFair - price) / price
+      const streetUpside  = (analystTarget - price) / price
+      const divergence    = Math.abs(ourUpside - streetUpside)
+      if (divergence < 0.10) return
+      const impliedG    = d?.valuationMethods?.models?.reverseDcf?.impliedCAGR
+      const hist3y      = d?.cagrAnalysis?.historicalCagr3y
+      const roicSpread  = d?.scores?.roic?.spread
+      const sector      = d?.quote?.sector ?? ''
+      candidates.push({ ticker, price, ourFair, ourUpside, analystTarget, streetUpside, divergence, numAnalysts, impliedG, hist3y, roicSpread, sector })
+    } catch { /* skip */ }
+  }))
+
+  if (candidates.length < 3) { console.warn('li_divergence: not enough divergent stocks — skipping'); return }
+
+  candidates.sort((a, b) => b.divergence - a.divergence)
+  const picks = candidates.slice(0, 3)
+
+  const intro = picks.some(p => p.ourUpside < p.streetUpside)
+    ? `3 stocks where our DCF and Wall Street don't agree. The gap is the conversation.`
+    : `Our model is more bearish than the Street on each of these. Here's why that matters.`
+
+  const stockLines = picks.flatMap(p => {
+    const ourDir    = p.ourUpside > 0 ? `sees ${(p.ourUpside * 100).toFixed(0)}% upside` : `sees ${Math.abs(p.ourUpside * 100).toFixed(0)}% downside`
+    const stDir     = p.streetUpside > 0 ? `+${(p.streetUpside * 100).toFixed(0)}%` : `${(p.streetUpside * 100).toFixed(0)}%`
+    const roicNote  = p.roicSpread != null
+      ? p.roicSpread < -0.02 ? ` ROIC below WACC — that's the tension.`
+      : p.roicSpread > 0.08  ? ` ROIC well above WACC — business quality supports the bull case.`
+      : ``
+      : ``
+    const growthNote = p.impliedG != null && p.hist3y != null
+      ? ` Market pricing in ${pct(p.impliedG, false)}/yr; historical rate was ${pct(p.hist3y, false)}.`
+      : ``
+    return [
+      `$${p.ticker} — price ${fmt(p.price)}`,
+      `Our model: ${fmt(p.ourFair)} (${ourDir}) · Street: ${fmt(p.analystTarget)} (${stDir}, ${p.numAnalysts} analysts)`,
+      `${growthNote}${roicNote}`.trim() || null,
+      ``,
+    ].filter(Boolean)
+  })
+
+  const closing = `The divergence isn't a bug — it's the question. Which assumptions are wrong: ours or theirs? Run the model and change the inputs yourself.`
+
+  const lines = [
+    intro,
+    ``,
+    ...stockLines,
+    closing,
+    ``,
+    `Adjust any assumption → insic.app`,
+    ``,
+    `#DCF #Valuation #Investing #Finance #StockMarket`,
+  ]
+
+  await postLinkedIn(lines.join('\n'))
+}
+
+// ─── li_weekly_picks ──────────────────────────────────────────────────────────
+// Friday 1:00 PM ART. Top 5 most attractively priced stocks from our model
+// this week — pure product showcase, drives visits, saves/bookmarks on LinkedIn.
+
+async function runLiWeeklyPicks() {
+  const QUALITY_POOL = [
+    'MSFT','AMZN','GOOGL','META','NVDA','AAPL','JPM','V','MA','UNH',
+    'COST','LLY','AVGO','MRK','PG','HD','KO','PEP','TMO','ABT',
+    'ADBE','CRM','NOW','INTU','ORCL','TXN','QCOM','AMD','AMAT','LOW',
+    'GS','BAC','MS','BLK','SCHW','AXP','CB','MMC','SPG','PLD',
+  ]
+
+  const scored = []
+  await Promise.all(QUALITY_POOL.map(async ticker => {
+    try {
+      const d = await fetchValuation(ticker)
+      const upside   = appUpside(d)
+      const fair     = appFairValue(d)
+      const price    = d?.quote?.price
+      const roicSpread = d?.scores?.roic?.spread
+      const piotroski = d?.scores?.piotroski?.score
+      const analyst1y = d?.cagrAnalysis?.analystEstimate1y
+      const hist3y    = d?.cagrAnalysis?.historicalCagr3y
+      const fwdPE     = d?.analystForwardPE
+      const sector    = d?.quote?.sector ?? ''
+      const recLabel  = (() => {
+        const r = d?.analystRecommendation ?? ''
+        return r === 'strong_buy' ? 'Strong Buy' : r === 'buy' ? 'Buy' : r === 'hold' ? 'Hold' : null
+      })()
+      if (!upside || !fair || !price || upside < 0.08) return
+      // Quality filter: prefer positive ROIC spread or decent Piotroski
+      const qualityOk = (roicSpread != null && roicSpread > -0.02) || (piotroski != null && piotroski >= 5)
+      if (!qualityOk) return
+      scored.push({ ticker, upside, fair, price, roicSpread, piotroski, analyst1y, hist3y, fwdPE, sector, recLabel })
+    } catch { /* skip */ }
+  }))
+
+  if (scored.length < 3) { console.warn('li_weekly_picks: not enough data'); return }
+
+  scored.sort((a, b) => b.upside - a.upside)
+  const top = scored.slice(0, 5)
+
+  const dateStr = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+  const sectorSet = [...new Set(top.map(s => s.sector).filter(Boolean))]
+  const diverseNote = sectorSet.length >= 4
+    ? `Spread across ${sectorSet.length} sectors — not a concentrated bet.`
+    : sectorSet.length >= 2 ? `Across ${sectorSet.join(', ')}.` : ``
+
+  const stockLines = top.flatMap((s, i) => {
+    const roicNote = s.roicSpread != null && s.roicSpread > 0.04
+      ? ` ROIC ${(s.roicSpread * 100).toFixed(0)}pp above WACC.`
+      : ``
+    const growthNote = s.analyst1y != null
+      ? ` Analysts see ${pct(s.analyst1y, false)}/yr growth.`
+      : s.hist3y != null ? ` 3Y CAGR ${pct(s.hist3y, false)}.` : ``
+    const recNote = s.recLabel && s.recLabel !== 'Hold' ? ` Street says ${s.recLabel}.` : ``
+    return [
+      `${i + 1}. $${s.ticker} — ${fmt(s.price)} → model fair value ${fmt(s.fair)} (${(s.upside * 100).toFixed(0)}% upside)`,
+      `${[growthNote, roicNote, recNote].join('').trim() || null}`,
+      ``,
+    ].filter(Boolean)
+  })
+
+  const lines = [
+    `5 attractively priced stocks — week of ${dateStr}`,
+    ``,
+    `These aren't recommendations. They're the 5 stocks where our DCF model shows the largest gap between price and fair value, filtered for business quality.`,
+    ``,
+    ...stockLines,
+    diverseNote,
+    ``,
+    `All models are interactive — change WACC, growth rate, or terminal value and see fair value move in real time.`,
+    ``,
+    `insic.app`,
+    ``,
+    `#ValueInvesting #DCF #StockPicks #Finance #Investing`,
+  ].filter(Boolean)
+
+  await postLinkedIn(lines.join('\n'))
+}
+
+// ─── li_myth ──────────────────────────────────────────────────────────────────
+// Mon/Wed 11:00 AM ART. Rotating myth-busting posts — highest share rate on
+// LinkedIn finance content. Each post challenges a common belief with data.
+// Static rotation, no API calls needed — 100% token-free.
+
+const LI_MYTHS = [
+  [
+    `"Just buy index funds and don't think about valuations."`,
+    ``,
+    `This advice is fine for most people most of the time. But it contains a hidden assumption: that the index is reasonably priced.`,
+    ``,
+    `In January 2000, the S&P 500 traded at a cyclically adjusted P/E of 44×. Index investors at that point waited 13 years to break even in real terms.`,
+    ``,
+    `In March 2009, the same advice — "just buy the index" — would have returned 500%+ over the next decade.`,
+    ``,
+    `The strategy is identical. The outcome is completely different. The variable is price paid.`,
+    ``,
+    `Understanding valuation doesn't mean you should avoid index funds. It means you understand what you're buying and at what price. That's always worth knowing.`,
+    ``,
+    `Current S&P 500 implied growth and fair value breakdown → insic.app`,
+    ``,
+    `#IndexFunds #ValueInvesting #Finance #Investing`,
+  ],
+  [
+    `"A stock with a high P/E is expensive."`,
+    ``,
+    `This is one of the most repeated rules in investing — and one of the most misleading.`,
+    ``,
+    `A P/E ratio tells you what you're paying per dollar of today's earnings. It says nothing about tomorrow's.`,
+    ``,
+    `A company growing earnings at 30%/yr with a P/E of 35× may be far cheaper than a company with a P/E of 12× and flat earnings.`,
+    ``,
+    `The metric that actually captures this: PEG ratio (P/E ÷ earnings growth rate). A PEG below 1.0 suggests you're not overpaying for the growth.`,
+    ``,
+    `Better still: a DCF model. It forces you to make the growth assumption explicit, then discounts it at the appropriate rate. No shortcuts.`,
+    ``,
+    `High P/E ≠ expensive. Low P/E ≠ cheap. Context is everything.`,
+    ``,
+    `Run a proper valuation → insic.app`,
+    ``,
+    `#PERatio #DCF #Valuation #Finance #Investing`,
+  ],
+  [
+    `"Revenue growth is what matters most."`,
+    ``,
+    `Revenue growth gets the headlines. It's what management teams optimize for in their investor presentations.`,
+    ``,
+    `But revenue without returns is just activity.`,
+    ``,
+    `The number that actually matters: ROIC vs WACC.`,
+    ``,
+    `A company growing at 20%/yr with ROIC of 8% and WACC of 10% is destroying value with every dollar it reinvests. Revenue goes up. Intrinsic value goes down.`,
+    ``,
+    `A company growing at 8%/yr with ROIC of 25% and WACC of 9% compounds value relentlessly. That 16pp spread means every dollar reinvested creates 16 cents of economic profit.`,
+    ``,
+    `This is why Buffett focuses on moats — a durable competitive advantage is what sustains ROIC above WACC for a decade or more. That's where wealth is actually created.`,
+    ``,
+    `Insic.app shows ROIC, WACC, and the spread for every stock. It's one of the first things worth checking.`,
+    ``,
+    `#ROIC #ValueCreation #Finance #Investing #Buffett`,
+  ],
+  [
+    `"Analysts' price targets tell you where a stock is going."`,
+    ``,
+    `They don't. Here's what academic research actually shows:`,
+    ``,
+    `→ Price targets cluster near the current price. Analysts rarely deviate more than 20% — in either direction.`,
+    `→ They revise reactively. Target goes up after the stock rises. Down after it falls.`,
+    `→ 12-month accuracy is statistically indistinguishable from a coin flip when controlling for momentum.`,
+    `→ They reflect consensus by design — the exact opposite of what generates alpha.`,
+    ``,
+    `None of this means sell-side research is useless. The EPS models, industry analysis, and management channel checks are genuinely valuable inputs.`,
+    ``,
+    `But the price target number itself? That's a prediction about what other investors will pay in 12 months — not what the business is worth.`,
+    ``,
+    `DCF intrinsic value asks a different question: if I owned this business forever and collected all its cash flows, what would I pay for it today? That's the more honest frame.`,
+    ``,
+    `insic.app`,
+    ``,
+    `#AnalystTargets #DCF #ValueInvesting #Finance`,
+  ],
+  [
+    `"Profitable companies can't go bankrupt."`,
+    ``,
+    `They can. And they do. More often than most investors expect.`,
+    ``,
+    `The mechanism: a company can report positive net income while burning cash. Accounting profit ≠ cash flow.`,
+    ``,
+    `Revenue is recognized when earned. Cash arrives later. If receivables build faster than collections, net income rises while the cash account drains.`,
+    ``,
+    `The Altman Z-Score was designed precisely for this — it combines five financial ratios to predict financial distress 2 years out. A Z-Score below 1.81 puts a company in the "distress zone" regardless of reported earnings.`,
+    ``,
+    `The Beneish M-Score is the other side: it detects whether the earnings being reported are real, or the result of aggressive accounting.`,
+    ``,
+    `Neither score is a sentence. Both are flags worth investigating.`,
+    ``,
+    `Insic.app shows both scores for every stock in our coverage.`,
+    ``,
+    `#AltmanZScore #Beneish #FinancialHealth #Investing #Finance`,
+  ],
+  [
+    `"If a stock dropped 50%, it must be a bargain."`,
+    ``,
+    `One of the most expensive assumptions in investing.`,
+    ``,
+    `A stock that falls 50% from $100 to $50 needs to double just to get back to where it was.`,
+    ``,
+    `But the question isn't "where was it?" — it's "what is it worth?"`,
+    ``,
+    `If the business deteriorated — margins compressed, growth slowed, debt increased — the fair value may now be $30. In that case $50 is still expensive.`,
+    ``,
+    `If the business is intact and the drop was sentiment-driven, the $50 price might be a genuine opportunity.`,
+    ``,
+    `The only way to tell the difference: build the model. Look at the FCF, the ROIC trend, the debt load, the growth runway. Don't anchor to the old price.`,
+    ``,
+    `Price history is irrelevant to intrinsic value. The business fundamentals are not.`,
+    ``,
+    `insic.app`,
+    ``,
+    `#ValueInvesting #DCF #Valuation #Finance #Investing`,
+  ],
+]
+
+async function runLiMyth() {
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+  const content = LI_MYTHS[dayOfYear % LI_MYTHS.length]
+  await postLinkedIn(content.join('\n'))
+}
+
 const MODES = {
   dcf:               runDcf,
   dcf2:              runDcf2,
@@ -4672,6 +5073,10 @@ const MODES = {
   li_market_wrap:    runLiMarketWrap,
   li_deep_dive:      runLiDeepDive,
   li_sector_scan:    runLiSectorScan,
+  li_morning_brief:  runLiMorningBrief,
+  li_divergence:     runLiDivergence,
+  li_weekly_picks:   runLiWeeklyPicks,
+  li_myth:           runLiMyth,
 }
 
 if (!MODES[MODE]) {
