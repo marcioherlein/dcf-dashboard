@@ -948,7 +948,7 @@ export default function ValuationMethodCards({
           return (
             <div
               key={m.id}
-              className={`relative rounded-xl border flex flex-col w-[72vw] max-w-[240px] sm:min-w-0 sm:w-auto sm:max-w-none snap-start flex-shrink-0 sm:flex-shrink overflow-hidden ${
+              className={`relative rounded-xl border flex flex-col w-[62vw] sm:min-w-0 sm:w-auto snap-start flex-shrink-0 sm:flex-shrink overflow-hidden ${
                 hasValue ? 'border-[#E3E1DA] bg-white' : 'border-[#E3E1DA] bg-[#F5F5F5]/50'
               }`}
               role="article"
