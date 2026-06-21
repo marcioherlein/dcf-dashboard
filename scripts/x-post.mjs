@@ -5720,7 +5720,10 @@ function etfScoreEmoji(score) {
 
 async function fetchLatestEtfScores() {
   const sb = await _getSupabase()
-  if (!sb) { console.warn('ETF scan: no Supabase client'); return [] }
+  if (!sb) {
+    console.error('ETF scan: NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY not set — ETF modes will skip')
+    return []
+  }
   const cutoff = new Date(Date.now() - 86400000 * 4).toISOString()
   const { data, error } = await sb
     .from('etf_score_history')
