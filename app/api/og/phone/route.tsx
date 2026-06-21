@@ -27,13 +27,9 @@ const SCRN_W   = FRAME_W - SCRNX * 2   // 1074
 const SCRN_H   = FRAME_H - SCRNY - 100 // 2392
 
 export async function GET(req: NextRequest) {
-  // Forward all params to the portrait route to render the card inside the phone
   const params = req.nextUrl.searchParams.toString()
   const baseUrl = req.nextUrl.origin
   const portraitUrl = `${baseUrl}/api/og/portrait${params ? `?${params}` : ''}`
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const _dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 
   return new ImageResponse(
     (
