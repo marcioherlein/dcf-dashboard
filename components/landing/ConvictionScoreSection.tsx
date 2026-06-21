@@ -179,17 +179,6 @@ export default function ConvictionScoreSection() {
 
         </div>
 
-        {/* CTA */}
-        <div className="mt-10 text-center">
-          <Link
-            href="/analyze"
-            className="inline-flex items-center justify-center rounded-xl px-7 py-3.5 text-[14.5px] font-semibold text-white transition-all hover:-translate-y-px active:scale-95"
-            style={{ background: '#5F790B', boxShadow: '0 4px 14px rgba(95,121,11,0.28)', minHeight: '48px' }}
-          >
-            Check any stock&apos;s Conviction Score →
-          </Link>
-        </div>
-
       </div>
     </section>
   )
