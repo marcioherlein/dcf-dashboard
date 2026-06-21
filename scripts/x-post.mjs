@@ -472,7 +472,8 @@ async function runEarnings() {
       const line3 = recLabel && roic != null
         ? `Wall St says ${recLabel}. ROIC is ${pct(roic, false)} vs ${pct(wacc, false)} WACC.`
         : recLabel ? `Wall St says ${recLabel}.` : null
-      dcfBlock = [line1, line2, line3].filter(Boolean).join('\n')
+      const histLine = historicalContext(data, ticker)
+      dcfBlock = [line1, line2, line3, histLine].filter(Boolean).join('\n')
     }
   } catch (e) {
     console.warn('Could not fetch DCF for featured ticker:', e.message)
@@ -533,6 +534,62 @@ const ROTATION = {
     'XOM','CVX','COP','SLB','EOG','NEE','DUK','SO','BA','CAT',
     'GE','HON','RTX','LMT','DE','UPS','FDX','UBER','ABNB','CMG',
   ],
+}
+
+// Returns a compact ↳ historical context line for any single-stock post.
+// Picks the 1-2 most informative signals available and never shows a blank.
+function historicalContext(data, ticker) {
+  const price        = data.quote?.price
+  const fwdPE        = data.analystForwardPE
+  const impliedGrowth = data.valuationMethods?.models?.reverseDcf?.impliedCAGR
+  const hist3y       = data.cagrAnalysis?.historicalCagr3y
+  const analyst1y    = data.cagrAnalysis?.analystEstimate1y
+  const roicSpread   = data.scores?.roic?.spread
+  const high52       = data.quote?.fiftyTwoWeekHigh
+  const low52        = data.quote?.fiftyTwoWeekLow
+  const histMultiples = data.historicalMultiples ?? []
+  const histPEs      = histMultiples.map(y => y.pe).filter(v => v != null && v > 0 && v < 200)
+  const avgHistPE    = histPEs.length >= 2 ? histPEs.reduce((s, v) => s + v, 0) / histPEs.length : null
+  const annualMetrics = data.keyMetricsAnnual ?? []
+  const roicHistory  = annualMetrics.map(y => y.roic).filter(v => v != null)
+  const roicTrend    = roicHistory.length >= 2
+    ? (roicHistory[roicHistory.length - 1] > roicHistory[0] ? 'improving' : 'declining') : null
+
+  const parts = []
+
+  // 1. Valuation vs own history
+  if (fwdPE != null && avgHistPE != null) {
+    const vs = fwdPE / avgHistPE
+    const label = vs > 1.2 ? `above` : vs < 0.82 ? `below` : `in line with`
+    parts.push(`Fwd P/E ${label} 3Y avg (${avgHistPE.toFixed(0)}×)`)
+  }
+
+  // 2. Implied growth vs historical pace
+  if (impliedGrowth != null && hist3y != null) {
+    const accel = impliedGrowth > hist3y * 1.15 ? `above` : impliedGrowth < hist3y * 0.8 ? `below` : `in line with`
+    parts.push(`Market pricing in ${pct(impliedGrowth, false)}/yr — ${accel} 3Y CAGR of ${pct(hist3y, false)}`)
+  } else if (hist3y != null && analyst1y != null) {
+    const dir = analyst1y > hist3y * 1.1 ? `accelerating` : analyst1y < hist3y * 0.85 ? `decelerating` : `steady`
+    parts.push(`Growth ${dir}: analysts ${pct(analyst1y, false)} vs 3Y CAGR ${pct(hist3y, false)}`)
+  } else if (hist3y != null) {
+    parts.push(`3Y revenue CAGR: ${pct(hist3y, false)}`)
+  }
+
+  // 3. ROIC trend as tiebreaker
+  if (parts.length < 2 && roicTrend) parts.push(`ROIC ${roicTrend}`)
+
+  // 4. 52W position
+  if (parts.length < 2 && high52 != null && price != null) {
+    const fromHigh = ((price - high52) / high52 * 100).toFixed(0)
+    if (Number(fromHigh) < -15) parts.push(`${Math.abs(fromHigh)}% off 52W high`)
+    else if (low52 != null) {
+      const fromLow = ((price - low52) / low52 * 100).toFixed(0)
+      if (Number(fromLow) < 20) parts.push(`Near 52W low (${Math.abs(fromLow)}% above)`)
+    }
+  }
+
+  if (parts.length === 0) return null
+  return `↳ ${parts.slice(0, 2).join(' · ')}`
 }
 
 
@@ -643,6 +700,7 @@ async function runDcf() {
     ...(impliedStr ? [impliedStr] : []),
     ...(historicalStr ? [historicalStr] : []),
     ...(vsHistorical ? [vsHistorical] : []),
+    ...(!impliedStr ? [historicalContext(data, ticker)].filter(Boolean) : []),
     ``,
     `Model: fair value ~${fmt(fair)} (${pct(upside)} vs current price)`,
     ...(bear && bull ? [`Range: ${fmt(bear)} bear → ${fmt(bull)} bull`] : []),
@@ -1252,6 +1310,8 @@ async function runWeeklyWrap() {
     const direction = s.upside > 0.05 ? `model sees ${upsideStr}% upside` : s.upside < -0.05 ? `model sees ${Math.abs(upsideStr)}% downside` : `model says fair`
     lines.push(`${v.emoji} $${s.ticker} — ${fmt(s.price)} → ${fmt(s.fair)} · ${direction}`)
     if (impliedG != null) lines.push(`   Market pricing in ~${pct(impliedG, false)}/yr growth`)
+    const hist = s.data ? historicalContext(s.data, s.ticker) : null
+    if (hist) lines.push(`   ${hist}`)
     lines.push(``)
   }
 
@@ -3734,6 +3794,7 @@ async function run52wLow() {
       : null,
     fcfM != null ? `FCF margin ${pct(fcfM, false)} — still generating cash despite the drop.` : null,
     roic != null && roic > 0 ? `ROIC ${pct(roic, false)} — the business hasn't deteriorated.` : null,
+    data ? historicalContext(data, ticker) : null,
     ``,
     `Price weakness ≠ business weakness. Worth a closer look.`,
     ``,
@@ -3766,10 +3827,10 @@ async function runTopUndervalued() {
       const fair   = appFairValue(d)
       const price  = d?.quote?.price
       if (upside == null || !fair || !price) return
-      if (upside < 0.05) return  // only genuinely undervalued
+      if (upside < 0.05) return
       const sector = d?.quote?.sector ?? ''
       const grade  = d?.ratings?.overall?.grade ?? ''
-      scored.push({ ticker, upside, fair, price, sector, grade })
+      scored.push({ ticker, upside, fair, price, sector, grade, d })
     } catch { /* skip */ }
   }))
 
@@ -3778,17 +3839,22 @@ async function runTopUndervalued() {
   scored.sort((a, b) => b.upside - a.upside)
   const top = scored.slice(0, 5)
 
+  const stockLines = top.flatMap((s, i) => {
+    const hist = historicalContext(s.d, s.ticker)
+    return [
+      `${i + 1}. $${s.ticker} — ${fmt(s.price)} → model: ${fmt(s.fair)} (${pct(s.upside)})`,
+      hist ? `   ${hist}` : null,
+    ].filter(Boolean)
+  })
+
   const lines = [
-    `📊 5 most undervalued S&P 500 stocks (our DCF model, today)`,
+    `5 most undervalued S&P 500 stocks — our DCF model today`,
     ``,
-    ...top.map((s, i) =>
-      `${i + 1}. $${s.ticker} — ${fmt(s.price)} → model: ${fmt(s.fair)} (${pct(s.upside)})`
-    ),
+    ...stockLines,
     ``,
-    `Methodology: DCF + forward P/E + EV/EBITDA blend.`,
-    `Not financial advice — these are model outputs, not recommendations.`,
+    `Not financial advice — model outputs only.`,
     ``,
-    `Run your own analysis free → ${APP_URL}`,
+    `Run your own analysis → ${APP_URL}`,
     `#ValueInvesting #DCF #StockMarket #Investing`,
   ].filter(Boolean)
 
@@ -3851,6 +3917,7 @@ async function runMarketVsModel() {
     `Gap: ${gapPct}%`,
     ``,
     growthContext,
+    c.d ? historicalContext(c.d, ticker) : null,
     ourIsHigher
       ? `If analysts are anchored to near-term estimates and the model captures longer-term economics better, the gap is an opportunity.`
       : `If the model's growth assumptions are too conservative, the Street is right. If they're too optimistic, the consensus target doesn't hold.`,
