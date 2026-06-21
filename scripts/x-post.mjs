@@ -3406,76 +3406,85 @@ async function runSectorScan() {
 
   if (rows.length === 0) throw new Error('No sector scan data returned')
 
-  // Sort by Forward P/E ascending (cheapest first on this metric)
   rows.sort((a, b) => (a.fwdPE ?? 999) - (b.fwdPE ?? 999))
 
-  const cheapest  = rows[0]
-  const richest   = rows[rows.length - 1]
-  const bestROIC  = [...rows].sort((a, b) => (b.roicSpread ?? -99) - (a.roicSpread ?? -99))[0]
+  const cheapest   = rows[0]
+  const richest    = rows[rows.length - 1]
+  const bestROIC   = [...rows].sort((a, b) => (b.roicSpread ?? -99) - (a.roicSpread ?? -99))[0]
   const bestGrowth = [...rows].filter(r => r.revGrowth != null).sort((a, b) => b.revGrowth - a.revGrowth)[0]
+  const threshold  = Math.ceil(rows.length * 0.6)
 
-  // Build the league table — adaptive columns, never show blank fields
-  // Decide which multiple column to use based on data availability
-  const evEbitdaCount  = rows.filter(r => r.evEbitda   != null).length
-  const evRevenueCount = rows.filter(r => r.evRevenue  != null).length
-  const pfcfCount      = rows.filter(r => r.pfcf       != null).length
-  const roicCount      = rows.filter(r => r.roicSpread != null).length
-  const growthCount    = rows.filter(r => r.revGrowth  != null).length
+  // Pick which secondary multiple has enough coverage to show
+  const multipleKey   = rows.filter(r => r.evEbitda  != null).length >= threshold ? 'evEbitda'
+                      : rows.filter(r => r.evRevenue != null).length >= threshold ? 'evRevenue'
+                      : rows.filter(r => r.pfcf      != null).length >= threshold ? 'pfcf'
+                      : null
+  const multipleLabel = multipleKey === 'evEbitda'  ? 'EV/EBITDA'
+                      : multipleKey === 'evRevenue' ? 'EV/Revenue'
+                      : multipleKey === 'pfcf'      ? 'P/FCF' : null
+  const multipleDesc  = multipleKey === 'evEbitda'  ? 'enterprise value relative to operating earnings'
+                      : multipleKey === 'evRevenue' ? 'enterprise value relative to revenue — useful when EBITDA is thin or negative'
+                      : multipleKey === 'pfcf'      ? 'price relative to free cash flow — cash earnings, not accounting earnings'
+                      : null
+  const showGrowth = rows.filter(r => r.revGrowth  != null).length >= threshold
+  const showROIC   = rows.filter(r => r.roicSpread != null).length >= threshold
 
-  // Pick the best secondary multiple — prefer the one with most coverage
-  let multipleKey = null
-  let multipleLabel = null
-  if (evEbitdaCount >= Math.ceil(rows.length * 0.6)) {
-    multipleKey = 'evEbitda'; multipleLabel = 'EV/EBITDA'
-  } else if (evRevenueCount >= Math.ceil(rows.length * 0.6)) {
-    multipleKey = 'evRevenue'; multipleLabel = 'EV/Rev'
-  } else if (pfcfCount >= Math.ceil(rows.length * 0.6)) {
-    multipleKey = 'pfcf'; multipleLabel = 'P/FCF'
-  }
-
-  const showGrowth = growthCount >= Math.ceil(rows.length * 0.5)
-  const showROIC   = roicCount   >= Math.ceil(rows.length * 0.5)
-
+  // Build each row with full labels on every metric — no abbreviations, no header row needed
   const tableLines = rows.map(r => {
-    const fwdPEStr = `${r.fwdPE.toFixed(0)}×`
-    const parts = [`${r.v.emoji} $${r.ticker.padEnd(5)} Fwd P/E ${fwdPEStr.padStart(4)}`]
+    const fwdPELine   = `  Fwd P/E: ${r.fwdPE.toFixed(0)}× — what you pay per dollar of next year's earnings`
+    const multLine    = multipleKey && r[multipleKey] != null
+      ? `  ${multipleLabel}: ${r[multipleKey].toFixed(1)}×`
+      : null
+    const growthLine  = showGrowth && r.revGrowth != null
+      ? `  Revenue growth: +${(r.revGrowth * 100).toFixed(0)}%/yr (analyst consensus)`
+      : null
+    const roicLine    = showROIC && r.roicSpread != null
+      ? `  ROIC vs WACC: ${r.roicSpread >= 0 ? '+' : ''}${(r.roicSpread * 100).toFixed(0)}pp — ${r.roicSpread > 0.05 ? 'creating value' : r.roicSpread > -0.02 ? 'roughly break-even on capital' : 'destroying value'}`
+      : null
+    const modelLine   = r.upside != null
+      ? `  Model: ${r.v.short} · DCF upside ${r.upside >= 0 ? '+' : ''}${(r.upside * 100).toFixed(0)}% to fair value ${r.fair ? `(${fmt(r.fair)})` : ''}`
+      : `  Model: ${r.v.short}`
 
-    if (multipleKey) {
-      const val = r[multipleKey]
-      parts.push(`${multipleLabel} ${val != null ? `${val.toFixed(0)}×` : 'n/a'}`)
-    }
-    if (showGrowth) {
-      const g = r.revGrowth
-      parts.push(`Rev ${g != null ? `+${(g * 100).toFixed(0)}%` : 'n/a'}`)
-    }
-    if (showROIC) {
-      const rs = r.roicSpread
-      parts.push(`ROIC ${rs != null ? `${rs >= 0 ? '+' : ''}${(rs * 100).toFixed(0)}pp` : 'n/a'}`)
-    }
-    // Always show model verdict + upside
-    const upsideStr = r.upside != null ? ` (${r.upside >= 0 ? '+' : ''}${(r.upside * 100).toFixed(0)}%)` : ''
-    parts.push(`${r.v.short}${upsideStr}`)
-
-    return parts.join(' · ')
+    return [
+      `${r.v.emoji} $${r.ticker}`,
+      fwdPELine,
+      multLine,
+      growthLine,
+      roicLine,
+      modelLine,
+      ``,
+    ].filter(Boolean).join('\n')
   })
 
-  const insightLines = [
-    cheapest   ? `Lowest Fwd P/E: $${cheapest.ticker} at ${cheapest.fwdPE.toFixed(0)}×` : null,
-    richest    ? `Richest valuation: $${richest.ticker} at ${richest.fwdPE.toFixed(0)}×` : null,
-    bestROIC  && bestROIC.roicSpread != null ? `Widest ROIC spread: $${bestROIC.ticker} (+${(bestROIC.roicSpread * 100).toFixed(0)}pp vs WACC)` : null,
-    bestGrowth && bestGrowth.revGrowth != null ? `Fastest grower: $${bestGrowth.ticker} at +${(bestGrowth.revGrowth * 100).toFixed(0)}%/yr analyst est` : null,
+  // Legend only for metrics that actually appear
+  const legendParts = [`Fwd P/E = forward price-to-earnings (lower = cheaper on near-term earnings)`]
+  if (multipleLabel && multipleDesc) legendParts.push(`${multipleLabel} = ${multipleDesc}`)
+  if (showGrowth)  legendParts.push(`Revenue growth = analyst consensus 1-year forward estimate`)
+  if (showROIC)    legendParts.push(`ROIC vs WACC = return on invested capital minus cost of capital — positive means the business creates value`)
+
+  // Narrative insight sentences
+  const insights = [
+    cheapest   ? `$${cheapest.ticker} trades at the lowest forward multiple in the group (${cheapest.fwdPE.toFixed(0)}×). ${cheapest.revGrowth != null ? `Analysts still expect +${(cheapest.revGrowth * 100).toFixed(0)}%/yr revenue growth — that combination is worth a closer look.` : ``}` : null,
+    richest    ? `$${richest.ticker} is the most expensive on Fwd P/E at ${richest.fwdPE.toFixed(0)}×. ${richest.revGrowth != null ? `It needs to sustain +${(richest.revGrowth * 100).toFixed(0)}%/yr growth to justify that multiple — and then some.` : `A premium that demands delivery.`}` : null,
+    bestROIC && bestROIC.roicSpread != null && bestROIC.roicSpread > 0.05
+      ? `$${bestROIC.ticker} has the widest ROIC spread (+${(bestROIC.roicSpread * 100).toFixed(0)}pp above WACC). That's the kind of moat that compounds — every dollar reinvested earns well above the cost of capital.` : null,
+    bestGrowth && bestGrowth.revGrowth != null
+      ? `$${bestGrowth.ticker} is the fastest grower analysts expect in this group at +${(bestGrowth.revGrowth * 100).toFixed(0)}%/yr. ${bestGrowth.roicSpread != null && bestGrowth.roicSpread > 0 ? `Paired with a positive ROIC spread, that growth is actually worth something.` : `Whether the multiple prices that in already is the question.`}` : null,
   ].filter(Boolean)
 
   const lines = [
     `${scan.emoji} ${scan.name} — Valuation Scan · ${dateStr}`,
     ``,
-    ...tableLines,
-    ``,
     scan.context,
     ``,
-    ...insightLines,
+    ...tableLines,
+    `─`,
+    `How to read this:`,
+    ...legendParts.map(l => `· ${l}`),
     ``,
-    `Free models on every S&P 500 stock → ${APP_URL}`,
+    ...insights,
+    ``,
+    `Full interactive models → ${APP_URL}`,
     scan.hashtags,
   ].filter(Boolean)
 
@@ -4663,44 +4672,61 @@ async function runLiSectorScan() {
   const threshold = Math.ceil(rows.length * 0.6)
   const multipleKey   = evEbitdaCount  >= threshold ? 'evEbitda'
                       : evRevenueCount >= threshold ? 'evRevenue' : null
-  const multipleLabel = multipleKey === 'evEbitda' ? 'EV/EBITDA'
-                      : multipleKey === 'evRevenue' ? 'EV/Rev' : null
+  const multipleLabel = multipleKey === 'evEbitda'  ? 'EV/EBITDA'
+                      : multipleKey === 'evRevenue' ? 'EV/Revenue' : null
+  const multipleDesc  = multipleKey === 'evEbitda'  ? 'enterprise value vs operating earnings — lower means cheaper relative to cash generation'
+                      : multipleKey === 'evRevenue' ? 'enterprise value vs revenue — useful when margins are thin or variable'
+                      : null
   const showGrowth = rows.filter(r => r.revGrowth  != null).length >= threshold
   const showROIC   = rows.filter(r => r.roicSpread != null).length >= threshold
 
-  const headerParts = ['Ticker', 'Fwd P/E']
-  if (multipleLabel) headerParts.push(multipleLabel)
-  if (showGrowth)    headerParts.push('Rev Growth')
-  if (showROIC)      headerParts.push('ROIC vs WACC')
-  headerParts.push('Model')
-
-  const tableLines = rows.map(r => {
-    const parts = [`$${r.ticker}`, `${r.fwdPE.toFixed(0)}×`]
-    if (multipleKey) parts.push(r[multipleKey] != null ? `${r[multipleKey].toFixed(0)}×` : 'n/a')
-    if (showGrowth)  parts.push(r.revGrowth    != null ? `+${(r.revGrowth * 100).toFixed(0)}%` : 'n/a')
-    if (showROIC)    parts.push(r.roicSpread   != null ? `${r.roicSpread >= 0 ? '+' : ''}${(r.roicSpread * 100).toFixed(0)}pp` : 'n/a')
-    const upsideStr = r.upside != null ? ` (${r.upside >= 0 ? '+' : ''}${(r.upside * 100).toFixed(0)}%)` : ''
-    parts.push(`${r.v.short}${upsideStr}`)
-    return parts.join(' | ')
+  // Each stock gets its own mini-block — fully labeled, no abbreviations
+  const stockBlocks = rows.map(r => {
+    const lines = [`$${r.ticker}`]
+    lines.push(`  Forward P/E: ${r.fwdPE.toFixed(0)}× (what you pay per dollar of next year's earnings)`)
+    if (multipleKey && r[multipleKey] != null) lines.push(`  ${multipleLabel}: ${r[multipleKey].toFixed(1)}× (${multipleDesc})`)
+    if (showGrowth && r.revGrowth != null) lines.push(`  Revenue growth: +${(r.revGrowth * 100).toFixed(0)}%/yr analyst consensus`)
+    if (showROIC && r.roicSpread != null) {
+      const spreadPp = (r.roicSpread * 100).toFixed(0)
+      const comment = r.roicSpread > 0.08 ? `strong value creation — every reinvested dollar earns well above its cost`
+        : r.roicSpread > 0.02 ? `creating value above cost of capital`
+        : r.roicSpread > -0.02 ? `roughly break-even on capital returns`
+        : `returning less than it costs to fund the business`
+      lines.push(`  ROIC vs WACC: ${r.roicSpread >= 0 ? '+' : ''}${spreadPp}pp (${comment})`)
+    }
+    if (r.upside != null && r.fair) {
+      lines.push(`  DCF model: ${r.v.short} · fair value ${fmt(r.fair)} · ${r.upside >= 0 ? '+' : ''}${(r.upside * 100).toFixed(0)}% vs current price`)
+    }
+    return lines.join('\n')
   })
+
+  // Narrative insight paragraphs
+  const insights = [
+    cheapest ? `$${cheapest.ticker} has the lowest forward multiple in the group at ${cheapest.fwdPE.toFixed(0)}×.${cheapest.revGrowth != null ? ` Analysts still expect +${(cheapest.revGrowth * 100).toFixed(0)}%/yr revenue growth — that combination is worth investigating.` : ''}` : null,
+    richest  ? `$${richest.ticker} is priced the richest at ${richest.fwdPE.toFixed(0)}× forward earnings.${richest.revGrowth != null ? ` It needs to sustain +${(richest.revGrowth * 100).toFixed(0)}%/yr growth to justify that premium.` : ' A valuation that demands execution.'}` : null,
+    bestROIC && bestROIC.roicSpread != null && bestROIC.roicSpread > 0.04
+      ? `$${bestROIC.ticker} has the widest ROIC spread in the group (+${(bestROIC.roicSpread * 100).toFixed(0)}pp above WACC). That's what a durable moat looks like in the numbers — compounding above the cost of capital.`
+      : null,
+    bestGrowth && bestGrowth.revGrowth != null
+      ? `$${bestGrowth.ticker} is the fastest-growing name analysts expect here (+${(bestGrowth.revGrowth * 100).toFixed(0)}%/yr).${bestGrowth.roicSpread != null && bestGrowth.roicSpread > 0 ? ` With a positive ROIC spread, that growth actually creates value rather than just consuming capital.` : ` The question is whether the current price already accounts for it.`}`
+      : null,
+  ].filter(Boolean)
+
+  const closing = `A low multiple doesn't mean cheap if growth is decelerating. A high multiple doesn't mean expensive if the business earns well above its cost of capital. Both numbers together tell a more honest story.`
 
   const lines = [
     `${scan.emoji} ${scan.name} Sector — Valuation Analysis`,
-    `${dateStr}`,
+    dateStr,
     ``,
     scan.context,
     ``,
-    headerParts.join(' | '),
-    ...tableLines,
+    ...stockBlocks.flatMap(b => [b, ``]),
+    `─`,
+    ...insights,
     ``,
-    cheapest  ? `Lowest Fwd P/E: $${cheapest.ticker} at ${cheapest.fwdPE.toFixed(0)}× — cheapest on this metric` : null,
-    richest   ? `Richest valuation: $${richest.ticker} at ${richest.fwdPE.toFixed(0)}× — pricing in significant growth delivery` : null,
-    bestROIC  && bestROIC.roicSpread != null ? `Strongest moat signal: $${bestROIC.ticker} with ROIC ${(bestROIC.roicSpread * 100).toFixed(0)}pp above WACC` : null,
-    bestGrowth && bestGrowth.revGrowth != null ? `Fastest grower: $${bestGrowth.ticker} at +${(bestGrowth.revGrowth * 100).toFixed(0)}%/yr` : null,
+    closing,
     ``,
-    `A low Fwd P/E doesn't mean cheap if growth is decelerating. A high Fwd P/E doesn't mean expensive if the ROIC spread is wide and durable. Context matters.`,
-    ``,
-    `Full interactive DCF models for each → insic.app`,
+    `Full interactive DCF models (adjust any assumption) → insic.app`,
     ``,
     `#${scan.name.replace(/[^a-zA-Z]/g, '')} #Valuation #SectorAnalysis #DCF #Finance`,
   ].filter(Boolean)
