@@ -5317,6 +5317,417 @@ async function runLiMyth() {
   await postLinkedIn(content.join('\n'))
 }
 
+// ─── Conviction Score computation ─────────────────────────────────────────────
+// Simplified port of lib/stock/computeConvictionScore.ts.
+// No riskDimensions (client-only) or verdict object (not in API).
+// Uses all raw fields available from /api/financials.
+
+function computeSimplifiedConviction(data) {
+  const clamp = v => Math.round(Math.max(0, Math.min(100, v)))
+
+  const upside     = appUpside(data) ?? 0
+  const fwdPE      = data.analystForwardPE ?? null
+  const roicSpread = data.scores?.roic?.spread ?? 0
+  const moat       = data.ratings?.moat?.score ?? 2.5
+  const prof       = data.ratings?.profitability?.score ?? 2.5
+  const liq        = data.ratings?.liquidity?.score ?? 2.5
+  const growth     = data.ratings?.growth?.score ?? 2.5
+  const altmanZone = data.scores?.altman?.zone ?? 'Grey'
+  const pioScore   = data.scores?.piotroski?.score ?? 4
+  const beneishFlag = data.scores?.beneish?.flag ?? 'Clean'
+  const insiderPct = data.ownership?.insiderPct ?? 0
+  const trend      = data.analystRatingTrend ?? []
+  const surprises  = data.earningsSurprises ?? []
+  const stock1y    = data.holdingReturns?.stock1y ?? null
+  const spy1y      = data.holdingReturns?.spy1y ?? null
+  const analystTarget = data.quote?.analystTargetMean ?? null
+  const price      = data.quote?.price ?? null
+
+  // ── Dimension 1: Valuation (27%) ─────────────────────────────────────────
+  let val = upside > 0.25 ? 100 : upside > 0.10 ? 80 : upside > 0 ? 60 : upside > -0.10 ? 40 : 20
+  if (fwdPE != null) {
+    if (fwdPE < 20) val = Math.min(100, val + 5)
+    else if (fwdPE > 40) val = Math.max(0, val - 5)
+  }
+  // analyst target upside modifier
+  if (analystTarget != null && price != null && price > 0) {
+    const streetGap = (analystTarget - price) / price
+    if (streetGap > 0.15) val = Math.min(100, val + 5)
+    else if (streetGap < -0.10) val = Math.max(0, val - 5)
+  }
+
+  // ── Dimension 2: Business Quality (23%) ──────────────────────────────────
+  const roicMod = roicSpread > 0.08 ? 7 : roicSpread > 0.02 ? 3 : roicSpread < -0.02 ? -5 : 0
+  const qual = clamp(((moat - 1) / 4) * 50 + ((prof - 1) / 4) * 50 + roicMod)
+
+  // ── Dimension 3: Financial Health (18%) ───────────────────────────────────
+  const altmanMod = altmanZone === 'Safe' ? 100 : altmanZone === 'Grey' ? 50 : 0
+  const pioMod    = (pioScore / 9) * 100
+  const health    = clamp(((liq - 1) / 4) * 50 + altmanMod * 0.30 + pioMod * 0.20)
+
+  // ── Dimension 4: Growth Momentum (14%) ───────────────────────────────────
+  const alphaMod = (stock1y != null && spy1y != null)
+    ? (stock1y - spy1y > 0.10 ? 5 : stock1y - spy1y < -0.10 ? -5 : 0)
+    : 0
+  const growthScore = clamp(((growth - 1) / 4) * 100 + alphaMod)
+
+  // ── Dimension 5: Earnings Integrity (5%) ─────────────────────────────────
+  const beneishMod = beneishFlag === 'Clean' ? 100 : beneishFlag === 'Warning' ? 40 : 0
+  const accrual = data.scores?.piotroski?.criteria?.find(c => c.name?.toLowerCase().includes('accrual'))
+  const accrualMod = accrual == null || accrual.pass === null ? 60 : accrual.pass ? 100 : 0
+  const integ = clamp(beneishMod * 0.50 + accrualMod * 0.50)
+
+  // ── Dimension 6: Risk (5%) — approximated ────────────────────────────────
+  const riskScore = clamp(
+    (altmanZone === 'Safe' ? 80 : altmanZone === 'Grey' ? 55 : 20) * 0.50 +
+    (roicSpread > 0 ? 70 : 40) * 0.30 +
+    (pioScore >= 6 ? 75 : pioScore >= 4 ? 55 : 35) * 0.20
+  )
+
+  // ── Dimension 7: Sentiment (8%) ───────────────────────────────────────────
+  let consensusScore = 50
+  if (trend.length > 0) {
+    const { strongBuy: sb = 0, buy: b = 0, hold: h = 0, sell: s = 0, strongSell: ss = 0 } = trend[0]
+    const total = sb + b + h + s + ss
+    if (total > 0) consensusScore = clamp((sb * 2 + b - s - ss * 2) / total * 50 + 50)
+  }
+  const last4   = surprises.slice(0, 4)
+  const beats   = last4.filter(q => (q.epsActual ?? 0) > (q.epsEstimate ?? 0)).length
+  const beatScore = last4.length > 0 ? (beats / last4.length) * 100 : 50
+
+  let targetScore = 50
+  if (analystTarget != null && price != null && price > 0) {
+    const gap = (analystTarget - price) / price
+    targetScore = clamp(gap > 0 ? gap * 200 : 50 + gap * 100)
+  }
+  const insiderScore = insiderPct >= 0.10 ? 85 : insiderPct >= 0.05 ? 70 : insiderPct >= 0.01 ? 50 : 35
+  const sent = clamp(consensusScore * 0.40 + beatScore * 0.30 + targetScore * 0.20 + insiderScore * 0.10)
+
+  // ── Weighted total ────────────────────────────────────────────────────────
+  const raw   = val * 0.27 + qual * 0.23 + health * 0.18 + growthScore * 0.14 + integ * 0.05 + riskScore * 0.05 + sent * 0.08
+  const score = Math.round(Math.max(0, Math.min(100, raw)))
+
+  const gradeFull = score >= 90 ? 'A+' : score >= 80 ? 'A' : score >= 72 ? 'B+' : score >= 65 ? 'B' : score >= 50 ? 'C' : score >= 35 ? 'D' : 'F'
+  const grade     = gradeFull.replace('+', '')
+  const label     = grade === 'A' ? 'Exceptional buy'
+    : grade === 'B' ? 'Good business, reasonable price'
+    : grade === 'C' ? 'Mixed picture — proceed carefully'
+    : grade === 'D' ? 'More risks than rewards'
+    : 'High risk — significant concerns'
+
+  // ── Signal summaries for display ─────────────────────────────────────────
+  const valSignal = upside > 0.10
+    ? `Buying at a discount (${pct(upside)} DCF upside)`
+    : upside < -0.05
+    ? `Trading above fair value (${pct(Math.abs(upside))} premium)`
+    : `Near fair value`
+
+  const qualSignal = roicSpread > 0.05
+    ? `${data.ratings?.moat?.label ?? 'Moderate'} moat · ROIC ${pct(roicSpread, false)} above WACC`
+    : `${data.ratings?.moat?.label ?? 'Moderate'} moat · profitability ${data.ratings?.profitability?.label ?? 'fair'}`
+
+  const healthSignal = `${altmanZone === 'Safe' ? 'Safe zone' : altmanZone === 'Grey' ? 'Watch zone' : 'Distress zone'} (Altman) · Piotroski ${pioScore}/9`
+
+  const growthSignal = data.ratings?.growth?.label != null
+    ? `${data.ratings.growth.label}${alphaMod > 0 ? ` · +${alphaMod}pp vs S&P 500` : alphaMod < 0 ? ` · lagging S&P 500` : ''}`
+    : `Growth grade: N/A`
+
+  const integSignal = `Accounting ${beneishFlag === 'Clean' ? 'clean' : beneishFlag === 'Warning' ? 'some concerns' : 'red flag'} (Beneish)`
+
+  const riskSignal = `${altmanZone === 'Safe' ? 'Low financial distress risk' : altmanZone === 'Grey' ? 'Moderate financial risk' : 'Elevated distress risk'}`
+
+  const bullPct = (() => {
+    if (!trend.length) return null
+    const { strongBuy: sb = 0, buy: b = 0, hold: h = 0, sell: s = 0, strongSell: ss = 0 } = trend[0]
+    const total = sb + b + h + s + ss
+    return total > 0 ? Math.round(((sb + b) / total) * 100) : null
+  })()
+  const sentSignal = [
+    bullPct != null ? `${bullPct}% bullish analysts` : null,
+    last4.length > 0 ? `beat ${beats}/${last4.length} qtrs` : null,
+  ].filter(Boolean).join(' · ') || 'Limited data'
+
+  return {
+    score, grade, gradeFull, label,
+    dimensions: {
+      val: clamp(val), qual, health, growth: growthScore, integ, risk: riskScore, sent,
+    },
+    signals: { val: valSignal, qual: qualSignal, health: healthSignal, growth: growthSignal, integ: integSignal, risk: riskSignal, sent: sentSignal },
+  }
+}
+
+// ─── Mode: conviction_score ───────────────────────────────────────────────────
+// Mon/Wed/Fri 2PM ART. Full 7-dimension conviction breakdown for one stock.
+// Showcases the Conviction Score tab — insic.app's most differentiating feature.
+
+async function runConvictionScore() {
+  const day = new Date().getDay()
+  const pool = TICKER ? [TICKER] : (ROTATION[day] ?? ROTATION[1])
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+
+  let ticker = null, data = null
+  for (let attempt = 0; attempt < Math.min(6, pool.length); attempt++) {
+    const candidate = pool[(dayOfYear + attempt + 5) % pool.length]
+    try {
+      const result = await fetchValuation(candidate)
+      if (result?.quote?.price && appFairValue(result) && result?.ratings?.moat) {
+        ticker = candidate; data = result; break
+      }
+    } catch { /* try next */ }
+  }
+  if (!data) { console.warn('conviction_score: no data — skipping'); return }
+
+  const c    = computeSimplifiedConviction(data)
+  const fair = appFairValue(data)
+  const price = data.quote?.price
+
+  const lines = [
+    `$${ticker} Conviction Score: ${c.score}/100 — ${c.gradeFull}`,
+    `${c.label}.`,
+    ``,
+    `Valuation:  ${c.dimensions.val.toString().padStart(3)}  ${c.signals.val}`,
+    `Quality:    ${c.dimensions.qual.toString().padStart(3)}  ${c.signals.qual}`,
+    `Health:     ${c.dimensions.health.toString().padStart(3)}  ${c.signals.health}`,
+    `Growth:     ${c.dimensions.growth.toString().padStart(3)}  ${c.signals.growth}`,
+    `Integrity:  ${c.dimensions.integ.toString().padStart(3)}  ${c.signals.integ}`,
+    `Risk:       ${c.dimensions.risk.toString().padStart(3)}  ${c.signals.risk}`,
+    `Sentiment:  ${c.dimensions.sent.toString().padStart(3)}  ${c.signals.sent}`,
+    ``,
+    fair && price ? `DCF fair value: ${fmt(fair)} vs ${fmt(price)} current` : null,
+    ``,
+    `Full breakdown → ${APP_URL}/stock/${ticker}`,
+    `$${ticker} #ConvictionScore #DCF #Investing`,
+  ].filter(Boolean)
+
+  await post(lines.join('\n'))
+}
+
+// ─── Mode: li_conviction ──────────────────────────────────────────────────────
+// Tue/Thu 2PM ART. LinkedIn version — each dimension gets a narrative sentence.
+
+async function runLiConviction() {
+  const day = new Date().getDay()
+  const pool = TICKER ? [TICKER] : (ROTATION[day] ?? ROTATION[1])
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+
+  let ticker = null, data = null
+  for (let attempt = 0; attempt < Math.min(6, pool.length); attempt++) {
+    const candidate = pool[(dayOfYear + attempt + 11) % pool.length]
+    try {
+      const result = await fetchValuation(candidate)
+      if (result?.quote?.price && appFairValue(result) && result?.ratings?.moat) {
+        ticker = candidate; data = result; break
+      }
+    } catch { /* try next */ }
+  }
+  if (!data) { console.warn('li_conviction: no data — skipping'); return }
+
+  const c     = computeSimplifiedConviction(data)
+  const fair  = appFairValue(data)
+  const price = data.quote?.price
+  const upside = appUpside(data)
+  const roicSpread = data.scores?.roic?.spread
+  const hist3y = data.cagrAnalysis?.historicalCagr3y
+  const analyst1y = data.cagrAnalysis?.analystEstimate1y
+  const impliedG = data.valuationMethods?.models?.reverseDcf?.impliedCAGR
+  const sector = data.quote?.sector ?? ''
+
+  const gradeEmoji = c.grade === 'A' ? '🟢' : c.grade === 'B' ? '🟡' : '🔴'
+
+  // Opening — lead with the score and what it means
+  const opening = `${gradeEmoji} $${ticker} — Conviction Score: ${c.score}/100 (${c.gradeFull})\n${c.label}.`
+
+  // Each dimension as a prose sentence
+  const dimLines = [
+    `Valuation (${c.dimensions.val}/100): ${c.signals.val}.${impliedG != null ? ` The market is pricing in ~${pct(impliedG, false)}/yr revenue growth.` : ''}`,
+    ``,
+    `Business Quality (${c.dimensions.qual}/100): ${c.signals.qual}.${roicSpread != null ? ` Every dollar reinvested ${roicSpread > 0 ? 'earns above its cost' : 'currently costs more than it returns'}.` : ''}`,
+    ``,
+    `Financial Health (${c.dimensions.health}/100): ${c.signals.health}.`,
+    ``,
+    `Growth Momentum (${c.dimensions.growth}/100): ${c.signals.growth}.${hist3y != null && analyst1y != null ? ` Historical 3Y CAGR was ${pct(hist3y, false)}; analysts expect ${pct(analyst1y, false)} ahead.` : ''}`,
+    ``,
+    `Earnings Integrity (${c.dimensions.integ}/100): ${c.signals.integ}. The score penalises companies where reported profits outrun cash flows.`,
+    ``,
+    `Risk Profile (${c.dimensions.risk}/100): ${c.signals.risk}.`,
+    ``,
+    `Analyst & Sentiment (${c.dimensions.sent}/100): ${c.signals.sent}.`,
+  ]
+
+  // Closing
+  const closing = c.score >= 72
+    ? `The combination of a strong quality score and valuation discount is relatively rare. Worth understanding why the gap exists.`
+    : c.score >= 50
+    ? `The score reflects a mixed picture — some dimensions are strong, others warrant scrutiny. The details matter more than the headline number.`
+    : `A low conviction score doesn't mean avoid permanently — it means the current setup has more concerns than strengths. Worth monitoring for a better entry.`
+
+  const lines = [
+    opening,
+    ``,
+    ...dimLines,
+    ``,
+    closing,
+    ``,
+    `Conviction Score is available for every S&P 500 stock on insic.app — free, no account required.`,
+    `insic.app/stock/${ticker}`,
+    ``,
+    `#${ticker} #ConvictionScore #ValueInvesting #DCF #Finance${sector ? ` #${sector.replace(/[^a-zA-Z]/g, '')}` : ''}`,
+  ].filter(s => s !== undefined)
+
+  await postLinkedIn(lines.join('\n'))
+}
+
+// ─── ETF helpers ──────────────────────────────────────────────────────────────
+
+const ETF_META_MAP = {
+  // Sector
+  XLK: 'Technology', XLV: 'Healthcare', XLF: 'Financials', XLY: 'Cons. Cyclical',
+  XLI: 'Industrials', XLC: 'Comm. Services', XLP: 'Cons. Defensive', XLE: 'Energy',
+  XLRE: 'Real Estate', XLB: 'Materials', XLU: 'Utilities',
+  // Geo
+  SPY: 'US Large Cap', EFA: 'Developed World', EEM: 'Emerging Markets',
+  EWJ: 'Japan', FXI: 'China', EWZ: 'Brazil', EWU: 'UK', EWG: 'Germany', INDA: 'India',
+  // Style
+  VTV: 'Value', VUG: 'Growth', VYM: 'High Dividend', USMV: 'Low Volatility', QUAL: 'Quality',
+  // Broad
+  QQQ: 'Nasdaq 100', IWM: 'Small Cap', GLD: 'Gold', TLT: 'Long Bonds', BIL: 'T-Bills',
+}
+
+const ETF_SCORE_LABELS = { 70: 'Deep Value', 50: 'Fair Value', 30: 'Stretched', 0: 'Expensive' }
+function etfScoreLabel(score) {
+  if (score >= 70) return 'Deep Value'
+  if (score >= 50) return 'Fair Value'
+  if (score >= 30) return 'Stretched'
+  return 'Expensive'
+}
+function etfScoreEmoji(score) {
+  return score >= 70 ? '🟢' : score >= 50 ? '🟡' : '🔴'
+}
+
+async function fetchLatestEtfScores() {
+  const sb = await _getSupabase()
+  if (!sb) { console.warn('ETF scan: no Supabase client'); return [] }
+  const cutoff = new Date(Date.now() - 86400000 * 4).toISOString()
+  const { data, error } = await sb
+    .from('etf_score_history')
+    .select('ticker, score, pe_ratio, pb_ratio, yield_val, expense_ratio, ts')
+    .gte('ts', cutoff)
+    .order('ts', { ascending: false })
+  if (error) { console.warn('ETF scan Supabase error:', error.message); return [] }
+  const seen = new Set()
+  return (data ?? []).filter(r => {
+    if (seen.has(r.ticker)) return false
+    seen.add(r.ticker)
+    return true
+  })
+}
+
+// ─── Mode: etf_value_scan ─────────────────────────────────────────────────────
+// Saturday 10AM ART. Top 3 best-value and 3 most expensive ETFs from Supabase.
+// Showcases the ETF tracker — insic.app/etf
+
+async function runEtfValueScan() {
+  const etfs = await fetchLatestEtfScores()
+  if (etfs.length < 6) { console.warn('etf_value_scan: insufficient ETF data — skipping'); return }
+
+  etfs.sort((a, b) => b.score - a.score)
+  const bestValue  = etfs.slice(0, 3)
+  const mostExp    = [...etfs].reverse().slice(0, 3)
+  const dateStr    = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+
+  const fmtEtfLine = (e) => {
+    const name   = ETF_META_MAP[e.ticker] ?? e.ticker
+    const pe     = e.pe_ratio  != null ? `P/E ${e.pe_ratio.toFixed(0)}×` : null
+    const yld    = e.yield_val != null && e.yield_val > 0 ? `Yield ${(e.yield_val * 100).toFixed(1)}%` : null
+    const parts  = [pe, yld].filter(Boolean).join(' · ')
+    return `${etfScoreEmoji(e.score)} ${e.ticker} (${name}) — Score ${e.score}${parts ? ` · ${parts}` : ''}`
+  }
+
+  const lines = [
+    `ETF Value Scan — ${dateStr}`,
+    ``,
+    `Best value right now:`,
+    ...bestValue.map(fmtEtfLine),
+    ``,
+    `Most expensive right now:`,
+    ...mostExp.map(fmtEtfLine),
+    ``,
+    `Score = P/E + P/B + Yield − Expense ratio. Deep Value ≥70 · Stretched ≤30.`,
+    ``,
+    `Full ETF rankings → ${APP_URL}/etf`,
+    `#ETF #ValueInvesting #SectorRotation #Investing`,
+  ]
+
+  await post(lines.join('\n'))
+}
+
+// ─── Mode: li_etf_scan ────────────────────────────────────────────────────────
+// Sunday 11AM ART. LinkedIn ETF scan — covers sector/geo/style groups with narrative.
+
+async function runLiEtfScan() {
+  const etfs = await fetchLatestEtfScores()
+  if (etfs.length < 6) { console.warn('li_etf_scan: insufficient ETF data — skipping'); return }
+
+  const dateStr = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+
+  // Group by type
+  const SECTOR_TICKERS = ['XLK','XLV','XLF','XLY','XLI','XLC','XLP','XLE','XLRE','XLB','XLU']
+  const GEO_TICKERS    = ['SPY','EFA','EEM','EWJ','FXI','EWZ','EWU','EWG','INDA']
+  const STYLE_TICKERS  = ['VTV','VUG','VYM','USMV','QUAL']
+
+  const byTicker = Object.fromEntries(etfs.map(e => [e.ticker, e]))
+
+  const sectorEtfs = SECTOR_TICKERS.map(t => byTicker[t]).filter(Boolean).sort((a, b) => b.score - a.score)
+  const geoEtfs    = GEO_TICKERS.map(t => byTicker[t]).filter(Boolean).sort((a, b) => b.score - a.score)
+  const styleEtfs  = STYLE_TICKERS.map(t => byTicker[t]).filter(Boolean).sort((a, b) => b.score - a.score)
+
+  const fmtBlock = (e) => {
+    const name = ETF_META_MAP[e.ticker] ?? e.ticker
+    const pe   = e.pe_ratio  != null ? `P/E: ${e.pe_ratio.toFixed(0)}×` : null
+    const pb   = e.pb_ratio  != null ? `P/B: ${e.pb_ratio.toFixed(1)}×` : null
+    const yld  = e.yield_val != null && e.yield_val > 0 ? `Yield: ${(e.yield_val * 100).toFixed(1)}%` : null
+    const exp  = e.expense_ratio != null ? `Expense: ${(e.expense_ratio * 100).toFixed(2)}%` : null
+    const metrics = [pe, pb, yld, exp].filter(Boolean).join(' · ')
+    return `${etfScoreEmoji(e.score)} ${e.ticker} — ${name} · Score ${e.score} (${etfScoreLabel(e.score)})${metrics ? `\n  ${metrics}` : ''}`
+  }
+
+  // Narrative insights
+  const sectorBest  = sectorEtfs[0]
+  const sectorWorst = sectorEtfs[sectorEtfs.length - 1]
+  const geoInsight  = geoEtfs.length >= 2
+    ? `${geoEtfs[0] ? `${ETF_META_MAP[geoEtfs[0].ticker] ?? geoEtfs[0].ticker} (${geoEtfs[0].ticker}) scores best geographically at ${geoEtfs[0].score}` : ''} vs ${geoEtfs[geoEtfs.length - 1] ? `${ETF_META_MAP[geoEtfs[geoEtfs.length - 1].ticker] ?? geoEtfs[geoEtfs.length - 1].ticker} at ${geoEtfs[geoEtfs.length - 1].score}` : ''}.`
+    : null
+  const styleInsight = styleEtfs.length >= 2
+    ? `Among style factors, ${ETF_META_MAP[styleEtfs[0].ticker] ?? styleEtfs[0].ticker} (${styleEtfs[0].ticker}, ${etfScoreLabel(styleEtfs[0].score)}) beats ${ETF_META_MAP[styleEtfs[styleEtfs.length - 1].ticker] ?? styleEtfs[styleEtfs.length - 1].ticker} (${styleEtfs[styleEtfs.length - 1].ticker}, ${etfScoreLabel(styleEtfs[styleEtfs.length - 1].score)}) on valuation.`
+    : null
+
+  const scoreNote = `The score combines P/E ratio, P/B ratio, dividend yield, and expense ratio into a 0-100 value signal. Deep Value (≥70) means the ETF's holdings are historically cheap on these metrics. Expensive (<30) means you're paying a premium.`
+
+  const lines = [
+    `ETF Value Scan — ${dateStr}`,
+    ``,
+    `🏭 Sector ETFs`,
+    ...sectorEtfs.map(fmtBlock),
+    sectorBest && sectorWorst ? `\n${ETF_META_MAP[sectorBest.ticker] ?? sectorBest.ticker} is the cheapest sector right now. ${ETF_META_MAP[sectorWorst.ticker] ?? sectorWorst.ticker} is the most expensive.` : null,
+    ``,
+    `🌍 Geographic ETFs`,
+    ...geoEtfs.map(fmtBlock),
+    geoInsight ? `\n${geoInsight}` : null,
+    ``,
+    `📊 Style ETFs`,
+    ...styleEtfs.map(fmtBlock),
+    styleInsight ? `\n${styleInsight}` : null,
+    ``,
+    scoreNote,
+    ``,
+    `Full interactive ETF tracker → insic.app/etf`,
+    ``,
+    `#ETF #ValueInvesting #SectorRotation #AssetAllocation #Finance`,
+  ].filter(s => s != null)
+
+  await postLinkedIn(lines.join('\n'))
+}
+
 const MODES = {
   dcf:               runDcf,
   dcf2:              runDcf2,
@@ -5353,6 +5764,10 @@ const MODES = {
   li_divergence:     runLiDivergence,
   li_weekly_picks:   runLiWeeklyPicks,
   li_myth:           runLiMyth,
+  conviction_score:  runConvictionScore,
+  li_conviction:     runLiConviction,
+  etf_value_scan:    runEtfValueScan,
+  li_etf_scan:       runLiEtfScan,
 }
 
 if (!MODES[MODE]) {

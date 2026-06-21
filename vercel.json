@@ -181,6 +181,22 @@
       "schedule": "0 16 * * 5"
     },
     {
+      "path": "/api/cron/x-post?mode=conviction_score",
+      "schedule": "0 17 * * 1,3,5"
+    },
+    {
+      "path": "/api/cron/x-post?mode=li_conviction",
+      "schedule": "0 17 * * 2,4"
+    },
+    {
+      "path": "/api/cron/x-post?mode=etf_value_scan",
+      "schedule": "0 13 * * 6"
+    },
+    {
+      "path": "/api/cron/x-post?mode=li_etf_scan",
+      "schedule": "0 14 * * 0"
+    },
+    {
       "path": "/api/reddit-post?format=insight",
       "schedule": "0 11 * * 1-5"
     }
