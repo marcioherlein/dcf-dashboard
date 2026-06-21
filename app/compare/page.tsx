@@ -1,11 +1,13 @@
 'use client'
 import { useState, useCallback } from 'react'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
 import MultiTickerChart, { type OHLCV } from '@/components/charts/MultiTickerChart'
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer,
   ReferenceLine, CartesianGrid,
 } from 'recharts'
+import ProGate from '@/components/monetization/ProGate'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface ComparePoint {
@@ -113,6 +115,9 @@ function RatioTooltip({ active, payload, label, mean, color }: {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function ComparePage() {
+  const { data: session } = useSession()
+  const isPro = (session?.user as { plan?: string } | undefined)?.plan === 'pro'
+
   const [chartTickers, setChartTickers] = useState<string[]>(['NVDA', 'AMD'])
   const [pairData, setPairData] = useState<{ points: ComparePoint[]; stats: Stats } | null>(null)
 
@@ -165,7 +170,8 @@ export default function ComparePage() {
         />
       </div>
 
-      {/* Pairs analysis — only when exactly 2 tickers */}
+      {/* Pairs analysis — PRO: correlation, Z-score, divergence signals */}
+      <ProGate featureName="Pairs Analysis" isPro={isPro} placeholderHeight="h-48">
       {chartTickers.length >= 2 && stats && points.length > 0 && (
         <div className="px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
 
@@ -291,6 +297,7 @@ export default function ComparePage() {
           </div>
         </div>
       )}
+      </ProGate>
 
       {/* Hint when only 1 ticker */}
       {chartTickers.length < 2 && (

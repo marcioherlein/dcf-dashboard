@@ -9,7 +9,7 @@ const PayPalSubscribeButton = dynamic(
   () => import('@/components/payments/PayPalSubscribeButton'),
   { ssr: false, loading: () => <div className="h-12 rounded-xl bg-gray-100 animate-pulse" /> }
 )
-import { Check, X, ChevronDown, Zap, BarChart2, Bell, FileText, Users, TrendingUp, Shield } from 'lucide-react'
+import { Check, X, ChevronDown, Zap, BarChart2, Bell, Users, TrendingUp, Shield } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { InsicLogoLockup } from '@/components/ui/InsicLogo'
 
@@ -33,15 +33,12 @@ const PRO_FEATURES = [
   { icon: Zap,        text: 'Unlimited stocks — analyze any NYSE or NASDAQ ticker' },
   { icon: Shield,     text: 'Everything in Free, unlimited' },
   { icon: BarChart2,  text: 'Sensitivity table — fair value at every CAGR × WACC' },
-  { icon: Bell,       text: 'Price vs fair value email alerts' },
   { icon: TrendingUp, text: 'Unlimited saved analyses to Watchlist' },
-  { icon: FileText,   text: 'PDF investment brief export' },
-  { icon: Users,      text: 'Thesis Builder — 26-question investment questionnaire' },
-  { icon: TrendingUp, text: 'Portfolio fair value tracker' },
-  { icon: Zap,        text: 'Bull / Base / Bear custom scenario builder' },
+  { icon: BarChart2,  text: 'Multi-ticker comparison with correlation & pairs signals' },
+  { icon: Zap,        text: 'AI Stack screener — 125 AI infrastructure companies scored' },
+  { icon: TrendingUp, text: 'Market Screener with factor ranking — NYSE, NASDAQ, MERVAL' },
+  { icon: Users,      text: 'Quant Strategy Library — 5 academic factor strategies' },
   { icon: Bell,       text: 'Weekly watchlist digest (email)' },
-  { icon: BarChart2,  text: 'Historical fair value — see how estimates have evolved' },
-  { icon: Shield,     text: 'SEC filings & institutional ownership data' },
   { icon: Shield,     text: 'Priority support' },
 ]
 
@@ -58,14 +55,11 @@ const COMPARISON_ROWS = [
   { label: 'Risk radar',                                   free: true,  pro: true  },
   { label: 'News feed',                                    free: true,  pro: true  },
   { label: 'Sensitivity table (CAGR × WACC heat map)',     free: false, pro: true  },
-  { label: 'Price vs fair value email alerts',             free: false, pro: true  },
-  { label: 'Thesis Builder (26-question questionnaire)',   free: false, pro: true  },
-  { label: 'PDF investment brief export',                  free: false, pro: true  },
-  { label: 'Portfolio fair value dashboard',               free: false, pro: true  },
-  { label: 'Bull / Base / Bear scenario builder',          free: false, pro: true  },
-  { label: 'Historical fair value tracking',               free: false, pro: true  },
+  { label: 'Multi-ticker comparison + pairs signals',      free: false, pro: true  },
+  { label: 'AI Stack screener (125 companies)',            free: false, pro: true  },
+  { label: 'Market Screener + factor ranking',             free: false, pro: true  },
+  { label: 'Quant Strategy Library (5 strategies)',        free: false, pro: true  },
   { label: 'Weekly watchlist digest (email)',               free: false, pro: true  },
-  { label: 'SEC filings & institutional ownership',        free: false, pro: true  },
   { label: 'Priority support',                             free: false, pro: true  },
 ]
 

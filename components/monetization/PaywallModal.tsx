@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { X, Lock, Bell, TrendingUp, BarChart2 } from 'lucide-react'
+import { X, Lock, Bell, TrendingUp, BarChart2, GitCompare, Layers, type LucideIcon } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 import { getGateConfig, type FeatureGate } from '@/lib/monetization/featureGates'
 
@@ -10,16 +10,35 @@ interface Props {
   onClose: () => void
 }
 
-const PRO_BULLETS = [
+const GATE_BULLETS: Partial<Record<FeatureGate, Array<{ Icon: LucideIcon, text: string }>>> = {
+  sensitivity_table: [
+    { Icon: BarChart2, text: 'Sensitivity table — fair value at every CAGR × WACC' },
+    { Icon: Bell,      text: 'Weekly watchlist digest — portfolio recap every Monday' },
+    { Icon: TrendingUp, text: 'Unlimited saved analyses + market screener' },
+  ],
+  compare_tool: [
+    { Icon: GitCompare, text: 'Pairs trading — correlation, Z-score, divergence signals' },
+    { Icon: BarChart2,  text: 'Market Screener with factor ranking' },
+    { Icon: Layers,     text: 'Quant Strategy Library — 5 academic strategies' },
+  ],
+  macro_brief: [
+    { Icon: BarChart2,  text: 'AI Stack screener — 125 AI infrastructure companies scored' },
+    { Icon: Layers,     text: 'Quant Strategy Library — 5 academic strategies' },
+    { Icon: TrendingUp, text: 'Unlimited saved analyses + weekly digest' },
+  ],
+}
+
+const DEFAULT_BULLETS: Array<{ Icon: LucideIcon, text: string }> = [
   { Icon: BarChart2, text: 'Sensitivity table — fair value at every CAGR × WACC' },
-  { Icon: Bell,      text: 'Price alerts — get notified when a stock enters your range' },
-  { Icon: TrendingUp, text: 'Unlimited saved analyses + portfolio tracker' },
+  { Icon: Bell,      text: 'Weekly watchlist digest — portfolio recap every Monday' },
+  { Icon: TrendingUp, text: 'Unlimited saved analyses + market screener' },
 ]
 
 export default function PaywallModal({ gate, onClose }: Props) {
   const config = getGateConfig(gate)
   const titleId = 'paywall-modal-title'
   const ctaRef = useRef<HTMLAnchorElement>(null)
+  const bullets = GATE_BULLETS[gate] ?? DEFAULT_BULLETS
 
   useEffect(() => {
     ctaRef.current?.focus()
@@ -64,7 +83,7 @@ export default function PaywallModal({ gate, onClose }: Props) {
         </p>
 
         <ul className="mt-5 space-y-3">
-          {PRO_BULLETS.map(({ Icon, text }, i) => (
+          {bullets.map(({ Icon, text }, i) => (
             <li key={i} className="flex items-center gap-3 text-sm text-[#111111]">
               <div className="w-7 h-7 rounded-lg bg-[#EEF2FA] flex items-center justify-center shrink-0">
                 <Icon size={14} className="text-[#5F790B]" />
