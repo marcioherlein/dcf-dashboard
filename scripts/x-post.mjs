@@ -3379,17 +3379,29 @@ async function runSectorScan() {
     const d = r.value
     const ticker     = scan.tickers[i]
     const price      = d.quote?.price
-    const fwdPE      = d.analystForwardPE          // Forward P/E — primary multiple
-    const evEbitda   = d.businessProfile?.evToEbitda ?? null
+    const fwdPE      = d.analystForwardPE
+    const evEbitda   = d.businessProfile?.evToEbitda   ?? null
+    const evRevenue  = d.businessProfile?.evToRevenue  ?? null
+    const pfcf       = (() => {
+      // P/FCF = price / (FCF per share). FCF per share = baseFCF * 1e6 / sharesOutstanding
+      const fcfM   = d.baseFCF
+      const shares = d.quote?.sharesOutstanding
+      if (fcfM != null && shares && shares > 0) {
+        const fcfPerShare = (fcfM * 1e6) / (shares * 1e6)
+        return fcfPerShare > 0 ? price / fcfPerShare : null
+      }
+      return null
+    })()
     const revGrowth  = d.cagrAnalysis?.analystEstimate1y ?? null
     const roicSpread = d.scores?.roic?.spread ?? null
     const fair       = appFairValue(d)
     const upside     = appUpside(d)
 
+    // Skip rows missing the primary multiple — they break the table
     if (!price || !fwdPE) continue
 
     const v = verdictLabel(upside ?? 0)
-    rows.push({ ticker, price, fwdPE, evEbitda, revGrowth, roicSpread, fair, upside, v })
+    rows.push({ ticker, price, fwdPE, evEbitda, evRevenue, pfcf, revGrowth, roicSpread, fair, upside, v })
   }
 
   if (rows.length === 0) throw new Error('No sector scan data returned')
@@ -3402,25 +3414,60 @@ async function runSectorScan() {
   const bestROIC  = [...rows].sort((a, b) => (b.roicSpread ?? -99) - (a.roicSpread ?? -99))[0]
   const bestGrowth = [...rows].filter(r => r.revGrowth != null).sort((a, b) => b.revGrowth - a.revGrowth)[0]
 
-  // Build the league table
+  // Build the league table — adaptive columns, never show blank fields
+  // Decide which multiple column to use based on data availability
+  const evEbitdaCount  = rows.filter(r => r.evEbitda   != null).length
+  const evRevenueCount = rows.filter(r => r.evRevenue  != null).length
+  const pfcfCount      = rows.filter(r => r.pfcf       != null).length
+  const roicCount      = rows.filter(r => r.roicSpread != null).length
+  const growthCount    = rows.filter(r => r.revGrowth  != null).length
+
+  // Pick the best secondary multiple — prefer the one with most coverage
+  let multipleKey = null
+  let multipleLabel = null
+  if (evEbitdaCount >= Math.ceil(rows.length * 0.6)) {
+    multipleKey = 'evEbitda'; multipleLabel = 'EV/EBITDA'
+  } else if (evRevenueCount >= Math.ceil(rows.length * 0.6)) {
+    multipleKey = 'evRevenue'; multipleLabel = 'EV/Rev'
+  } else if (pfcfCount >= Math.ceil(rows.length * 0.6)) {
+    multipleKey = 'pfcf'; multipleLabel = 'P/FCF'
+  }
+
+  const showGrowth = growthCount >= Math.ceil(rows.length * 0.5)
+  const showROIC   = roicCount   >= Math.ceil(rows.length * 0.5)
+
   const tableLines = rows.map(r => {
-    const fwdPEStr    = r.fwdPE   != null ? `${r.fwdPE.toFixed(0)}×` : 'N/A'
-    const evEbStr     = r.evEbitda != null ? `${r.evEbitda.toFixed(0)}×` : '—'
-    const growthStr   = r.revGrowth != null ? `+${(r.revGrowth * 100).toFixed(0)}%` : '—'
-    return `${r.v.emoji} $${r.ticker.padEnd(5)} Fwd P/E ${fwdPEStr.padStart(4)} · EV/EBITDA ${evEbStr.padStart(4)} · Rev ${growthStr.padStart(5)} · ${r.v.short}`
+    const fwdPEStr = `${r.fwdPE.toFixed(0)}×`
+    const parts = [`${r.v.emoji} $${r.ticker.padEnd(5)} Fwd P/E ${fwdPEStr.padStart(4)}`]
+
+    if (multipleKey) {
+      const val = r[multipleKey]
+      parts.push(`${multipleLabel} ${val != null ? `${val.toFixed(0)}×` : 'n/a'}`)
+    }
+    if (showGrowth) {
+      const g = r.revGrowth
+      parts.push(`Rev ${g != null ? `+${(g * 100).toFixed(0)}%` : 'n/a'}`)
+    }
+    if (showROIC) {
+      const rs = r.roicSpread
+      parts.push(`ROIC ${rs != null ? `${rs >= 0 ? '+' : ''}${(rs * 100).toFixed(0)}pp` : 'n/a'}`)
+    }
+    // Always show model verdict + upside
+    const upsideStr = r.upside != null ? ` (${r.upside >= 0 ? '+' : ''}${(r.upside * 100).toFixed(0)}%)` : ''
+    parts.push(`${r.v.short}${upsideStr}`)
+
+    return parts.join(' · ')
   })
 
   const insightLines = [
-    cheapest  ? `Lowest Fwd P/E:  $${cheapest.ticker} at ${cheapest.fwdPE?.toFixed(0)}×` : null,
-    richest   ? `Richest valuation: $${richest.ticker} at ${richest.fwdPE?.toFixed(0)}×` : null,
-    bestROIC  && bestROIC.roicSpread != null ? `Widest ROIC spread: $${bestROIC.ticker} (+${(bestROIC.roicSpread * 100).toFixed(0)}% vs WACC)` : null,
-    bestGrowth ? `Fastest grower: $${bestGrowth.ticker} at +${(bestGrowth.revGrowth * 100).toFixed(0)}%/yr analyst est` : null,
+    cheapest   ? `Lowest Fwd P/E: $${cheapest.ticker} at ${cheapest.fwdPE.toFixed(0)}×` : null,
+    richest    ? `Richest valuation: $${richest.ticker} at ${richest.fwdPE.toFixed(0)}×` : null,
+    bestROIC  && bestROIC.roicSpread != null ? `Widest ROIC spread: $${bestROIC.ticker} (+${(bestROIC.roicSpread * 100).toFixed(0)}pp vs WACC)` : null,
+    bestGrowth && bestGrowth.revGrowth != null ? `Fastest grower: $${bestGrowth.ticker} at +${(bestGrowth.revGrowth * 100).toFixed(0)}%/yr analyst est` : null,
   ].filter(Boolean)
 
   const lines = [
-    `${scan.emoji} ${scan.name} — Valuation Scan`,
-    `${dateStr}`,
-    ``,
+    `${scan.emoji} ${scan.name} — Valuation Scan · ${dateStr}`,
     ``,
     ...tableLines,
     ``,
@@ -4590,7 +4637,8 @@ async function runLiSectorScan() {
     if (r.status !== 'fulfilled') continue
     const d = r.value
     const fwdPE      = d.analystForwardPE
-    const evEbitda   = d.businessProfile?.evToEbitda ?? null
+    const evEbitda   = d.businessProfile?.evToEbitda   ?? null
+    const evRevenue  = d.businessProfile?.evToRevenue  ?? null
     const revGrowth  = d.cagrAnalysis?.analystEstimate1y ?? null
     const roicSpread = d.scores?.roic?.spread ?? null
     const fair       = appFairValue(d)
@@ -4598,7 +4646,7 @@ async function runLiSectorScan() {
     const price      = d.quote?.price
     if (!price || !fwdPE) continue
     const v = verdictLabel(upside ?? 0)
-    rows.push({ ticker: scan.tickers[i], price, fwdPE, evEbitda, revGrowth, roicSpread, fair, upside, v })
+    rows.push({ ticker: scan.tickers[i], price, fwdPE, evEbitda, evRevenue, revGrowth, roicSpread, fair, upside, v })
   }
 
   if (rows.length === 0) throw new Error('No sector scan data')
@@ -4607,12 +4655,33 @@ async function runLiSectorScan() {
   const cheapest   = rows[0]
   const richest    = rows[rows.length - 1]
   const bestROIC   = [...rows].sort((a, b) => (b.roicSpread ?? -99) - (a.roicSpread ?? -99))[0]
+  const bestGrowth = [...rows].filter(r => r.revGrowth != null).sort((a, b) => b.revGrowth - a.revGrowth)[0]
+
+  // Adaptive column — use whichever multiple has ≥60% coverage
+  const evEbitdaCount  = rows.filter(r => r.evEbitda  != null).length
+  const evRevenueCount = rows.filter(r => r.evRevenue != null).length
+  const threshold = Math.ceil(rows.length * 0.6)
+  const multipleKey   = evEbitdaCount  >= threshold ? 'evEbitda'
+                      : evRevenueCount >= threshold ? 'evRevenue' : null
+  const multipleLabel = multipleKey === 'evEbitda' ? 'EV/EBITDA'
+                      : multipleKey === 'evRevenue' ? 'EV/Rev' : null
+  const showGrowth = rows.filter(r => r.revGrowth  != null).length >= threshold
+  const showROIC   = rows.filter(r => r.roicSpread != null).length >= threshold
+
+  const headerParts = ['Ticker', 'Fwd P/E']
+  if (multipleLabel) headerParts.push(multipleLabel)
+  if (showGrowth)    headerParts.push('Rev Growth')
+  if (showROIC)      headerParts.push('ROIC vs WACC')
+  headerParts.push('Model')
 
   const tableLines = rows.map(r => {
-    const fwdStr   = r.fwdPE    != null ? `${r.fwdPE.toFixed(0)}×` : 'N/A'
-    const evStr    = r.evEbitda != null ? `${r.evEbitda.toFixed(0)}×` : '—'
-    const growthStr = r.revGrowth != null ? `${(r.revGrowth * 100).toFixed(0)}%` : '—'
-    return `$${r.ticker} | Fwd P/E: ${fwdStr} | EV/EBITDA: ${evStr} | Rev growth: ${growthStr} | ${r.v.short}`
+    const parts = [`$${r.ticker}`, `${r.fwdPE.toFixed(0)}×`]
+    if (multipleKey) parts.push(r[multipleKey] != null ? `${r[multipleKey].toFixed(0)}×` : 'n/a')
+    if (showGrowth)  parts.push(r.revGrowth    != null ? `+${(r.revGrowth * 100).toFixed(0)}%` : 'n/a')
+    if (showROIC)    parts.push(r.roicSpread   != null ? `${r.roicSpread >= 0 ? '+' : ''}${(r.roicSpread * 100).toFixed(0)}pp` : 'n/a')
+    const upsideStr = r.upside != null ? ` (${r.upside >= 0 ? '+' : ''}${(r.upside * 100).toFixed(0)}%)` : ''
+    parts.push(`${r.v.short}${upsideStr}`)
+    return parts.join(' | ')
   })
 
   const lines = [
@@ -4621,14 +4690,13 @@ async function runLiSectorScan() {
     ``,
     scan.context,
     ``,
-    `━━━ VALUATION BREAKDOWN ━━━`,
-    `Ticker | Fwd P/E | EV/EBITDA | Rev Growth | Model View`,
+    headerParts.join(' | '),
     ...tableLines,
     ``,
-    `📌 Key Findings`,
-    cheapest  ? `Lowest Fwd P/E: $${cheapest.ticker} at ${cheapest.fwdPE?.toFixed(0)}× — cheapest on this metric in the group` : null,
-    richest   ? `Richest valuation: $${richest.ticker} at ${richest.fwdPE?.toFixed(0)}× — pricing in significant growth delivery` : null,
-    bestROIC && bestROIC.roicSpread != null ? `Strongest moat signal: $${bestROIC.ticker} with ROIC ${(bestROIC.roicSpread * 100).toFixed(0)}% above WACC` : null,
+    cheapest  ? `Lowest Fwd P/E: $${cheapest.ticker} at ${cheapest.fwdPE.toFixed(0)}× — cheapest on this metric` : null,
+    richest   ? `Richest valuation: $${richest.ticker} at ${richest.fwdPE.toFixed(0)}× — pricing in significant growth delivery` : null,
+    bestROIC  && bestROIC.roicSpread != null ? `Strongest moat signal: $${bestROIC.ticker} with ROIC ${(bestROIC.roicSpread * 100).toFixed(0)}pp above WACC` : null,
+    bestGrowth && bestGrowth.revGrowth != null ? `Fastest grower: $${bestGrowth.ticker} at +${(bestGrowth.revGrowth * 100).toFixed(0)}%/yr` : null,
     ``,
     `A low Fwd P/E doesn't mean cheap if growth is decelerating. A high Fwd P/E doesn't mean expensive if the ROIC spread is wide and durable. Context matters.`,
     ``,
