@@ -20,22 +20,22 @@ const FREE_FEATURES = [
 
 const PRO_FEATURES = [
   'Everything in Free, unlimited',
-  'Full valuation models (DCF, RDCF, Multiples)',
-  'Sensitivity tables and scenarios',
-  'Conviction Score history',
-  'Screener (filters by fundamentals)',
-  'ETF Tracker',
+  'Full valuation models (DCF, Reverse DCF, Multiples)',
+  'Sensitivity tables and Monte Carlo simulation',
+  'Multi-ticker comparison with pairs signals',
+  'AI Stack screener — 125 AI companies scored',
+  'Market Screener with factor ranking',
+  'Quant Strategy Library — 5 academic strategies',
   'Unlimited saved analyses',
-  'PDF export',
-  'Portfolio and watchlists',
+  'Weekly watchlist digest (email)',
   'Priority support',
 ]
 
 const PRO_DIFF = [
-  'Conviction Score history',
+  'Compare + pairs signals',
   'Sensitivity tables',
-  'Screener',
-  'ETF Tracker',
+  'AI Stack screener',
+  'Quant Strategies',
 ]
 
 export default function PricingSection() {

@@ -5,6 +5,7 @@ import FannedVerdictCards from '@/components/landing/FannedVerdictCards'
 import LiveVerdictStrip from '@/components/landing/LiveVerdictStrip'
 import ReverseDCFSection from '@/components/landing/ReverseDCFSection'
 import ConvictionScoreSection from '@/components/landing/ConvictionScoreSection'
+import ToolSurfaceSection from '@/components/landing/ToolSurfaceSection'
 import TestimonialsSection from '@/components/landing/TestimonialsSection'
 import TransparencySection from '@/components/landing/TransparencySection'
 import PricingSection from '@/components/landing/PricingSection'
@@ -28,13 +29,15 @@ export default function LandingPage() {
         <ReverseDCFSection />
         {/* 6. Off-white — Conviction Score differentiator */}
         <ConvictionScoreSection />
-        {/* 7. White — social proof */}
+        {/* 7. Light grey — differentiating tools */}
+        <ToolSurfaceSection />
+        {/* 8. White — social proof */}
         <TestimonialsSection />
-        {/* 8. Off-white — transparency / no black boxes */}
+        {/* 9. Off-white — transparency / no black boxes */}
         <TransparencySection />
-        {/* 9. White — pricing */}
+        {/* 10. White — pricing */}
         <PricingSection />
-        {/* 10. Dark anchor — final CTA closes the page */}
+        {/* 11. Dark anchor — final CTA closes the page */}
         <FinalCTASection />
       </main>
       <LandingFooter />
