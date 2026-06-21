@@ -524,7 +524,7 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData, on
   )
 
   // WACC data
-  const waccRaw = apiData?.wacc ?? {}
+  const waccRaw = useMemo(() => apiData?.wacc ?? {}, [apiData?.wacc])
   const waccData: WACCData = useMemo(() => ({
     costOfDebt:
       waccRaw.inputs?.costOfDebt ??

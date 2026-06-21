@@ -1132,7 +1132,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
   }, [apiData, ttmEbitda, ttmNetDebt, sharesAbsolute, stmtFxRate])
 
   // ── Forward P/E ──────────────────────────────────────────────────────────
-  const fwdPEOverrides = overrides['forward_pe'] ?? {}
+  const fwdPEOverrides = useMemo(() => overrides['forward_pe'] ?? {}, [overrides])
   const fwdPEInputs = useMemo(() => ({
     ltvRevenue:        fwdPEOverrides.ltvRevenue        ?? ltvRevenueAbsolute,
     sharesOutstanding: fwdPEOverrides.sharesOutstanding ?? sharesAbsolute,
@@ -1162,10 +1162,10 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
     warnings:    fwdPEResult.guardErrors,
     fairValueSummary: fwdPEResult.fairValueToday,
     currentPrice,
-  }), [fwdPEBase, fwdPEInputs, fwdPEResult, ticker, currency, currentPrice, apiData, ltvRevenueAbsolute, sharesAbsolute, cagrBenchmarks])
+  }), [fwdPEBase, fwdPEResult, ticker, currency, currentPrice, apiData, ltvRevenueAbsolute, sharesAbsolute, cagrBenchmarks])
 
   // ── Revenue Multiple ─────────────────────────────────────────────────────
-  const revMultOverrides = overrides['revenue_multiple'] ?? {}
+  const revMultOverrides = useMemo(() => overrides['revenue_multiple'] ?? {}, [overrides])
   const revMultInputs = useMemo(() => ({
     ltvRevenue:        revMultOverrides.ltvRevenue        ?? ltvRevenueAbsolute,
     sharesOutstanding: revMultOverrides.sharesOutstanding ?? sharesAbsolute,
@@ -1193,10 +1193,10 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
     warnings:    revMultResult.guardErrors,
     fairValueSummary: revMultResult.fairValueToday,
     currentPrice,
-  }), [revMultBase, revMultInputs, revMultResult, ticker, currency, currentPrice, apiData, ltvRevenueAbsolute, cagrBenchmarks])
+  }), [revMultBase, revMultResult, ticker, currency, currentPrice, apiData, ltvRevenueAbsolute, cagrBenchmarks])
 
   // ── EV/EBITDA ────────────────────────────────────────────────────────────
-  const evEbitdaOverrides = overrides['ev_ebitda'] ?? {}
+  const evEbitdaOverrides = useMemo(() => overrides['ev_ebitda'] ?? {}, [overrides])
   const evEbitdaInputs = useMemo(() => ({
     ttmEbitda:    evEbitdaOverrides.ttmEbitda    ?? evEbitdaBase.ebitda,
     netDebt:      evEbitdaOverrides.netDebt      ?? evEbitdaBase.netDebt,
@@ -1250,10 +1250,14 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
   }, [evEbitdaBase, evEbitdaInputs, evEbitdaResult, ticker, currency, currentPrice, apiData])
 
   // ── Reverse DCF ──────────────────────────────────────────────────────────
-  const incomeRows: Array<{ revenue: number | null; netIncome: number | null; freeCashFlow?: number | null; isProjected: boolean }> =
-    apiData?.financialStatements?.incomeStatement ?? []
-  const cashFlowRows: Array<{ freeCashFlow: number | null; isProjected: boolean }> =
-    apiData?.financialStatements?.cashFlow ?? []
+  const incomeRows = useMemo(() =>
+    (apiData?.financialStatements?.incomeStatement ?? []) as Array<{ revenue: number | null; netIncome: number | null; freeCashFlow?: number | null; isProjected: boolean }>,
+    [apiData?.financialStatements?.incomeStatement]
+  )
+  const cashFlowRows = useMemo(() =>
+    (apiData?.financialStatements?.cashFlow ?? []) as Array<{ freeCashFlow: number | null; isProjected: boolean }>,
+    [apiData?.financialStatements?.cashFlow]
+  )
 
   const lastActualRevenue = useMemo(() => {
     if (ttmRevenue != null) return ttmRevenue * stmtFxRate

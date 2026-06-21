@@ -22,12 +22,15 @@ export const metadata: Metadata = {
     title: "insic — Invest with a process, not a story",
     description: "Fair value estimates and transparent assumptions for any stock. Free.",
     siteName: "insic",
+    url: "https://insic.app",
     type: "website",
+    images: [{ url: "https://insic.app/opengraph-image.png", width: 1200, height: 630, alt: "insic — DCF valuation for any stock" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "insic — Invest with a process, not a story",
     description: "Fair value estimates and transparent assumptions for any stock. Free.",
+    site: "@insicapp",
   },
 };
 
