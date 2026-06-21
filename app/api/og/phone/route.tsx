@@ -12,7 +12,7 @@
  */
 import { ImageResponse } from '@vercel/og'
 import { NextRequest } from 'next/server'
-import { BRAND, SITE_URL } from '@/lib/brand'
+import { BRAND } from '@/lib/brand'
 
 export const runtime = 'edge'
 
@@ -32,7 +32,8 @@ export async function GET(req: NextRequest) {
   const baseUrl = req.nextUrl.origin
   const portraitUrl = `${baseUrl}/api/og/portrait${params ? `?${params}` : ''}`
 
-  const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 
   return new ImageResponse(
     (

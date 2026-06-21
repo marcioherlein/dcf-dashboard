@@ -19,6 +19,7 @@ import { getCRPByCountry } from '@/lib/dcf/countryRiskPremium'
 import { runAssumptionAudit } from '@/lib/valuation/assumptionAuditor'
 import { seedAssumptions, buildSnapshot } from '@/lib/valuation/cockpitBuilders'
 import { computeCockpitOutput } from '@/lib/valuation/cockpit'
+import { FREE_STOCK_ANALYSES_PER_MONTH } from '@/lib/constants'
 
 export async function GET(req: NextRequest) {
   const limited = rateLimit(req, 30, 60_000, 'financials')
@@ -65,7 +66,7 @@ export async function GET(req: NextRequest) {
       if (userRow) {
         const plan = (userRow as { plan?: string }).plan
         if (plan !== 'pro') {
-          const FREE_LIMIT = 10
+          const FREE_LIMIT = FREE_STOCK_ANALYSES_PER_MONTH
           const monthStart = new Date()
           monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0)
 

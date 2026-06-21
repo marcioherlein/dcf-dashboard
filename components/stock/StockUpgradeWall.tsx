@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Lock, Zap, Check } from 'lucide-react'
+import { FREE_STOCK_ANALYSES_PER_MONTH } from '@/lib/constants'
 
 interface Props {
   ticker: string
@@ -19,15 +20,15 @@ interface Props {
   viewCount: number
 }
 
-const LIMIT = 10
+const LIMIT = FREE_STOCK_ANALYSES_PER_MONTH
 
 const PRO_HIGHLIGHTS = [
   'Unlimited analyses — no monthly cap',
   'Sensitivity table (CAGR × WACC heat map)',
-  'Price vs fair value email alerts',
-  'PDF investment brief export',
-  'Portfolio fair value tracker',
-  'Historical fair value tracking',
+  'Multi-ticker comparison with pairs signals',
+  'AI Stack screener — 125 companies scored',
+  'Market Screener with factor ranking',
+  'Weekly watchlist digest (email)',
 ]
 
 function fmt(n: number, currency: string) {

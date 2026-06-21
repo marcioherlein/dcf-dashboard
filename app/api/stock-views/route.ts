@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { createClient } from '@supabase/supabase-js'
+import { FREE_STOCK_ANALYSES_PER_MONTH } from '@/lib/constants'
 
-const FREE_LIMIT: number = 10
+const FREE_LIMIT = FREE_STOCK_ANALYSES_PER_MONTH
 
 function getClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL

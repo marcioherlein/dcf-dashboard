@@ -1,7 +1,11 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import { useSession } from 'next-auth/react'
+import Link from 'next/link'
+import { Lock } from 'lucide-react'
 import type { StrategyRow, UniverseCategory } from '@/lib/strategies/types'
+import { FREE_STRATEGIES_VISIBLE } from '@/lib/constants'
 
 // ─── Strategy definitions ─────────────────────────────────────────────────────
 
@@ -518,6 +522,9 @@ function ConsensusSummary({ rows }: { rows: StrategyRow[] }) {
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function StrategiesPage() {
+  const { data: session } = useSession()
+  const isPro = (session?.user as { plan?: string } | undefined)?.plan === 'pro'
+
   const [rows, setRows] = useState<StrategyRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -581,14 +588,18 @@ export default function StrategiesPage() {
             onClick={() => setActiveStrategy('consensus')}
             label="Consensus"
           />
-          {STRATEGIES.map(s => (
-            <TabBtn
-              key={s.id}
-              active={activeStrategy === s.id}
-              onClick={() => setActiveStrategy(s.id)}
-              label={s.shortLabel}
-            />
-          ))}
+          {STRATEGIES.map((s, i) => {
+            const locked = !isPro && i >= FREE_STRATEGIES_VISIBLE
+            return (
+              <TabBtn
+                key={s.id}
+                active={activeStrategy === s.id}
+                onClick={() => setActiveStrategy(s.id)}
+                label={s.shortLabel}
+                locked={locked}
+              />
+            )
+          })}
         </div>
 
         {loading && (
@@ -604,20 +615,48 @@ export default function StrategiesPage() {
 
         {!loading && !error && (
           <>
-            {activeStrategy === 'consensus' ? (
-              <ConsensusSummary rows={filteredRows} />
-            ) : (
-              <>
-                {activeDef && <StrategyHeader def={activeDef} />}
-                <div className="bg-white border border-[#E3E1DA] rounded-xl overflow-x-auto">
-                  {activeStrategy === 'momentum' && <MomentumTable rows={filteredRows} />}
-                  {activeStrategy === 'lowvol'   && <LowVolTable rows={filteredRows} />}
-                  {activeStrategy === 'ma'       && <MaTable rows={filteredRows} />}
-                  {activeStrategy === 'meanrev'  && <MeanRevTable rows={filteredRows} />}
-                  {activeStrategy === 'value'    && <ValueTable rows={filteredRows} />}
-                </div>
-              </>
-            )}
+            {(() => {
+              const stratIdx = STRATEGIES.findIndex(s => s.id === activeStrategy)
+              const isLocked = activeStrategy !== 'consensus' && stratIdx >= FREE_STRATEGIES_VISIBLE && !isPro
+              if (isLocked) {
+                return (
+                  <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
+                    <div className="w-12 h-12 rounded-full bg-[#EEF2FA] flex items-center justify-center">
+                      <Lock size={20} className="text-[#5F790B]" />
+                    </div>
+                    <div>
+                      <p className="text-[15px] font-bold text-[#06101F]">This strategy is a Pro feature</p>
+                      <p className="text-[13px] text-[#566174] mt-1 max-w-xs mx-auto">
+                        Unlock all 5 strategies plus the AI Stack screener, Market Screener, and pairs comparison tool.
+                      </p>
+                    </div>
+                    <Link
+                      href="/pricing"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#5F790B] text-white text-[13px] font-bold hover:bg-[#526A08] transition-colors"
+                    >
+                      Upgrade to Pro →
+                    </Link>
+                    <p className="text-[11px] text-[#8A95A6]">
+                      {STRATEGIES.slice(0, FREE_STRATEGIES_VISIBLE).map(s => s.shortLabel).join(' · ')} · Consensus are always free
+                    </p>
+                  </div>
+                )
+              }
+              return activeStrategy === 'consensus' ? (
+                <ConsensusSummary rows={filteredRows} />
+              ) : (
+                <>
+                  {activeDef && <StrategyHeader def={activeDef} />}
+                  <div className="bg-white border border-[#E3E1DA] rounded-xl overflow-x-auto">
+                    {activeStrategy === 'momentum' && <MomentumTable rows={filteredRows} />}
+                    {activeStrategy === 'lowvol'   && <LowVolTable rows={filteredRows} />}
+                    {activeStrategy === 'ma'       && <MaTable rows={filteredRows} />}
+                    {activeStrategy === 'meanrev'  && <MeanRevTable rows={filteredRows} />}
+                    {activeStrategy === 'value'    && <ValueTable rows={filteredRows} />}
+                  </div>
+                </>
+              )
+            })()}
           </>
         )}
 
@@ -633,18 +672,19 @@ export default function StrategiesPage() {
   )
 }
 
-function TabBtn({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
+function TabBtn({ active, onClick, label, locked }: { active: boolean; onClick: () => void; label: string; locked?: boolean }) {
   return (
     <button
       onClick={onClick}
       className={[
-        'px-3.5 py-1.5 rounded-lg text-[13px] font-medium transition-colors shrink-0 min-h-[44px]',
+        'px-3.5 py-1.5 rounded-lg text-[13px] font-medium transition-colors shrink-0 min-h-[44px] flex items-center gap-1.5',
         active
           ? 'bg-blue-600 text-white'
           : 'text-[#566174] hover:text-[#06101F] hover:bg-[#F0F1F6]',
       ].join(' ')}
     >
       {label}
+      {locked && <span className="text-[10px] bg-[#EEF2FA] text-[#5F790B] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide">Pro</span>}
     </button>
   )
 }
