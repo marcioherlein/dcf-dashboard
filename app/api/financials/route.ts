@@ -65,7 +65,7 @@ export async function GET(req: NextRequest) {
       if (userRow) {
         const plan = (userRow as { plan?: string }).plan
         if (plan !== 'pro') {
-          const FREE_LIMIT = 3
+          const FREE_LIMIT = 10
           const monthStart = new Date()
           monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0)
 

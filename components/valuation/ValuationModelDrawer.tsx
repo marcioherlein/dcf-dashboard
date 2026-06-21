@@ -289,7 +289,7 @@ export default function ValuationModelDrawer({
       onClick={onClose}
     >
       <div
-        className="bg-[#111111] w-full sm:max-w-lg h-[90vh] sm:h-full overflow-y-auto shadow-2xl border-t sm:border-t-0 sm:border-l border-[#222] rounded-t-2xl sm:rounded-none pb-safe"
+        className="bg-[#111111] w-full sm:max-w-lg max-h-[90dvh] h-[90dvh] sm:h-full overflow-y-auto shadow-2xl border-t sm:border-t-0 sm:border-l border-[#222] rounded-t-2xl sm:rounded-none pb-safe"
         onClick={e => e.stopPropagation()}
       >
         {/* Sticky header */}

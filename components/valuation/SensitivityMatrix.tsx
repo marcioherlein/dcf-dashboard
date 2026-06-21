@@ -745,7 +745,7 @@ export default function SensitivityMatrix({
       {/* Expand modal — full matrix with axis selectors, axes persist on close */}
       <Dialog open={modalOpen} onOpenChange={(isOpen: boolean) => { if (!isOpen) handleModalClose() }}>
         <DialogContent
-          className="max-w-3xl w-full max-h-[90vh] overflow-y-auto p-0"
+          className="max-w-3xl w-full max-h-[90dvh] overflow-y-auto p-0"
           showCloseButton={false}
         >
           <DialogHeader className="px-5 pt-5 pb-3 border-b border-[#E3E1DA] flex-row items-center justify-between">

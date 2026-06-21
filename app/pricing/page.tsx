@@ -75,7 +75,7 @@ const FAQS = [
     a: 'Yes. Free is not a trial. You can analyze 10 stocks per month and save 10 analyses at no cost, forever. We only charge for features that add meaningful depth or remove the monthly limit.',
   },
   {
-    q: 'What happens when I hit the 3-stock limit?',
+    q: 'What happens when I hit the 10-stock limit?',
     a: 'You\'ll see an upgrade prompt. Stocks you\'ve already viewed this month remain accessible — the limit only applies to new tickers. The count resets at the start of each calendar month.',
   },
   {

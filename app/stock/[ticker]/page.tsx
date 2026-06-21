@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, Suspense } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useParams, useSearchParams } from 'next/navigation'
 import NewsPanel from '@/components/stock/NewsPanel'
@@ -183,7 +183,9 @@ export default function StockPage() {
   return (
     // eslint-disable-next-line react/jsx-no-undef
     <LoginGateProvider>
-      <StockPageBody />
+      <Suspense>
+        <StockPageBody />
+      </Suspense>
     </LoginGateProvider>
   )
 }

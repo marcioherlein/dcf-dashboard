@@ -7,7 +7,7 @@ import Image from 'next/image'
 import { motion, useReducedMotion } from 'motion/react'
 import {
   TrendingUp, Bookmark, Globe,
-  Bell, Settings, HelpCircle, PieChart, SlidersHorizontal,
+  Settings, PieChart, SlidersHorizontal,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -30,9 +30,7 @@ const MARKETS_NAV: NavEntry[] = [
 ]
 
 const UTILITY_NAV: Array<{ href: string; label: string; icon: LucideIcon; match: (p: string) => boolean }> = [
-  { href: '/alerts',   label: 'Alerts',    icon: Bell,       match: (p) => p.startsWith('/alerts') },
   { href: '/settings', label: 'Settings',  icon: Settings,   match: (p) => p === '/settings' },
-  { href: '/help',     label: 'Help',      icon: HelpCircle, match: (p) => p.startsWith('/help') },
 ]
 
 const EASE = [0.16, 1, 0.3, 1] as const

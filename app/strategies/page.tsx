@@ -489,7 +489,7 @@ function ConsensusSummary({ rows }: { rows: StrategyRow[] }) {
             <div className="flex items-center gap-1.5 flex-1">
               <div className="flex-1 h-2 bg-[#F0F1F6] rounded-full overflow-hidden flex">
                 <div
-                  className="h-full bg-[#E8F7EF]0 transition-all"
+                  className="h-full bg-[#E8F7EF] transition-all"
                   style={{ width: `${(c.buys / c.total) * 100}%` }}
                 />
                 <div

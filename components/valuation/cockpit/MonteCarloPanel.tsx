@@ -407,7 +407,7 @@ export default function MonteCarloPanel({
         <Dialog open={dialogOpen} onOpenChange={(isOpen: boolean) => {
           if (!isOpen) { setDialogOpen(false); requestAnimationFrame(() => expandBtnRef.current?.focus()) }
         }}>
-          <DialogContent className="max-w-3xl w-full max-h-[90vh] overflow-y-auto p-0" showCloseButton={false}>
+          <DialogContent className="max-w-3xl w-full max-h-[90dvh] overflow-y-auto p-0" showCloseButton={false}>
             <DialogHeader className="px-5 pt-5 pb-3 border-b border-[#E3E1DA] flex-row items-center justify-between">
               <div>
                 <p className="text-[10px] font-[700] tracking-wider uppercase text-[#9B9B9B]">Monte Carlo DCF</p>
