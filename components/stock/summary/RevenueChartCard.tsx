@@ -57,7 +57,7 @@ const BarChartComponents = dynamic(
                   y={y - 17}
                   fill={yoyColor}
                   textAnchor="middle"
-                  fontSize={9}
+                  fontSize={11}
                   fontWeight={600}
                   fontFamily="Inter, system-ui, sans-serif"
                 >

@@ -42,8 +42,7 @@ export default function FeedbackButton() {
       {/* Floating button */}
       <button
         onClick={() => { setOpen(true); setStatus('idle') }}
-        className="fixed right-4 lg:bottom-6 lg:right-6 z-50 flex items-center gap-2 rounded-full bg-[#5F790B] hover:bg-[#526A08] active:scale-95 text-white text-[12px] font-semibold px-4 py-2.5 shadow-lg transition-all"
-        style={{ bottom: 'calc(56px + env(safe-area-inset-bottom, 0px) + 12px)' }}
+        className="fixed right-4 lg:right-6 z-50 flex items-center gap-2 rounded-full bg-[#5F790B] hover:bg-[#526A08] active:scale-95 text-white text-[12px] font-semibold px-4 py-2.5 shadow-lg transition-all bottom-[calc(56px+env(safe-area-inset-bottom,0px)+12px)] lg:bottom-6"
         aria-label="Send feedback"
       >
         <MessageSquare size={14} strokeWidth={2.5} />

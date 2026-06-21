@@ -145,13 +145,13 @@ function PriceValuationPanel({
             aria-label="View valuation details"
           >
             <div>
-              <p className="text-[10px] text-[#9B9B9B] leading-none mb-0.5">Model estimate</p>
-              <p className="text-[15px] font-[750] text-[#111111] leading-none tabular-nums">
+              <p className="text-[10px] text-[#9B9B9B] leading-none mb-0.5">Fair value estimate</p>
+              <p className="text-[18px] font-[750] text-[#111111] leading-none tabular-nums">
                 {fmtPriceValue(fairValue, currency)}
               </p>
             </div>
             <div className="flex flex-col items-end gap-0.5">
-              <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-[650] ${
+              <span className={`inline-flex rounded-full px-2.5 py-1 text-[13px] font-[700] ${
                 upside > 15  ? 'bg-[#E8F7EF] text-[#11875D]' :
                 upside < -10 ? 'bg-[#FCEAEA] text-[#D83B3B]' :
                 'bg-[#F5F5F5] text-[#6B6B6B]'

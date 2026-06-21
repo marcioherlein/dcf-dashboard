@@ -40,12 +40,12 @@ const buttonVariants = cva(
         landing: "h-11 gap-2 px-5 text-[14px]",
         // App buttons (40px)
         default: "h-10 gap-1.5 px-4 text-[13.5px]",
-        // Compact (36px) — inside cards, toolbars
-        sm:   "h-9 gap-1 rounded-[9px] px-3.5 text-[13px]",
-        // Extra small (32px)
-        xs:   "h-8 gap-1 rounded-[8px] px-3 text-[12.5px]",
-        // Tiny (28px) — chips, inline
-        xxs:  "h-7 gap-0.5 rounded-[8px] px-2.5 text-[12px]",
+        // Compact (36px desktop, 44px mobile)
+        sm:   "h-9 min-h-[44px] lg:min-h-0 gap-1 rounded-[9px] px-3.5 text-[13px]",
+        // Extra small (32px desktop, 44px mobile)
+        xs:   "h-8 min-h-[44px] lg:min-h-0 gap-1 rounded-[8px] px-3 text-[12.5px]",
+        // Tiny (28px desktop, 44px mobile)
+        xxs:  "h-7 min-h-[44px] lg:min-h-0 gap-0.5 rounded-[8px] px-2.5 text-[12px]",
         // Icon buttons
         icon:    "size-10 rounded-[10px]",
         "icon-sm": "size-9 rounded-[9px]",

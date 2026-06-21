@@ -121,19 +121,6 @@ interface SummaryTabProps {
   analystRatingTrend?: RatingPeriod[]
 }
 
-// ─── Section heading ──────────────────────────────────────────────────────────
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex items-center gap-2.5">
-      <div className="w-[3px] h-4 rounded-full" style={{ background: 'linear-gradient(to bottom, #334155, #475569)' }} aria-hidden="true" />
-      <h2 className="text-[13px] font-[600] text-[#334155] tracking-normal">
-        {children}
-      </h2>
-    </div>
-  )
-}
-
 // ─── Main export ──────────────────────────────────────────────────────────────
 
 export default function SummaryTab({
@@ -250,7 +237,28 @@ export default function SummaryTab({
         fcfMargin={businessProfile?.fcfMargin ?? null} roic={roic ?? null}
       />
 
-      {/* 3. Valuation Ratios — full width */}
+      {/* 3. Investment Checklist — moved up: the verdict is why someone looks at a stock */}
+      {scores && (
+        <InvestmentVerdict
+          ticker={ticker} upsidePct={upsidePct} scores={scores}
+          analystRecommendation={analystRecommendation ?? null}
+          fcfMargin={businessProfile?.fcfMargin ?? null}
+          grossMargin={businessProfile?.grossMargin ?? null}
+          netMargin={businessProfile?.netMargin ?? null}
+          revenueCAGR={cagrAnalysis?.historicalCagr3y ?? null}
+          pegRatio={quote?.pegRatio ?? null}
+          epsGrowthFwd={epsGrowthFwd}
+          currentPrice={price}
+          high52={high52}
+          low52={low52}
+          insiderPct={ownership?.insiderPct ?? null}
+          shortPct={ownership?.shortPct ?? null}
+          analystTargetMean={analystTargetMean ?? null}
+          conviction={conviction}
+        />
+      )}
+
+      {/* 4. Valuation Ratios — full width */}
       <ValuationRatiosCard
         estimates={valuationMethods?.models?.multiples?.estimates}
         pegRatio={quote?.pegRatio} peRatio={peRatio} sector={sector}
@@ -320,35 +328,13 @@ export default function SummaryTab({
         <ETFExposureCard ticker={ticker} />
       </div>
 
-      {/* 8. Valuation Ratios + If You Had Held */}
+      {/* 8. If You Had Held + Income Flow */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3 items-stretch">
         {holdingReturns ? (
           <HoldingReturns returns={holdingReturns} ticker={ticker} />
         ) : <div />}
         <IncomeFlowCard statementsData={statementsData} currency={currency} />
       </div>
-
-      {/* 9. Investment Checklist */}
-      <SectionLabel>Investment Checklist</SectionLabel>
-      {scores && (
-        <InvestmentVerdict
-          ticker={ticker} upsidePct={upsidePct} scores={scores}
-          analystRecommendation={analystRecommendation ?? null}
-          fcfMargin={businessProfile?.fcfMargin ?? null}
-          grossMargin={businessProfile?.grossMargin ?? null}
-          netMargin={businessProfile?.netMargin ?? null}
-          revenueCAGR={cagrAnalysis?.historicalCagr3y ?? null}
-          pegRatio={quote?.pegRatio ?? null}
-          epsGrowthFwd={epsGrowthFwd}
-          currentPrice={price}
-          high52={high52}
-          low52={low52}
-          insiderPct={ownership?.insiderPct ?? null}
-          shortPct={ownership?.shortPct ?? null}
-          analystTargetMean={analystTargetMean ?? null}
-          conviction={conviction}
-        />
-      )}
 
     </div>
   )
