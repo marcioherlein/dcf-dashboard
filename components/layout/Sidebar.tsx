@@ -8,7 +8,6 @@ import { motion, useReducedMotion } from 'motion/react'
 import {
   TrendingUp, Bookmark, Globe,
   Settings, PieChart, SlidersHorizontal,
-  GitCompare, BarChart3, Layers, List, Cpu,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -28,14 +27,6 @@ const TRACK_NAV: NavEntry[] = [
 const MARKETS_NAV: NavEntry[] = [
   { href: '/markets',               label: 'Markets',       icon: Globe,             match: (p) => p.startsWith('/markets') },
   { href: '/etf',                   label: 'ETF Tracker',   icon: PieChart,          match: (p) => p.startsWith('/etf') },
-]
-
-const TOOLS_NAV: NavEntry[] = [
-  { href: '/compare',        label: 'Compare',        icon: GitCompare, match: (p) => p.startsWith('/compare') },
-  { href: '/factor-ranking', label: 'Factor Ranking',  icon: BarChart3,  match: (p) => p.startsWith('/factor-ranking') },
-  { href: '/strategies',     label: 'Strategies',      icon: Layers,     match: (p) => p.startsWith('/strategies') || p.startsWith('/strategy') },
-  { href: '/simplifier',     label: 'Watchlist',        icon: List,       match: (p) => p.startsWith('/simplifier') },
-  { href: '/ai-stack',       label: 'AI Stack',         icon: Cpu,        match: (p) => p.startsWith('/ai-stack') },
 ]
 
 const UTILITY_NAV: Array<{ href: string; label: string; icon: LucideIcon; match: (p: string) => boolean }> = [
@@ -259,31 +250,7 @@ export default function Sidebar() {
           aria-hidden="true"
         />
 
-        {/* Group 4 — Tools */}
         <SectionLabel delay={0.32} reduced={reduced}>Tools</SectionLabel>
-        <ul className="flex flex-col gap-0.5 mb-3 list-none p-0 m-0">
-          {TOOLS_NAV.map(({ href, label, icon, match }, i) => (
-            <NavItem
-              key={href}
-              href={href}
-              label={label}
-              icon={icon}
-              active={match(pathname)}
-              index={RESEARCH_NAV.length + TRACK_NAV.length + MARKETS_NAV.length + i}
-              reduced={reduced}
-            />
-          ))}
-        </ul>
-
-        <motion.div
-          className="mx-3 mb-3"
-          style={{ height: '1px', background: 'rgba(255,255,255,0.07)' }}
-          initial={reduced ? false : { scaleX: 0, originX: 0 }}
-          animate={{ scaleX: 1 }}
-          transition={{ duration: 0.4, ease: EASE, delay: 0.38 }}
-          aria-hidden="true"
-        />
-
         <ul className="flex flex-col gap-0.5 list-none p-0 m-0">
           {UTILITY_NAV.map(({ href, label, icon, match }, i) => (
             <NavItem
@@ -292,7 +259,7 @@ export default function Sidebar() {
               label={label}
               icon={icon}
               active={match(pathname)}
-              index={RESEARCH_NAV.length + TRACK_NAV.length + MARKETS_NAV.length + TOOLS_NAV.length + i}
+              index={RESEARCH_NAV.length + TRACK_NAV.length + MARKETS_NAV.length + i}
               reduced={reduced}
             />
           ))}
