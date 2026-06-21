@@ -5325,57 +5325,64 @@ async function runLiMyth() {
 function computeSimplifiedConviction(data) {
   const clamp = v => Math.round(Math.max(0, Math.min(100, v)))
 
-  const upside     = appUpside(data) ?? 0
-  const fwdPE      = data.analystForwardPE ?? null
-  const roicSpread = data.scores?.roic?.spread ?? 0
-  const moat       = data.ratings?.moat?.score ?? 2.5
-  const prof       = data.ratings?.profitability?.score ?? 2.5
-  const liq        = data.ratings?.liquidity?.score ?? 2.5
-  const growth     = data.ratings?.growth?.score ?? 2.5
-  const altmanZone = data.scores?.altman?.zone ?? 'Grey'
-  const pioScore   = data.scores?.piotroski?.score ?? 4
+  const upside      = appUpside(data) ?? 0
+  const fwdPE       = data.analystForwardPE ?? null
+  const roicSpread  = data.scores?.roic?.spread ?? 0
+  const moat        = data.ratings?.moat?.score ?? 2.5
+  const prof        = data.ratings?.profitability?.score ?? 2.5
+  const liq         = data.ratings?.liquidity?.score ?? 2.5
+  const growth      = data.ratings?.growth?.score ?? 2.5
+  const altmanZone  = data.scores?.altman?.zone ?? 'Grey'
+  const pioScore    = data.scores?.piotroski?.score ?? 4      // 0–9
+  const pioLabel    = data.scores?.piotroski?.label ?? null   // Strong/Mixed/Weak
   const beneishFlag = data.scores?.beneish?.flag ?? 'Clean'
-  const insiderPct = data.ownership?.insiderPct ?? 0
-  const trend      = data.analystRatingTrend ?? []
-  const surprises  = data.earningsSurprises ?? []
-  const stock1y    = data.holdingReturns?.stock1y ?? null
-  const spy1y      = data.holdingReturns?.spy1y ?? null
+  const insiderPct  = data.ownership?.insiderPct ?? 0
+  const trend       = data.analystRatingTrend ?? []
+  const surprises   = data.earningsSurprises ?? []
+  const stock1y     = data.holdingReturns?.stock1y ?? null
+  const spy1y       = data.holdingReturns?.spy1y ?? null
   const analystTarget = data.quote?.analystTargetMean ?? null
-  const price      = data.quote?.price ?? null
+  const price       = data.quote?.price ?? null
 
-  // ── Dimension 1: Valuation (27%) ─────────────────────────────────────────
-  let val = upside > 0.25 ? 100 : upside > 0.10 ? 80 : upside > 0 ? 60 : upside > -0.10 ? 40 : 20
-  if (fwdPE != null) {
+  // ── Dimension 1: Valuation (27%) — matches app ────────────────────────────
+  // upsideSignalScore: >25%→100, 10-25%→80, 0-10%→60, -10-0%→40, -25--10%→20, <-25%→0
+  const upsideSig = upside > 0.25 ? 100 : upside > 0.10 ? 80 : upside > 0 ? 60 : upside > -0.10 ? 40 : upside > -0.25 ? 20 : 0
+  const valRatingNorm = ((data.ratings?.valuation?.score ?? 2.5) - 1) / 4 * 100
+  let val = valRatingNorm * 0.60 + upsideSig * 0.40
+  if (fwdPE != null && fwdPE > 0 && fwdPE < 100) {
     if (fwdPE < 20) val = Math.min(100, val + 5)
-    else if (fwdPE > 40) val = Math.max(0, val - 5)
+    else if (fwdPE > 40) val = Math.max(0, val - 3)
   }
-  // analyst target upside modifier
   if (analystTarget != null && price != null && price > 0) {
     const streetGap = (analystTarget - price) / price
     if (streetGap > 0.15) val = Math.min(100, val + 5)
     else if (streetGap < -0.10) val = Math.max(0, val - 5)
   }
+  val = clamp(val)
 
-  // ── Dimension 2: Business Quality (23%) ──────────────────────────────────
-  const roicMod = roicSpread > 0.08 ? 7 : roicSpread > 0.02 ? 3 : roicSpread < -0.02 ? -5 : 0
-  const qual = clamp(((moat - 1) / 4) * 50 + ((prof - 1) / 4) * 50 + roicMod)
+  // ── Dimension 2: Business Quality (23%) — matches app ────────────────────
+  const moatNorm = ((moat - 1) / 4) * 100
+  const profNorm = ((prof - 1) / 4) * 100
+  const roicMod  = roicSpread > 0.08 ? 7 : roicSpread > 0.02 ? 3 : roicSpread < -0.02 ? -5 : 0
+  const qual = clamp(moatNorm * 0.50 + profNorm * 0.50 + roicMod)
 
-  // ── Dimension 3: Financial Health (18%) ───────────────────────────────────
+  // ── Dimension 3: Financial Health (18%) — matches app ────────────────────
   const altmanMod = altmanZone === 'Safe' ? 100 : altmanZone === 'Grey' ? 50 : 0
   const pioMod    = (pioScore / 9) * 100
-  const health    = clamp(((liq - 1) / 4) * 50 + altmanMod * 0.30 + pioMod * 0.20)
+  const liqNorm   = ((liq - 1) / 4) * 100
+  const health    = clamp(liqNorm * 0.50 + altmanMod * 0.30 + pioMod * 0.20)
 
-  // ── Dimension 4: Growth Momentum (14%) ───────────────────────────────────
-  const alphaMod = (stock1y != null && spy1y != null)
-    ? (stock1y - spy1y > 0.10 ? 5 : stock1y - spy1y < -0.10 ? -5 : 0)
-    : 0
-  const growthScore = clamp(((growth - 1) / 4) * 100 + alphaMod)
+  // ── Dimension 4: Growth Momentum (14%) — matches app ─────────────────────
+  const growthNorm = ((growth - 1) / 4) * 100
+  const alphaMod   = (stock1y != null && spy1y != null)
+    ? (stock1y - spy1y > 0.10 ? 5 : stock1y - spy1y < -0.10 ? -5 : 0) : 0
+  const growthScore = clamp(growthNorm + alphaMod)
 
-  // ── Dimension 5: Earnings Integrity (5%) ─────────────────────────────────
-  const beneishMod = beneishFlag === 'Clean' ? 100 : beneishFlag === 'Warning' ? 40 : 0
-  const accrual = data.scores?.piotroski?.criteria?.find(c => c.name?.toLowerCase().includes('accrual'))
-  const accrualMod = accrual == null || accrual.pass === null ? 60 : accrual.pass ? 100 : 0
-  const integ = clamp(beneishMod * 0.50 + accrualMod * 0.50)
+  // ── Dimension 5: Earnings Integrity (5%) — matches app ───────────────────
+  const beneishMod  = beneishFlag === 'Clean' ? 100 : beneishFlag === 'Warning' ? 40 : 0
+  const accrual     = data.scores?.piotroski?.criteria?.find(c => c.name?.toLowerCase().includes('accrual'))
+  const accrualMod  = accrual == null || accrual.pass === null ? 60 : accrual.pass ? 100 : 0
+  const integ       = clamp(beneishMod * 0.50 + accrualMod * 0.50)
 
   // ── Dimension 6: Risk (5%) — approximated ────────────────────────────────
   const riskScore = clamp(
@@ -5384,17 +5391,16 @@ function computeSimplifiedConviction(data) {
     (pioScore >= 6 ? 75 : pioScore >= 4 ? 55 : 35) * 0.20
   )
 
-  // ── Dimension 7: Sentiment (8%) ───────────────────────────────────────────
+  // ── Dimension 7: Analyst & Market Sentiment (8%) — matches app ───────────
   let consensusScore = 50
   if (trend.length > 0) {
     const { strongBuy: sb = 0, buy: b = 0, hold: h = 0, sell: s = 0, strongSell: ss = 0 } = trend[0]
     const total = sb + b + h + s + ss
     if (total > 0) consensusScore = clamp((sb * 2 + b - s - ss * 2) / total * 50 + 50)
   }
-  const last4   = surprises.slice(0, 4)
-  const beats   = last4.filter(q => (q.epsActual ?? 0) > (q.epsEstimate ?? 0)).length
+  const last4     = surprises.slice(0, 4)
+  const beats     = last4.filter(q => (q.epsActual ?? 0) > (q.epsEstimate ?? 0)).length
   const beatScore = last4.length > 0 ? (beats / last4.length) * 100 : 50
-
   let targetScore = 50
   if (analystTarget != null && price != null && price > 0) {
     const gap = (analystTarget - price) / price
@@ -5403,7 +5409,7 @@ function computeSimplifiedConviction(data) {
   const insiderScore = insiderPct >= 0.10 ? 85 : insiderPct >= 0.05 ? 70 : insiderPct >= 0.01 ? 50 : 35
   const sent = clamp(consensusScore * 0.40 + beatScore * 0.30 + targetScore * 0.20 + insiderScore * 0.10)
 
-  // ── Weighted total ────────────────────────────────────────────────────────
+  // ── Weighted total — matches app exactly ─────────────────────────────────
   const raw   = val * 0.27 + qual * 0.23 + health * 0.18 + growthScore * 0.14 + integ * 0.05 + riskScore * 0.05 + sent * 0.08
   const score = Math.round(Math.max(0, Math.min(100, raw)))
 
@@ -5415,26 +5421,44 @@ function computeSimplifiedConviction(data) {
     : grade === 'D' ? 'More risks than rewards'
     : 'High risk — significant concerns'
 
-  // ── Signal summaries for display ─────────────────────────────────────────
+  // ── Plain-English signal summaries (no jargon) ────────────────────────────
   const valSignal = upside > 0.10
-    ? `Buying at a discount (${pct(upside)} DCF upside)`
+    ? `Price is ${pct(upside)} below our fair value estimate`
     : upside < -0.05
-    ? `Trading above fair value (${pct(Math.abs(upside))} premium)`
-    : `Near fair value`
+    ? `Price is ${pct(Math.abs(upside))} above our fair value estimate`
+    : `Price is near our fair value estimate`
 
+  const moatLabel = data.ratings?.moat?.label ?? 'Moderate'
   const qualSignal = roicSpread > 0.05
-    ? `${data.ratings?.moat?.label ?? 'Moderate'} moat · ROIC ${pct(roicSpread, false)} above WACC`
-    : `${data.ratings?.moat?.label ?? 'Moderate'} moat · profitability ${data.ratings?.profitability?.label ?? 'fair'}`
+    ? `${moatLabel} competitive position · returns ${pct(roicSpread, false)} above cost of capital`
+    : roicSpread < -0.02
+    ? `${moatLabel} competitive position · returns below cost of capital`
+    : `${moatLabel} competitive position · ${data.ratings?.profitability?.label ?? 'fair'} profitability`
 
-  const healthSignal = `${altmanZone === 'Safe' ? 'Safe zone' : altmanZone === 'Grey' ? 'Watch zone' : 'Distress zone'} (Altman) · Piotroski ${pioScore}/9`
+  // Health: translate scores to plain language, no model names
+  const financialMomentum = pioLabel === 'Strong' ? 'improving' : pioLabel === 'Weak' ? 'deteriorating' : 'stable'
+  const balanceSheet = data.ratings?.liquidity?.label ?? (liq >= 3.5 ? 'Strong' : liq >= 2.5 ? 'Fair' : 'Weak')
+  const bankruptcyRisk = altmanZone === 'Safe' ? 'low bankruptcy risk'
+    : altmanZone === 'Grey' ? 'moderate watch zone'
+    : 'elevated financial distress signal'
+  const healthSignal = `${balanceSheet} balance sheet · financials ${financialMomentum} · ${bankruptcyRisk}`
 
   const growthSignal = data.ratings?.growth?.label != null
-    ? `${data.ratings.growth.label}${alphaMod > 0 ? ` · +${alphaMod}pp vs S&P 500` : alphaMod < 0 ? ` · lagging S&P 500` : ''}`
-    : `Growth grade: N/A`
+    ? `${data.ratings.growth.label}${alphaMod !== 0 ? ` · ${alphaMod > 0 ? '+' : ''}${alphaMod}pp vs S&P 500 this year` : ''}`
+    : 'Growth data limited'
 
-  const integSignal = `Accounting ${beneishFlag === 'Clean' ? 'clean' : beneishFlag === 'Warning' ? 'some concerns' : 'red flag'} (Beneish)`
+  // Integrity: no "Beneish" — describe what it means
+  const integSignal = beneishFlag === 'Clean'
+    ? `Earnings appear reliable · cash flow confirms reported profits`
+    : beneishFlag === 'Warning'
+    ? `Some accounting flags — reported profits may outrun cash flow`
+    : `Earnings quality concerns — significant accounting red flags`
 
-  const riskSignal = `${altmanZone === 'Safe' ? 'Low financial distress risk' : altmanZone === 'Grey' ? 'Moderate financial risk' : 'Elevated distress risk'}`
+  const riskSignal = altmanZone === 'Safe'
+    ? `Low financial distress risk`
+    : altmanZone === 'Grey'
+    ? `Moderate financial risk — worth monitoring`
+    : `Elevated financial distress signals`
 
   const bullPct = (() => {
     if (!trend.length) return null
@@ -5443,20 +5467,38 @@ function computeSimplifiedConviction(data) {
     return total > 0 ? Math.round(((sb + b) / total) * 100) : null
   })()
   const sentSignal = [
-    bullPct != null ? `${bullPct}% bullish analysts` : null,
-    last4.length > 0 ? `beat ${beats}/${last4.length} qtrs` : null,
-  ].filter(Boolean).join(' · ') || 'Limited data'
+    bullPct != null ? `${bullPct}% of analysts are bullish` : null,
+    last4.length > 0 ? `beat earnings estimates ${beats} of last ${last4.length} quarters` : null,
+  ].filter(Boolean).join(' · ') || 'Limited analyst data'
 
   return {
     score, grade, gradeFull, label,
-    dimensions: {
-      val: clamp(val), qual, health, growth: growthScore, integ, risk: riskScore, sent,
-    },
-    signals: { val: valSignal, qual: qualSignal, health: healthSignal, growth: growthSignal, integ: integSignal, risk: riskSignal, sent: sentSignal },
+    dimensions: { val, qual, health, growth: growthScore, integ, risk: riskScore, sent },
+    signals:    { val: valSignal, qual: qualSignal, health: healthSignal, growth: growthSignal, integ: integSignal, risk: riskSignal, sent: sentSignal },
   }
 }
 
-// ─── Mode: conviction_score ───────────────────────────────────────────────────
+// Validates a conviction result before posting — blocks weird/empty values
+function validateConviction(c, ticker) {
+  if (!c || typeof c.score !== 'number') throw new Error(`Conviction: no result for ${ticker}`)
+  if (isNaN(c.score) || c.score < 0 || c.score > 100) throw new Error(`Conviction: score out of range (${c.score}) for ${ticker}`)
+  if (!c.grade || !c.gradeFull || !c.label) throw new Error(`Conviction: missing grade/label for ${ticker}`)
+  // Every dimension must be a valid 0-100 integer
+  for (const [key, val] of Object.entries(c.dimensions)) {
+    if (isNaN(val) || val < 0 || val > 100) throw new Error(`Conviction: dimension ${key}=${val} out of range for ${ticker}`)
+  }
+  // Every signal must be a non-empty string with no raw jargon terms users won't understand
+  const JARGON = ['NaN', 'undefined', '[object', 'Piotroski', 'Beneish', 'Altman', 'WACC', 'n/a', 'N/A']
+  for (const [key, sig] of Object.entries(c.signals)) {
+    if (!sig || typeof sig !== 'string' || sig.trim() === '') throw new Error(`Conviction: empty signal ${key} for ${ticker}`)
+    for (const term of JARGON) {
+      if (sig.includes(term)) throw new Error(`Conviction: jargon "${term}" in signal ${key}: "${sig}"`)
+    }
+  }
+  console.log(`✓ Conviction validated: ${ticker} ${c.score}/100 ${c.gradeFull}`)
+}
+
+
 // Mon/Wed/Fri 2PM ART. Full 7-dimension conviction breakdown for one stock.
 // Showcases the Conviction Score tab — insic.app's most differentiating feature.
 
@@ -5477,26 +5519,28 @@ async function runConvictionScore() {
   }
   if (!data) { console.warn('conviction_score: no data — skipping'); return }
 
-  const c    = computeSimplifiedConviction(data)
-  const fair = appFairValue(data)
+  const c     = computeSimplifiedConviction(data)
+  const fair  = appFairValue(data)
   const price = data.quote?.price
 
+  validateConviction(c, ticker)
+
   const lines = [
-    `$${ticker} Conviction Score: ${c.score}/100 — ${c.gradeFull}`,
+    `$${ticker} — Conviction Score: ${c.score}/100 (${c.gradeFull})`,
     `${c.label}.`,
     ``,
-    `Valuation:  ${c.dimensions.val.toString().padStart(3)}  ${c.signals.val}`,
-    `Quality:    ${c.dimensions.qual.toString().padStart(3)}  ${c.signals.qual}`,
-    `Health:     ${c.dimensions.health.toString().padStart(3)}  ${c.signals.health}`,
-    `Growth:     ${c.dimensions.growth.toString().padStart(3)}  ${c.signals.growth}`,
-    `Integrity:  ${c.dimensions.integ.toString().padStart(3)}  ${c.signals.integ}`,
-    `Risk:       ${c.dimensions.risk.toString().padStart(3)}  ${c.signals.risk}`,
-    `Sentiment:  ${c.dimensions.sent.toString().padStart(3)}  ${c.signals.sent}`,
+    `Valuation:  ${String(c.dimensions.val).padStart(3)}  ${c.signals.val}`,
+    `Quality:    ${String(c.dimensions.qual).padStart(3)}  ${c.signals.qual}`,
+    `Health:     ${String(c.dimensions.health).padStart(3)}  ${c.signals.health}`,
+    `Growth:     ${String(c.dimensions.growth).padStart(3)}  ${c.signals.growth}`,
+    `Integrity:  ${String(c.dimensions.integ).padStart(3)}  ${c.signals.integ}`,
+    `Risk:       ${String(c.dimensions.risk).padStart(3)}  ${c.signals.risk}`,
+    `Sentiment:  ${String(c.dimensions.sent).padStart(3)}  ${c.signals.sent}`,
     ``,
-    fair && price ? `DCF fair value: ${fmt(fair)} vs ${fmt(price)} current` : null,
+    fair && price ? `Fair value estimate: ${fmt(fair)} · Current price: ${fmt(price)}` : null,
     ``,
     `Full breakdown → ${APP_URL}/stock/${ticker}`,
-    `$${ticker} #ConvictionScore #DCF #Investing`,
+    `$${ticker} #ConvictionScore #Investing`,
   ].filter(Boolean)
 
   await post(lines.join('\n'))
@@ -5523,6 +5567,8 @@ async function runLiConviction() {
   if (!data) { console.warn('li_conviction: no data — skipping'); return }
 
   const c     = computeSimplifiedConviction(data)
+  validateConviction(c, ticker)
+
   const fair  = appFairValue(data)
   const price = data.quote?.price
   const upside = appUpside(data)
