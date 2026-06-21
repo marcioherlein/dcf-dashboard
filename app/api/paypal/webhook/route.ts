@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { Resend } from 'resend'
+import ProWelcomeEmail from '@/emails/ProWelcomeEmail'
 
 function getClient() {
   return createClient(
@@ -79,6 +81,24 @@ export async function POST(req: NextRequest) {
           .update({ plan: 'pro', paypal_subscription_id: subscriptionId ?? null })
           .eq('email', email)
         console.log('[paypal/webhook] plan set to pro for', email)
+        // Send Pro upgrade confirmation email — non-blocking
+        if (process.env.RESEND_API_KEY) {
+          try {
+            const resend = new Resend(process.env.RESEND_API_KEY)
+            // Fetch name from users table for personalisation
+            const { data: userRow } = await sb.from('users').select('name').eq('email', email).maybeSingle()
+            const name = (userRow as { name?: string | null } | null)?.name ?? null
+            await resend.emails.send({
+              from: 'insic <team@insic.app>',
+              to: email,
+              subject: 'You\'re on insic Pro — unlimited access is active',
+              react: ProWelcomeEmail({ name, plan: 'monthly' }),
+            })
+            console.log('[paypal/webhook] pro welcome email sent to', email)
+          } catch (err) {
+            console.error('[paypal/webhook] pro welcome email failed:', err instanceof Error ? err.message : err)
+          }
+        }
       }
       break
 
