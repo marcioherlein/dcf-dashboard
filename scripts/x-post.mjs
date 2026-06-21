@@ -3429,38 +3429,16 @@ async function runSectorScan() {
   const showGrowth = rows.filter(r => r.revGrowth  != null).length >= threshold
   const showROIC   = rows.filter(r => r.roicSpread != null).length >= threshold
 
-  // Build each row with full labels on every metric — no abbreviations, no header row needed
+  // Each stock: one compact line per metric, labeled, no explanations
   const tableLines = rows.map(r => {
-    const fwdPELine   = `  Fwd P/E: ${r.fwdPE.toFixed(0)}× — what you pay per dollar of next year's earnings`
-    const multLine    = multipleKey && r[multipleKey] != null
-      ? `  ${multipleLabel}: ${r[multipleKey].toFixed(1)}×`
-      : null
-    const growthLine  = showGrowth && r.revGrowth != null
-      ? `  Revenue growth: +${(r.revGrowth * 100).toFixed(0)}%/yr (analyst consensus)`
-      : null
-    const roicLine    = showROIC && r.roicSpread != null
-      ? `  ROIC vs WACC: ${r.roicSpread >= 0 ? '+' : ''}${(r.roicSpread * 100).toFixed(0)}pp — ${r.roicSpread > 0.05 ? 'creating value' : r.roicSpread > -0.02 ? 'roughly break-even on capital' : 'destroying value'}`
-      : null
-    const modelLine   = r.upside != null
-      ? `  Model: ${r.v.short} · DCF upside ${r.upside >= 0 ? '+' : ''}${(r.upside * 100).toFixed(0)}% to fair value ${r.fair ? `(${fmt(r.fair)})` : ''}`
-      : `  Model: ${r.v.short}`
-
-    return [
-      `${r.v.emoji} $${r.ticker}`,
-      fwdPELine,
-      multLine,
-      growthLine,
-      roicLine,
-      modelLine,
-      ``,
-    ].filter(Boolean).join('\n')
+    const parts = [`${r.v.emoji} $${r.ticker}`]
+    parts.push(`Fwd P/E: ${r.fwdPE.toFixed(0)}×`)
+    if (multipleKey && r[multipleKey] != null) parts.push(`${multipleLabel}: ${r[multipleKey].toFixed(1)}×`)
+    if (showGrowth && r.revGrowth  != null) parts.push(`Rev growth: +${(r.revGrowth * 100).toFixed(0)}%`)
+    if (showROIC   && r.roicSpread != null) parts.push(`ROIC spread: ${r.roicSpread >= 0 ? '+' : ''}${(r.roicSpread * 100).toFixed(0)}pp`)
+    if (r.upside != null) parts.push(`${r.v.short} (${r.upside >= 0 ? '+' : ''}${(r.upside * 100).toFixed(0)}%)`)
+    return parts.join(' · ')
   })
-
-  // Legend only for metrics that actually appear
-  const legendParts = [`Fwd P/E = forward price-to-earnings (lower = cheaper on near-term earnings)`]
-  if (multipleLabel && multipleDesc) legendParts.push(`${multipleLabel} = ${multipleDesc}`)
-  if (showGrowth)  legendParts.push(`Revenue growth = analyst consensus 1-year forward estimate`)
-  if (showROIC)    legendParts.push(`ROIC vs WACC = return on invested capital minus cost of capital — positive means the business creates value`)
 
   // Narrative insight sentences
   const insights = [
@@ -3478,9 +3456,6 @@ async function runSectorScan() {
     scan.context,
     ``,
     ...tableLines,
-    `─`,
-    `How to read this:`,
-    ...legendParts.map(l => `· ${l}`),
     ``,
     ...insights,
     ``,
@@ -4680,24 +4655,15 @@ async function runLiSectorScan() {
   const showGrowth = rows.filter(r => r.revGrowth  != null).length >= threshold
   const showROIC   = rows.filter(r => r.roicSpread != null).length >= threshold
 
-  // Each stock gets its own mini-block — fully labeled, no abbreviations
+  // Each stock: one compact line per metric, labeled, no explanations
   const stockBlocks = rows.map(r => {
-    const lines = [`$${r.ticker}`]
-    lines.push(`  Forward P/E: ${r.fwdPE.toFixed(0)}× (what you pay per dollar of next year's earnings)`)
-    if (multipleKey && r[multipleKey] != null) lines.push(`  ${multipleLabel}: ${r[multipleKey].toFixed(1)}× (${multipleDesc})`)
-    if (showGrowth && r.revGrowth != null) lines.push(`  Revenue growth: +${(r.revGrowth * 100).toFixed(0)}%/yr analyst consensus`)
-    if (showROIC && r.roicSpread != null) {
-      const spreadPp = (r.roicSpread * 100).toFixed(0)
-      const comment = r.roicSpread > 0.08 ? `strong value creation — every reinvested dollar earns well above its cost`
-        : r.roicSpread > 0.02 ? `creating value above cost of capital`
-        : r.roicSpread > -0.02 ? `roughly break-even on capital returns`
-        : `returning less than it costs to fund the business`
-      lines.push(`  ROIC vs WACC: ${r.roicSpread >= 0 ? '+' : ''}${spreadPp}pp (${comment})`)
-    }
-    if (r.upside != null && r.fair) {
-      lines.push(`  DCF model: ${r.v.short} · fair value ${fmt(r.fair)} · ${r.upside >= 0 ? '+' : ''}${(r.upside * 100).toFixed(0)}% vs current price`)
-    }
-    return lines.join('\n')
+    const parts = [`${r.v.emoji} $${r.ticker}`]
+    parts.push(`Fwd P/E: ${r.fwdPE.toFixed(0)}×`)
+    if (multipleKey && r[multipleKey] != null) parts.push(`${multipleLabel}: ${r[multipleKey].toFixed(1)}×`)
+    if (showGrowth && r.revGrowth  != null) parts.push(`Rev growth: +${(r.revGrowth * 100).toFixed(0)}%`)
+    if (showROIC   && r.roicSpread != null) parts.push(`ROIC spread: ${r.roicSpread >= 0 ? '+' : ''}${(r.roicSpread * 100).toFixed(0)}pp`)
+    if (r.upside != null && r.fair) parts.push(`${r.v.short} (${r.upside >= 0 ? '+' : ''}${(r.upside * 100).toFixed(0)}% to ${fmt(r.fair)})`)
+    return parts.join(' · ')
   })
 
   // Narrative insight paragraphs
@@ -4720,8 +4686,8 @@ async function runLiSectorScan() {
     ``,
     scan.context,
     ``,
-    ...stockBlocks.flatMap(b => [b, ``]),
-    `─`,
+    ...stockBlocks,
+    ``,
     ...insights,
     ``,
     closing,
