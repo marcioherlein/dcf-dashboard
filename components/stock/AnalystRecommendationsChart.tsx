@@ -137,9 +137,9 @@ export default function AnalystRecommendationsChart({
   const bearPct = Math.round(((latest.sell + latest.strongSell) / totalLatest) * 100)
   const holdPct = 100 - bullPct - bearPct
 
-  const consensusLabel = bullPct >= 60 ? 'Buy' : bullPct >= 40 ? 'Mixed' : 'Hold/Sell'
-  const consensusColor = bullPct >= 60 ? 'text-[#11875D]' : bullPct >= 40 ? 'text-[#B56A00]' : 'text-[#D83B3B]'
-  const consensusBg    = bullPct >= 60 ? 'bg-[#E8F7EF]' : bullPct >= 40 ? 'bg-[#FFF4DA]' : 'bg-[#FCEAEA]'
+  const consensusLabel = bullPct >= 60 ? 'Buy' : bullPct >= 40 ? 'Mixed' : holdPct >= 40 ? 'Neutral' : 'Sell'
+  const consensusColor = bullPct >= 60 ? 'text-[#11875D]' : bullPct >= 40 ? 'text-[#B56A00]' : holdPct >= 40 ? 'text-[#6B6B6B]' : 'text-[#D83B3B]'
+  const consensusBg    = bullPct >= 60 ? 'bg-[#E8F7EF]' : bullPct >= 40 ? 'bg-[#FFF4DA]' : holdPct >= 40 ? 'bg-[#F5F5F5]' : 'bg-[#FCEAEA]'
 
   // Show oldest on left → newest on right (reverse the array)
   const chartData = [...trend].reverse()

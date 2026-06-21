@@ -56,7 +56,7 @@ export default function SimplifierPage() {
     : entries.filter(e => e.listTag === activeTab)
 
   return (
-    <div className="min-h-dvh bg-[#F7F6F1]">
+    <div className="min-h-dvh bg-[#F0F1F6]">
       <div className="max-w-7xl mx-auto px-4 py-4 sm:py-8">
 
         {/* ── Top header card ─────────────────────────────────────────── */}
@@ -73,9 +73,9 @@ export default function SimplifierPage() {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-semibold text-olive-700 bg-olive-50 px-1.5 py-0.5 rounded border border-olive-100">BETA</span>
+                  <h1 className="text-sm font-semibold text-[#06101F]">Watchlist</h1>
                 </div>
-                <p className="text-[#6B6A72] text-xs mt-0.5">My Watch Lists</p>
+                <p className="text-[#6B6A72] text-xs mt-0.5">Track stocks with one-click DCF analysis</p>
               </div>
             </div>
             <div className="flex items-center gap-3 w-full sm:w-auto">

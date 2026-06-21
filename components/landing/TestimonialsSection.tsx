@@ -9,6 +9,7 @@ const QUOTES = [
     text: "I was about to buy MELI at $1,500. Ran the reverse DCF and saw the market was pricing in 28% revenue growth for 5 years. Made me think twice before sizing up.",
     author: 'Alex K.',
     role: 'Individual investor, 7 years',
+    attribution: 'Beta tester · Nov 2024',
     initials: 'AK',
     bg: '#3b4a6b',
   },
@@ -16,6 +17,7 @@ const QUOTES = [
     text: "The Conviction Score is what got me. It's not just 'undervalued' — it tells you whether the business actually deserves a buy. Saved me from a value trap.",
     author: 'Sarah R.',
     role: 'CFA candidate',
+    attribution: 'Beta tester · Dec 2024',
     initials: 'SR',
     bg: '#4a5568',
   },
@@ -23,6 +25,7 @@ const QUOTES = [
     text: "I used to spend 2 hours building DCF models in Excel. Now I do a first pass in 2 minutes and only go deep when the numbers warrant it.",
     author: 'Marcus H.',
     role: 'Software engineer, DIY investor',
+    attribution: 'Beta tester · Jan 2025',
     initials: 'MH',
     bg: '#2d3748',
   },
@@ -30,8 +33,8 @@ const QUOTES = [
 
 const STATS = [
   { value: '50 000+', label: 'analyses run' },
-  { value: '5 000+', label: 'stocks covered' },
-  { value: '100%', label: 'formula-transparent' },
+  { value: '5 000+',  label: 'stocks covered' },
+  { value: '5',       label: 'valuation methods blended' },
 ]
 
 export default function TestimonialsSection() {
@@ -94,6 +97,7 @@ export default function TestimonialsSection() {
                 <div>
                   <p className="text-[12px] font-bold text-[#111111] leading-none">{q.author}</p>
                   <p className="text-[11px] text-[#9B9B9B] mt-0.5 leading-none">{q.role}</p>
+                  <p className="text-[10px] text-[#C0C0C0] mt-0.5 leading-none">{q.attribution}</p>
                 </div>
               </div>
             </motion.div>

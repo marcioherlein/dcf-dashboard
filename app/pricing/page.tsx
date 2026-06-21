@@ -99,13 +99,32 @@ export default function PricingPage() {
   return (
     <div className="min-h-dvh bg-white">
 
-      {/* Breadcrumb */}
-      <div className="border-b border-gray-100 px-6 py-3 flex items-center gap-3">
-        <Link href="/" className="flex items-center shrink-0" aria-label="insic home">
-          <InsicLogoLockup size="sm" />
-        </Link>
-        <span className="text-gray-300">·</span>
-        <span className="text-[13px] text-gray-500">Pricing</span>
+      {/* Nav — shared with landing page */}
+      <div className="border-b border-gray-100 px-4 sm:px-6 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link href="/" className="flex items-center shrink-0" aria-label="insic home">
+            <InsicLogoLockup size="sm" />
+          </Link>
+          <span className="text-gray-300 hidden sm:block">·</span>
+          <span className="text-[13px] text-gray-500 hidden sm:block">Pricing</span>
+        </div>
+        <div className="flex items-center gap-3">
+          {!session && (
+            <Link href="/analyze" className="text-[13px] text-gray-500 hover:text-gray-900 transition-colors">
+              Sign in
+            </Link>
+          )}
+          <Link
+            href="/analyze"
+            className="inline-flex items-center justify-center rounded-lg px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-[#526A08]"
+            style={{ background: '#5F790B', minHeight: '36px' }}
+          >
+            {session ? 'Go to app' : 'Try free'}
+          </Link>
+          <Link href="/" className="text-[13px] text-gray-400 hover:text-gray-700 transition-colors hidden sm:block">
+            ← Home
+          </Link>
+        </div>
       </div>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-20">
@@ -131,7 +150,7 @@ export default function PricingPage() {
           <div className="rounded-2xl border border-gray-200 bg-white p-8 flex flex-col shadow-sm relative">
             <div className="absolute top-5 left-5">
               <span className="rounded-full bg-[#EEF2FA] border border-[#BFD2A1] text-[#5F790B] text-[10px] font-bold uppercase tracking-wider px-2.5 py-1">
-                Beta — free now
+                Free forever
               </span>
             </div>
             <div className="mb-8 mt-7">

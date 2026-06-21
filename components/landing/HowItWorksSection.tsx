@@ -1,5 +1,6 @@
 'use client'
 import { useRef } from 'react'
+import Link from 'next/link'
 import { motion, useInView, useReducedMotion } from 'motion/react'
 import { Search, TrendingUp, SlidersHorizontal } from 'lucide-react'
 
@@ -137,6 +138,18 @@ export default function HowItWorksSection() {
               </div>
             </motion.div>
           ))}
+        </div>
+
+        {/* CTA */}
+        <div className="mt-8 text-center">
+          <Link
+            href="/analyze"
+            className="inline-flex items-center justify-center rounded-xl px-7 py-3.5 text-[14.5px] font-semibold text-white transition-all hover:-translate-y-px active:scale-95"
+            style={{ background: '#5F790B', boxShadow: '0 4px 14px rgba(95,121,11,0.28)', minHeight: '48px' }}
+          >
+            Try it free — type any ticker →
+          </Link>
+          <p className="mt-2 text-[12px] text-[#9B9B9B]">No sign-up required for your first analysis</p>
         </div>
 
       </div>

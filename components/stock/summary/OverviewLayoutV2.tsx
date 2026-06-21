@@ -173,7 +173,7 @@ export default function OverviewLayoutV2({
               color={effectiveChangePct >= 0 ? '#11875D' : '#D83B3B'}
             />
             <KpiCell
-              label="Cockpit Est."
+              label="DCF Fair Value"
               primary={fairValue != null ? fmtP(fairValue, currency) : '—'}
               secondary={fvUpside != null ? `${fvUpside >= 0 ? '+' : ''}${fvUpside.toFixed(1)}%` : undefined}
               color="#8b5cf6"

@@ -120,11 +120,15 @@ export default function LiveVerdictStrip() {
   )
 
   useEffect(() => {
+    // 4-second timeout per ticker — prevents indefinite skeletons on slow connections
     TICKERS.forEach((ticker, idx) => {
-      fetch(`/api/financials?ticker=${ticker}`)
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 4000)
+
+      fetch(`/api/financials?ticker=${ticker}`, { signal: controller.signal })
         .then((r) => r.json())
         .then((json) => {
-          // Defensively read multiple possible field paths
+          clearTimeout(timeout)
           const currentPrice: number | null =
             json?.currentPrice ?? json?.price ?? json?.quote?.price ?? null
           const fairValue: number | null =
@@ -146,6 +150,7 @@ export default function LiveVerdictStrip() {
           })
         })
         .catch(() => {
+          clearTimeout(timeout)
           setCards((prev) => {
             const next = [...prev]
             next[idx] = { ticker, state: 'error', data: null }

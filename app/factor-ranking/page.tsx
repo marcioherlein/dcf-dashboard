@@ -119,7 +119,7 @@ export default function FactorRankingPage() {
       {/* Page title */}
       <div className="px-4 sm:px-6 py-4 border-b border-[#E3E1DA] bg-white flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-base font-semibold text-[#06101F] tracking-tight">Market Screener</h1>
+          <h1 className="text-base font-semibold text-[#06101F] tracking-tight">Factor Ranking</h1>
           <p className="text-[12px] text-[#566174] mt-0.5">
             Multi-factor ranking · MERVAL · NYSE · NASDAQ · ROFEX
             {lastFetch && <> · <span className="text-[#8A95A6]">updated {lastFetch.toLocaleTimeString()}</span></>}

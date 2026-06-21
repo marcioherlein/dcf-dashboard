@@ -310,8 +310,7 @@ export default function MonteCarloPanel({
           <div>
             <div className="flex items-center gap-1.5">
               <p className="text-[10px] font-[700] tracking-wider uppercase text-[#9B9B9B]">Monte Carlo</p>
-              <span className="px-1.5 py-px text-[9px] font-[700] bg-[#FFF4DA] text-[#B56A00] border border-[#F3D391] rounded-full">Beta</span>
-              <InfoTooltip text="10,000 Markov-regime DCF simulation paths. P50 adjusted for tail risk via CVaR. Shows the distribution of fair value outcomes." />
+              <InfoTooltip text="10,000 Markov-regime DCF simulation paths. P50 adjusted for tail risk via CVaR. Exploratory — for context only, not a point estimate." />
             </div>
             <p className="text-[13px] font-[700] text-[#06101F] mt-0.5">
               {running ? 'Running simulation…' : fairValue != null ? `P50 ${fmtPrice(fairValue, currency)}` : 'Distribution'}
@@ -480,11 +479,8 @@ export default function MonteCarloPanel({
         {/* Method label */}
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <span className="text-[13px] font-[700] text-[#111111] truncate">Monte Carlo DCF</span>
-          <span className="shrink-0 px-1.5 py-0.5 text-[10px] font-[700] bg-[#FFF4DA] text-[#B56A00] border border-[#F3D391] rounded-full">
-            Beta
-          </span>
           <InfoTooltip
-            text="10,000 Markov-regime simulation paths with Longstaff-Schwartz real options. P50 adjusted for tail risk via CVaR. Analyst consensus anchors years 1–3."
+            text="10,000 Markov-regime simulation paths with Longstaff-Schwartz real options. P50 adjusted for tail risk via CVaR. Exploratory — for context, not a point estimate."
             side="bottom"
           />
         </div>

@@ -426,7 +426,13 @@ export default function ScreenerPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-[#F5F5F5]">
+    <div className="min-h-dvh bg-[#F0F1F6]">
+
+      {/* ── Page header ────────────────────────────────────────────────────── */}
+      <div className="px-4 sm:px-6 py-3 border-b border-[#E3E1DA] bg-white">
+        <h1 className="text-base font-semibold text-[#06101F] tracking-tight">US Stock Screener</h1>
+        <p className="text-[12px] text-[#566174] mt-0.5">Filter 5,000+ NYSE &amp; NASDAQ equities by fundamentals, technicals, and analyst ratings</p>
+      </div>
 
       {/* ── Sticky filter bar ──────────────────────────────────────────────── */}
       <div className="bg-white border-b border-[#E5E5E5] sticky top-[52px] z-30">

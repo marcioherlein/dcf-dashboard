@@ -143,7 +143,7 @@ export default function PeerValuationChart({ ticker, isFinancialSector = false }
               type="button"
               onClick={load}
               aria-label="Refresh peer data"
-              className="min-w-[36px] min-h-[36px] flex items-center justify-center text-[#8A95A6] hover:text-[#566174] transition-colors rounded-lg hover:bg-[#F5F5F5]"
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center text-[#8A95A6] hover:text-[#566174] transition-colors rounded-lg hover:bg-[#F5F5F5]"
             >
               <RefreshCw className="w-3 h-3" />
             </button>

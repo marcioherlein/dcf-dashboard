@@ -32,7 +32,7 @@ const MARKETS_NAV: NavEntry[] = [
 
 const TOOLS_NAV: NavEntry[] = [
   { href: '/compare',        label: 'Compare',        icon: GitCompare, match: (p) => p.startsWith('/compare') },
-  { href: '/factor-ranking', label: 'Market Screener', icon: BarChart3,  match: (p) => p.startsWith('/factor-ranking') },
+  { href: '/factor-ranking', label: 'Factor Ranking',  icon: BarChart3,  match: (p) => p.startsWith('/factor-ranking') },
   { href: '/strategies',     label: 'Strategies',      icon: Layers,     match: (p) => p.startsWith('/strategies') || p.startsWith('/strategy') },
   { href: '/simplifier',     label: 'Watchlist',        icon: List,       match: (p) => p.startsWith('/simplifier') },
   { href: '/ai-stack',       label: 'AI Stack',         icon: Cpu,        match: (p) => p.startsWith('/ai-stack') },

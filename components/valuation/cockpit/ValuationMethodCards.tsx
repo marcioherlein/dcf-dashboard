@@ -844,7 +844,7 @@ export default function ValuationMethodCards({
   fcfMargin, ttmEbitdaDollars,
   assumptions, historicalData,
   onChange, onReset, onUndo, canUndo,
-  sensitivity: _sensitivity, sectorBenchmarks,
+  sensitivity, sectorBenchmarks,
   onScrollToFullDCF,
   fcfMarginSeries,
   blendedFairValue,
@@ -1089,13 +1089,18 @@ export default function ValuationMethodCards({
                     </div>
                     {fields.map(f => {
                       const hist = historicalData?.[f.chartKey ?? f.key]
-                      const hint = historicalHint(hist, f.unit)
+                      const histHint = historicalHint(hist, f.unit)
                       const fValue = assumptions[f.key] as number ?? (f.unit === '%' ? 0 : 1)
                       const sectorBenchmark =
                         f.key === 'exitPE'         ? (sectorBenchmarks?.exitPE ?? null) :
                         f.key === 'exitMultiple'    ? (sectorBenchmarks?.exitMultiple ?? null) :
                         f.key === 'revenueMultiple' ? (sectorBenchmarks?.revenueMultiple ?? null) :
                         null
+                      const impact = sensitivity?.[f.key]
+                      const impactHint = impact != null && Math.abs(impact) > 0.01
+                        ? `±$${Math.abs(impact).toFixed(2)}/1pp`
+                        : null
+                      const hint = [histHint, impactHint].filter(Boolean).join(' · ') || null
                       return (
                         <FieldStepper
                           key={String(f.key)}

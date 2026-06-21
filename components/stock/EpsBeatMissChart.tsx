@@ -223,22 +223,6 @@ export default function EpsBeatMissChart({ surprises, currency = 'USD' }: Props)
       <div className="flex-1">
         <BarsChart data={data} sym={sym} />
       </div>
-
-      {/* Per-quarter beat/miss row */}
-      <div className="grid mt-2 border-t border-[#F0F0F0] pt-3" style={{ gridTemplateColumns: `repeat(${data.length}, 1fr)` }}>
-        {data.map((d, i) => (
-          <div key={i} className="flex flex-col items-center gap-0.5">
-            <span className={`text-[11px] font-[700] ${d.beat ? 'text-[#11875D]' : d.miss ? 'text-[#D83B3B]' : 'text-[#9B9B9B]'}`}>
-              {d.beat ? 'Beat' : d.miss ? 'Miss' : 'In line'}
-            </span>
-            {d.diff != null && (
-              <span className={`text-[10px] font-[600] tabular-nums ${d.beat ? 'text-[#11875D]' : d.miss ? 'text-[#D83B3B]' : 'text-[#9B9B9B]'}`}>
-                {d.beat ? '+' : d.miss ? '−' : ''}{sym}{Math.abs(d.diff).toFixed(2)}
-              </span>
-            )}
-          </div>
-        ))}
-      </div>
     </div>
   )
 }

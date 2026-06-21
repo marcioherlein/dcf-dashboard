@@ -735,8 +735,8 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
 
       </div>
 
-      {/* ── 7. FULL DCF MODEL (collapsed) — year-by-year projections ─────────── */}
-      <details ref={fullDcfRef} className="group" id="full_dcf" open>
+      {/* ── 7. FULL DCF MODEL (collapsed by default) — year-by-year projections ─────────── */}
+      <details ref={fullDcfRef} className="group" id="full_dcf">
         <summary className="flex items-center gap-2 cursor-pointer list-none bg-white rounded-xl border border-[#E3E1DA] shadow-card px-4 sm:px-5 py-3.5 hover:bg-[#EAF1FF] transition-colors select-none">
           <span className="text-[#2563EB] text-xs group-open:rotate-90 transition-transform inline-block">▶</span>
           <span className="text-sm font-[650] text-[#2563EB]">

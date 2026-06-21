@@ -1,9 +1,9 @@
 import Link from 'next/link'
-import { GitCompare, Cpu, Layers, ArrowRight } from 'lucide-react'
+import { GitCompare, Cpu, Layers, ArrowRight, BarChart2 } from 'lucide-react'
 
 const DIFFERENTIATORS = [
   {
-    icon: <GitCompare size={22} strokeWidth={2} className="text-[#5F790B]" />,
+    icon: <BarChart2 size={22} strokeWidth={2} className="text-[#5F790B]" />,
     name: 'Reverse DCF',
     tagline: 'What growth is the market pricing in?',
     description:
