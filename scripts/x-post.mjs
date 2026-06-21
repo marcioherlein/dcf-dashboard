@@ -3383,7 +3383,6 @@ async function runSectorScan() {
     const evEbitda   = d.businessProfile?.evToEbitda   ?? null
     const evRevenue  = d.businessProfile?.evToRevenue  ?? null
     const pfcf       = (() => {
-      // P/FCF = price / (FCF per share). FCF per share = baseFCF * 1e6 / sharesOutstanding
       const fcfM   = d.baseFCF
       const shares = d.quote?.sharesOutstanding
       if (fcfM != null && shares && shares > 0) {
@@ -3393,15 +3392,41 @@ async function runSectorScan() {
       return null
     })()
     const revGrowth  = d.cagrAnalysis?.analystEstimate1y ?? null
+    const hist3y     = d.cagrAnalysis?.historicalCagr3y  ?? null
     const roicSpread = d.scores?.roic?.spread ?? null
     const fair       = appFairValue(d)
     const upside     = appUpside(d)
+    const high52     = d.quote?.fiftyTwoWeekHigh ?? null
+    const low52      = d.quote?.fiftyTwoWeekLow  ?? null
 
-    // Skip rows missing the primary multiple — they break the table
+    // Historical P/E average from last 3 years of historicalMultiples
+    const histMultiples = d.historicalMultiples ?? []
+    const histPEs = histMultiples.map(y => y.pe).filter(v => v != null && v > 0 && v < 200)
+    const avgHistPE = histPEs.length >= 2
+      ? histPEs.reduce((s, v) => s + v, 0) / histPEs.length
+      : null
+
+    // Historical EV/EBITDA average
+    const histEvEb = histMultiples.map(y => y.evEbitda).filter(v => v != null && v > 0 && v < 500)
+    const avgHistEvEb = histEvEb.length >= 2
+      ? histEvEb.reduce((s, v) => s + v, 0) / histEvEb.length
+      : null
+
+    // Historical ROIC trend from keyMetricsAnnual
+    const annualMetrics = d.keyMetricsAnnual ?? []
+    const roicHistory = annualMetrics.map(y => y.roic).filter(v => v != null)
+    const roicTrend = roicHistory.length >= 2
+      ? (roicHistory[roicHistory.length - 1] > roicHistory[0] ? 'improving' : 'declining')
+      : null
+
     if (!price || !fwdPE) continue
 
     const v = verdictLabel(upside ?? 0)
-    rows.push({ ticker, price, fwdPE, evEbitda, evRevenue, pfcf, revGrowth, roicSpread, fair, upside, v })
+    rows.push({
+      ticker, price, fwdPE, evEbitda, evRevenue, pfcf,
+      revGrowth, hist3y, roicSpread, fair, upside, v,
+      high52, low52, avgHistPE, avgHistEvEb, roicTrend,
+    })
   }
 
   if (rows.length === 0) throw new Error('No sector scan data returned')
@@ -3429,7 +3454,7 @@ async function runSectorScan() {
   const showGrowth = rows.filter(r => r.revGrowth  != null).length >= threshold
   const showROIC   = rows.filter(r => r.roicSpread != null).length >= threshold
 
-  // Each stock: one compact line per metric, labeled, no explanations
+  // Each stock: current metrics + one historical context line where available
   const tableLines = rows.map(r => {
     const parts = [`${r.v.emoji} $${r.ticker}`]
     parts.push(`Fwd P/E: ${r.fwdPE.toFixed(0)}×`)
@@ -3437,7 +3462,29 @@ async function runSectorScan() {
     if (showGrowth && r.revGrowth  != null) parts.push(`Rev growth: +${(r.revGrowth * 100).toFixed(0)}%`)
     if (showROIC   && r.roicSpread != null) parts.push(`ROIC spread: ${r.roicSpread >= 0 ? '+' : ''}${(r.roicSpread * 100).toFixed(0)}pp`)
     if (r.upside != null) parts.push(`${r.v.short} (${r.upside >= 0 ? '+' : ''}${(r.upside * 100).toFixed(0)}%)`)
-    return parts.join(' · ')
+
+    // Historical context — pick the most informative one available
+    const histParts = []
+    if (r.avgHistPE != null) {
+      const vs = r.fwdPE / r.avgHistPE
+      const label = vs > 1.15 ? `above` : vs < 0.85 ? `below` : `in line with`
+      histParts.push(`Fwd P/E ${label} 3Y avg (${r.avgHistPE.toFixed(0)}×)`)
+    }
+    if (r.hist3y != null && r.revGrowth != null) {
+      const accel = r.revGrowth > r.hist3y * 1.1 ? `accelerating vs` : r.revGrowth < r.hist3y * 0.85 ? `decelerating vs` : `in line with`
+      histParts.push(`growth ${accel} 3Y CAGR of +${(r.hist3y * 100).toFixed(0)}%`)
+    } else if (r.hist3y != null) {
+      histParts.push(`3Y revenue CAGR: +${(r.hist3y * 100).toFixed(0)}%`)
+    }
+    if (r.roicTrend) histParts.push(`ROIC ${r.roicTrend}`)
+    if (r.high52 != null && r.low52 != null && r.price != null) {
+      const fromHigh = ((r.price - r.high52) / r.high52 * 100).toFixed(0)
+      if (Number(fromHigh) < -15) histParts.push(`${Math.abs(fromHigh)}% off 52W high`)
+    }
+
+    const histLine = histParts.length > 0 ? `  ↳ ${histParts.slice(0, 2).join(' · ')}` : null
+
+    return [parts.join(' · '), histLine].filter(Boolean).join('\n')
   })
 
   // Narrative insight sentences
@@ -4628,9 +4675,21 @@ async function runLiSectorScan() {
     const fair       = appFairValue(d)
     const upside     = appUpside(d)
     const price      = d.quote?.price
+    const hist3y     = d.cagrAnalysis?.historicalCagr3y ?? null
+    const high52     = d.quote?.fiftyTwoWeekHigh ?? null
+    const low52      = d.quote?.fiftyTwoWeekLow  ?? null
+    const histMultiples = d.historicalMultiples ?? []
+    const histPEs    = histMultiples.map(y => y.pe).filter(v => v != null && v > 0 && v < 200)
+    const avgHistPE  = histPEs.length >= 2 ? histPEs.reduce((s, v) => s + v, 0) / histPEs.length : null
+    const histEvEb   = histMultiples.map(y => y.evEbitda).filter(v => v != null && v > 0 && v < 500)
+    const avgHistEvEb = histEvEb.length >= 2 ? histEvEb.reduce((s, v) => s + v, 0) / histEvEb.length : null
+    const annualMetrics = d.keyMetricsAnnual ?? []
+    const roicHistory = annualMetrics.map(y => y.roic).filter(v => v != null)
+    const roicTrend  = roicHistory.length >= 2
+      ? (roicHistory[roicHistory.length - 1] > roicHistory[0] ? 'improving' : 'declining') : null
     if (!price || !fwdPE) continue
     const v = verdictLabel(upside ?? 0)
-    rows.push({ ticker: scan.tickers[i], price, fwdPE, evEbitda, evRevenue, revGrowth, roicSpread, fair, upside, v })
+    rows.push({ ticker: scan.tickers[i], price, fwdPE, evEbitda, evRevenue, revGrowth, roicSpread, fair, upside, v, hist3y, high52, low52, avgHistPE, avgHistEvEb, roicTrend })
   }
 
   if (rows.length === 0) throw new Error('No sector scan data')
@@ -4655,7 +4714,7 @@ async function runLiSectorScan() {
   const showGrowth = rows.filter(r => r.revGrowth  != null).length >= threshold
   const showROIC   = rows.filter(r => r.roicSpread != null).length >= threshold
 
-  // Each stock: one compact line per metric, labeled, no explanations
+  // Each stock: current metrics + historical context line
   const stockBlocks = rows.map(r => {
     const parts = [`${r.v.emoji} $${r.ticker}`]
     parts.push(`Fwd P/E: ${r.fwdPE.toFixed(0)}×`)
@@ -4663,18 +4722,38 @@ async function runLiSectorScan() {
     if (showGrowth && r.revGrowth  != null) parts.push(`Rev growth: +${(r.revGrowth * 100).toFixed(0)}%`)
     if (showROIC   && r.roicSpread != null) parts.push(`ROIC spread: ${r.roicSpread >= 0 ? '+' : ''}${(r.roicSpread * 100).toFixed(0)}pp`)
     if (r.upside != null && r.fair) parts.push(`${r.v.short} (${r.upside >= 0 ? '+' : ''}${(r.upside * 100).toFixed(0)}% to ${fmt(r.fair)})`)
-    return parts.join(' · ')
+
+    const histParts = []
+    if (r.avgHistPE != null) {
+      const vs = r.fwdPE / r.avgHistPE
+      const label = vs > 1.15 ? `above` : vs < 0.85 ? `below` : `in line with`
+      histParts.push(`P/E ${label} 3Y avg (${r.avgHistPE.toFixed(0)}×)`)
+    }
+    if (r.hist3y != null && r.revGrowth != null) {
+      const accel = r.revGrowth > r.hist3y * 1.1 ? `accelerating vs` : r.revGrowth < r.hist3y * 0.85 ? `decelerating vs` : `in line with`
+      histParts.push(`growth ${accel} 3Y CAGR of +${(r.hist3y * 100).toFixed(0)}%`)
+    } else if (r.hist3y != null) {
+      histParts.push(`3Y CAGR: +${(r.hist3y * 100).toFixed(0)}%`)
+    }
+    if (r.roicTrend) histParts.push(`ROIC ${r.roicTrend}`)
+    if (r.high52 != null && r.price != null) {
+      const fromHigh = ((r.price - r.high52) / r.high52 * 100).toFixed(0)
+      if (Number(fromHigh) < -15) histParts.push(`${Math.abs(fromHigh)}% off 52W high`)
+    }
+    const histLine = histParts.length > 0 ? `  ↳ ${histParts.slice(0, 2).join(' · ')}` : null
+
+    return [parts.join(' · '), histLine].filter(Boolean).join('\n')
   })
 
   // Narrative insight paragraphs
   const insights = [
-    cheapest ? `$${cheapest.ticker} has the lowest forward multiple in the group at ${cheapest.fwdPE.toFixed(0)}×.${cheapest.revGrowth != null ? ` Analysts still expect +${(cheapest.revGrowth * 100).toFixed(0)}%/yr revenue growth — that combination is worth investigating.` : ''}` : null,
-    richest  ? `$${richest.ticker} is priced the richest at ${richest.fwdPE.toFixed(0)}× forward earnings.${richest.revGrowth != null ? ` It needs to sustain +${(richest.revGrowth * 100).toFixed(0)}%/yr growth to justify that premium.` : ' A valuation that demands execution.'}` : null,
+    cheapest ? `$${cheapest.ticker} has the lowest forward multiple in the group at ${cheapest.fwdPE.toFixed(0)}×.${cheapest.avgHistPE != null ? ` Its 3Y average was ${cheapest.avgHistPE.toFixed(0)}× — so it's trading ${cheapest.fwdPE < cheapest.avgHistPE * 0.9 ? 'below' : 'near'} its own history.` : ''}${cheapest.revGrowth != null ? ` Analysts expect +${(cheapest.revGrowth * 100).toFixed(0)}%/yr growth.` : ''}` : null,
+    richest  ? `$${richest.ticker} is priced the richest at ${richest.fwdPE.toFixed(0)}×.${richest.avgHistPE != null ? ` Vs its own 3Y average of ${richest.avgHistPE.toFixed(0)}× — ${richest.fwdPE > richest.avgHistPE * 1.15 ? 'elevated relative to history' : 'in historical range'}.` : ''}${richest.revGrowth != null ? ` Needs +${(richest.revGrowth * 100).toFixed(0)}%/yr growth to justify it.` : ''}` : null,
     bestROIC && bestROIC.roicSpread != null && bestROIC.roicSpread > 0.04
-      ? `$${bestROIC.ticker} has the widest ROIC spread in the group (+${(bestROIC.roicSpread * 100).toFixed(0)}pp above WACC). That's what a durable moat looks like in the numbers — compounding above the cost of capital.`
+      ? `$${bestROIC.ticker} has the widest ROIC spread (+${(bestROIC.roicSpread * 100).toFixed(0)}pp above WACC).${bestROIC.roicTrend ? ` And it's ${bestROIC.roicTrend} — that matters more than a single year's number.` : ''}`
       : null,
     bestGrowth && bestGrowth.revGrowth != null
-      ? `$${bestGrowth.ticker} is the fastest-growing name analysts expect here (+${(bestGrowth.revGrowth * 100).toFixed(0)}%/yr).${bestGrowth.roicSpread != null && bestGrowth.roicSpread > 0 ? ` With a positive ROIC spread, that growth actually creates value rather than just consuming capital.` : ` The question is whether the current price already accounts for it.`}`
+      ? `$${bestGrowth.ticker} is the fastest-growing name here at +${(bestGrowth.revGrowth * 100).toFixed(0)}%/yr.${bestGrowth.hist3y != null ? ` Historical 3Y CAGR was +${(bestGrowth.hist3y * 100).toFixed(0)}% — analysts expect ${bestGrowth.revGrowth > bestGrowth.hist3y * 1.1 ? 'an acceleration' : bestGrowth.revGrowth < bestGrowth.hist3y * 0.85 ? 'a deceleration' : 'a similar pace'}.` : ''}`
       : null,
   ].filter(Boolean)
 
