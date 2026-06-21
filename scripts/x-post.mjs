@@ -127,16 +127,17 @@ function validatePost(text) {
 /**
  * Post a single tweet. Used for all non-thread posts.
  */
-async function post(text) {
-  // Validate before posting — throws if content is broken
+async function post(text, imageUrl = null) {
   validatePost(text)
 
   if (DRY_RUN) {
     console.log('--- DRY RUN ---')
     console.log(text)
+    if (imageUrl) console.log(`Image: ${imageUrl}`)
     console.log(`Length: ${text.length}`)
     return
   }
+  const mediaBlock = imageUrl ? `\n          mediaUrls: [${JSON.stringify(imageUrl)}]` : ''
   const res = await fetch('https://api.buffer.com', {
     method: 'POST',
     headers: {
@@ -147,7 +148,7 @@ async function post(text) {
       query: `mutation {
         createPost(input: {
           channelId: "${BUFFER_CHANNEL_ID}"
-          text: ${JSON.stringify(text)}
+          text: ${JSON.stringify(text)}${mediaBlock}
           schedulingType: automatic
           mode: shareNow
         }) {
@@ -164,7 +165,7 @@ async function post(text) {
   const json = await res.json()
   const result = json?.data?.createPost
   if (result?.post?.status === 'sent' || result?.post?.status === 'buffer') {
-    console.log(`Posted — Buffer post ID: ${result.post.id}`)
+    console.log(`Posted — Buffer post ID: ${result.post.id}${imageUrl ? ' (with image)' : ''}`)
   } else {
     const msg = result?.message ?? JSON.stringify(json)
     throw new Error(`Buffer post failed: ${msg}`)
@@ -4300,7 +4301,7 @@ async function runRatioExplained() {
 // LinkedIn audience: finance professionals, investors, career-oriented.
 // Format: longer, more narrative, no character limits, hashtags at end only.
 
-async function postLinkedIn(text) {
+async function postLinkedIn(text, imageUrl = null) {
   if (!LINKEDIN_CHANNEL_ID) {
     console.warn('LINKEDIN_CHANNEL_ID not set — skipping LinkedIn post')
     return
@@ -4309,9 +4310,11 @@ async function postLinkedIn(text) {
   if (DRY_RUN) {
     console.log('--- DRY RUN (LinkedIn) ---')
     console.log(text)
+    if (imageUrl) console.log(`Image: ${imageUrl}`)
     console.log(`Length: ${text.length}`)
     return
   }
+  const mediaBlock = imageUrl ? `\n          mediaUrls: [${JSON.stringify(imageUrl)}]` : ''
   const res = await fetch('https://api.buffer.com', {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${BUFFER_API_KEY}`, 'Content-Type': 'application/json' },
@@ -4319,7 +4322,7 @@ async function postLinkedIn(text) {
       query: `mutation {
         createPost(input: {
           channelId: "${LINKEDIN_CHANNEL_ID}"
-          text: ${JSON.stringify(text)}
+          text: ${JSON.stringify(text)}${mediaBlock}
           schedulingType: automatic
           mode: shareNow
         }) {
@@ -4336,7 +4339,7 @@ async function postLinkedIn(text) {
   const json = await res.json()
   const result = json?.data?.createPost
   if (result?.post?.status === 'sent' || result?.post?.status === 'buffer') {
-    console.log(`LinkedIn posted — Buffer post ID: ${result.post.id}`)
+    console.log(`LinkedIn posted — Buffer post ID: ${result.post.id}${imageUrl ? ' (with image)' : ''}`)
   } else {
     throw new Error(`LinkedIn post failed: ${result?.message ?? JSON.stringify(json)}`)
   }
@@ -5499,9 +5502,73 @@ function validateConviction(c, ticker) {
 }
 
 
+// Builds the phone OG image URL for a given stock + conviction result.
+// Attaches to conviction_score and li_conviction posts.
+function buildPhoneImageUrl(data, ticker, convScore) {
+  if (!APP_URL) return null
+  const price   = data.quote?.price
+  const fair    = appFairValue(data)
+  const upside  = appUpside(data)
+  const bear    = data.scenarios?.bear?.fairValue
+  const bull    = data.scenarios?.bull?.fairValue
+  const currency = data.quote?.currency ?? 'USD'
+  const name    = data.quote?.name ?? ''
+  const impliedG = data.valuationMethods?.models?.reverseDcf?.impliedCAGR
+  const mig     = impliedG != null ? impliedG : null
+  const migA    = data.cagr ?? null
+
+  // Map conviction score → verdict string for OG image
+  const verdict = upside == null ? 'Insufficient Data'
+    : upside > 0.10  ? 'Undervalued'
+    : upside < -0.10 ? 'Overvalued'
+    : 'Fairly Valued'
+
+  // Build 2-3 pass bullets from the strongest signals
+  const c = convScore
+  const passBullets = []
+  const failBullets = []
+  if (c.dimensions.qual >= 70) passBullets.push(c.signals.qual.split(' · ')[0])
+  if (c.dimensions.sent >= 70) passBullets.push(c.signals.sent.split(' · ')[0])
+  if (c.dimensions.health >= 65) passBullets.push(c.signals.health.split(' · ')[0])
+  if (c.dimensions.integ >= 80) passBullets.push('Earnings appear reliable')
+  if (c.dimensions.qual < 40) failBullets.push(c.signals.qual.split(' · ')[0])
+  else if (c.dimensions.val < 40) failBullets.push(c.signals.val)
+  else if (c.dimensions.health < 40) failBullets.push(c.signals.health.split(' · ')[0])
+
+  // P/E history for mini bar chart
+  const histMultiples = data.historicalMultiples ?? []
+  const peHistStr = histMultiples
+    .filter(y => y.pe != null && y.pe > 0 && y.pe < 200 && y.fiscalYear)
+    .slice(-5)
+    .map(y => `${y.fiscalYear}:${y.pe.toFixed(1)}`)
+    .join('|')
+
+  const params = new URLSearchParams()
+  params.set('ticker', ticker)
+  if (name) params.set('name', name.slice(0, 50))
+  params.set('verdict', verdict)
+  params.set('currency', currency)
+  if (price)  params.set('price', price.toFixed(2))
+  if (fair)   params.set('fv', fair.toFixed(2))
+  if (upside != null) params.set('upside', upside.toFixed(4))
+  if (bear)   params.set('bear', bear.toFixed(2))
+  if (bull)   params.set('bull', bull.toFixed(2))
+  if (mig)    params.set('mig', mig.toFixed(4))
+  if (migA)   params.set('migAssumed', migA.toFixed(4))
+  if (peHistStr) params.set('peHist', peHistStr)
+  // Conviction signals for the card
+  params.set('checkPassed', String(Math.round(c.score)))
+  params.set('checkTotal', '100')
+  params.set('checkLabel', c.score >= 72 ? 'Strong' : c.score >= 50 ? 'Mixed' : 'Weak')
+  if (passBullets.length > 0) params.set('passBullets', passBullets.slice(0, 3).join('|'))
+  if (failBullets.length > 0) params.set('failBullets', failBullets.slice(0, 1).join('|'))
+
+  return `${APP_URL}/api/og/phone?${params.toString()}`
+}
+
+// ─── Mode: conviction_score ───────────────────────────────────────────────────
 // Mon/Wed/Fri 2PM ART. Full 7-dimension conviction breakdown for one stock.
 // Showcases the Conviction Score tab — insic.app's most differentiating feature.
-
 async function runConvictionScore() {
   const day = new Date().getDay()
   const pool = TICKER ? [TICKER] : (ROTATION[day] ?? ROTATION[1])
@@ -5524,6 +5591,7 @@ async function runConvictionScore() {
   const price = data.quote?.price
 
   validateConviction(c, ticker)
+  const imageUrl = buildPhoneImageUrl(data, ticker, c)
 
   const lines = [
     `$${ticker} — Conviction Score: ${c.score}/100 (${c.gradeFull})`,
@@ -5543,7 +5611,7 @@ async function runConvictionScore() {
     `$${ticker} #ConvictionScore #Investing`,
   ].filter(Boolean)
 
-  await post(lines.join('\n'))
+  await post(lines.join('\n'), imageUrl)
 }
 
 // ─── Mode: li_conviction ──────────────────────────────────────────────────────
@@ -5568,7 +5636,7 @@ async function runLiConviction() {
 
   const c     = computeSimplifiedConviction(data)
   validateConviction(c, ticker)
-
+  const imageUrl = buildPhoneImageUrl(data, ticker, c)
   const fair  = appFairValue(data)
   const price = data.quote?.price
   const upside = appUpside(data)
@@ -5620,7 +5688,7 @@ async function runLiConviction() {
     `#${ticker} #ConvictionScore #ValueInvesting #DCF #Finance${sector ? ` #${sector.replace(/[^a-zA-Z]/g, '')}` : ''}`,
   ].filter(s => s !== undefined)
 
-  await postLinkedIn(lines.join('\n'))
+  await postLinkedIn(lines.join('\n'), imageUrl)
 }
 
 // ─── ETF helpers ──────────────────────────────────────────────────────────────
