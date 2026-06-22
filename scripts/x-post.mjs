@@ -340,6 +340,34 @@ function appUpside(data) {
   return data.valuationMethods?.cockpitUpsidePct ?? data.valuationMethods?.triangulatedUpsidePct ?? null
 }
 
+// Derive bear/bull scenarios anchored to the cockpit fair value.
+// The raw scenarios.bear/bull are from a single DCF model that can diverge
+// wildly from cockpitFairValue (e.g. MU: raw base $117, cockpit $660).
+// We apply the raw scenarios' proportional spread to the cockpit base instead,
+// so bear/bull are always consistent with the fair value we actually display.
+function appScenarios(data) {
+  const cockpit  = appFairValue(data)
+  const rawBase  = data.scenarios?.base?.fairValue
+  const rawBear  = data.scenarios?.bear?.fairValue
+  const rawBull  = data.scenarios?.bull?.fairValue
+  if (!cockpit || !rawBase || !rawBear || !rawBull || rawBase <= 0) return { bear: null, bull: null }
+  // Apply same proportional spread to cockpit fair value
+  const bear = cockpit * (rawBear / rawBase)
+  const bull = cockpit * (rawBull / rawBase)
+  // Sanity: bear < cockpit < bull, and spread > 5%
+  if (bear >= cockpit || bull <= cockpit) return { bear: null, bull: null }
+  if ((bull - bear) / cockpit < 0.05) return { bear: null, bull: null }
+  return { bear: Math.round(bear * 100) / 100, bull: Math.round(bull * 100) / 100 }
+}
+
+// Only show bear/bull when they bracket fair value sensibly
+function validScenarios(bear, bull, fair) {
+  if (!bear || !bull || !fair) return false
+  if (bear >= bull) return false
+  if (bear >= fair) return false
+  return true
+}
+
 // Verdict language: analyst-style, not binary buy/sell signals
 function verdictLabel(upside) {
   if (upside >  0.25) return { emoji: '🟢', short: 'Attractively priced vs model',    long: 'trades at a meaningful discount to our intrinsic value estimate' }
@@ -449,8 +477,7 @@ async function runEarnings() {
     const label  = data.ratings?.overall?.label
     const wacc   = data.wacc?.wacc
     const cagr   = data.cagr
-    const bear   = data.scenarios?.bear?.fairValue
-    const bull   = data.scenarios?.bull?.fairValue
+    const { bear, bull } = appScenarios(data)
     const grossM = data.businessProfile?.grossMargin
     const netM   = data.businessProfile?.netMargin
     const roic   = data.scores?.roic?.roic
@@ -467,7 +494,7 @@ async function runEarnings() {
       const line1 = impliedG != null
         ? `At ${fmt(price)}, the market is pricing in ~${pct(impliedG, false)}/yr growth. Our model uses ${pct(cagr, false)} and lands at ${fmt(fair)} (${pct(upside)} from here).`
         : `Our model puts fair value at ${fmt(fair)} — ${pct(upside)} vs today's ${fmt(price)}.`
-      const line2 = bear && bull
+      const line2 = validScenarios(bear, bull, fair)
         ? `Downside case: ${fmt(bear)}. Bull case: ${fmt(bull)}.`
         : null
       const line3 = recLabel && roic != null
@@ -671,8 +698,7 @@ async function runDcf() {
 
   const wacc      = data.wacc?.wacc
   const terminalG = data.terminalG
-  const bear      = data.scenarios?.bear?.fairValue
-  const bull      = data.scenarios?.bull?.fairValue
+  const { bear, bull } = appScenarios(data)
   const revenueM  = data.businessProfile?.revenueM
 
   // Build the key insight sentence — the most shareable part
@@ -704,7 +730,7 @@ async function runDcf() {
     ...(!impliedStr ? [historicalContext(data, ticker)].filter(Boolean) : []),
     ``,
     `Model: fair value ~${fmt(fair)} (${pct(upside)} vs current price)`,
-    ...(bear && bull ? [`Range: ${fmt(bear)} bear → ${fmt(bull)} bull`] : []),
+    ...(validScenarios(bear, bull, fair) ? [`Range: ${fmt(bear)} bear → ${fmt(bull)} bull`] : []),
     ``,
     `Full analysis → ${APP_URL}/stock/${ticker}`,
     `$${ticker} #DCF #Investing`,
@@ -1463,8 +1489,7 @@ async function runDcfBear() {
   const recommendation = data.analystRecommendation ?? ''
   const analystTarget  = data.quote?.analystTargetMean
   const forwardPE      = data.analystForwardPE
-  const bear = data.scenarios?.bear?.fairValue
-  const bull = data.scenarios?.bull?.fairValue
+  const { bear, bull } = appScenarios(data)
   const revenueM = data.businessProfile?.revenueM
   const surprises  = data.earningsSurprises ?? []
   const beatCount  = surprises.filter(s => (s.surprisePercent ?? 0) > 0).length
@@ -1520,7 +1545,7 @@ async function runDcfBear() {
     ``,
     ...(comparedToAnalysts ? [comparedToAnalysts] : []),
     `Our model: fair value ~${fmt(fair)} (${pct(upside)} vs current price)`,
-    ...(bear && bull ? [`Scenario range: ${fmt(bear)} → ${fmt(bull)}`] : []),
+    ...(validScenarios(bear, bull, fair) ? [`Scenario range: ${fmt(bear)} → ${fmt(bull)}`] : []),
     ``,
     `Full model → ${APP_URL}/stock/${ticker}`,
     `$${ticker} #DCF #Investing`,
@@ -2441,8 +2466,7 @@ async function runDcf2() {
   const grade = data.ratings?.overall?.grade ?? ''
   const label = data.ratings?.overall?.label ?? ''
   const sector = data.quote?.sector ?? ''
-  const bear = data.scenarios?.bear?.fairValue
-  const bull = data.scenarios?.bull?.fairValue
+  const { bear, bull } = appScenarios(data)
 
   if (!price || !fair) throw new Error(`No price/fair value for ${ticker}`)
 
@@ -2457,7 +2481,7 @@ async function runDcf2() {
     if (upside > 0.20 && impliedGrowth != null) {
       return `$${ticker} at ${fmt(price)} is only pricing in ~${pct(impliedGrowth, false)}/yr growth — well below what the business has historically delivered.`
     }
-    if (bear && bull) {
+    if (validScenarios(bear, bull, fair)) {
       return `Under our bear case (${fmt(bear)}), the downside is ${pct((bear - price) / price)}. Under the bull (${fmt(bull)}), the upside is ${pct((bull - price) / price)}.`
     }
     return `Model fair value: ${fmt(fair)}. The market disagrees by ${pct(Math.abs(upside))}.`
@@ -2480,7 +2504,7 @@ async function runDcf2() {
     ...(qualityNote ? [qualityNote] : []),
     ``,
     ...(recLabel ? [`Wall St: ${recLabel}${analyst1y != null && numAnalysts >= 3 ? ` · ${numAnalysts} analysts expect ${pct(analyst1y, false)}/yr growth` : ''}`] : []),
-    `Our model: ${fmt(fair)} (${pct(upside)})${bear && bull ? ` · Range ${fmt(bear)}–${fmt(bull)}` : ''}`,
+    `Our model: ${fmt(fair)} (${pct(upside)})${validScenarios(bear, bull, fair) ? ` · Range ${fmt(bear)}–${fmt(bull)}` : ''}`,
     ``,
     `${APP_URL}/stock/${ticker}`,
     `$${ticker} #DCF #Investing`,
@@ -4404,8 +4428,7 @@ async function runLiValuation() {
   const marketCap     = data.quote?.marketCap
   const sector        = data.quote?.sector ?? ''
   const industry      = data.quote?.industry ?? ''
-  const bear          = data.scenarios?.bear?.fairValue
-  const bull          = data.scenarios?.bull?.fairValue
+  const { bear, bull } = appScenarios(data)
   const impliedGrowth = data.valuationMethods?.models?.reverseDcf?.impliedCAGR
   const piotroski     = data.scores?.piotroski?.score
   const piotroskiLbl  = data.scores?.piotroski?.label
@@ -4461,7 +4484,7 @@ async function runLiValuation() {
 
   // ── Valuation context paragraph ───────────────────────────────────────────
   const valParts = []
-  if (bear && bull) {
+  if (validScenarios(bear, bull, fair)) {
     const bearGap = ((bear - price) / price * 100).toFixed(0)
     const bullGap = ((bull - price) / price * 100).toFixed(0)
     valParts.push(`Scenario range: ${fmt(bear)} (bear) to ${fmt(bull)} (bull) — ${bearGap}% downside to ${Number(bullGap) > 0 ? '+' : ''}${bullGap}% upside from here.`)
@@ -5509,8 +5532,7 @@ function buildPhoneImageUrl(data, ticker, convScore) {
   const price   = data.quote?.price
   const fair    = appFairValue(data)
   const upside  = appUpside(data)
-  const bear    = data.scenarios?.bear?.fairValue
-  const bull    = data.scenarios?.bull?.fairValue
+  const { bear, bull } = appScenarios(data)
   const currency = data.quote?.currency ?? 'USD'
   const name    = data.quote?.name ?? ''
   const impliedG = data.valuationMethods?.models?.reverseDcf?.impliedCAGR
