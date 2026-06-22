@@ -72,62 +72,76 @@ function classifyExpectation(impliedCAGR: number, historicalCagr3y: number | nul
   return 'Very Aggressive'
 }
 
-// ─── Simplified reverse-DCF implied CAGR ─────────────────────────────────────
-// Approximates the revenue CAGR baked into a stock's current price using
-// forward P/E and analyst growth estimates as proxies. Not the full cockpit
-// model — that requires the full financials fetch — but gives a directional
-// signal fast enough to rank 100 stocks.
+// ─── Simplified implied CAGR ──────────────────────────────────────────────────
+// Uses analyst forward EPS growth (from epsForward vs epsTTM) as the primary
+// signal. Falls back to revenue growth when EPS data is missing.
+// Result is annualised forward growth expectation, in percent (e.g. 15.0 = 15%).
 
 function estimateImpliedCAGR(
-  price: number,
-  forwardPE: number | null,
-  revenueGrowth: number | null,
-  netMargin: number | null,
-  epsGrowth: number | null,
+  epsForward: number | null,
+  epsTTM: number | null,
+  revenueGrowth: number | null,   // decimal, e.g. 0.22 = 22%
+  epsGrowth: number | null,       // decimal, trailing YoY from financialData
 ): number | null {
-  // Method 1: If we have EPS growth and forward P/E, use PEG-implied growth
-  if (forwardPE != null && forwardPE > 0 && epsGrowth != null && epsGrowth > -0.5) {
-    // Implied via Gordon-like approximation: growth ≈ EPS growth scaled by premium
-    const peg = forwardPE / Math.max(1, epsGrowth * 100)
-    const premium = Math.max(0.5, Math.min(3, peg))
-    return Math.max(-5, Math.min(80, (epsGrowth * 100) * premium * 0.6))
+  // Best: forward EPS / TTM EPS → NTM implied growth
+  if (epsForward != null && epsTTM != null && Math.abs(epsTTM) > 0.01) {
+    const growth = (epsForward / epsTTM) - 1
+    // Only use if result is plausible (-80% to +300%)
+    if (growth >= -0.80 && growth <= 3.0) return growth * 100
   }
 
-  // Method 2: Revenue growth proxy
-  if (revenueGrowth != null && netMargin != null && netMargin > 0) {
-    return Math.max(-5, Math.min(80, revenueGrowth * 100 * 1.2))
+  // Fallback: analyst EPS growth from financialData
+  if (epsGrowth != null && epsGrowth >= -0.80 && epsGrowth <= 3.0) {
+    return epsGrowth * 100
   }
 
-  // Method 3: EPS growth only
-  if (epsGrowth != null) {
-    return Math.max(-5, Math.min(80, epsGrowth * 100))
+  // Last resort: revenue growth
+  if (revenueGrowth != null && revenueGrowth >= -0.80 && revenueGrowth <= 3.0) {
+    return revenueGrowth * 100
   }
 
   return null
 }
 
-// Rough DCF fair value estimate: forward earnings × exit P/E discounted 3 years
+// ─── Fair value estimate ──────────────────────────────────────────────────────
+// Primary: analyst consensus target price (targetMeanPrice from financialData).
+// This is the most defensible single-number fair value proxy available without
+// a full DCF — it represents the aggregated analyst 12-month target.
+// Secondary: simple forward earnings model when target price is unavailable.
+
 function estimateFairValue(
   price: number,
-  forwardPE: number | null,
+  targetMeanPrice: number | null,
+  forwardPE: number | null,       // from quote() — reliable
+  epsForward: number | null,
+  epsTTM: number | null,
   epsGrowth: number | null,
-  revenueGrowth: number | null,
 ): number | null {
-  if (forwardPE == null || forwardPE <= 0 || forwardPE > 200) return null
+  // Primary: analyst target price
+  if (targetMeanPrice != null && targetMeanPrice > 0 && targetMeanPrice < price * 5) {
+    return targetMeanPrice
+  }
 
-  // Use EPS growth or revenue growth as the growth proxy
-  const growthRate = epsGrowth ?? revenueGrowth ?? 0.05
-  const clampedGrowth = Math.max(-0.20, Math.min(0.60, growthRate))
+  // Secondary: forward earnings × exit multiple
+  // Uses forwardPE from quote() (not financialData — that field is unreliable)
+  if (forwardPE != null && forwardPE > 0 && forwardPE < 150 && epsForward != null && epsForward > 0) {
+    // Project forward EPS 2 years at expected growth, apply slight P/E compression
+    const growth = (epsGrowth ?? 0.08)
+    const clampedGrowth = Math.max(-0.20, Math.min(0.60, growth))
+    const futureEPS = epsForward * Math.pow(1 + clampedGrowth, 2)
+    const exitPE = Math.max(10, Math.min(40, forwardPE * 0.90))
+    const tv = futureEPS * exitPE
+    const pv = tv / Math.pow(1.09, 2)
+    if (isFinite(pv) && pv > 0) return pv
+  }
 
-  // Project 3Y earnings, apply historical P/E compression toward 18×
-  const exitPE = Math.max(10, Math.min(35, forwardPE * 0.85))
-  const impliedEPS = (price / Math.max(5, forwardPE)) * Math.pow(1 + clampedGrowth, 3)
-  const tv = impliedEPS * exitPE
-  const wacc = 0.09
-  const pv = tv / Math.pow(1 + wacc, 3)
+  // Tertiary: TTM EPS × reasonable multiple
+  if (epsTTM != null && epsTTM > 0) {
+    const impliedMultiple = Math.min(30, Math.max(12, 20))
+    return epsTTM * impliedMultiple
+  }
 
-  if (!isFinite(pv) || pv <= 0) return null
-  return pv
+  return null
 }
 
 // ─── Fetch and compute ────────────────────────────────────────────────────────
@@ -150,6 +164,7 @@ async function buildIdeas(): Promise<IdeasResponse> {
         fields: [
           'regularMarketPrice', 'marketCap', 'forwardPE', 'trailingPE',
           'fiftyTwoWeekHigh', 'fiftyTwoWeekLow', 'longName', 'shortName',
+          'epsForward', 'epsTrailingTwelveMonths',
         ]
       }, { validateResult: false })
       for (const q of (Array.isArray(results) ? results : [])) {
@@ -193,21 +208,24 @@ async function buildIdeas(): Promise<IdeasResponse> {
       ? ((price / high52) - 1) * 100
       : null
 
+    // forwardPE is reliable from quote(), NOT from financialData
     const forwardPE     = q.forwardPE ?? null
+    const epsForward    = q.epsForward ?? null
+    const epsTTM        = q.epsTrailingTwelveMonths ?? null
     const revenueGrowth = fd?.revenueGrowth ?? null
     const epsGrowth     = fd?.earningsGrowth ?? null
-    const netMargin     = fd?.profitMargins ?? null
+    const targetPrice   = fd?.targetMeanPrice ?? null
     const analystRating = fd?.recommendationMean ?? null
 
-    // Historical CAGR proxy from revenue growth
-    const historicalCagr3y = revenueGrowth != null ? revenueGrowth * 100 : null
+    // TTM revenue growth as a percentage (labelled honestly, not as "3Y CAGR")
+    const revenueGrowthPct = revenueGrowth != null ? revenueGrowth * 100 : null
 
-    const impliedCAGR = estimateImpliedCAGR(price, forwardPE, revenueGrowth, netMargin, epsGrowth)
-    const fairValue   = estimateFairValue(price, forwardPE, epsGrowth, revenueGrowth)
+    const impliedCAGR = estimateImpliedCAGR(epsForward, epsTTM, revenueGrowth, epsGrowth)
+    const fairValue   = estimateFairValue(price, targetPrice, forwardPE, epsForward, epsTTM, epsGrowth)
     const upsidePct   = (fairValue != null && price > 0) ? (fairValue / price) - 1 : null
 
-    const expectation = impliedCAGR != null && historicalCagr3y != null
-      ? classifyExpectation(impliedCAGR, historicalCagr3y)
+    const expectation = impliedCAGR != null
+      ? classifyExpectation(impliedCAGR, revenueGrowthPct)
       : null
 
     stocks.push({
@@ -218,7 +236,7 @@ async function buildIdeas(): Promise<IdeasResponse> {
       fairValue,
       upsidePct,
       impliedCAGR,
-      historicalCagr3y,
+      historicalCagr3y: revenueGrowthPct,
       expectation,
       marketCap: q.marketCap ?? null,
       pctFrom52WHigh,

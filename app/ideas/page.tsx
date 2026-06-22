@@ -22,7 +22,7 @@ const SIGNALS: {
     id: 'undervalued',
     label: 'Most Undervalued',
     shortLabel: 'Undervalued',
-    description: 'Stocks where the DCF fair value estimate is more than 20% above the current price and analyst consensus is neutral or better.',
+    description: 'Stocks where the analyst consensus target price is more than 20% above the current price and analyst consensus is neutral or better. Fair value = median analyst 12-month target.',
     icon: TrendingUp,
     cardBg: 'linear-gradient(145deg, #1a2a06 0%, #2d4a0f 100%)',
     accentColor: '#a3e635',
@@ -32,7 +32,7 @@ const SIGNALS: {
     id: 'margin_of_safety',
     label: 'Widest Margin of Safety',
     shortLabel: 'Margin of Safety',
-    description: 'Stocks ranked by the gap between estimated fair value and current price — the larger the gap, the bigger the cushion if your assumptions are wrong.',
+    description: 'Stocks ranked by the gap between analyst consensus target price and current price. The larger the gap, the bigger the cushion if your assumptions are wrong.',
     icon: Target,
     cardBg: 'linear-gradient(145deg, #0f1e3a 0%, #1a3158 100%)',
     accentColor: '#7eb8f7',
@@ -42,7 +42,7 @@ const SIGNALS: {
     id: 'priced_for_perfection',
     label: 'Priced for Perfection',
     shortLabel: 'Priced for Perfection',
-    description: "Stocks where today's price implies 25%+ annual growth for 5 years. The market is betting everything goes right. A useful contrarian watch list.",
+    description: 'Stocks where forward EPS growth expectations exceed 25%. High expectations already in the price — small misses get punished hard.',
     icon: Zap,
     cardBg: 'linear-gradient(145deg, #271500 0%, #3d2200 100%)',
     accentColor: '#fcd34d',
@@ -52,7 +52,7 @@ const SIGNALS: {
     id: 'contrarian',
     label: 'Market Underestimates',
     shortLabel: 'Contrarian',
-    description: 'Stocks where the implied growth rate is well below the company\'s historical track record. The market may be underpricing the future.',
+    description: 'Stocks where forward EPS growth is well below the recent TTM revenue growth track record. The market may be underpricing the fundamentals.',
     icon: BarChart2,
     cardBg: 'linear-gradient(145deg, #0a1f12 0%, #133d20 100%)',
     accentColor: '#4ade80',
@@ -62,7 +62,7 @@ const SIGNALS: {
     id: 'near_52w_low',
     label: 'Near 52-Week Low',
     shortLabel: '52W Low',
-    description: 'Stocks more than 25% below their 52-week high where the DCF model still suggests positive upside. Price under pressure, but fundamentals intact.',
+    description: 'Stocks more than 25% below their 52-week high where the analyst consensus target still implies positive upside. Price under pressure, but analysts see value.',
     icon: TrendingDown,
     cardBg: 'linear-gradient(145deg, #1a0a3a 0%, #1e0f3d 100%)',
     accentColor: '#c4b5fd',
@@ -72,7 +72,7 @@ const SIGNALS: {
     id: 'high_conviction',
     label: 'High Conviction',
     shortLabel: 'High Conviction',
-    description: 'Stocks where analyst consensus is Buy or Strong Buy and the DCF model shows at least 10% upside. Two independent signals pointing the same direction.',
+    description: 'Stocks where analyst consensus is Buy or Strong Buy (rating ≤ 2.2/5) and the analyst target implies at least 10% upside. Two signals aligned.',
     icon: Star,
     cardBg: 'linear-gradient(145deg, #0a2929 0%, #134040 100%)',
     accentColor: '#5eead4',
@@ -198,14 +198,14 @@ function IdeaCard({
           {/* Implied vs historical */}
           {(signalId === 'undervalued' || signalId === 'margin_of_safety' || signalId === 'contrarian' || signalId === 'high_conviction') && (
             <div className="flex items-center justify-between">
-              <span className="text-[10px] text-[rgba(255,255,255,0.40)]">Implied 5Y CAGR</span>
+              <span className="text-[10px] text-[rgba(255,255,255,0.40)]">Fwd EPS growth</span>
               <span className="text-[11px] font-[700] tabular-nums text-white">{fmtCAGR(stock.impliedCAGR)}</span>
             </div>
           )}
           {(signalId === 'priced_for_perfection') && (
             <div className="flex items-center justify-between">
-              <span className="text-[10px] text-[rgba(255,255,255,0.40)]">Market expects</span>
-              <span className="text-[11px] font-[700] tabular-nums text-[#fcd34d]">{fmtCAGR(stock.impliedCAGR)} / yr</span>
+              <span className="text-[10px] text-[rgba(255,255,255,0.40)]">Fwd EPS growth</span>
+              <span className="text-[11px] font-[700] tabular-nums text-[#fcd34d]">{fmtCAGR(stock.impliedCAGR)}</span>
             </div>
           )}
           {(signalId === 'near_52w_low') && (
@@ -215,9 +215,9 @@ function IdeaCard({
             </div>
           )}
 
-          {stock.historicalCagr3y != null && signalId !== 'priced_for_perfection' && signalId !== 'near_52w_low' && (
+          {stock.historicalCagr3y != null && signalId !== 'near_52w_low' && (
             <div className="flex items-center justify-between">
-              <span className="text-[10px] text-[rgba(255,255,255,0.40)]">3Y historical CAGR</span>
+              <span className="text-[10px] text-[rgba(255,255,255,0.40)]">TTM rev growth</span>
               <span className="text-[11px] font-[700] tabular-nums" style={{ color: sig.accentColor }}>
                 {fmtCAGR(stock.historicalCagr3y)}
               </span>
@@ -226,7 +226,7 @@ function IdeaCard({
 
           {stock.fairValue != null && (
             <div className="flex items-center justify-between">
-              <span className="text-[10px] text-[rgba(255,255,255,0.40)]">Est. fair value</span>
+              <span className="text-[10px] text-[rgba(255,255,255,0.40)]">Analyst target</span>
               <span className="text-[11px] font-[700] tabular-nums text-white">{fmtPrice(stock.fairValue, 'USD')}</span>
             </div>
           )}
