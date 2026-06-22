@@ -10,32 +10,32 @@ const PayPalSubscribeButton = dynamic(
 )
 
 const FREE_FEATURES = [
-  'Stock analysis (any ticker)',
-  'Fair value summary',
-  'Conviction Score',
-  'Market-implied expectations',
-  'Essential financials',
-  '10 saved analyses',
+  'Analyze up to 10 stocks/month',
+  'Conviction Score + checklist',
+  'Reverse DCF — market-implied CAGR',
+  'Full financials + analyst estimates',
+  'Markets, ETF Tracker, Screener (20 results)',
+  '5 saved analyses',
 ]
 
 const PRO_FEATURES = [
-  'Everything in Free, unlimited',
-  'Full valuation models (DCF, Reverse DCF, Multiples)',
-  'Sensitivity tables and Monte Carlo simulation',
-  'Multi-ticker comparison with pairs signals',
-  'AI Stack screener — 125 AI companies scored',
-  'Market Screener with factor ranking',
-  'Quant Strategy Library — 5 academic strategies',
-  'Unlimited saved analyses',
+  'Unlimited stocks — no monthly cap',
+  'Valuation cockpit — edit WACC, growth, margins',
+  'Sensitivity table (CAGR × WACC heat map)',
+  'Monte Carlo simulation',
+  'Full DCF model — year-by-year projections',
+  'Unlimited saves + full screener',
+  'Multi-ticker comparison + pairs signals',
+  'AI Stack screener — 125 companies',
+  'Quant Strategy Library — 5 strategies',
   'Weekly watchlist digest (email)',
-  'Priority support',
 ]
 
 const PRO_DIFF = [
-  'Compare + pairs signals',
-  'Sensitivity tables',
-  'AI Stack screener',
-  'Quant Strategies',
+  'Valuation cockpit',
+  'Sensitivity + Monte Carlo',
+  'Full screener',
+  'Compare + pairs',
 ]
 
 export default function PricingSection() {

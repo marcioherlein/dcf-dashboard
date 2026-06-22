@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo, useId } from 'react'
 import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import { motion, useReducedMotion } from 'motion/react'
 import {
   SlidersHorizontal, ArrowUpDown, ArrowUp, ArrowDown,
@@ -289,6 +290,16 @@ function ActiveChip({ label, value, onRemove }: { label: string; value: string; 
 export default function ScreenerPage() {
   const router  = useRouter()
   const reduced = useReducedMotion()
+  const { data: session } = useSession()
+  const [isPro, setIsPro] = useState(false)
+
+  useEffect(() => {
+    if (!session?.user?.email) return
+    fetch('/api/user/plan')
+      .then(r => r.json())
+      .then(d => setIsPro(d?.plan === 'pro'))
+      .catch(() => {})
+  }, [session?.user?.email])
 
   const [stocks, setStocks]     = useState<ScreenerStock[]>([])
   const [loading, setLoading]   = useState(true)
@@ -365,13 +376,15 @@ export default function ScreenerPage() {
   }, [filterKey, fetchStocks]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Client-side sort ──────────────────────────────────────────────────────
+  const FREE_SCREENER_LIMIT = 20
+
   const displayed = useMemo(() => {
     let result = stocks
     if (searchQ.trim()) {
       const q = searchQ.toLowerCase()
       result = result.filter(s => s.ticker.toLowerCase().startsWith(q) || s.name.toLowerCase().includes(q))
     }
-    return [...result].sort((a, b) => {
+    const sorted = [...result].sort((a, b) => {
       let va: number | string | null
       let vb: number | string | null
       if      (sortKey === 'name')         { va = a.name;          vb = b.name }
@@ -388,7 +401,8 @@ export default function ScreenerPage() {
       if (na == null) return 1; if (nb == null) return -1
       return sortDir === 'asc' ? na - nb : nb - na
     })
-  }, [stocks, searchQ, sortKey, sortDir])
+    return isPro ? sorted : sorted.slice(0, FREE_SCREENER_LIMIT)
+  }, [stocks, searchQ, sortKey, sortDir, isPro, FREE_SCREENER_LIMIT])
 
   function toggleSort(key: SortKey) {
     if (key === sortKey) setSortDir(d => d === 'desc' ? 'asc' : 'desc')
@@ -537,6 +551,11 @@ export default function ScreenerPage() {
               <span className="ml-auto text-[11px] text-[#6B6B6B] shrink-0 tabular-nums">
                 <TrendingUp size={11} className="inline mr-1 mb-px" />
                 {displayed.length.toLocaleString()} stocks
+                {!isPro && stocks.length > FREE_SCREENER_LIMIT && (
+                  <span className="ml-1.5 text-[#5F790B] font-[600]">
+                    · {stocks.length - FREE_SCREENER_LIMIT} more with Pro
+                  </span>
+                )}
               </span>
             )}
 
@@ -548,10 +567,16 @@ export default function ScreenerPage() {
                     view === 'table' ? 'bg-white text-[#111111] shadow-sm' : 'text-[#6B6B6B] hover:text-[#111111]')}>
                   <TableProperties size={13} />
                 </button>
-                <button onClick={() => setView('chart')} aria-label="Chart view" aria-pressed={view === 'chart'}
-                  className={cn('flex items-center justify-center w-8 h-8 rounded-md transition-colors',
+                <button
+                  onClick={() => isPro ? setView('chart') : undefined}
+                  aria-label={isPro ? 'Chart view' : 'Chart view (Pro)'}
+                  aria-pressed={view === 'chart'}
+                  title={isPro ? undefined : 'Upgrade to Pro to unlock the scatter chart view'}
+                  className={cn('flex items-center justify-center w-8 h-8 rounded-md transition-colors relative',
+                    !isPro ? 'opacity-40 cursor-not-allowed' :
                     view === 'chart' ? 'bg-white text-[#111111] shadow-sm' : 'text-[#6B6B6B] hover:text-[#111111]')}>
                   <ScatterIcon size={13} />
+                  {!isPro && <span className="absolute -top-1 -right-1 text-[7px] font-[800] bg-[#5F790B] text-white rounded-full px-0.5 leading-3">P</span>}
                 </button>
               </div>
             )}
