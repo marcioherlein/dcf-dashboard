@@ -142,7 +142,7 @@ export default function TermsPage() {
               unused features, or accidental renewals unless required by applicable law.
             </p>
 
-            <p className="font-medium text-[#566174] mt-4">Refunds</p>
+            <p id="refunds" className="font-medium text-[#566174] mt-4">Refunds</p>
             <p>
               All sales are final. Except where required by applicable consumer protection law, we do not
               offer refunds. If you believe you were charged in error, contact us at{' '}
