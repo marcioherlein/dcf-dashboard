@@ -142,7 +142,9 @@ export async function getAnnualIncomeStatement(ticker: string): Promise<any[]> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const rows: any[] = await yf.fundamentalsTimeSeries(ticker, {
       type: 'annual',
-      module: 'income-statement',
+      // 'financials' module returns operatingIncome, EBIT, grossProfit, taxRateForCalcs.
+      // The 'income-statement' module is unreliable for many tickers (returns empty or only partial fields).
+      module: 'financials',
       period1: '2015-01-01',
     })
     return rows ?? []

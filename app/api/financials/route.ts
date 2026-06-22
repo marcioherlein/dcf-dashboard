@@ -960,15 +960,50 @@ export async function GET(req: NextRequest) {
       latestRevM = fmpIsSorted[fmpIsSorted.length - 1].revenue / 1e6 * fxRate
       baseYear   = parseInt(fmpIsSorted[fmpIsSorted.length - 1].fiscalYear)
     } else {
-      // Yahoo fallback
+      // Yahoo fallback: prefer fundamentalsTimeSeries (annualISRows) over legacy incomeStatementHistory.
+      // Legacy API returns ebit=0/operatingIncome=null for many tickers (e.g. NOW/ServiceNow).
       const rawISHistory: any[] = fin.incomeStatementHistory?.incomeStatementHistory ?? []
-      const isHistorical = rawISHistory.slice(-4).reverse()
-      avgGrossMarginRatio = isHistorical.length > 0 ? isHistorical.reduce((s: number, s2: any) => { const rev = (s2.totalRevenue ?? s2.operatingRevenue ?? 0) as number; const gp = (s2.grossProfit ?? 0) as number; return s + (rev > 0 ? gp / rev : 0) }, 0) / isHistorical.length : 0.4
-      avgOpMarginRatio    = isHistorical.length > 0 ? isHistorical.reduce((s: number, s2: any) => { const rev = (s2.totalRevenue ?? s2.operatingRevenue ?? 0) as number; const op = (s2.ebit ?? 0) as number; return s + (rev > 0 ? op / rev : 0) }, 0) / isHistorical.length : 0.15
-      avgEbitdaMarginRatio = isHistorical.length > 0 ? isHistorical.reduce((s: number, s2: any) => { const rev = (s2.totalRevenue ?? s2.operatingRevenue ?? 0) as number; const eb = (s2.ebitda ?? 0) as number; return s + (rev > 0 ? eb / rev : 0) }, 0) / isHistorical.length : 0.2
-      avgNetMarginRatio   = isHistorical.length > 0 ? isHistorical.reduce((s: number, s2: any) => { const rev = (s2.totalRevenue ?? s2.operatingRevenue ?? 0) as number; const ni = (s2.netIncome ?? 0) as number; return s + (rev > 0 ? ni / rev : 0) }, 0) / isHistorical.length : 0.1
-      latestRevM = isHistorical.length > 0 ? ((isHistorical[isHistorical.length - 1].totalRevenue ?? isHistorical[isHistorical.length - 1].operatingRevenue ?? 0) as number) / 1e6 * fxRate : historicalRevenues[0] ?? 0
-      baseYear   = isHistorical.length > 0 ? new Date(isHistorical[isHistorical.length - 1].endDate).getFullYear() : new Date().getFullYear()
+      // Use annualISRows (fundamentalsTimeSeries 'financials' module) when available — richer fields.
+      const ftsRows = (annualISRows as any[]).filter((s: any) => s.totalRevenue ?? s.operatingRevenue)
+      const isHistorical = ftsRows.length >= 2
+        ? ftsRows.slice(-4)
+        : rawISHistory.slice(-4).reverse()
+      const isFts = ftsRows.length >= 2
+
+      const getField = (s: any, ftsKey: string, legacyKey: string) =>
+        isFts ? (s[ftsKey] ?? null) : (s[legacyKey] ?? null)
+
+      avgGrossMarginRatio = isHistorical.length > 0 ? isHistorical.reduce((acc: number, s: any) => {
+        const rev = (isFts ? (s.totalRevenue ?? s.operatingRevenue ?? 0) : (s.totalRevenue ?? s.operatingRevenue ?? 0)) as number
+        const gp = (isFts ? (s.grossProfit ?? 0) : (s.grossProfit ?? 0)) as number
+        return acc + (rev > 0 ? gp / rev : 0)
+      }, 0) / isHistorical.length : 0.4
+
+      avgOpMarginRatio = isHistorical.length > 0 ? isHistorical.reduce((acc: number, s: any) => {
+        const rev = (s.totalRevenue ?? s.operatingRevenue ?? 0) as number
+        const op = (isFts ? (s.operatingIncome ?? s.EBIT ?? 0) : (s.ebit ?? s.operatingIncome ?? 0)) as number
+        return acc + (rev > 0 ? op / rev : 0)
+      }, 0) / isHistorical.length : 0.15
+
+      avgEbitdaMarginRatio = isHistorical.length > 0 ? isHistorical.reduce((acc: number, s: any) => {
+        const rev = (s.totalRevenue ?? s.operatingRevenue ?? 0) as number
+        const eb = (isFts ? (s.EBITDA ?? s.normalizedEBITDA ?? 0) : (s.ebitda ?? 0)) as number
+        return acc + (rev > 0 ? eb / rev : 0)
+      }, 0) / isHistorical.length : 0.2
+
+      avgNetMarginRatio = isHistorical.length > 0 ? isHistorical.reduce((acc: number, s: any) => {
+        const rev = (s.totalRevenue ?? s.operatingRevenue ?? 0) as number
+        const ni = (s.netIncome ?? 0) as number
+        return acc + (rev > 0 ? ni / rev : 0)
+      }, 0) / isHistorical.length : 0.1
+
+      const lastRow = isHistorical[isHistorical.length - 1]
+      const lastRevRaw = (lastRow?.totalRevenue ?? lastRow?.operatingRevenue ?? 0) as number
+      latestRevM = lastRevRaw > 0 ? lastRevRaw / 1e6 * fxRate : (historicalRevenues[0] ?? 0)
+      const lastDateField = isFts ? (lastRow?.date ?? null) : (lastRow?.endDate ?? null)
+      baseYear = lastDateField
+        ? new Date(lastDateField instanceof Date ? lastDateField : String(lastDateField)).getFullYear()
+        : new Date().getFullYear()
     }
 
     // --- Income Statement ---
@@ -1000,6 +1035,41 @@ export async function GET(req: NextRequest) {
           }
         })
       : (() => {
+          // Prefer fundamentalsTimeSeries IS rows (annualISRows, 'financials' module) over the
+          // legacy incomeStatementHistory — the legacy API returns ebit=0/operatingIncome=null
+          // for many tickers (e.g. NOW/ServiceNow) while fundamentalsTimeSeries has the full data.
+          const nonzero = (v: number | null | undefined) => (v != null && v !== 0) ? v : null
+
+          if ((annualISRows as any[]).length >= 2) {
+            return (annualISRows as any[])
+              .filter((s: any) => s.totalRevenue ?? s.operatingRevenue)
+              .map((s: any) => {
+                const d = s.date instanceof Date ? s.date : new Date(String(s.date))
+                const yr = String(d.getFullYear())
+                const revRaw = nonzero(s.totalRevenue ?? s.operatingRevenue)
+                const ebitRaw = nonzero(s.operatingIncome ?? s.EBIT)
+                const ebitdaRaw = nonzero(s.EBITDA ?? s.normalizedEBITDA)
+                const taxRaw = typeof s.taxRateForCalcs === 'number' && isFinite(s.taxRateForCalcs) ? s.taxRateForCalcs : null
+                const taxFromIS = (s.taxProvision != null && s.pretaxIncome != null && s.pretaxIncome !== 0)
+                  ? Math.abs(s.taxProvision as number) / Math.abs(s.pretaxIncome as number) : null
+                const eps = typeof s.dilutedEPS === 'number' ? s.dilutedEPS : null
+                return {
+                  year: yr,
+                  revenue: revRaw != null ? revRaw / 1e6 * fxRate : null,
+                  grossProfit: nonzero(s.grossProfit) != null ? (s.grossProfit as number) / 1e6 * fxRate : null,
+                  operatingIncome: ebitRaw != null ? ebitRaw / 1e6 * fxRate : null,
+                  ebitda: ebitdaRaw != null ? ebitdaRaw / 1e6 * fxRate : null,
+                  netIncome: s.netIncome != null ? (s.netIncome as number) / 1e6 * fxRate : null,
+                  eps,
+                  operatingMargin: (revRaw && ebitRaw) ? ebitRaw / revRaw : null,
+                  taxRate: (taxRaw ?? taxFromIS) != null ? Math.max(0.05, Math.min(0.55, (taxRaw ?? taxFromIS)!)) : null,
+                  fiscalDate: isNaN(d.getTime()) ? yr : d.toISOString().split('T')[0],
+                  isProjected: false,
+                }
+              })
+          }
+
+          // Legacy fallback: incomeStatementHistory (Yahoo old-style API)
           const rawISHistory: any[] = fin.incomeStatementHistory?.incomeStatementHistory ?? []
           const isHistorical = rawISHistory.slice(-4).reverse()
           const rawCFForEbitda: any[] = fin.cashflowStatementHistory?.cashflowStatements ?? []
@@ -1009,7 +1079,6 @@ export async function GET(req: NextRequest) {
             const da = ((cf.depreciation ?? cf.depreciationAndAmortization ?? 0) as number) / 1e6 * fxRate
             if (da > 0) depreciationByYear[yr] = da
           }
-          const nonzero = (v: number | null | undefined) => (v != null && v !== 0) ? v : null
           return isHistorical.map((s: any) => {
             const yr = String(new Date(s.endDate).getFullYear())
             const revRaw = nonzero(s.totalRevenue ?? s.operatingRevenue)
