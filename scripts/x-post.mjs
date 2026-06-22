@@ -137,7 +137,6 @@ async function post(text, imageUrl = null) {
     console.log(`Length: ${text.length}`)
     return
   }
-  const mediaBlock = imageUrl ? `\n          mediaUrls: [${JSON.stringify(imageUrl)}]` : ''
   const res = await fetch('https://api.buffer.com', {
     method: 'POST',
     headers: {
@@ -148,7 +147,7 @@ async function post(text, imageUrl = null) {
       query: `mutation {
         createPost(input: {
           channelId: "${BUFFER_CHANNEL_ID}"
-          text: ${JSON.stringify(text)}${mediaBlock}
+          text: ${JSON.stringify(text)}
           schedulingType: automatic
           mode: shareNow
         }) {
@@ -4346,7 +4345,7 @@ async function postLinkedIn(text, imageUrl = null) {
       query: `mutation {
         createPost(input: {
           channelId: "${LINKEDIN_CHANNEL_ID}"
-          text: ${JSON.stringify(text)}${mediaBlock}
+          text: ${JSON.stringify(text)}
           schedulingType: automatic
           mode: shareNow
         }) {
