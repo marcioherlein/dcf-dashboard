@@ -491,13 +491,13 @@ async function runEarnings() {
     if (fair && price) {
       const impliedG = data.valuationMethods?.models?.reverseDcf?.impliedCAGR
       const line1 = impliedG != null
-        ? `At ${fmt(price)}, the market is pricing in ~${pct(impliedG, false)}/yr growth. Our model uses ${pct(cagr, false)} and lands at ${fmt(fair)} (${pct(upside)} from here).`
-        : `Our model puts fair value at ${fmt(fair)} — ${pct(upside)} vs today's ${fmt(price)}.`
+        ? `At ${fmt(price)}, the stock is pricing in ~${pct(impliedG, false)}/yr growth. The model puts fair value at ${fmt(fair)} (${pct(upside)} from here).`
+        : `The model puts fair value at ${fmt(fair)} — ${pct(upside)} vs today's ${fmt(price)}.`
       const line2 = validScenarios(bear, bull, fair)
-        ? `Downside case: ${fmt(bear)}. Bull case: ${fmt(bull)}.`
+        ? `Bear case ${fmt(bear)} · bull case ${fmt(bull)}.`
         : null
       const line3 = recLabel && roic != null
-        ? `Wall St says ${recLabel}. ROIC is ${pct(roic, false)} vs ${pct(wacc, false)} WACC.`
+        ? `Wall St says ${recLabel}. ROIC at ${pct(roic, false)} — the business earns above its cost of capital.`
         : recLabel ? `Wall St says ${recLabel}.` : null
       const histLine = historicalContext(data, ticker)
       dcfBlock = [line1, line2, line3, histLine].filter(Boolean).join('\n')
@@ -514,19 +514,21 @@ async function runEarnings() {
     : 'tomorrow'
   const whenVerb = featuredDate === yesterdayStr ? 'reported' : 'reports'
 
+  const earningsLead = whenStr === 'tomorrow'
+    ? `$${ticker} drops earnings tomorrow. Before the number lands, here's where the model stands.`
+    : whenStr === 'today'
+    ? `$${ticker} reports today. The real question isn't beat or miss — it's whether the business is worth the current price.`
+    : `$${ticker} reported yesterday after hours. Now that the dust has settled, what does the model say?`
+
   const lines = [
-    whenStr === 'tomorrow'
-      ? `$${ticker} reports earnings tomorrow.`
-      : whenStr === 'today'
-      ? `$${ticker} is reporting today.`
-      : `$${ticker} reported yesterday after hours.`,
+    earningsLead,
     ``,
-    dcfBlock || `See the model before the number → ${APP_URL}/stock/${ticker}`,
+    dcfBlock || `The full picture is at insic.app/stock/${ticker}`,
     ``,
-    ...(others.length > 0 ? [`Also on deck: ${others.join(' · ')}`] : []),
+    ...(others.length > 0 ? [`Also reporting: ${others.join(' · ')}`] : []),
     ``,
-    `The number moves the price. The model tells you whether the business actually changed.`,
-    `${APP_URL}/stock/${ticker}`,
+    `Earnings move the price. Rarely do they change the underlying value by that much.`,
+    `insic.app/stock/${ticker}`,
     `$${ticker} #Earnings #DCF`,
   ].filter(Boolean)
 
@@ -677,11 +679,12 @@ async function runDcf() {
     insights.push(`3Y revenue CAGR: ${pct(data.cagrAnalysis.historicalCagr3y, false)} · model assumes ${pct(cagr, false)} going forward`)
   }
   if (roicSpread != null && roicSpread > 0.05) {
-    insights.push(`ROIC ${pct(roic, false)} vs WACC — ${pct(roicSpread, false)} value spread (creating value)`)
+    insights.push(`Earns ${pct(roic, false)} on invested capital — ${pct(roicSpread, false)} above its cost of capital`)
   } else if (grossMargin != null && grossMargin > 0.50) {
-    insights.push(`Gross margin: ${pct(grossMargin, false)} · Net margin: ${netMargin != null ? pct(netMargin, false) : 'N/A'}`)
+    const netStr = netMargin != null ? ` · net ${pct(netMargin, false)}` : ''
+    insights.push(`Gross margin ${pct(grossMargin, false)}${netStr}`)
   } else if (fcfMargin != null && fcfMargin > 0.15) {
-    insights.push(`FCF margin: ${pct(fcfMargin, false)} — cash-generative business`)
+    insights.push(`Free cash flow margin ${pct(fcfMargin, false)} — genuinely cash-generative`)
   }
   if (insights.length < 2 && analystTarget && forwardPE) {
     const recLabel = recommendation === 'strong_buy' ? 'Strong Buy' : recommendation === 'buy' ? 'Buy' : recommendation === 'hold' ? 'Hold' : null
@@ -703,35 +706,37 @@ async function runDcf() {
   // Build the key insight sentence — the most shareable part
   const impliedGrowth = data.valuationMethods?.models?.reverseDcf?.impliedCAGR
   const impliedStr = impliedGrowth != null
-    ? `At ${fmt(price)}, the market is pricing in ~${pct(impliedGrowth, false)}/yr revenue growth for the next 5 years.`
+    ? `At ${fmt(price)}, the stock is pricing in ~${pct(impliedGrowth, false)}/yr revenue growth over the next 5 years.`
     : null
 
   const historicalStr = (data.cagrAnalysis?.historicalCagr3y != null)
-    ? `Historical 3Y CAGR: ${pct(data.cagrAnalysis.historicalCagr3y, false)}.`
+    ? `$${ticker}'s actual 3-year annual growth rate: ${pct(data.cagrAnalysis.historicalCagr3y, false)}.`
     : null
 
   const vsHistorical = (impliedGrowth != null && data.cagrAnalysis?.historicalCagr3y != null)
     ? (impliedGrowth < data.cagrAnalysis.historicalCagr3y * 0.85
-        ? `That's below its historical pace — the market may be underestimating it.`
+        ? `That's below its historical pace — the stock may be underestimating this business.`
         : impliedGrowth > data.cagrAnalysis.historicalCagr3y * 1.15
-        ? `That's well above its historical pace — high expectations baked in.`
-        : `Roughly in line with historical pace.`)
+        ? `That's well above its historical pace — a lot of optimism already in the price.`
+        : `Roughly in line with what it's actually delivered.`)
     : null
 
+  const dcfLead = impliedStr
+    ? `What's $${ticker}'s stock price actually betting on?`
+    : `${v.emoji} $${ticker} — ${v.short}`
+
   const lines = [
-    impliedStr
-      ? `What is $${ticker}'s stock price actually betting on?`
-      : `${v.emoji} $${ticker} — ${v.short}`,
+    dcfLead,
     ``,
     ...(impliedStr ? [impliedStr] : []),
     ...(historicalStr ? [historicalStr] : []),
     ...(vsHistorical ? [vsHistorical] : []),
     ...(!impliedStr ? [historicalContext(data, ticker)].filter(Boolean) : []),
     ``,
-    `Model: fair value ~${fmt(fair)} (${pct(upside)} vs current price)`,
+    `Model fair value ~${fmt(fair)} (${pct(upside)} vs today's price)`,
     ...(validScenarios(bear, bull, fair) ? [`Range: ${fmt(bear)} bear → ${fmt(bull)} bull`] : []),
     ``,
-    `Full analysis → ${APP_URL}/stock/${ticker}`,
+    `Worth stress-testing the assumptions at insic.app/stock/${ticker}`,
     `$${ticker} #DCF #Investing`,
   ].filter(Boolean)
 
@@ -1322,11 +1327,18 @@ async function runWeeklyWrap() {
   // Sort: most undervalued first, most overvalued last — shows the spread
   stocks.sort((a, b) => (b.upside ?? 0) - (a.upside ?? 0))
 
-  const lines = []
-  const verdicts = stocks.map(s => verdictLabel(s.upside))
-  const allBullish = verdicts.every(v => (s => s.upside > 0.05)(stocks[verdicts.indexOf(v)]))
+  const allUndervalued = stocks.every(s => (s.upside ?? 0) > 0.10)
+  const allOvervalued  = stocks.every(s => (s.upside ?? 0) < -0.05)
 
-  lines.push(`3 stocks. Same DCF engine. The market gets at least one of them wrong.`)
+  const lines = []
+
+  if (allUndervalued) {
+    lines.push(`The model is bullish on all 3 this week. The market disagrees with at least some of that.`)
+  } else if (allOvervalued) {
+    lines.push(`3 stocks. All three trading above what the model says they're worth. Make of that what you will.`)
+  } else {
+    lines.push(`3 stocks. Same model. Very different verdicts.`)
+  }
   lines.push(``)
 
   for (const s of stocks) {
@@ -1335,13 +1347,13 @@ async function runWeeklyWrap() {
     const upsideStr = (s.upside * 100).toFixed(0)
     const direction = s.upside > 0.05 ? `model sees ${upsideStr}% upside` : s.upside < -0.05 ? `model sees ${Math.abs(upsideStr)}% downside` : `model says fair`
     lines.push(`${v.emoji} $${s.ticker} — ${fmt(s.price)} → ${fmt(s.fair)} · ${direction}`)
-    if (impliedG != null) lines.push(`   Market pricing in ~${pct(impliedG, false)}/yr growth`)
+    if (impliedG != null) lines.push(`   Market pricing in ~${pct(impliedG, false)}/yr annual growth`)
     const hist = s.data ? historicalContext(s.data, s.ticker) : null
     if (hist) lines.push(`   ${hist}`)
     lines.push(``)
   }
 
-  lines.push(`Which one is the market most wrong about?`)
+  lines.push(`Which one would you bet on?`)
   lines.push(``)
   lines.push(`${APP_URL}`)
   lines.push(`#DCF #Investing #ValueInvesting`)
@@ -1507,32 +1519,32 @@ async function runDcfBear() {
   const impliedGrowth = data.valuationMethods?.models?.reverseDcf?.impliedCAGR
   const historicalCagr = data.cagrAnalysis?.historicalCagr3y
 
-  // What is the market pricing in?
+  // What is the stock price betting on?
   const impliedStr = impliedGrowth != null
-    ? `At ${fmt(price)}, the market is pricing in ~${pct(impliedGrowth, false)}/yr revenue growth over 5 years.`
+    ? `At ${fmt(price)}, the stock is pricing in ~${pct(impliedGrowth, false)}/yr revenue growth over 5 years.`
     : null
 
   const historicalStr = historicalCagr != null
-    ? `${ticker}'s actual 3-year revenue CAGR: ${pct(historicalCagr, false)}.`
+    ? `$${ticker}'s actual 3-year annual growth rate: ${pct(historicalCagr, false)}.`
     : null
 
   // The provocative take — the gap between implied and historical
   const take = (() => {
     if (impliedGrowth == null || historicalCagr == null) {
       return upside > 0.20
-        ? `Our model says the market is underpricing this business by ${pct(upside)}.`
+        ? `The model sees ${pct(upside)} of upside the market hasn't priced in.`
         : upside < -0.20
-        ? `Our model says the market is overpricing this business by ${pct(Math.abs(upside))}.`
-        : `Market price and our model are broadly aligned.`
+        ? `The model says the stock is overpriced by ${pct(Math.abs(upside))}. That's a meaningful gap.`
+        : `Model and market are broadly in agreement here.`
     }
     const ratio = impliedGrowth / historicalCagr
-    if (ratio > 1.3)  return `The market needs ${ticker} to significantly accelerate beyond its historical pace. That's a bet worth stress-testing.`
-    if (ratio < 0.7)  return `The market is pricing in a slowdown well below ${ticker}'s historical pace. Is the pessimism justified?`
-    return `The implied growth rate is roughly in line with history. The question is whether that pace is sustainable.`
+    if (ratio > 1.3)  return `To justify ${fmt(price)}, $${ticker} needs to grow faster than it ever has. That's the bet.`
+    if (ratio < 0.7)  return `The stock is pricing in a slowdown well below $${ticker}'s historical pace. Is the pessimism justified, or is this an opportunity?`
+    return `Implied growth is roughly in line with history. Whether that's sustainable is the real question.`
   })()
 
   const comparedToAnalysts = recLabel && analyst1y != null && numAnalysts >= 5
-    ? `Analysts (${numAnalysts}) expect ${pct(analyst1y, false)}/yr and rate it ${recLabel}.`
+    ? `${numAnalysts} analysts expect ${pct(analyst1y, false)}/yr growth and rate it ${recLabel}.`
     : null
 
   const lines = [
@@ -1543,10 +1555,11 @@ async function runDcfBear() {
     ...(take ? [take] : []),
     ``,
     ...(comparedToAnalysts ? [comparedToAnalysts] : []),
-    `Our model: fair value ~${fmt(fair)} (${pct(upside)} vs current price)`,
-    ...(validScenarios(bear, bull, fair) ? [`Scenario range: ${fmt(bear)} → ${fmt(bull)}`] : []),
+    `Model fair value ~${fmt(fair)} (${pct(upside)} vs today's price)`,
+    ...(validScenarios(bear, bull, fair) ? [`Range: ${fmt(bear)} → ${fmt(bull)}`] : []),
     ``,
-    `Full model → ${APP_URL}/stock/${ticker}`,
+    `One of the oldest questions in markets — is the price right?`,
+    `insic.app/stock/${ticker}`,
     `$${ticker} #DCF #Investing`,
   ].filter(Boolean)
 
@@ -1986,16 +1999,16 @@ async function runMorningBrief() {
   })() : null
 
   const macroNarrative = macroToday.map(e => {
-    if (e.type === 'FOMC') return `🏦 FOMC rate decision today. Consensus expects no change. The key signal will be the dot plot and Powell's language on rate cut timing — any shift directly affects WACC assumptions and equity valuations.`
-    if (e.type === 'CPI')  return `📊 CPI inflation report today. A reading above expectations keeps rates elevated and compresses DCF fair values. A softer print opens the path to rate cuts and benefits growth stocks.`
-    if (e.type === 'NFP')  return `💼 Nonfarm Payrolls report this morning. A strong number reduces the likelihood of near-term rate cuts. Watch the prior month revision — it often tells more than the headline.`
+    if (e.type === 'FOMC') return `🏦 FOMC decision today. Consensus says no change, but the dot plot and Powell's tone on cut timing is what actually moves markets — any shift in forward guidance ripples straight through discount rates and equity valuations.`
+    if (e.type === 'CPI')  return `📊 CPI print this morning. Above expectations keeps rates elevated and compresses fair values. Below expectations opens the path to cuts and lifts growth stocks. Both move DCF assumptions.`
+    if (e.type === 'NFP')  return `💼 Payrolls this morning. A strong number pushes back rate cuts. Check the prior month revision — it often tells a different story than the headline.`
     return `📅 ${e.label} today.`
   })
 
   const earningsNarrative = earningsTickers.length > 0 ? (() => {
     const names = earningsTickers.slice(0, 4).map(t => `$${t.symbol}`)
     const str = names.length === 1 ? names[0] : names.slice(0, -1).join(', ') + ' and ' + names.at(-1)
-    return `📊 ${str} ${names.length === 1 ? 'reports' : 'report'} earnings today. The key question isn't just beat or miss — it's whether results justify the current valuation. Check the model before the number hits.`
+    return `📊 ${str} ${names.length === 1 ? 'reports' : 'report'} today. Beat or miss matters less than whether the result justifies the current valuation.`
   })() : null
 
   const tomorrowNote = macroTomorrow.length > 0
@@ -2011,7 +2024,7 @@ async function runMorningBrief() {
     vix    ? `VIX ${vix.price.toFixed(1)}` : null,
   ].filter(Boolean).join(' · ')
 
-  const lines = [`Good morning — ${dayName}`, ``, openTone + vixNote]
+  const lines = [openTone + vixNote]
   if (usIndicesLine) lines.push(usIndicesLine)
 
   const overnightItems = [
@@ -2049,18 +2062,18 @@ async function runMorningBrief() {
       if (!byDate[e.date]) byDate[e.date] = []
       byDate[e.date].push(`$${e.symbol}`)
     }
-    lines.push(``, `Earnings this week:`)
+    lines.push(``, `On the earnings calendar this week:`)
     for (const [date, tickers] of Object.entries(byDate)) {
       const dayLabel = new Date(date + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
-      lines.push(`${dayLabel}: ${tickers.join(' · ')}`)
+      lines.push(`→ ${dayLabel}: ${tickers.join(' · ')}`)
     }
   }
 
   if (tomorrowNote) lines.push(``, tomorrowNote)
 
-  lines.push(``, `Does your model still support your positions at today's prices?`)
+  lines.push(``, `The price moved. Did the value?`)
   lines.push(`${APP_URL}`)
-  lines.push(`#GoodMorning #Markets #Investing`)
+  lines.push(`#Markets #Investing #DCF`)
 
   await post(lines.join('\n'))
 }
@@ -2136,18 +2149,18 @@ async function runMiddayPulse() {
     : null
 
   const macroNote = macroToday.map(e => {
-    if (e.type === 'FOMC') return `🏦 Fed decision this afternoon — market on hold until Powell speaks.`
-    if (e.type === 'CPI')  return `📊 CPI data is in — have you updated your WACC assumptions?`
+    if (e.type === 'FOMC') return `🏦 Fed decision this afternoon — everything on hold until Powell speaks.`
+    if (e.type === 'CPI')  return `📊 CPI is in — reprices the rate path and every growth stock with it.`
     if (e.type === 'NFP')  return `💼 Jobs data out this morning — rate cut path updated.`
     return `📅 ${e.label} today.`
   })
 
   const weekOfYear = Math.floor((Date.now() / 86400000 + 4) / 7)
   const hooks = [
-    'Interesting session. What are you watching?',
-    'Rotation is clear today. How are you positioned?',
-    'Mid-session check. Anything surprising you?',
-    'This rotation has a story behind it. What\'s your read?',
+    'Halfway through. Anything shifting the thesis?',
+    "What's driving this rotation — sentiment or fundamentals?",
+    "Midday check. What's standing out to you?",
+    'Rotation is speaking. Is your model listening?',
   ]
 
   const lines = [`Midday — ${dayName}`, ``, indexLine]
@@ -2245,22 +2258,22 @@ async function runMarketClose() {
   const watchTomorrow = (() => {
     const items = []
     macroTomorrow.forEach(e => {
-      if (e.type === 'FOMC') items.push(`🏦 Fed rate decision — most important event for equity valuations`)
-      if (e.type === 'CPI')  items.push(`📊 CPI inflation print — will move WACC assumptions across the board`)
-      if (e.type === 'NFP')  items.push(`💼 Jobs report — key input for Fed rate path and discount rates`)
+      if (e.type === 'FOMC') items.push(`🏦 Fed rate decision tomorrow — everything moves on the statement`)
+      if (e.type === 'CPI')  items.push(`📊 CPI tomorrow — will reshape expectations on where rates go from here`)
+      if (e.type === 'NFP')  items.push(`💼 Jobs report tomorrow — strong number = fewer cuts, weak number = risk off`)
     })
     if (tnx && tnx.price >= 4.4) items.push(`10Y at ${tnx.price.toFixed(2)}% — if it breaks ${(Math.ceil(tnx.price * 10) / 10).toFixed(1)}%, growth stocks will feel it`)
-    if (vix && vix.price >= 20)  items.push(`VIX ${vix.price.toFixed(1)} — elevated volatility, position sizing matters tomorrow`)
-    if (items.length === 0) items.push(`Watch premarket futures for overnight direction`)
+    if (vix && vix.price >= 20)  items.push(`VIX ${vix.price.toFixed(1)} — don't size up until volatility settles`)
+    if (items.length === 0) items.push(`No major catalysts tomorrow. Tape-driven.`)
     return items
   })()
 
   const weekOfYear = Math.floor((Date.now() / 86400000 + 4) / 7)
   const hooks = [
-    `Did today's move change the fundamental case for any position, or just the price?`,
-    `One stock moved big today. Did the business change, or just the market's mood?`,
-    `Before tomorrow's open: did anything today shift your growth or WACC assumptions?`,
-    `The market priced something in today. Was it already in your model?`,
+    `The price moved. Did the value? ${APP_URL}`,
+    `Worth running the model after a session like this — ${APP_URL}`,
+    `The market priced something in today. Was it already in your model? ${APP_URL}`,
+    `Some of these moves will matter. Most won't. Hard part is knowing which. ${APP_URL}`,
   ]
 
   const sp = sp500 ? `S&P ${sp500.changePct >= 0 ? '+' : ''}${sp500.changePct.toFixed(2)}%` : null
@@ -2269,16 +2282,14 @@ async function runMarketClose() {
   const indexLine = [sp, nq, dj].filter(Boolean).join(' · ')
 
   const lines = [
-    `Markets closed — ${dayName}`,
-    ``,
     indexLine,
     vix ? `VIX ${vix.price.toFixed(1)} — ${vixSentiment(vix.price).label.toLowerCase()}` : null,
     ``,
   ].filter(Boolean)
 
   if (sectorData.length > 0) {
-    sectorData.forEach((s, i) => {
-      const e = i === 0 ? '▲' : s.changePct < 0 ? '▼' : '→'
+    sectorData.forEach(s => {
+      const e = s.changePct >= 1 ? '▲' : s.changePct <= -1 ? '▼' : '→'
       lines.push(`${e} ${s.name} ${s.changePct >= 0 ? '+' : ''}${s.changePct.toFixed(2)}%`)
     })
     lines.push(``)
@@ -2296,11 +2307,11 @@ async function runMarketClose() {
   whatDroveIt.forEach(l => lines.push(l))
 
   if (watchTomorrow.length > 0) {
-    lines.push(``, `Tomorrow watch:`)
-    watchTomorrow.forEach(w => lines.push(`→ ${w}`))
+    lines.push(``)
+    watchTomorrow.forEach(w => lines.push(w))
   }
 
-  lines.push(``, hooks[weekOfYear % hooks.length], ``, `${APP_URL}`)
+  lines.push(``, hooks[weekOfYear % hooks.length])
   lines.push(`#MarketClose #Investing #StockMarket`)
 
   await post(lines.join('\n'))
@@ -2325,14 +2336,14 @@ async function runMarketOpen() {
 
   // Process-oriented insight, not just price reporting
   const processNote = spChg > 1.0
-    ? `Strong open. Something shifted sentiment overnight — before you act, ask what changed fundamentally.`
+    ? `Strong open. Before you act, ask what actually changed in the fundamentals — not just the sentiment.`
     : spChg > 0.2
-    ? `Positive start. Does today's gap up change anything in your models, or is it just noise?`
+    ? `Positive start. Does this move change anything in your models, or is it noise?`
     : spChg > -0.2
-    ? `Flat open. Low conviction. Good day to update your assumptions, not chase moves.`
+    ? `Flat open. Low conviction day. Good time to update assumptions, not chase moves.`
     : spChg > -1.0
-    ? `Soft open. Risk-off tone. If defensives are leading, rate expectations may be quietly shifting.`
-    : `Risk-off open. The model doesn't panic — do your positions still have a margin of safety at today's price?`
+    ? `Soft open, risk-off tone. If defensives are leading, rate expectations may be quietly shifting.`
+    : `Risk-off open. The model doesn't panic — do your positions still have a margin of safety here?`
 
   const sp = sp500 ? `S&P ${sp500.changePct >= 0 ? '+' : ''}${sp500.changePct.toFixed(2)}%` : null
   const nq = nasdaq ? `Nasdaq ${nasdaq.changePct >= 0 ? '+' : ''}${nasdaq.changePct.toFixed(2)}%` : null
@@ -2340,14 +2351,14 @@ async function runMarketOpen() {
   const indexLine = [sp, nq, dj].filter(Boolean).join(' · ')
 
   const lines = [
-    `${openEmoji} Opening bell — ${dayName}`,
+    `${openEmoji} NYSE open — ${dayName}`,
     ``,
     indexLine,
     vix ? `VIX ${vix.price.toFixed(1)} — ${vixSentiment(vix.price).label.toLowerCase()}` : null,
     ``,
     processNote,
     ``,
-    `${APP_URL}`,
+    `insic.app`,
     `#OpeningBell #Markets #Investing`,
   ].filter(Boolean)
 
@@ -2367,12 +2378,12 @@ const SECTOR_STOCKS = {
 }
 
 const SECTOR_NARRATIVES = {
-  XLK: 'Tech leading. Watch what\'s driving it — if it\'s rate relief, WACC assumptions across growth stocks need updating. If it\'s earnings momentum, check whether the move is already baked into valuations.',
-  XLE: 'Energy outperforming. Oil supply or geopolitical premium driving this? For integrated majors, check if current crude levels justify the multiple. FCF-heavy names in this environment have real margin of safety.',
-  XLF: 'Financials leading — usually means the market is pricing in a steeper yield curve or improving credit conditions. Higher rates = better NIM for banks, but also higher discount rates for the rest of the market.',
-  XLV: 'Healthcare bid. When defensives lead, the market is hedging. Either growth expectations are being trimmed, or macro risk is rising. Both affect WACC assumptions across your portfolio.',
-  XLU: 'Utilities leading — classic rate-cut signal. The market is pricing in lower rates ahead. If you\'re holding growth stocks, lower WACC means higher fair values. Update your models.',
-  XLI: 'Industrials up — cyclical leadership. Typically confirms GDP growth expectations are stable or rising. Good environment for capex-heavy names. Check ROIC vs WACC spread — it widens in expansion.',
+  XLK: 'Tech leading. Is it rate-driven or earnings-driven? Those are two different stories. Rate relief lifts valuations mechanically. Earnings momentum has to keep delivering.',
+  XLE: 'Energy outperforming. Check whether it\'s an oil supply story or a geopolitical premium. For integrated majors, free cash flow at current crude prices is what justifies the multiple.',
+  XLF: 'Financials leading — usually the market pricing in a steeper yield curve or better credit. Higher rates help bank margins, but the same rates make every other sector\'s discount calculation harder.',
+  XLV: 'Healthcare bid. Defensives leading means the market is hedging. Either growth expectations are getting trimmed or macro risk is rising. Both compress what investors will pay for riskier names.',
+  XLU: 'Utilities leading — classic rate-cut signal. The market is front-running lower rates. Lower cost of capital mechanically increases fair value on long-duration assets.',
+  XLI: 'Industrials up — cyclical leadership. Usually confirms GDP expectations are stable or rising. Good environment for capex-heavy businesses where returns on invested capital exceed the cost of capital.',
 }
 
 async function runSectorSpotlight() {
@@ -2406,14 +2417,14 @@ async function runSectorSpotlight() {
     narrative,
     ``,
     ...sectorData.map(s => {
-      const e = s.changePct >= 1 ? '🟢' : s.changePct <= -1 ? '🔴' : '→'
+      const e = s.changePct >= 1 ? '▲' : s.changePct <= -1 ? '▼' : '→'
       return `${e} ${sectorName[s.symbol] ?? s.symbol} ${s.changePct >= 0 ? '+' : ''}${s.changePct.toFixed(2)}%`
     }),
     ``,
     gapStr,
-    stocks.length > 0 ? `Names to watch in ${sectorName[best.symbol]}: ${stocks.slice(0, 3).map(t => `$${t}`).join(' · ')}` : null,
+    stocks.length > 0 ? `Names moving in ${sectorName[best.symbol]}: ${stocks.slice(0, 3).map(t => `$${t}`).join(' · ')}` : null,
     ``,
-    `${APP_URL}`,
+    `Which sector holds up at current valuations? ${APP_URL}/etf`,
     `#SectorRotation #${sectorName[best.symbol]?.replace(/\s/g,'') ?? best.symbol} #Investing`,
   ].filter(Boolean)
 
@@ -2475,37 +2486,38 @@ async function runDcf2() {
 
   const stressTest = (() => {
     if (upside < -0.15 && impliedGrowth != null) {
-      return `For $${ticker} at ${fmt(price)} to be fairly valued, you need to believe in ~${pct(impliedGrowth, false)}/yr revenue growth for 5 years.`
+      return `For $${ticker} at ${fmt(price)} to be fairly valued, you need ~${pct(impliedGrowth, false)}/yr revenue growth for 5 years. Is that realistic?`
     }
     if (upside > 0.20 && impliedGrowth != null) {
-      return `$${ticker} at ${fmt(price)} is only pricing in ~${pct(impliedGrowth, false)}/yr growth — well below what the business has historically delivered.`
+      return `$${ticker} at ${fmt(price)} is only pricing in ~${pct(impliedGrowth, false)}/yr growth — well below what this business has historically delivered.`
     }
     if (validScenarios(bear, bull, fair)) {
-      return `Under our bear case (${fmt(bear)}), the downside is ${pct((bear - price) / price)}. Under the bull (${fmt(bull)}), the upside is ${pct((bull - price) / price)}.`
+      return `Bear case ${fmt(bear)} (${pct((bear - price) / price)}). Bull case ${fmt(bull)} (${pct((bull - price) / price)}). Where do you sit?`
     }
-    return `Model fair value: ${fmt(fair)}. The market disagrees by ${pct(Math.abs(upside))}.`
+    return `Model fair value ${fmt(fair)}. It disagrees with the market by ${pct(Math.abs(upside))}.`
   })()
 
   const qualityNote = (() => {
     if (roic != null && roicSpread != null && roicSpread > 0.08)
-      return `ROIC ${pct(roic, false)} vs WACC — ${pct(roicSpread, false)} spread. This business consistently creates value above its cost of capital.`
+      return `Earns ${pct(roic, false)} on invested capital — ${pct(roicSpread, false)} above its cost of capital. The business consistently creates value.`
     if (grossM != null && grossM > 0.60)
-      return `Gross margin of ${pct(grossM, false)} suggests real pricing power.`
+      return `Gross margin of ${pct(grossM, false)} — real pricing power here.`
     if (netM != null && netM < 0 && upside > 0)
-      return `Still loss-making (net margin ${pct(netM, false)}), but the model sees a path to profitability in the growth assumptions.`
+      return `Still loss-making (net margin ${pct(netM, false)}), but the growth assumptions carry a path to profitability.`
     return null
   })()
 
   const lines = [
     stressTest,
     ``,
-    ...(historicalCagr != null ? [`Historical 3Y revenue CAGR: ${pct(historicalCagr, false)}.`] : []),
+    ...(historicalCagr != null ? [`$${ticker}'s actual 3-year annual growth rate: ${pct(historicalCagr, false)}.`] : []),
     ...(qualityNote ? [qualityNote] : []),
     ``,
     ...(recLabel ? [`Wall St: ${recLabel}${analyst1y != null && numAnalysts >= 3 ? ` · ${numAnalysts} analysts expect ${pct(analyst1y, false)}/yr growth` : ''}`] : []),
-    `Our model: ${fmt(fair)} (${pct(upside)})${validScenarios(bear, bull, fair) ? ` · Range ${fmt(bear)}–${fmt(bull)}` : ''}`,
+    `Model fair value ${fmt(fair)} (${pct(upside)})${validScenarios(bear, bull, fair) ? ` · range ${fmt(bear)}–${fmt(bull)}` : ''}`,
     ``,
-    `${APP_URL}/stock/${ticker}`,
+    `The price moved. Did the value?`,
+    `insic.app/stock/${ticker}`,
     `$${ticker} #DCF #Investing`,
   ].filter(Boolean)
 
@@ -2558,7 +2570,7 @@ async function runPreClose() {
     lateSignal,
     ...(macroTomorrow.length > 0 ? [``, `Tomorrow: ${macroTomorrow.map(e => e.label).join(' · ')}`] : []),
     ``,
-    `${APP_URL}`,
+    `The price moved. Did the value? ${APP_URL}`,
     `#Markets #PreClose #Investing`,
   ].filter(Boolean)
 
@@ -2618,8 +2630,6 @@ async function runAfterHours() {
   const ahIndexLine = [sp, nq, dj].filter(Boolean).join(' · ')
 
   const lines = [
-    `After hours — ${dayName}`,
-    ``,
     ahIndexLine,
     ``,
     sessionSummary,
@@ -2627,11 +2637,11 @@ async function runAfterHours() {
 
   if (todayEarners.length > 0) {
     lines.push(``, `Reporting tonight: ${todayEarners.map(t => `$${t.symbol}`).join(' · ')}`)
-    lines.push(`Worth checking the model before the number drops.`)
+    lines.push(`The consensus is already priced in. What matters is the guide.`)
   }
 
   if (tomorrowEarners.length > 0) {
-    lines.push(``, `On deck tomorrow: ${tomorrowEarners.map(t => `$${t.symbol}`).join(' · ')}`)
+    lines.push(``, `Up tomorrow: ${tomorrowEarners.map(t => `$${t.symbol}`).join(' · ')}`)
   }
 
   if (macroTomorrow.length > 0) {
@@ -3729,7 +3739,7 @@ async function runInsiderBuy() {
   const lines = [
     `${namePart} just filed a Form 4 on $${ticker}.`,
     ``,
-    `Executives buy with their own money for one reason.`,
+    `Insiders buy for all kinds of reasons. They only sell for one.`,
     modelLine,
     ``,
     best.link,
@@ -3811,16 +3821,16 @@ async function run52wLow() {
   const roic   = data?.scores?.roic?.roic
 
   const lines = [
-    `$${ticker} is trading ${pctFrom52Low}% above its 52-week low. ${pctFrom52High}% off the peak.`,
+    `$${ticker} is ${pctFrom52Low}% off its 52-week low. The business is still there — the question is whether the price reflects it.`,
     ``,
     fair && upside != null
-      ? `Our model sees ${upside >= 0 ? `${(upside * 100).toFixed(0)}% upside` : `${Math.abs(upside * 100).toFixed(0)}% downside`} to fair value of ${fmt(fair)}.`
+      ? `Our DCF puts fair value at ${fmt(fair)} — that's ${upside >= 0 ? `${(upside * 100).toFixed(0)}% above` : `${Math.abs(upside * 100).toFixed(0)}% below`} where it trades today.`
       : null,
-    fcfM != null ? `FCF margin ${pct(fcfM, false)} — still generating cash despite the drop.` : null,
-    roic != null && roic > 0 ? `ROIC ${pct(roic, false)} — the business hasn't deteriorated.` : null,
+    fcfM != null ? `Free cash flow margin: ${pct(fcfM, false)}. Still generating cash despite the weakness.` : null,
+    roic != null && roic > 0 ? `ROIC ${pct(roic, false)} — nothing's broken at the operating level.` : null,
     data ? historicalContext(data, ticker) : null,
     ``,
-    `Price weakness ≠ business weakness. Worth a closer look.`,
+    `Price and value diverge all the time. The gap closes eventually — one way or the other.`,
     ``,
     `${APP_URL}/stock/${ticker}`,
     `$${ticker} #ValueInvesting #DCF`,
@@ -3871,14 +3881,17 @@ async function runTopUndervalued() {
     ].filter(Boolean)
   })
 
+  const topStock = top[0]
+  const biggestUpside = (topStock.upside * 100).toFixed(0)
+
   const lines = [
-    `5 most undervalued S&P 500 stocks — our DCF model today`,
+    `The 5 most undervalued names from our DCF model right now. $${topStock.ticker} leads — ${biggestUpside}% gap between price and model fair value.`,
     ``,
     ...stockLines,
     ``,
-    `Not financial advice — model outputs only.`,
+    `Model outputs, not financial advice — but the gap is real. The model says these are cheap. The market disagrees. One of them is right.`,
     ``,
-    `Run your own analysis → ${APP_URL}`,
+    `${APP_URL}`,
     `#ValueInvesting #DCF #StockMarket #Investing`,
   ].filter(Boolean)
 
@@ -3933,18 +3946,17 @@ async function runMarketVsModel() {
 
   const lines = [
     ourIsHigher
-      ? `Our DCF on $${ticker} is more bullish than the ${c.numAnalysts}-analyst consensus. Here's the gap.`
-      : `${c.numAnalysts} analysts have a higher target on $${ticker} than our DCF. One of them is wrong.`,
+      ? `Our DCF on $${ticker} is more bullish than ${c.numAnalysts} analysts. By ${gapPct}%.`
+      : `${c.numAnalysts} analysts think $${ticker} is worth more than our model does. The gap is ${gapPct}%.`,
     ``,
     `Our model: ${fmt(c.ourFair)} (${c.ourUpside >= 0 ? '+' : ''}${(c.ourUpside * 100).toFixed(0)}%)`,
     `Street consensus: ${fmt(c.analystTarget)} (${c.analystUpside >= 0 ? '+' : ''}${(c.analystUpside * 100).toFixed(0)}%)`,
-    `Gap: ${gapPct}%`,
     ``,
     growthContext,
     c.d ? historicalContext(c.d, ticker) : null,
     ourIsHigher
-      ? `If analysts are anchored to near-term estimates and the model captures longer-term economics better, the gap is an opportunity.`
-      : `If the model's growth assumptions are too conservative, the Street is right. If they're too optimistic, the consensus target doesn't hold.`,
+      ? `Analysts tend to anchor to near-term numbers. DCF captures the longer arc. If the model's right, there's a gap worth exploring.`
+      : `If our growth assumptions are too conservative, the Street wins. If they're too generous, the consensus target doesn't hold. Worth stress-testing either way.`,
     ``,
     `Run the assumptions yourself → ${APP_URL}/stock/${ticker}`,
     `$${ticker} #DCF #Valuation #Investing`,
@@ -4639,14 +4651,14 @@ async function runLiMarketWrap() {
   })()
 
   const lines = [
-    `📊 Market Close — ${dayName}`,
+    `📊 ${dayName} close.`,
     ``,
     `🇺🇸 US Indices`,
     sp500  ? `S&P 500:   ${sp500.changePct >= 0 ? '+' : ''}${sp500.changePct.toFixed(2)}% (${sp500.price.toFixed(0)})` : null,
     nasdaq ? `Nasdaq:    ${nasdaq.changePct >= 0 ? '+' : ''}${nasdaq.changePct.toFixed(2)}% (${nasdaq.price.toFixed(0)})` : null,
     dow    ? `Dow Jones: ${dow.changePct >= 0 ? '+' : ''}${dow.changePct.toFixed(2)}% (${dow.price.toFixed(0)})` : null,
     ``,
-    `🏭 Sector Performance`,
+    `🏭 Sectors`,
     ...sectors.map(s => `${s.changePct >= 0.5 ? '▲' : s.changePct <= -0.5 ? '▼' : '→'} ${s.name}: ${s.changePct >= 0 ? '+' : ''}${s.changePct.toFixed(2)}%`),
     ``,
     `📌 Rates & Commodities`,
@@ -4655,12 +4667,10 @@ async function runLiMarketWrap() {
     gold ? `Gold: $${gold.price.toFixed(0)} (${gold.changePct >= 0 ? '+' : ''}${gold.changePct.toFixed(2)}%)` : null,
     dxy  ? `US Dollar (DXY): ${dxy.price.toFixed(1)} (${dxy.changePct >= 0 ? '+' : ''}${dxy.changePct.toFixed(2)}%)` : null,
     ``,
-    `🔍 What Drove It`,
+    `🔍 What drove it`,
     ...whatDrove,
     ``,
-    `The key question for investors: did today's move change the fundamental value of your positions, or just the price? Those are very different things.`,
-    ``,
-    `Run your DCF models → insic.app`,
+    `Price moved. Whether value moved is a different question — and the one worth asking. Check your positions at insic.app`,
     ``,
     `#MarketClose #Finance #Investing #StockMarket #DCF`,
   ].filter(Boolean)
@@ -5035,7 +5045,7 @@ async function runLiMorningBrief() {
   })() : null
 
   const lines = [
-    `Good morning — ${dayName}`,
+    `${dayName} morning.`,
     ``,
     [spFutures, nqFutures].filter(Boolean).join(' · '),
     overnightParts.length > 0 ? overnightParts.join(' · ') : null,
@@ -5048,7 +5058,7 @@ async function runLiMorningBrief() {
     topItem ? `\n${topItem}` : null,
     valuationHook ? `\n${valuationHook}` : null,
     ``,
-    `Full market models → insic.app`,
+    `Start with the numbers that matter → insic.app`,
     ``,
     `#GoodMorning #Finance #Investing #Markets`,
   ].filter(Boolean)
@@ -5093,20 +5103,23 @@ async function runLiDivergence() {
   candidates.sort((a, b) => b.divergence - a.divergence)
   const picks = candidates.slice(0, 3)
 
-  const intro = picks.some(p => p.ourUpside < p.streetUpside)
-    ? `3 stocks where our DCF and Wall Street don't agree. The gap is the conversation.`
-    : `Our model is more bearish than the Street on each of these. Here's why that matters.`
+  const ourBullishCount = picks.filter(p => p.ourUpside > p.streetUpside).length
+  const intro = ourBullishCount >= 2
+    ? `Our model sees more upside than Wall Street on these. That's either an opportunity or a disagreement worth understanding.`
+    : ourBullishCount === 0
+    ? `The Street is more bullish than our model on all three. Here's where the assumptions diverge.`
+    : `3 stocks. Our model and Wall Street don't see eye to eye — in both directions.`
 
   const stockLines = picks.flatMap(p => {
     const ourDir    = p.ourUpside > 0 ? `sees ${(p.ourUpside * 100).toFixed(0)}% upside` : `sees ${Math.abs(p.ourUpside * 100).toFixed(0)}% downside`
     const stDir     = p.streetUpside > 0 ? `+${(p.streetUpside * 100).toFixed(0)}%` : `${(p.streetUpside * 100).toFixed(0)}%`
     const roicNote  = p.roicSpread != null
-      ? p.roicSpread < -0.02 ? ` ROIC below WACC — that's the tension.`
-      : p.roicSpread > 0.08  ? ` ROIC well above WACC — business quality supports the bull case.`
+      ? p.roicSpread < -0.02 ? ` Cost of capital exceeds returns — that's the tension.`
+      : p.roicSpread > 0.08  ? ` Returns are well above cost of capital — business quality supports the bull case.`
       : ``
       : ``
     const growthNote = p.impliedG != null && p.hist3y != null
-      ? ` Market pricing in ${pct(p.impliedG, false)}/yr; historical rate was ${pct(p.hist3y, false)}.`
+      ? ` Market is pricing in ${pct(p.impliedG, false)}/yr annual growth; the 3-year historical rate was ${pct(p.hist3y, false)}.`
       : ``
     return [
       `$${p.ticker} — price ${fmt(p.price)}`,
@@ -5116,7 +5129,11 @@ async function runLiDivergence() {
     ].filter(Boolean)
   })
 
-  const closing = `The divergence isn't a bug — it's the question. Which assumptions are wrong: ours or theirs? Run the model and change the inputs yourself.`
+  const closing = ourBullishCount >= 2
+    ? `If our assumptions are right, these are being left on the table. If the Street's right, they're not. Run the inputs and see which story holds up.`
+    : ourBullishCount === 0
+    ? `Analysts may be extrapolating recent momentum. Our model discounts cash flows over the full cycle. One of them is overpaying. Worth stress-testing.`
+    : `Same data, different assumptions, different answers. That gap is where investing happens. Adjust the inputs yourself → insic.app`
 
   const lines = [
     intro,
@@ -5124,8 +5141,7 @@ async function runLiDivergence() {
     ...stockLines,
     closing,
     ``,
-    `Adjust any assumption → insic.app`,
-    ``,
+    ...(ourBullishCount !== 1 ? [`Adjust any assumption → insic.app`, ``] : []),
     `#DCF #Valuation #Investing #Finance #StockMarket`,
   ]
 
@@ -5182,11 +5198,11 @@ async function runLiWeeklyPicks() {
 
   const stockLines = top.flatMap((s, i) => {
     const roicNote = s.roicSpread != null && s.roicSpread > 0.04
-      ? ` ROIC ${(s.roicSpread * 100).toFixed(0)}pp above WACC.`
+      ? ` ROIC ${(s.roicSpread * 100).toFixed(0)}pp above cost of capital.`
       : ``
     const growthNote = s.analyst1y != null
       ? ` Analysts see ${pct(s.analyst1y, false)}/yr growth.`
-      : s.hist3y != null ? ` 3Y CAGR ${pct(s.hist3y, false)}.` : ``
+      : s.hist3y != null ? ` 3-year annual growth: ${pct(s.hist3y, false)}.` : ``
     const recNote = s.recLabel && s.recLabel !== 'Hold' ? ` Street says ${s.recLabel}.` : ``
     return [
       `${i + 1}. $${s.ticker} — ${fmt(s.price)} → model fair value ${fmt(s.fair)} (${(s.upside * 100).toFixed(0)}% upside)`,
@@ -5196,14 +5212,14 @@ async function runLiWeeklyPicks() {
   })
 
   const lines = [
-    `5 attractively priced stocks — week of ${dateStr}`,
+    `5 stocks the model finds attractive — week of ${dateStr}`,
     ``,
-    `These aren't recommendations. They're the 5 stocks where our DCF model shows the largest gap between price and fair value, filtered for business quality.`,
+    `These aren't recommendations. They're the names where our DCF shows the biggest gap between what the market is pricing and what the business appears to be worth. Filtered for quality.`,
     ``,
     ...stockLines,
     diverseNote,
     ``,
-    `All models are interactive — change WACC, growth rate, or terminal value and see fair value move in real time.`,
+    `Every model is interactive — change cost of capital, growth rate, or terminal value and see the fair value update in real time. Build your own thesis.`,
     ``,
     `insic.app`,
     ``,
@@ -5790,9 +5806,9 @@ async function runEtfValueScan() {
     `Most expensive right now:`,
     ...mostExp.map(fmtEtfLine),
     ``,
-    `Score = P/E + P/B + Yield − Expense ratio. Deep Value ≥70 · Stretched ≤30.`,
+    `The score blends P/E, P/B, yield, and fees into a single number — higher means cheaper relative to what you're getting.`,
     ``,
-    `Full ETF rankings → ${APP_URL}/etf`,
+    `Which sector holds up at current valuations? ${APP_URL}/etf`,
     `#ETF #ValueInvesting #SectorRotation #Investing`,
   ]
 
@@ -5942,6 +5958,10 @@ async function runMovers() {
     ? `$${biggestMover.symbol} leads the session at +${biggestMover.chgPct.toFixed(2)}% — the biggest move in today's large-cap universe.`
     : `$${biggestMover.symbol} leads the selling at ${biggestMover.chgPct.toFixed(2)}% — the sharpest drop in today's large-cap universe.`
 
+
+  const ctaLine = isGainer
+    ? `Is $${biggestMover.symbol} worth what it's pricing in after today? ${APP_URL}/stock/${biggestMover.symbol}`
+    : `$${biggestMover.symbol} down ${Math.abs(biggestMover.chgPct).toFixed(1)}% — the value case just got cheaper or the thesis just broke. ${APP_URL}/stock/${biggestMover.symbol}`
   const lines = [
     `Today's biggest movers — ${dayName}`,
     ``,
@@ -5954,7 +5974,7 @@ async function runMovers() {
     bigMoverLine,
     dcfContext,
     ``,
-    `Did the business change, or just the price? → ${APP_URL}/stock/${biggestMover.symbol}`,
+    ctaLine,
     `$${biggestMover.symbol} #Stocks #Markets #Investing`,
   ].filter(Boolean)
 
