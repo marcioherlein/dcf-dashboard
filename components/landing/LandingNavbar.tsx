@@ -1,10 +1,11 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useId } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { Menu, X } from 'lucide-react'
 import { InsicLogoLockup } from '@/components/ui/InsicLogo'
-import { motion, AnimatePresence } from 'motion/react'
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react'
 
 const NAV_LINKS = [
   { label: 'Features',     href: '/#how-it-works' },
@@ -16,6 +17,9 @@ export default function LandingNavbar() {
   const { data: session } = useSession()
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const pathname = usePathname()
+  const reduced = useReducedMotion()
+  const pillId = useId()
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 48)
@@ -31,6 +35,11 @@ export default function LandingNavbar() {
   }, [mobileOpen])
 
   const atTop = !scrolled
+
+  // Determine which nav item is "active" based on path
+  const activeHref = NAV_LINKS.find(l => l.href === pathname)?.href ?? null
+
+  const SPRING = { type: 'spring', stiffness: 500, damping: 38, mass: 0.6 } as const
 
   return (
     <>
@@ -63,28 +72,57 @@ export default function LandingNavbar() {
               </Link>
             </div>
 
-            {/* ── Col 2: Nav — dead center of the bar ── */}
-            <nav className="hidden lg:flex items-center gap-0.5">
-              {NAV_LINKS.map(link => (
-                <Link
-                  key={link.label}
-                  href={link.href}
-                  className="px-4 py-2 rounded-lg text-[14.5px] font-medium transition-all duration-150 whitespace-nowrap min-h-[44px] flex items-center"
-                  style={{
-                    color: atTop ? 'rgba(255,255,255,0.80)' : '#6B6B6B',
-                  }}
-                  onMouseEnter={e => {
-                    (e.currentTarget as HTMLElement).style.backgroundColor = atTop ? 'rgba(255,255,255,0.10)' : '#F5F5F5'
-                    ;(e.currentTarget as HTMLElement).style.color = atTop ? 'rgba(255,255,255,1)' : '#111111'
-                  }}
-                  onMouseLeave={e => {
-                    (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'
-                    ;(e.currentTarget as HTMLElement).style.color = atTop ? 'rgba(255,255,255,0.80)' : '#6B6B6B'
-                  }}
-                >
-                  {link.label}
-                </Link>
-              ))}
+            {/* ── Col 2: Nav — pill-within-pill ── */}
+            <nav className="hidden lg:flex items-center justify-center">
+              <div
+                className="flex items-center rounded-full p-[3px]"
+                style={atTop ? {
+                  background: 'rgba(255,255,255,0.08)',
+                  backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)',
+                } : {
+                  background: 'rgba(240,241,246,0.85)',
+                  backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(0,0,0,0.07)',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.5)',
+                }}
+              >
+                {NAV_LINKS.map(link => {
+                  const isActive = activeHref === link.href
+                  return (
+                    <Link
+                      key={link.label}
+                      href={link.href}
+                      className="relative flex items-center rounded-full px-4 py-2 text-[13.5px] min-h-[34px] whitespace-nowrap transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(95,121,11,0.6)]"
+                      style={{ color: atTop ? (isActive ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.60)') : (isActive ? '#111111' : '#6B6B6B') }}
+                    >
+                      {isActive && (
+                        <motion.span
+                          layoutId={`${pillId}-nav-pill`}
+                          className="absolute inset-0 rounded-full"
+                          style={atTop ? {
+                            background: 'rgba(255,255,255,0.16)',
+                            backdropFilter: 'blur(8px)',
+                            WebkitBackdropFilter: 'blur(8px)',
+                            border: '1px solid rgba(255,255,255,0.18)',
+                            boxShadow: '0 1px 4px rgba(0,0,0,0.20), inset 0 1px 0 rgba(255,255,255,0.16)',
+                          } : {
+                            background: 'rgba(255,255,255,0.95)',
+                            border: '1px solid rgba(0,0,0,0.08)',
+                            boxShadow: '0 1px 4px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.9)',
+                          }}
+                          transition={reduced ? { duration: 0 } : SPRING}
+                          aria-hidden="true"
+                        />
+                      )}
+                      <span className="relative z-10 font-medium">{link.label}</span>
+                    </Link>
+                  )
+                })}
+              </div>
             </nav>
 
             {/* ── Col 3: CTA — right edge ── */}

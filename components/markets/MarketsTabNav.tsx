@@ -1,5 +1,6 @@
 'use client'
-import { cn } from '@/lib/utils'
+import { useId } from 'react'
+import { motion, useReducedMotion } from 'motion/react'
 
 export type MarketTab = 'overview' | 'sectors' | 'calendar' | 'valuation'
 
@@ -10,17 +11,29 @@ const TABS: { id: MarketTab; label: string }[] = [
   { id: 'valuation', label: 'Valuation' },
 ]
 
+const SPRING = { type: 'spring', stiffness: 500, damping: 38, mass: 0.6 } as const
+
 interface Props {
   active: MarketTab
   onChange: (tab: MarketTab) => void
 }
 
 export default function MarketsTabNav({ active, onChange }: Props) {
+  const pillId  = useId()
+  const reduced = useReducedMotion()
+
   return (
     <div
       role="tablist"
       aria-label="Markets sections"
-      className="flex items-center gap-0 border-b border-[#E5E5E5] overflow-x-auto scrollbar-hide -mb-px"
+      className="inline-flex items-center rounded-full p-[3px]"
+      style={{
+        background: 'rgba(240,241,246,0.85)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        border: '1px solid rgba(0,0,0,0.07)',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.5)',
+      }}
     >
       {TABS.map(tab => {
         const isActive = tab.id === active
@@ -32,18 +45,23 @@ export default function MarketsTabNav({ active, onChange }: Props) {
             aria-controls={`markets-panel-${tab.id}`}
             id={`markets-tab-${tab.id}`}
             onClick={() => onChange(tab.id)}
-            className={cn(
-              'relative shrink-0 px-4 py-2.5 text-[13px] font-semibold leading-none transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-offset-1',
-              isActive ? 'text-[#111111]' : 'text-[#6B6B6B] hover:text-[#111111]',
-            )}
+            className="relative flex items-center rounded-full px-3.5 py-1.5 text-[13px] min-h-[32px] whitespace-nowrap transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(95,121,11,0.6)]"
+            style={{ color: isActive ? '#111111' : '#6B6B6B', fontWeight: isActive ? 650 : 500 }}
           >
-            {tab.label}
-            <span
-              className={cn(
-                'absolute bottom-0 left-0 right-0 h-[2px] rounded-full transition-all duration-200',
-                isActive ? 'bg-[#5F790B] opacity-100' : 'opacity-0',
-              )}
-            />
+            {isActive && (
+              <motion.span
+                layoutId={`${pillId}-markets-pill`}
+                className="absolute inset-0 rounded-full"
+                style={{
+                  background: 'rgba(255,255,255,0.95)',
+                  border: '1px solid rgba(0,0,0,0.08)',
+                  boxShadow: '0 1px 4px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.9)',
+                }}
+                transition={reduced ? { duration: 0 } : SPRING}
+                aria-hidden="true"
+              />
+            )}
+            <span className="relative z-10">{tab.label}</span>
           </button>
         )
       })}

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useId } from 'react'
+import { motion, useReducedMotion } from 'motion/react'
 import { RefreshCw, ChevronDown, ChevronRight, Plus, ArrowUpRight, Trash2, Info } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
@@ -597,6 +598,9 @@ export default function ETFTrackerPage() {
   // ── Tab state (2 tabs only) ──────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState<'overview' | 'rankings'>('overview')
   const [rankingsFilter, setRankingsFilter] = useState<FilterGroup>('all')
+  const etfPillId  = useId()
+  const etfReduced = useReducedMotion()
+  const ETF_SPRING = { type: 'spring', stiffness: 500, damping: 38, mass: 0.6 } as const
 
   function goToRankings(filter: FilterGroup = 'all') {
     setRankingsFilter(filter)
@@ -647,21 +651,48 @@ export default function ETFTrackerPage() {
             <ETFHelpButton />
           </div>
 
-          <div className="flex gap-0 mt-3 -mb-px">
-            {TABS.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={cn(
-                  'px-4 py-2 text-[13px] font-[600] whitespace-nowrap border-b-2 transition-colors',
-                  activeTab === tab.id
-                    ? 'text-olive-700 border-olive-700'
-                    : 'text-[#6B6B6B] border-transparent hover:text-[#111111] hover:border-[#CDD1C8]',
-                )}
-              >
-                {tab.label}
-              </button>
-            ))}
+          <div className="flex items-center mt-3">
+            <div
+              role="tablist"
+              aria-label="ETF Tracker sections"
+              className="inline-flex items-center gap-0.5 rounded-full p-[3px]"
+              style={{
+                background: 'rgba(240,241,246,0.85)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                border: '1px solid rgba(0,0,0,0.07)',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.5)',
+              }}
+            >
+              {TABS.map((tab) => {
+                const isActive = activeTab === tab.id
+                return (
+                  <button
+                    key={tab.id}
+                    role="tab"
+                    aria-selected={isActive}
+                    onClick={() => setActiveTab(tab.id)}
+                    className="relative flex items-center rounded-full px-3.5 py-1.5 text-[13px] min-h-[32px] whitespace-nowrap transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(95,121,11,0.6)]"
+                    style={{ color: isActive ? '#111111' : '#6B6B6B', fontWeight: isActive ? 650 : 500 }}
+                  >
+                    {isActive && (
+                      <motion.span
+                        layoutId={`${etfPillId}-etf-pill`}
+                        className="absolute inset-0 rounded-full"
+                        style={{
+                          background: 'rgba(255,255,255,0.95)',
+                          border: '1px solid rgba(0,0,0,0.08)',
+                          boxShadow: '0 1px 4px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.9)',
+                        }}
+                        transition={etfReduced ? { duration: 0 } : ETF_SPRING}
+                        aria-hidden="true"
+                      />
+                    )}
+                    <span className="relative z-10">{tab.label}</span>
+                  </button>
+                )
+              })}
+            </div>
           </div>
         </div>
       </div>

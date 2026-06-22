@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef, useId } from 'react'
+import { motion, useReducedMotion } from 'motion/react'
 import Link from 'next/link'
 import { useSession, signIn } from 'next-auth/react'
 import {
@@ -125,16 +126,27 @@ const TABS: Array<{ id: TabId; label: string }> = [
   { id: 'recent', label: 'Recently Updated' },
 ]
 
+const SPRING = { type: 'spring', stiffness: 500, damping: 38, mass: 0.6 } as const
+
 function SegmentTabs({ active, counts, onSelect }: {
   active:   TabId
   counts:   Record<TabId, number>
   onSelect: (id: TabId) => void
 }) {
+  const pillId  = useId()
+  const reduced = useReducedMotion()
   return (
     <div
       role="tablist"
       aria-label="Valuation lists"
-      className="flex items-center gap-0 overflow-x-auto scrollbar-hide border-b border-[#E5E5E5]"
+      className="flex items-center gap-0.5 overflow-x-auto scrollbar-hide rounded-full p-[3px]"
+      style={{
+        background: 'rgba(240,241,246,0.85)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        border: '1px solid rgba(0,0,0,0.07)',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.5)',
+      }}
     >
       {TABS.map(({ id, label }) => {
         const isActive = active === id
@@ -145,19 +157,26 @@ function SegmentTabs({ active, counts, onSelect }: {
             role="tab"
             aria-selected={isActive}
             onClick={() => onSelect(id)}
-            className={cn(
-              'flex items-center gap-1.5 px-4 py-3 text-[13px] font-semibold whitespace-nowrap border-b-2 transition-colors',
-              isActive
-                ? 'text-olive-700 border-olive-700'
-                : 'text-[#6B6B6B] border-transparent hover:text-[#111111] hover:border-[#CDD1C8]',
-            )}
+            className="relative flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] whitespace-nowrap min-h-[32px] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(95,121,11,0.6)]"
+            style={{ color: isActive ? '#111111' : '#6B6B6B', fontWeight: isActive ? 650 : 500 }}
           >
-            {label}
+            {isActive && (
+              <motion.span
+                layoutId={`${pillId}-seg-pill`}
+                className="absolute inset-0 rounded-full"
+                style={{
+                  background: 'rgba(255,255,255,0.95)',
+                  border: '1px solid rgba(0,0,0,0.08)',
+                  boxShadow: '0 1px 4px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.9)',
+                }}
+                transition={reduced ? { duration: 0 } : SPRING}
+                aria-hidden="true"
+              />
+            )}
+            <span className="relative z-10">{label}</span>
             {count > 0 && (
-              <span className={cn(
-                'text-[10px] font-bold rounded-full px-1.5 py-0.5 min-w-[18px] text-center',
-                isActive ? 'bg-olive-100 text-olive-700' : 'bg-[#F5F5F5] text-[#6B6B6B]',
-              )}>
+              <span className="relative z-10 text-[10px] font-[700] tabular-nums rounded-full px-1.5 py-px min-w-[18px] text-center"
+                style={{ background: isActive ? 'rgba(95,121,11,0.10)' : 'rgba(0,0,0,0.06)', color: isActive ? '#5F790B' : '#9B9B9B' }}>
                 {count}
               </span>
             )}

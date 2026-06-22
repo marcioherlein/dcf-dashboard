@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useId } from 'react'
 import { cn } from '@/lib/utils'
 import { motion, useReducedMotion } from 'motion/react'
 import {
@@ -9,11 +9,11 @@ import {
 export type TabId = 'overview' | 'valuation' | 'conviction' | 'financials' | 'news'
 
 const TABS = [
-  { id: 'overview'   as TabId, label: 'Overview',    Icon: BarChart2,  step: '01', primary: true,  gated: false },
-  { id: 'valuation'  as TabId, label: 'Valuation',   Icon: DollarSign, step: '02', primary: true,  gated: true  },
-  { id: 'conviction' as TabId, label: 'Conviction',  Icon: Award,      step: '03', primary: true,  gated: true  },
-  { id: 'financials' as TabId, label: 'Financials',  Icon: Table2,     step: '04', primary: false, gated: false },
-  { id: 'news'       as TabId, label: 'News',        Icon: Newspaper,  step: '05', primary: false, gated: true  },
+  { id: 'overview'   as TabId, label: 'Overview',    Icon: BarChart2,  primary: true,  gated: false },
+  { id: 'valuation'  as TabId, label: 'Valuation',   Icon: DollarSign, primary: true,  gated: true  },
+  { id: 'conviction' as TabId, label: 'Conviction',  Icon: Award,      primary: true,  gated: true  },
+  { id: 'financials' as TabId, label: 'Financials',  Icon: Table2,     primary: false, gated: false },
+  { id: 'news'       as TabId, label: 'News',        Icon: Newspaper,  primary: false, gated: true  },
 ]
 
 interface Props {
@@ -22,12 +22,14 @@ interface Props {
   isAuthed?: boolean
 }
 
+const SPRING = { type: 'spring', stiffness: 500, damping: 38, mass: 0.6 } as const
+
 export default function TabNav({ activeTab, onChange, isAuthed = true }: Props) {
-  const reduced = useReducedMotion()
-  const tabIds = TABS.map(t => t.id)
+  const reduced  = useReducedMotion()
+  const pillId   = useId()
+  const tabIds   = TABS.map(t => t.id)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  // Scroll active tab into view on mobile
   useEffect(() => {
     const el = document.getElementById(`tab-${activeTab}`)
     el?.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' })
@@ -50,20 +52,29 @@ export default function TabNav({ activeTab, onChange, isAuthed = true }: Props) 
     <div
       role="tablist"
       aria-label="Stock sections"
-      className="sticky z-20 glass-toolbar"
+      className="sticky z-20"
       style={{
-        top: "calc(52px + env(safe-area-inset-top, 0px))",
-        background: 'rgba(26, 37, 52, 0.82)',
-        borderBottom: '1px solid rgba(255,255,255,0.08)',
-        boxShadow: '0 1px 0 rgba(255,255,255,0.04)',
+        top: 'calc(52px + env(safe-area-inset-top, 0px))',
+        background: 'rgba(10,16,28,0.75)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderBottom: '1px solid rgba(255,255,255,0.07)',
       }}
       onKeyDown={handleKeyDown}
     >
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-        <div ref={containerRef} className="flex gap-0 overflow-x-auto scrollbar-hide -mb-px">
-          {TABS.map(({ id, label, Icon, step, primary, gated }, i) => {
-            const active = activeTab === id
-            const isFirstSecondary = !primary && TABS[i - 1]?.primary
+      <div className="mx-auto max-w-5xl px-3 sm:px-6 lg:px-8 py-2">
+        {/* Pill container */}
+        <div
+          ref={containerRef}
+          className="flex items-center gap-0.5 overflow-x-auto scrollbar-hide rounded-full p-[3px]"
+          style={{
+            background: 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.10)',
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
+          }}
+        >
+          {TABS.map(({ id, label, Icon, primary, gated }) => {
+            const active   = activeTab === id
             const showLock = gated && !isAuthed
             return (
               <button
@@ -75,46 +86,36 @@ export default function TabNav({ activeTab, onChange, isAuthed = true }: Props) 
                 tabIndex={active ? 0 : -1}
                 onClick={() => onChange(id)}
                 className={cn(
-                  'group relative flex items-center gap-1.5 px-4 py-3.5 whitespace-nowrap transition-colors border-b-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(95,121,11,0.7)] focus-visible:ring-offset-0',
-                  primary ? 'text-[13px] font-medium' : 'text-[12px] font-normal',
-                  isFirstSecondary ? 'ml-2 pl-5 border-l border-white/10' : '',
-                  active
-                    ? 'border-transparent text-white bg-white/8'
-                    : 'border-transparent text-white/50 hover:text-white/85 hover:border-white/20',
+                  'group relative flex items-center gap-1.5 rounded-full px-3 py-1.5 whitespace-nowrap transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(95,121,11,0.7)] focus-visible:ring-offset-0 min-h-[32px]',
+                  primary ? 'text-[13px]' : 'text-[12px]',
+                  active ? 'text-white font-[650]' : 'text-[rgba(255,255,255,0.45)] hover:text-[rgba(255,255,255,0.80)] font-[500]',
                 )}
               >
-                {/* Step number */}
-                <span
-                  className={cn(
-                    'text-[8px] font-bold tabular-nums transition-opacity leading-none',
-                    active
-                      ? 'text-[#7CB518] opacity-100'
-                      : 'text-white/30 opacity-80 group-hover:opacity-60',
-                  )}
-                  aria-hidden="true"
-                >
-                  {step}
-                </span>
-
-                <Icon
-                  size={primary ? 14 : 13}
-                  className={cn('shrink-0', active ? 'text-[#7CB518]' : 'text-white/40')}
-                />
-                {label}
-                {showLock && (
-                  <Lock
-                    size={10}
-                    className="ml-0.5 text-white/25 shrink-0"
-                    aria-label="requires sign in"
+                {/* Animated pill background */}
+                {active && (
+                  <motion.span
+                    layoutId={`${pillId}-tab-pill`}
+                    className="absolute inset-0 rounded-full"
+                    style={{
+                      background: 'rgba(255,255,255,0.14)',
+                      backdropFilter: 'blur(8px)',
+                      WebkitBackdropFilter: 'blur(8px)',
+                      border: '1px solid rgba(255,255,255,0.18)',
+                      boxShadow: '0 1px 4px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.14)',
+                    }}
+                    transition={reduced ? { duration: 0 } : SPRING}
+                    aria-hidden="true"
                   />
                 )}
 
-                {active && (
-                  <motion.span
-                    layoutId="tab-indicator"
-                    className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#7CB518] rounded-full"
-                    transition={reduced ? { duration: 0 } : { type: 'spring', duration: 0.35, bounce: 0.15 }}
-                  />
+                <Icon
+                  size={primary ? 13 : 12}
+                  className={cn('relative z-10 shrink-0', active ? 'text-[#7CB518]' : 'text-[rgba(255,255,255,0.30)] group-hover:text-[rgba(255,255,255,0.60)]')}
+                  aria-hidden="true"
+                />
+                <span className="relative z-10">{label}</span>
+                {showLock && (
+                  <Lock size={9} className="relative z-10 ml-0.5 text-[rgba(255,255,255,0.25)] shrink-0" aria-label="requires sign in" />
                 )}
               </button>
             )

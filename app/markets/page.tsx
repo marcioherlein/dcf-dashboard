@@ -188,7 +188,9 @@ export default function MarketsPage() {
         </div>
 
         {/* ── Tab navigation ───────────────────────────────────────────────── */}
-        <MarketsTabNav active={activeTab} onChange={setActiveTab} />
+        <div className="flex items-center">
+          <MarketsTabNav active={activeTab} onChange={setActiveTab} />
+        </div>
 
         {/* ── Tab panels ───────────────────────────────────────────────────── */}
         <div className="mt-5 space-y-5">
