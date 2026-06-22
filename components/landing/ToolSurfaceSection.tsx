@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { GitCompare, Cpu, Layers, ArrowRight, BarChart2 } from 'lucide-react'
+import { GitCompare, Layers, ArrowRight, BarChart2 } from 'lucide-react'
 
 const DIFFERENTIATORS = [
   {
@@ -19,15 +19,6 @@ const DIFFERENTIATORS = [
       'Compare any two tickers on indexed performance, Pearson correlation, ratio Z-score, and mean-reversion divergence signals. Find pairs that are out of sync.',
     href: '/compare',
     cta: 'Compare stocks →',
-  },
-  {
-    icon: <Cpu size={22} strokeWidth={2} className="text-[#5F790B]" />,
-    name: 'AI Stack Screener',
-    tagline: '125 AI infrastructure companies, all scored.',
-    description:
-      'Every major AI chip, data centre, cloud, and software company ranked by a composite DCF score across 16 supply-chain layers. Updated daily.',
-    href: '/ai-stack',
-    cta: 'Explore AI Stack →',
   },
   {
     icon: <Layers size={22} strokeWidth={2} className="text-[#5F790B]" />,

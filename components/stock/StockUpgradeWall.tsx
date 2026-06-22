@@ -26,7 +26,7 @@ const PRO_HIGHLIGHTS = [
   'Unlimited analyses — no monthly cap',
   'Sensitivity table (CAGR × WACC heat map)',
   'Multi-ticker comparison with pairs signals',
-  'AI Stack screener — 125 companies scored',
+  'Quant Strategy Library — 5 academic strategies',
   'Market Screener with factor ranking',
   'Weekly watchlist digest (email)',
 ]

@@ -35,8 +35,7 @@ const PRO_FEATURES = [
   { icon: TrendingUp, text: 'Unlimited saved analyses to Watchlist' },
   { icon: BarChart2,  text: 'Full screener — unlimited results + scatter chart view' },
   { icon: BarChart2,  text: 'Multi-ticker comparison with correlation & pairs signals' },
-  { icon: Zap,        text: 'AI Stack screener — 125 AI infrastructure companies scored' },
-  { icon: Users,      text: 'Quant Strategy Library — all 5 academic factor strategies' },
+  { icon: Users,      text: 'Quant Strategy Library — 5 academic factor strategies' },
   { icon: Bell,       text: 'Weekly watchlist digest (email)' },
   { icon: Shield,     text: 'Priority support' },
 ]
@@ -57,7 +56,6 @@ const COMPARISON_ROWS = [
   { label: 'Monte Carlo simulation',                                browse: false,  free: false, pro: true  },
   { label: 'Full DCF model — year-by-year projections',             browse: false,  free: false, pro: true  },
   { label: 'Multi-ticker comparison + pairs signals',               browse: false,  free: false, pro: true  },
-  { label: 'AI Stack screener (125 companies)',                     browse: false,  free: false, pro: true  },
   { label: 'Quant Strategy Library (all 5 strategies)',             browse: false,  free: false, pro: true  },
   { label: 'Weekly watchlist digest (email)',                       browse: false,  free: false, pro: true  },
   { label: 'Priority support',                                      browse: false,  free: false, pro: true  },

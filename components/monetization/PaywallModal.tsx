@@ -22,7 +22,7 @@ const GATE_BULLETS: Partial<Record<FeatureGate, Array<{ Icon: LucideIcon, text: 
     { Icon: Layers,     text: 'Quant Strategy Library — 5 academic strategies' },
   ],
   macro_brief: [
-    { Icon: BarChart2,  text: 'AI Stack screener — 125 AI infrastructure companies scored' },
+    { Icon: BarChart2,  text: 'Sensitivity table — fair value at every CAGR × WACC' },
     { Icon: Layers,     text: 'Quant Strategy Library — 5 academic strategies' },
     { Icon: TrendingUp, text: 'Unlimited saved analyses + weekly digest' },
   ],

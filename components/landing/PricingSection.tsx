@@ -33,7 +33,6 @@ const PRO_FEATURES = [
   'Full DCF model — year-by-year projections',
   'Unlimited saves + full screener',
   'Multi-ticker comparison + pairs signals',
-  'AI Stack screener — 125 companies',
   'Quant Strategy Library — 5 strategies',
   'Weekly watchlist digest (email)',
 ]
