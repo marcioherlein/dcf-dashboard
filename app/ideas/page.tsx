@@ -224,10 +224,10 @@ function IdeaCard({
             </div>
           )}
 
-          {stock.fairValue != null && (
+          {stock.analystTarget != null && (
             <div className="flex items-center justify-between">
-              <span className="text-[10px] text-[rgba(255,255,255,0.40)]">Analyst target</span>
-              <span className="text-[11px] font-[700] tabular-nums text-white">{fmtPrice(stock.fairValue, 'USD')}</span>
+              <span className="text-[10px] text-[rgba(255,255,255,0.40)]">Analyst target (12m)</span>
+              <span className="text-[11px] font-[700] tabular-nums text-white">{fmtPrice(stock.analystTarget, 'USD')}</span>
             </div>
           )}
         </div>
@@ -308,6 +308,9 @@ export default function IdeasPage() {
         {/* Active signal description */}
         <div className="mb-5 rounded-xl bg-white border border-[#E3E1DA] px-4 py-3">
           <p className="text-[13px] text-[#444444] leading-relaxed">{activeSig.description}</p>
+          <p className="text-[11px] text-[#9B9B9B] mt-2 leading-snug">
+            <span className="font-[600]">Note:</span> Upside % and target prices here are based on analyst consensus 12-month targets — not insic&apos;s DCF model. Open any stock for the full intrinsic value analysis.
+          </p>
         </div>
 
         {/* Error */}
@@ -343,7 +346,7 @@ export default function IdeasPage() {
               Updated {new Date(data.updatedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })} · Refreshes every 6 hours
             </p>
             <p className="text-[11px] text-[#9B9B9B]">
-              Fair value estimates are model-based approximations. Not financial advice.
+              Upside % is vs analyst 12-month consensus target — not insic&apos;s DCF. Open each stock for the full model.
             </p>
           </div>
         )}

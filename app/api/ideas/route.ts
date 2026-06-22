@@ -12,8 +12,8 @@ export interface IdeaStock {
   name: string
   sector: string | null
   price: number | null
-  fairValue: number | null
-  upsidePct: number | null
+  analystTarget: number | null      // analyst consensus 12-month target price
+  upsidePct: number | null          // upside vs analyst target
   impliedCAGR: number | null
   historicalCagr3y: number | null
   expectation: 'Conservative' | 'Moderate' | 'Aggressive' | 'Very Aggressive' | null
@@ -104,43 +104,19 @@ function estimateImpliedCAGR(
 }
 
 // ─── Fair value estimate ──────────────────────────────────────────────────────
-// Primary: analyst consensus target price (targetMeanPrice from financialData).
-// This is the most defensible single-number fair value proxy available without
-// a full DCF — it represents the aggregated analyst 12-month target.
-// Secondary: simple forward earnings model when target price is unavailable.
+// Returns the analyst consensus 12-month target price only.
+// We do NOT run insic's DCF model here — that requires the full financials
+// fetch (WACC, FCF, revenue projections) which is too expensive for 100
+// stocks. The ideas page is explicit that this is the analyst target, not
+// insic's DCF estimate.
 
-function estimateFairValue(
-  price: number,
+function getAnalystTarget(
   targetMeanPrice: number | null,
-  forwardPE: number | null,       // from quote() — reliable
-  epsForward: number | null,
-  epsTTM: number | null,
-  epsGrowth: number | null,
+  price: number,
 ): number | null {
-  // Primary: analyst target price
-  if (targetMeanPrice != null && targetMeanPrice > 0 && targetMeanPrice < price * 5) {
+  if (targetMeanPrice != null && targetMeanPrice > 0 && targetMeanPrice < price * 8) {
     return targetMeanPrice
   }
-
-  // Secondary: forward earnings × exit multiple
-  // Uses forwardPE from quote() (not financialData — that field is unreliable)
-  if (forwardPE != null && forwardPE > 0 && forwardPE < 150 && epsForward != null && epsForward > 0) {
-    // Project forward EPS 2 years at expected growth, apply slight P/E compression
-    const growth = (epsGrowth ?? 0.08)
-    const clampedGrowth = Math.max(-0.20, Math.min(0.60, growth))
-    const futureEPS = epsForward * Math.pow(1 + clampedGrowth, 2)
-    const exitPE = Math.max(10, Math.min(40, forwardPE * 0.90))
-    const tv = futureEPS * exitPE
-    const pv = tv / Math.pow(1.09, 2)
-    if (isFinite(pv) && pv > 0) return pv
-  }
-
-  // Tertiary: TTM EPS × reasonable multiple
-  if (epsTTM != null && epsTTM > 0) {
-    const impliedMultiple = Math.min(30, Math.max(12, 20))
-    return epsTTM * impliedMultiple
-  }
-
   return null
 }
 
@@ -209,7 +185,7 @@ async function buildIdeas(): Promise<IdeasResponse> {
       : null
 
     // forwardPE is reliable from quote(), NOT from financialData
-    const forwardPE     = q.forwardPE ?? null
+    const _forwardPE    = q.forwardPE ?? null
     const epsForward    = q.epsForward ?? null
     const epsTTM        = q.epsTrailingTwelveMonths ?? null
     const revenueGrowth = fd?.revenueGrowth ?? null
@@ -221,8 +197,8 @@ async function buildIdeas(): Promise<IdeasResponse> {
     const revenueGrowthPct = revenueGrowth != null ? revenueGrowth * 100 : null
 
     const impliedCAGR = estimateImpliedCAGR(epsForward, epsTTM, revenueGrowth, epsGrowth)
-    const fairValue   = estimateFairValue(price, targetPrice, forwardPE, epsForward, epsTTM, epsGrowth)
-    const upsidePct   = (fairValue != null && price > 0) ? (fairValue / price) - 1 : null
+    const analystTarget = getAnalystTarget(targetPrice, price)
+    const upsidePct   = (analystTarget != null && price > 0) ? (analystTarget / price) - 1 : null
 
     const expectation = impliedCAGR != null
       ? classifyExpectation(impliedCAGR, revenueGrowthPct)
@@ -233,7 +209,7 @@ async function buildIdeas(): Promise<IdeasResponse> {
       name: q.longName ?? q.shortName ?? meta?.name ?? ticker,
       sector: meta?.sector ?? null,
       price,
-      fairValue,
+      analystTarget,
       upsidePct,
       impliedCAGR,
       historicalCagr3y: revenueGrowthPct,
