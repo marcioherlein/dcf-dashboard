@@ -34,6 +34,10 @@ interface Props {
   analystForwardPE?: number | null
   ntmEVRevenue?: number | null
   companyType?: string | null
+  // Growth context for SynthesisBox and SharedCAGRPanel
+  historicalCagr3y?: number | null
+  analystEstimate1y?: number | null
+  analystEstimate2y?: number | null
 }
 
 type IconComp = React.ComponentType<{ size?: number; className?: string }>
@@ -496,12 +500,14 @@ export function FieldStepper({
 }
 
 // ─── SharedCAGRPanel ──────────────────────────────────────────────────────────
-// Only the CAGR stepper — charts live exclusively in KeyAssumptionsSection below.
 
 export function SharedCAGRPanel({
   value, step = 0.005, min = -0.05, max = 0.60,
   onChange, cagrSeries,
-  color = '#8b5cf6',
+  color = '#a3e635',
+  historicalCagr3y,
+  analystEstimate1y,
+  analystEstimate2y,
 }: {
   value: number
   step?: number
@@ -514,16 +520,78 @@ export function SharedCAGRPanel({
   peAssumption?: number
   evRevAssumption?: number
   color?: string
+  historicalCagr3y?: number | null
+  analystEstimate1y?: number | null
+  analystEstimate2y?: number | null
 }) {
   const hint = historicalHint(cagrSeries, '%')
 
+  // Build context chips — show what data is behind this assumption
+  const context: { label: string; value: string; title: string }[] = []
+  if (historicalCagr3y != null) {
+    context.push({
+      label: '3Y hist',
+      value: `${(historicalCagr3y * 100).toFixed(1)}%`,
+      title: 'Actual 3-year revenue CAGR (or net income CAGR for financials)',
+    })
+  }
+  if (analystEstimate1y != null) {
+    context.push({
+      label: 'Analyst Y1',
+      value: `${(analystEstimate1y * 100).toFixed(1)}%`,
+      title: 'Analyst consensus revenue growth estimate for next 12 months',
+    })
+  }
+  if (analystEstimate2y != null) {
+    context.push({
+      label: 'Analyst Y2',
+      value: `${(analystEstimate2y * 100).toFixed(1)}%`,
+      title: 'Analyst consensus revenue growth estimate for year 2, or fade from Y1',
+    })
+  }
+
   return (
-    <div className="rounded-xl border border-[#E3E1DA] bg-[#FAFAFA] px-5 py-3.5 mb-3">
+    <div
+      className="rounded-xl px-4 py-3.5 mb-3"
+      style={{
+        background: 'linear-gradient(145deg, #1a2a06 0%, #2d4a0f 100%)',
+        border: '1px solid rgba(163,230,53,0.15)',
+      }}
+    >
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        {/* Left: label + context */}
         <div className="min-w-0">
-          <p className="text-[12px] font-[650] text-[#111111]">Revenue CAGR</p>
-          <p className="text-[11px] text-[#9B9B9B]">Shared by Forward P/E and Revenue Multiple</p>
+          <p className="text-[12px] font-[650] text-white">Revenue CAGR</p>
+          <p className="text-[11px] text-[rgba(255,255,255,0.45)] mb-2">Shared by Forward P/E and Revenue Multiple</p>
+
+          {/* Context chips */}
+          {context.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {context.map(c => (
+                <div
+                  key={c.label}
+                  title={c.title}
+                  className="flex items-center gap-1.5 rounded-full px-2 py-0.5 cursor-help"
+                  style={{ background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.10)' }}
+                >
+                  <span className="text-[9px] text-[rgba(255,255,255,0.40)] uppercase tracking-wider">{c.label}</span>
+                  <span className="text-[11px] font-[700] tabular-nums" style={{ color }}>{c.value}</span>
+                </div>
+              ))}
+              {hint && (
+                <div
+                  className="flex items-center gap-1.5 rounded-full px-2 py-0.5"
+                  style={{ background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.10)' }}
+                >
+                  <span className="text-[9px] text-[rgba(255,255,255,0.40)] uppercase tracking-wider">Median hist</span>
+                  <span className="text-[11px] font-[700] tabular-nums" style={{ color }}>{hint.replace('Median ~', '')}</span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
+
+        {/* Right: stepper */}
         <FieldStepper
           label="5Y growth rate"
           value={value}
@@ -532,7 +600,6 @@ export function SharedCAGRPanel({
           min={min}
           max={max}
           onChange={onChange}
-          hint={hint}
           color={color}
         />
       </div>
@@ -571,9 +638,6 @@ function DcfDriverRow({
 }
 
 // ─── SynthesisBox ─────────────────────────────────────────────────────────────
-// The "Blended Fair Value (Synthesis)" header box. Shows blended FV, upside,
-// WACC, model count, and a legend of method weights. Arrows drop from here
-// down to the method cards below.
 
 function SynthesisBox({
   blendedFairValue, upsidePct, currency: _currency, wacc, methods, validTotal,
@@ -586,58 +650,61 @@ function SynthesisBox({
   validTotal: number
 }) {
   const upColor = upsidePct != null
-    ? (upsidePct >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')
-    : 'text-[#9B9B9B]'
+    ? (upsidePct >= 0 ? 'text-[#4ade80]' : 'text-[#fca5a5]')
+    : 'text-[rgba(255,255,255,0.40)]'
   const validMethods = methods.filter(m => m.fairValue != null && m.fairValue > 0)
 
   return (
-    <div className="rounded-xl border border-[#E3E1DA] bg-white px-5 py-4 shadow-sm">
+    <div
+      className="rounded-xl px-4 py-3.5 shadow-sm"
+      style={{
+        background: 'linear-gradient(145deg, #0f172a 0%, #1e293b 100%)',
+        border: '1px solid rgba(255,255,255,0.08)',
+      }}
+    >
       <div className="flex flex-col sm:flex-row sm:items-start gap-4">
 
-        {/* Left: compact FV reference + stats */}
-        <div className="shrink-0">
-          <p className="text-[10px] font-[700] uppercase tracking-widest text-[#9B9B9B] mb-1">
+        {/* Left: description + stats */}
+        <div className="shrink-0 min-w-0">
+          <p className="text-[10px] font-[700] uppercase tracking-widest text-[rgba(255,255,255,0.40)] mb-1">
             Blended Fair Value
           </p>
-          <p className="text-[12px] text-[#6B6B6B] leading-snug mb-3 max-w-[220px]">
+          <p className="text-[11px] text-[rgba(255,255,255,0.50)] leading-snug mb-3 max-w-[220px]">
             {blendedFairValue == null || validMethods.length === 0
               ? 'Insufficient data to compute fair value.'
-              : `Weighted average of ${validMethods.length} independent model${validMethods.length !== 1 ? 's' : ''} — adjust any assumption to see the blend update live.`
+              : `Weighted average of ${validMethods.length} model${validMethods.length !== 1 ? 's' : ''} — adjust any assumption to see the blend update live.`
             }
           </p>
           <div className="flex items-center gap-4 flex-wrap">
             <div>
-              <p className="text-[10px] text-[#9B9B9B] mb-0.5">Implied Return</p>
-              <p className={`text-[16px] font-[750] tabular-nums ${upColor}`}>
+              <p className="text-[10px] text-[rgba(255,255,255,0.40)] mb-0.5">Implied Return</p>
+              <p className={`text-[18px] font-[800] tabular-nums leading-none ${upColor}`}>
                 {upsidePct != null ? `${upsidePct >= 0 ? '+' : ''}${(upsidePct * 100).toFixed(1)}%` : '—'}
               </p>
-              <p className="text-[10px] text-[#9B9B9B]">vs current price</p>
+              <p className="text-[10px] text-[rgba(255,255,255,0.30)] mt-0.5">vs current price</p>
             </div>
-            <div className="w-px h-10 bg-[#E5E5E5] hidden sm:block" />
+            <div className="w-px h-10 bg-[rgba(255,255,255,0.10)] hidden sm:block" />
             <div>
-              <p className="text-[10px] text-[#9B9B9B] mb-0.5">WACC</p>
-              <p className="text-[16px] font-[750] tabular-nums text-[#111111]">
+              <p className="text-[10px] text-[rgba(255,255,255,0.40)] mb-0.5">WACC</p>
+              <p className="text-[18px] font-[800] tabular-nums leading-none text-white">
                 {(wacc * 100).toFixed(1)}%
               </p>
-              <p className="text-[10px] text-[#9B9B9B]">Discount rate</p>
+              <p className="text-[10px] text-[rgba(255,255,255,0.30)] mt-0.5">Discount rate</p>
             </div>
           </div>
         </div>
 
-        {/* Right: weight legend pills */}
+        {/* Right: weight legend */}
         {validMethods.length > 0 && (
-          <div className="flex flex-row flex-wrap gap-1 sm:flex-col sm:flex-nowrap sm:min-w-[140px] mt-1 sm:mt-0">
+          <div className="flex flex-row flex-wrap gap-x-3 gap-y-1 sm:flex-col sm:flex-nowrap sm:min-w-[148px] mt-1 sm:mt-0 sm:ml-auto">
             {validMethods.map(m => {
               const cfg = METHOD_CFG[m.id]
               const pct = validTotal > 0 ? Math.round((m.weight / validTotal) * 100) : 0
               return (
                 <div key={m.id} className="flex items-center gap-1.5 min-w-0">
-                  <span
-                    className="w-2 h-2 rounded-full shrink-0"
-                    style={{ backgroundColor: cfg?.chartHex ?? '#9B9B9B' }}
-                  />
-                  <span className="text-[10px] sm:text-[11px] text-[#6B6B6B] truncate max-w-[80px] sm:max-w-none flex-1">{m.method}</span>
-                  <span className="text-[10px] sm:text-[11px] font-[650] tabular-nums text-[#111111]">{pct}%</span>
+                  <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: cfg?.chartHex ?? '#9B9B9B' }} />
+                  <span className="text-[10px] sm:text-[11px] text-[rgba(255,255,255,0.55)] truncate max-w-[80px] sm:max-w-none flex-1">{m.method}</span>
+                  <span className="text-[10px] sm:text-[11px] font-[650] tabular-nums text-white">{pct}%</span>
                 </div>
               )
             })}
@@ -830,7 +897,7 @@ export default function ValuationMethodCards({
   fcfMargin, ttmEbitdaDollars,
   assumptions, historicalData,
   onChange, onReset, onUndo, canUndo,
-  sensitivity, sectorBenchmarks,
+  sensitivity: _sensitivity, sectorBenchmarks,
   onScrollToFullDCF,
   fcfMarginSeries,
   blendedFairValue,
@@ -838,6 +905,9 @@ export default function ValuationMethodCards({
   analystForwardPE,
   ntmEVRevenue,
   companyType,
+  historicalCagr3y,
+  analystEstimate1y,
+  analystEstimate2y,
 }: Props) {
   const validTotal = methods
     .filter(m => m.fairValue != null && m.fairValue > 0)
@@ -928,6 +998,9 @@ export default function ValuationMethodCards({
             value={assumptions.cagr}
             onChange={v => change('cagr', v)}
             cagrSeries={historicalData?.cagr}
+            historicalCagr3y={historicalCagr3y}
+            analystEstimate1y={analystEstimate1y}
+            analystEstimate2y={analystEstimate2y}
           />
         </div>
       )}
@@ -1087,7 +1160,7 @@ export default function ValuationMethodCards({
                         f.key === 'exitMultiple'    ? (sectorBenchmarks?.exitMultiple ?? null) :
                         f.key === 'revenueMultiple' ? (sectorBenchmarks?.revenueMultiple ?? null) :
                         null
-                      const impact = sensitivity?.[f.key]
+                      const impact = _sensitivity?.[f.key]
                       const impactHint = impact != null && Math.abs(impact) > 0.01
                         ? `±$${Math.abs(impact).toFixed(2)}/1pp`
                         : null

@@ -582,6 +582,9 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
           blendedFairValue={output.blendedFairValue}
           upsidePct={output.upsidePct}
           companyType={companyType}
+          historicalCagr3y={apiData.cagrAnalysis?.historicalCagr3y ?? null}
+          analystEstimate1y={apiData.cagrAnalysis?.analystEstimate1y ?? null}
+          analystEstimate2y={apiData.cagrAnalysis?.analystEstimate2y ?? null}
         />
       </div>
 
