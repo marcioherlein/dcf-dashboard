@@ -970,9 +970,6 @@ export async function GET(req: NextRequest) {
         : rawISHistory.slice(-4).reverse()
       const isFts = ftsRows.length >= 2
 
-      const _getField = (s: any, ftsKey: string, legacyKey: string) =>
-        isFts ? (s[ftsKey] ?? null) : (s[legacyKey] ?? null)
-
       avgGrossMarginRatio = isHistorical.length > 0 ? isHistorical.reduce((acc: number, s: any) => {
         const rev = (isFts ? (s.totalRevenue ?? s.operatingRevenue ?? 0) : (s.totalRevenue ?? s.operatingRevenue ?? 0)) as number
         const gp = (isFts ? (s.grossProfit ?? 0) : (s.grossProfit ?? 0)) as number
