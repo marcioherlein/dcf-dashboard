@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react'
 import { Check } from 'lucide-react'
@@ -16,6 +15,7 @@ interface Tab {
   headline: string
   bullets: string[]
   src: string
+  fallback: string  // shown while new screenshots haven't been taken yet
   url: string
   href: string
 }
@@ -32,7 +32,8 @@ const TABS: Tab[] = [
       'Market-implied 5Y growth rate',
       'Peer comparison + ETF exposure',
     ],
-    src: '/screenshots/summary-desktop.png',
+    src: '/screenshots/tab-overview.png',
+    fallback: '/screenshots/summary-desktop.png',
     url: 'insic.app/stock/NOW — Overview',
     href: '/analyze',
   },
@@ -47,7 +48,8 @@ const TABS: Tab[] = [
       'Sensitivity heatmap (CAGR × WACC)',
       'Monte Carlo simulation — probability distribution',
     ],
-    src: '/screenshots/valuation-cockpit.png',
+    src: '/screenshots/tab-valuation.png',
+    fallback: '/screenshots/valuation-cockpit.png',
     url: 'insic.app/stock/NOW — Valuation',
     href: '/pricing',
   },
@@ -62,7 +64,8 @@ const TABS: Tab[] = [
       'Wall Street analyst consensus + EPS surprises',
       'Insider & institutional ownership',
     ],
-    src: '/screenshots/valuation-desktop.png',
+    src: '/screenshots/tab-financials.png',
+    fallback: '/screenshots/valuation-desktop.png',
     url: 'insic.app/stock/NOW — Financials',
     href: '/analyze',
   },
@@ -77,7 +80,8 @@ const TABS: Tab[] = [
       'Earnings & economic calendar',
       'Yield curve chart',
     ],
-    src: '/screenshots/summary-desktop.png',
+    src: '/screenshots/tab-markets.png',
+    fallback: '/screenshots/summary-desktop.png',
     url: 'insic.app/markets',
     href: '/markets',
   },
@@ -92,7 +96,8 @@ const TABS: Tab[] = [
       'Sort by valuation, profitability, momentum',
       'Click any row → full analysis instantly',
     ],
-    src: '/screenshots/summary-desktop.png',
+    src: '/screenshots/tab-screener.png',
+    fallback: '/screenshots/summary-desktop.png',
     url: 'insic.app/screener',
     href: '/screener',
   },
@@ -204,13 +209,19 @@ export default function FeaturesShowcaseSection() {
             >
               <BrowserFrame url={active.url}>
                 <div className="overflow-hidden" style={{ background: '#F0F1F6' }}>
-                  <Image
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
                     src={active.src}
                     alt={`insic — ${active.label} tab`}
                     width={1440}
                     height={900}
                     className="w-full h-auto block"
-                    priority={active.id === 'overview'}
+                    onError={(e) => {
+                      const img = e.currentTarget
+                      if (img.src !== window.location.origin + active.fallback) {
+                        img.src = active.fallback
+                      }
+                    }}
                   />
                 </div>
               </BrowserFrame>

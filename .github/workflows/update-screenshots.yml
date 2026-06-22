@@ -1,0 +1,47 @@
+name: Update Landing Screenshots
+
+on:
+  schedule:
+    # Every Monday at 08:00 UTC — right after market open
+    - cron: '0 8 * * 1'
+  workflow_dispatch:
+    # Allow manual trigger from GitHub Actions UI
+
+jobs:
+  screenshots:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # needed to push the updated screenshots
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+
+      - name: Take screenshots
+        env:
+          BASE_URL: https://insic.app
+        run: node scripts/take-screenshots.js
+
+      - name: Check for changes
+        id: diff
+        run: |
+          git diff --quiet public/screenshots/ && echo "changed=false" >> "$GITHUB_OUTPUT" || echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Commit updated screenshots
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add public/screenshots/
+          git commit -m "chore(screenshots): weekly landing page screenshot update"
+          git push
