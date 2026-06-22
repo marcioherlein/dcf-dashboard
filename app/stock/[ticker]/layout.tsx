@@ -85,12 +85,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     : 'under review'
 
   const description = fvStr && priceStr && upsideStr
-    ? `${t} looks ${verdictWord}. Fair value: ${fvStr} vs current price ${priceStr} (${upsideStr} implied upside). Full DCF model on insic.`
-    : `DCF valuation and fair value estimate for ${t}. See the full model on insic.`
+    ? `${t} intrinsic value: ${fvStr}. Current price ${priceStr} — ${verdictWord} by ${Math.abs(upside! * 100).toFixed(0)}% based on DCF model. Implied 5Y revenue CAGR: see full analysis, free.`
+    : `DCF valuation and intrinsic value estimate for ${t}. See implied growth rate, fair value, and conviction score — free on insic.`
 
   return {
-    title: `${t} — DCF Valuation & Fair Value | insic`,
+    title: `${t} Intrinsic Value — DCF Analysis & Fair Value | insic`,
     description,
+    alternates: {
+      canonical: pageUrl,
+    },
     openGraph: {
       title: `${t} — ${verdict}`,
       description,

@@ -7,7 +7,7 @@ import Image from 'next/image'
 import { motion, useReducedMotion } from 'motion/react'
 import {
   TrendingUp, Bookmark, Globe,
-  Settings, PieChart, SlidersHorizontal,
+  Settings, PieChart, SlidersHorizontal, Lightbulb,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -18,6 +18,7 @@ type NavEntry = { href: string; label: string; icon: LucideIcon; match: (p: stri
 const RESEARCH_NAV: NavEntry[] = [
   { href: '/analyze',               label: 'Analyze',       icon: TrendingUp,        match: (p) => p === '/analyze' || p.startsWith('/stock') },
   { href: '/screener',              label: 'Screener',      icon: SlidersHorizontal, match: (p) => p.startsWith('/screener') },
+  { href: '/ideas',                 label: 'Ideas',         icon: Lightbulb,         match: (p) => p.startsWith('/ideas') },
 ]
 
 const TRACK_NAV: NavEntry[] = [

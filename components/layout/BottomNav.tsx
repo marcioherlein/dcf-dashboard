@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { Bell, Settings, HelpCircle, PieChart, X, Globe, Bookmark, SlidersHorizontal } from 'lucide-react'
+import { Bell, Settings, HelpCircle, PieChart, X, Globe, Bookmark, SlidersHorizontal, Lightbulb } from 'lucide-react'
 
 const LEFT_NAV = [
   {
@@ -19,6 +19,20 @@ const LEFT_NAV = [
     ),
   },
   {
+    href: '/ideas',
+    label: 'Ideas',
+    match: (p: string) => p.startsWith('/ideas'),
+    icon: (active: boolean) => (
+      <Lightbulb
+        className={cn('w-5 h-5', active ? 'text-[#5F790B]' : 'text-[#9B9B9B]')}
+        strokeWidth={active ? 2 : 1.5}
+      />
+    ),
+  },
+]
+
+const RIGHT_NAV = [
+  {
     href: '/screener',
     label: 'Screener',
     match: (p: string) => p.startsWith('/screener'),
@@ -29,9 +43,6 @@ const LEFT_NAV = [
       />
     ),
   },
-]
-
-const RIGHT_NAV = [
   {
     href: '/etf',
     label: 'ETFs',
@@ -46,11 +57,12 @@ const RIGHT_NAV = [
 ]
 
 const MORE_ITEMS = [
-  { href: '/valuations',             label: 'My Valuations', icon: Bookmark  },
-  { href: '/markets',                label: 'Markets',       icon: Globe     },
-  { href: '/etf',                    label: 'ETF Tracker',   icon: PieChart  },
-  { href: '/alerts',                 label: 'Alerts',        icon: Bell      },
-  { href: '/settings',               label: 'Settings',      icon: Settings  },
+  { href: '/valuations',             label: 'My Valuations', icon: Bookmark   },
+  { href: '/ideas',                  label: 'Ideas',         icon: Lightbulb  },
+  { href: '/markets',                label: 'Markets',       icon: Globe      },
+  { href: '/etf',                    label: 'ETF Tracker',   icon: PieChart   },
+  { href: '/alerts',                 label: 'Alerts',        icon: Bell       },
+  { href: '/settings',               label: 'Settings',      icon: Settings   },
   { href: '/help',                   label: 'Help & Support', icon: HelpCircle },
 ]
 
