@@ -583,27 +583,42 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
       setEntries(sorted)
       setLoading(false)
       if (sorted.length === 0) return
-      Promise.allSettled(
-        sorted.map((e) =>
-          fetch(`/api/historical?ticker=${encodeURIComponent(e.ticker)}&period=1mo`)
-            .then((r) => r.json())
-            .then((bars: Array<{ close: number }>) => ({
-              ticker: e.ticker,
-              prices: bars.map((b) => b.close).filter((v) => typeof v === 'number' && isFinite(v)),
-            }))
-            .catch(() => ({ ticker: e.ticker, prices: [] })),
+
+      const tickers = sorted.map(e => e.ticker)
+
+      // Fetch sparklines (1mo historical) and live quotes in parallel
+      Promise.all([
+        // Sparklines: 1mo historical, batched sequentially to avoid rate limits
+        Promise.allSettled(
+          sorted.map((e) =>
+            fetch(`/api/historical?ticker=${encodeURIComponent(e.ticker)}&period=1mo`)
+              .then((r) => r.json())
+              .then((bars: Array<{ close: number }>) => ({
+                ticker: e.ticker,
+                prices: bars.map((b) => b.close).filter((v) => typeof v === 'number' && isFinite(v)),
+              }))
+              .catch(() => ({ ticker: e.ticker, prices: [] as number[] })),
+          ),
         ),
-      ).then((results) => {
+        // Live prices: single batch request via /api/quotes
+        fetch(`/api/quotes?tickers=${tickers.map(t => encodeURIComponent(t)).join(',')}`)
+          .then(r => r.json())
+          .catch(() => ({ quotes: {} })),
+      ]).then(([sparkResults, quoteData]) => {
         const sparkMap: Record<string, number[] | null> = {}
-        const priceMap: Record<string, number | null> = {}
-        for (const r of results) {
+        for (const r of sparkResults) {
           if (r.status === 'fulfilled') {
             const prices = r.value.prices
             sparkMap[r.value.ticker] = prices.length >= 2 ? prices : null
-            // Last close is the live price
-            priceMap[r.value.ticker] = prices.length > 0 ? prices[prices.length - 1] : null
           }
         }
+
+        const priceMap: Record<string, number | null> = {}
+        const quotes = (quoteData as { quotes: Record<string, { price: number | null }> }).quotes ?? {}
+        for (const ticker of tickers) {
+          priceMap[ticker] = quotes[ticker]?.price ?? null
+        }
+
         setSparklines(sparkMap)
         setLivePrices(priceMap)
       })
