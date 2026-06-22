@@ -221,7 +221,6 @@ export default function SummaryTabV2({
               grossMargin={businessProfile?.grossMargin}
               netMargin={businessProfile?.netMargin}
               fcfMargin={businessProfile?.fcfMargin}
-              roe={roe ?? null} roic={roic ?? null}
               ratingsGrade={ratings?.overall?.grade}
               ratingsSummary={ratings?.overall?.summary}
               ratingsLabel={ratings?.overall?.label}

@@ -119,20 +119,11 @@ function ScenarioSlider({
   )
 }
 
-// Verdict colors adapted for dark slate background
-const VERDICT_DARK: Record<CockpitOutput['verdict'], string> = {
-  'Undervalued':       'text-[#7CB518]',
-  'Fairly Valued':     'text-[#60A5FA]',
-  'Overvalued':        'text-[#F87171]',
-  'Insufficient Data': 'text-[#94A3B8]',
-}
-
 export default function VerdictHero({
   output, currentPrice, changePct, currency, ticker, companyName = '', starRating,
 }: Props) {
   const [shareOpen, setShareOpen] = useState(false)
   const vd = VERDICT_DISPLAY[output.verdict] ?? VERDICT_DISPLAY['Insufficient Data']
-  const verdictDark = VERDICT_DARK[output.verdict]
   const conv = CONVICTION_LABEL[output.divergence.overallConfidence] ?? 'Moderate confidence'
   const validCount = output.methods.filter(m => m.fairValue != null && m.fairValue > 0).length
 
@@ -180,15 +171,23 @@ export default function VerdictHero({
             </button>
           </div>
 
-          {/* Headline */}
+          {/* Headline — fair value leads, verdict word follows */}
           <div>
-            <h2 className="text-[2rem] sm:text-[2rem] lg:text-[2.5rem] font-[800] leading-[1.05] tracking-tight text-white" style={{ fontFamily: 'Inter, system-ui, sans-serif', textWrap: 'balance' }}>
-              <span>{ticker} looks </span>
-              <span className={verdictDark}>{vd.word}</span>
+            <p className="text-[10px] font-[650] text-white/45 leading-tight mb-1">Fair value estimate</p>
+            <h2 className="text-[2rem] sm:text-[2.2rem] font-[800] leading-none tabular-nums text-white tracking-tight">
+              {output.blendedFairValue != null ? fmtPrice(output.blendedFairValue, currency) : '—'}
             </h2>
-
-            {/* Conviction line */}
             <div className="flex items-center gap-2 mt-2 flex-wrap">
+              <span
+                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[12px] font-[700] border"
+                style={{
+                  color: vd.colorHex,
+                  background: vd.bgHex,
+                  borderColor: vd.borderHex,
+                }}
+              >
+                {vd.word}
+              </span>
               <span className="inline-flex items-center gap-1.5 text-[11px] font-[650] text-white/55">
                 <svg className="w-3 h-3 text-white/30" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />

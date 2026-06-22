@@ -137,6 +137,8 @@ export default function ReverseDCFCompactCard({
   const cagrCapActive =
     rawBlendedCagr != null && cagrCap != null && rawBlendedCagr > cagrCap + 0.001
 
+  const [showAllBars, setShowAllBars] = useState(false)
+
   return (
     <div className={cn(CARD, 'p-4 sm:p-5 flex flex-col gap-3')}>
       {/* Header */}
@@ -237,41 +239,55 @@ export default function ReverseDCFCompactCard({
             widthPct={analystPct != null ? barWidth(analystPct) : 0}
             zeroLineLeft={minVal < 0 ? zeroLineLeft : null}
           />
-          {/* Analyst 2Y revenue */}
-          {analyst2yPct != null && (
-            <BarRow
-              label="Analyst Rev. (2Y)"
-              labelTooltip="2-year forward revenue growth consensus from analyst estimates."
-              dotHex="#9061E5"
-              value={analyst2yPct}
-              barColor="bg-[#9061E5]"
-              widthPct={barWidth(analyst2yPct)}
-              zeroLineLeft={minVal < 0 ? zeroLineLeft : null}
-            />
+          {/* Optional bars — hidden by default on mobile */}
+          {showAllBars && (
+            <>
+              {/* Analyst 2Y revenue */}
+              {analyst2yPct != null && (
+                <BarRow
+                  label="Analyst Rev. (2Y)"
+                  labelTooltip="2-year forward revenue growth consensus from analyst estimates."
+                  dotHex="#9061E5"
+                  value={analyst2yPct}
+                  barColor="bg-[#9061E5]"
+                  widthPct={barWidth(analyst2yPct)}
+                  zeroLineLeft={minVal < 0 ? zeroLineLeft : null}
+                />
+              )}
+              {/* Analyst EPS growth (fwd) */}
+              {epsPct != null && (
+                <BarRow
+                  label="Analyst EPS (1Y)"
+                  labelTooltip="Forward EPS growth consensus from analyst estimates (+1Y). Earnings growth can diverge from revenue growth due to margin expansion or compression."
+                  dotHex="#B07CE8"
+                  value={epsPct}
+                  barColor="bg-[#B07CE8]"
+                  widthPct={barWidth(epsPct)}
+                  zeroLineLeft={minVal < 0 ? zeroLineLeft : null}
+                />
+              )}
+              {/* Fundamental (reinvestment-based) growth */}
+              {fundamentalPct != null && (
+                <BarRow
+                  label="Fundamental"
+                  labelTooltip="Growth implied by the company's reinvestment rate and return on capital — what sustainable growth looks like given current financials, independent of analyst estimates."
+                  dotHex="#F59E0B"
+                  value={fundamentalPct}
+                  barColor="bg-[#F59E0B]"
+                  widthPct={barWidth(fundamentalPct)}
+                  zeroLineLeft={minVal < 0 ? zeroLineLeft : null}
+                />
+              )}
+            </>
           )}
-          {/* Analyst EPS growth (fwd) */}
-          {epsPct != null && (
-            <BarRow
-              label="Analyst EPS (1Y)"
-              labelTooltip="Forward EPS growth consensus from analyst estimates (+1Y). Earnings growth can diverge from revenue growth due to margin expansion or compression."
-              dotHex="#B07CE8"
-              value={epsPct}
-              barColor="bg-[#B07CE8]"
-              widthPct={barWidth(epsPct)}
-              zeroLineLeft={minVal < 0 ? zeroLineLeft : null}
-            />
-          )}
-          {/* Fundamental (reinvestment-based) growth */}
-          {fundamentalPct != null && (
-            <BarRow
-              label="Fundamental"
-              labelTooltip="Growth implied by the company's reinvestment rate and return on capital — what sustainable growth looks like given current financials, independent of analyst estimates."
-              dotHex="#F59E0B"
-              value={fundamentalPct}
-              barColor="bg-[#F59E0B]"
-              widthPct={barWidth(fundamentalPct)}
-              zeroLineLeft={minVal < 0 ? zeroLineLeft : null}
-            />
+          {/* Toggle */}
+          {(analyst2yPct != null || epsPct != null || fundamentalPct != null) && (
+            <button
+              onClick={() => setShowAllBars(v => !v)}
+              className="text-[11px] font-[600] text-[#5F790B] hover:text-[#526A08] transition-colors text-left mt-0.5"
+            >
+              {showAllBars ? '↑ Show less' : `↓ Show ${[analyst2yPct, epsPct, fundamentalPct].filter(v => v != null).length} more signals`}
+            </button>
           )}
         </div>
       </div>

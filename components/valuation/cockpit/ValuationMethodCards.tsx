@@ -576,7 +576,7 @@ function DcfDriverRow({
 // down to the method cards below.
 
 function SynthesisBox({
-  blendedFairValue, upsidePct, currency, wacc, methods, validTotal,
+  blendedFairValue, upsidePct, currency: _currency, wacc, methods, validTotal,
 }: {
   blendedFairValue: number | null
   upsidePct: number | null
@@ -594,29 +594,15 @@ function SynthesisBox({
     <div className="rounded-xl border border-[#E3E1DA] bg-white px-5 py-4 shadow-sm">
       <div className="flex flex-col sm:flex-row sm:items-start gap-4">
 
-        {/* Left: blended FV */}
+        {/* Left: compact FV reference + stats */}
         <div className="shrink-0">
           <p className="text-[10px] font-[700] uppercase tracking-widest text-[#9B9B9B] mb-1">
-            Blended Fair Value <span className="normal-case font-[500] tracking-normal text-[#9B9B9B]">(Synthesis)</span>
+            Blended Fair Value
           </p>
-          <p
-            className="text-[2rem] font-[800] leading-none tabular-nums text-[#111111]"
-            aria-label={blendedFairValue != null ? `Blended fair value: ${fmtPrice(blendedFairValue, currency)} per share` : 'Blended fair value unavailable'}
-          >
-            {blendedFairValue != null ? fmtPrice(blendedFairValue, currency) : '—'}
-          </p>
-          <p className="text-[11px] text-[#9B9B9B] mt-0.5">Per share</p>
-        </div>
-
-        {/* Divider */}
-        <div className="hidden sm:block w-px bg-[#E5E5E5] self-stretch mx-2" />
-
-        {/* Center: description + stats */}
-        <div className="flex-1 min-w-0">
-          <p className="text-[12px] text-[#6B6B6B] leading-snug mb-3">
+          <p className="text-[12px] text-[#6B6B6B] leading-snug mb-3 max-w-[220px]">
             {blendedFairValue == null || validMethods.length === 0
               ? 'Insufficient data to compute fair value.'
-              : `Weighted average of ${validMethods.length} independent model${validMethods.length !== 1 ? 's' : ''}. Weights reflect model reliability, data quality, and market context.`
+              : `Weighted average of ${validMethods.length} independent model${validMethods.length !== 1 ? 's' : ''} — adjust any assumption to see the blend update live.`
             }
           </p>
           <div className="flex items-center gap-4 flex-wrap">
@@ -907,6 +893,11 @@ export default function ValuationMethodCards({
           />
         </div>
         <div className="flex flex-col gap-1.5 shrink-0 pt-0.5">
+          {!canUndo && (
+            <p className="text-[10px] text-[#9B9B9B] leading-tight max-w-[72px] text-center">
+              Tap any value to adjust
+            </p>
+          )}
           {canUndo && (
             <button
               onClick={onUndo}
@@ -1120,19 +1111,32 @@ export default function ValuationMethodCards({
                   </div>
                 )}
 
-                {/* Core DCF card — link to full model */}
+                {/* Core DCF card — inline WACC + terminal growth steppers */}
                 {isCoreDCF && hasValue && (
                   <div className="pt-1 border-t border-[rgba(255,255,255,0.10)] space-y-2">
-                    <p className="text-[10px] text-[rgba(255,255,255,0.45)] leading-relaxed">
-                      Uses WACC, CAGR, terminal growth, and net margin. Edit these in the Full DCF Model below.
-                    </p>
                     <DcfDriverRow fcfMargin={fcfMargin} ttmEbitdaDollars={ttmEbitdaDollars} />
-                    <button
-                      onClick={onScrollToFullDCF}
-                      className="w-full text-[11px] font-[650] text-[#a3e635] bg-[rgba(95,121,11,0.20)] border border-[rgba(95,121,11,0.35)] rounded-lg py-2 hover:bg-[rgba(95,121,11,0.30)] transition-colors"
-                    >
-                      Edit assumptions in Full DCF ↓
-                    </button>
+                    <FieldStepper
+                      label="WACC"
+                      value={assumptions.wacc}
+                      unit="%"
+                      step={0.005}
+                      min={0.04}
+                      max={0.25}
+                      onChange={v => onChange({ ...assumptions, wacc: v })}
+                      hint={null}
+                      color="#7C9A19"
+                    />
+                    <FieldStepper
+                      label="Terminal growth"
+                      value={assumptions.terminalG}
+                      unit="%"
+                      step={0.005}
+                      min={0.005}
+                      max={0.05}
+                      onChange={v => onChange({ ...assumptions, terminalG: v })}
+                      hint={null}
+                      color="#7C9A19"
+                    />
                   </div>
                 )}
 

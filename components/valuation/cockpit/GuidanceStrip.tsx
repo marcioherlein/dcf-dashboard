@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 
 const STEPS = [
@@ -29,12 +29,24 @@ const STEPS = [
 export default function GuidanceStrip() {
   const [open, setOpen] = useState(false)
 
+  useEffect(() => {
+    try {
+      const seen = localStorage.getItem('insic_guidance_seen')
+      if (!seen) setOpen(true)
+    } catch {}
+  }, [])
+
+  function handleToggle() {
+    setOpen(o => !o)
+    try { localStorage.setItem('insic_guidance_seen', '1') } catch {}
+  }
+
   return (
     <div>
       <button
         type="button"
         aria-expanded={open}
-        onClick={() => setOpen(o => !o)}
+        onClick={handleToggle}
         className="w-full flex items-center gap-2 bg-white rounded-[14px] border border-[#E3E1DA] shadow-sm px-4 py-3 hover:bg-[#F5F5F5] transition-colors select-none flex-wrap text-left"
       >
         <span

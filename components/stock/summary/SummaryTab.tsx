@@ -297,7 +297,7 @@ export default function SummaryTab({
             />
             <ProfitabilityTextCard
               grossMargin={businessProfile?.grossMargin} netMargin={businessProfile?.netMargin}
-              fcfMargin={businessProfile?.fcfMargin} roe={roe ?? null} roic={roic ?? null}
+              fcfMargin={businessProfile?.fcfMargin}
               ratingsGrade={ratings?.overall?.grade} ratingsSummary={ratings?.overall?.summary}
               ratingsLabel={ratings?.overall?.label} cagrDrivers={cagrAnalysis?.drivers}
             />

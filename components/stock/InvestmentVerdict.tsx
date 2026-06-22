@@ -228,11 +228,11 @@ export default function InvestmentVerdict({
       pegRatio != null ? fmt2(pegRatio) : 'N/A',
     )
 
-    // 3. P/FCF vs sector — proxy: FCF margin > 5%
+    // 3. FCF margin > 5% (proxy for P/FCF health)
     const pfcfPass: boolean | null =
       fcfMargin != null ? fcfMargin > 0.05 : null
     const c3 = criterion(
-      'P/FCF vs sector',
+      'FCF generating (>5% margin)',
       pfcfPass,
       fcfMargin != null ? `FCF ${pct(fcfMargin, 1)}` : 'N/A',
     )
@@ -335,7 +335,7 @@ export default function InvestmentVerdict({
       ? high52 - low52 : null
     const rangePos = (range52 != null && currentPrice != null && low52 != null)
       ? (currentPrice - low52) / range52 : null
-    const c14 = criterion("Price within 52W range",
+    const c14 = criterion("Not near 52W high (<70% of range)",
       rangePos != null ? rangePos < 0.7 : null,
       rangePos != null ? Math.round(rangePos * 100) + "% of range" : "N/A"
     )

@@ -196,77 +196,63 @@ function PEGBlock({ peg, peRatioTTM, epsGrowthFwd, analystForwardPE }: PEGBlockP
             <p className="text-[11px] text-[#6B6B6B] mt-1">{interpretation}</p>
           )}
         </div>
-        {/* PEG gauge bar */}
-        {displayPeg != null && (
-          <div className="flex flex-col items-end gap-1 pb-0.5">
-            <div className="relative w-28 h-2 rounded-full bg-[#F0F0F0] overflow-hidden">
-              {/* gradient track: green → amber → red */}
-              <div className="absolute inset-0 rounded-full"
-                style={{ background: 'linear-gradient(to right, #11875D 0%, #11875D 33%, #B56A00 50%, #D83B3B 100%)' }} />
-              {/* needle */}
-              <div className="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-white rounded-full border border-[#6B6B6B] shadow"
-                style={{ left: `calc(${Math.min(Math.log(1 + Math.max(displayPeg, 0)) / Math.log(5), 1) * 100}% - 3px)` }} />
-            </div>
-            <div className="flex items-center justify-between w-28">
-              <span className="text-[9px] text-[#9B9B9B]">0</span>
-              <span className="text-[9px] text-[#9B9B9B]">1</span>
-              <span className="text-[9px] text-[#9B9B9B]">2</span>
-              <span className="text-[9px] text-[#9B9B9B]">4+</span>
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* ── Formula breakdown ── */}
+      {/* ── Formula breakdown — collapsed by default ── */}
       {(peUsed != null || growthPct != null) && (
-        <div className="rounded-xl border border-[#E5E5E5] bg-[#FAFAFA] px-3 py-2.5">
-          <p className="text-[10px] font-[600] text-[#9B9B9B] uppercase tracking-wide mb-2">How it&apos;s calculated</p>
-          <div className="flex items-center gap-1.5 flex-wrap">
+        <details className="group">
+          <summary className="cursor-pointer list-none flex items-center gap-1.5 text-[11px] font-[600] text-[#5F790B] hover:text-[#526A08] transition-colors select-none">
+            <span className="group-open:rotate-90 transition-transform inline-block text-[9px]">▶</span>
+            How it&apos;s calculated
+          </summary>
+          <div className="rounded-xl border border-[#E5E5E5] bg-[#FAFAFA] px-3 py-2.5 mt-2">
+            <div className="flex items-center gap-1.5 flex-wrap">
 
-            {/* P/E box */}
-            <div className="flex flex-col items-center rounded-lg bg-white border border-[#E5E5E5] px-2.5 py-1.5 min-w-[52px]">
-              <span className="text-[11px] font-[700] text-[#111111] tabular-nums font-mono leading-none">
-                {peUsed != null ? peUsed.toFixed(1) + '×' : '—'}
-              </span>
-              <span className="text-[9px] text-[#9B9B9B] mt-0.5 whitespace-nowrap">{peLabel}</span>
+              {/* P/E box */}
+              <div className="flex flex-col items-center rounded-lg bg-white border border-[#E5E5E5] px-2.5 py-1.5 min-w-[52px]">
+                <span className="text-[11px] font-[700] text-[#111111] tabular-nums font-mono leading-none">
+                  {peUsed != null ? peUsed.toFixed(1) + '×' : '—'}
+                </span>
+                <span className="text-[9px] text-[#9B9B9B] mt-0.5 whitespace-nowrap">{peLabel}</span>
+              </div>
+
+              <span className="text-[14px] font-[600] text-[#9B9B9B]">÷</span>
+
+              {/* Growth box */}
+              <div className="flex flex-col items-center rounded-lg bg-white border border-[#E5E5E5] px-2.5 py-1.5 min-w-[52px]">
+                <span className="text-[11px] font-[700] text-[#111111] tabular-nums font-mono leading-none">
+                  {growthPct != null ? growthPct.toFixed(1) + '%' : '—'}
+                </span>
+                <span className="text-[9px] text-[#9B9B9B] mt-0.5 whitespace-nowrap">EPS growth</span>
+              </div>
+
+              <span className="text-[14px] font-[600] text-[#9B9B9B]">=</span>
+
+              {/* Result box */}
+              <div className={cn(
+                'flex flex-col items-center rounded-lg border px-2.5 py-1.5 min-w-[52px]',
+                displayPeg == null ? 'bg-white border-[#E5E5E5]' :
+                displayPeg < 1.5 ? 'bg-[#E8F7EF] border-[#A3D9BE]' :
+                displayPeg < 2.5 ? 'bg-[#FFF4DA] border-[#F3D391]' :
+                'bg-[#FCEAEA] border-[#F0B8B8]'
+              )}>
+                <span className={cn('text-[11px] font-[700] tabular-nums font-mono leading-none',
+                  displayPeg == null ? 'text-[#6B6B6B]' : pegColor(displayPeg))}>
+                  {displayPeg != null ? displayPeg.toFixed(2) : '—'}
+                </span>
+                <span className="text-[9px] text-[#9B9B9B] mt-0.5">PEG</span>
+              </div>
             </div>
 
-            <span className="text-[14px] font-[600] text-[#9B9B9B]">÷</span>
-
-            {/* Growth box */}
-            <div className="flex flex-col items-center rounded-lg bg-white border border-[#E5E5E5] px-2.5 py-1.5 min-w-[52px]">
-              <span className="text-[11px] font-[700] text-[#111111] tabular-nums font-mono leading-none">
-                {growthPct != null ? growthPct.toFixed(1) + '%' : '—'}
-              </span>
-              <span className="text-[9px] text-[#9B9B9B] mt-0.5 whitespace-nowrap">EPS growth</span>
-            </div>
-
-            <span className="text-[14px] font-[600] text-[#9B9B9B]">=</span>
-
-            {/* Result box */}
-            <div className={cn(
-              'flex flex-col items-center rounded-lg border px-2.5 py-1.5 min-w-[52px]',
-              displayPeg == null ? 'bg-white border-[#E5E5E5]' :
-              displayPeg < 1.5 ? 'bg-[#E8F7EF] border-[#A3D9BE]' :
-              displayPeg < 2.5 ? 'bg-[#FFF4DA] border-[#F3D391]' :
-              'bg-[#FCEAEA] border-[#F0B8B8]'
-            )}>
-              <span className={cn('text-[11px] font-[700] tabular-nums font-mono leading-none',
-                displayPeg == null ? 'text-[#6B6B6B]' : pegColor(displayPeg))}>
-                {displayPeg != null ? displayPeg.toFixed(2) : '—'}
-              </span>
-              <span className="text-[9px] text-[#9B9B9B] mt-0.5">PEG</span>
-            </div>
+            {/* Source note */}
+            <p className="text-[9.5px] text-[#9B9B9B] mt-2 leading-snug">
+              {analystForwardPE != null
+                ? 'Forward P/E = price ÷ next-year consensus EPS estimate'
+                : 'Trailing P/E from most recent 12 months'}
+              {growthPct != null ? ' · EPS growth from analyst estimates (+1Y)' : ''}
+            </p>
           </div>
-
-          {/* Source note */}
-          <p className="text-[9.5px] text-[#9B9B9B] mt-2 leading-snug">
-            {analystForwardPE != null
-              ? 'Forward P/E = price ÷ next-year consensus EPS estimate'
-              : 'Trailing P/E from most recent 12 months'}
-            {growthPct != null ? ' · EPS growth from analyst estimates (+1Y)' : ''}
-          </p>
-        </div>
+        </details>
       )}
     </div>
   )
