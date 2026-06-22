@@ -11,7 +11,7 @@ const SPRING = { type: 'spring', stiffness: 300, damping: 30, mass: 0.8 } as con
 
 // ─── macOS browser chrome ──────────────────────────────────────────────────────
 
-function BrowserFrame({
+export function BrowserFrame({
   url,
   children,
   className = '',

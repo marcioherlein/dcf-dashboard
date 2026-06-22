@@ -42,23 +42,25 @@ const PRO_FEATURES = [
 ]
 
 const COMPARISON_ROWS = [
-  { label: 'Stocks per month',                                      free: '10',  pro: '∞'   },
-  { label: 'Saved analyses (Watchlist)',                             free: '5',   pro: '∞'   },
-  { label: 'Overview tab (chart, KPIs, peers, ETF exposure)',        free: true,  pro: true  },
-  { label: 'Conviction Score + 16-criterion checklist',             free: true,  pro: true  },
-  { label: 'Reverse DCF — market-implied CAGR',                     free: true,  pro: true  },
-  { label: 'Financials (3-statement, analyst estimates)',            free: true,  pro: true  },
-  { label: 'Markets page, ETF Tracker',                             free: true,  pro: true  },
-  { label: 'Screener — fundamental filters',                        free: '20 results', pro: '∞ + scatter' },
-  { label: 'Valuation cockpit — editable DCF assumptions',          free: false, pro: true  },
-  { label: 'Sensitivity table (CAGR × WACC heat map)',              free: false, pro: true  },
-  { label: 'Monte Carlo simulation',                                free: false, pro: true  },
-  { label: 'Full DCF model — year-by-year projections',             free: false, pro: true  },
-  { label: 'Multi-ticker comparison + pairs signals',               free: false, pro: true  },
-  { label: 'AI Stack screener (125 companies)',                     free: false, pro: true  },
-  { label: 'Quant Strategy Library (all 5 strategies)',             free: false, pro: true  },
-  { label: 'Weekly watchlist digest (email)',                       free: false, pro: true  },
-  { label: 'Priority support',                                      free: false, pro: true  },
+  { label: 'Stocks per month',                                      browse: 'Any',  free: '10',  pro: '∞'   },
+  { label: 'Saved analyses (Watchlist)',                             browse: false,  free: '5',   pro: '∞'   },
+  { label: 'Price + chart (any NYSE/NASDAQ ticker)',                 browse: true,   free: true,  pro: true  },
+  { label: 'Verdict badge (Undervalued / Fair Value / Overvalued)',  browse: 'Blurred fair value', free: true, pro: true },
+  { label: 'Overview tab (chart, KPIs, peers, ETF exposure)',        browse: false,  free: true,  pro: true  },
+  { label: 'Conviction Score + 16-criterion checklist',             browse: false,  free: true,  pro: true  },
+  { label: 'Reverse DCF — market-implied CAGR',                     browse: false,  free: true,  pro: true  },
+  { label: 'Financials (3-statement, analyst estimates)',            browse: false,  free: true,  pro: true  },
+  { label: 'Markets page, ETF Tracker',                             browse: false,  free: true,  pro: true  },
+  { label: 'Screener — fundamental filters',                        browse: false,  free: '20 results', pro: '∞ + scatter' },
+  { label: 'Valuation cockpit — editable DCF assumptions',          browse: false,  free: false, pro: true  },
+  { label: 'Sensitivity table (CAGR × WACC heat map)',              browse: false,  free: false, pro: true  },
+  { label: 'Monte Carlo simulation',                                browse: false,  free: false, pro: true  },
+  { label: 'Full DCF model — year-by-year projections',             browse: false,  free: false, pro: true  },
+  { label: 'Multi-ticker comparison + pairs signals',               browse: false,  free: false, pro: true  },
+  { label: 'AI Stack screener (125 companies)',                     browse: false,  free: false, pro: true  },
+  { label: 'Quant Strategy Library (all 5 strategies)',             browse: false,  free: false, pro: true  },
+  { label: 'Weekly watchlist digest (email)',                       browse: false,  free: false, pro: true  },
+  { label: 'Priority support',                                      browse: false,  free: false, pro: true  },
 ]
 
 const FAQS = [
@@ -142,7 +144,40 @@ export default function PricingPage() {
         </div>
 
         {/* ── Pricing cards ──────────────────────────────────────── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+          {/* Browse — no account */}
+          <div className="rounded-2xl border border-gray-100 bg-gray-50 p-8 flex flex-col shadow-sm">
+            <div className="mb-8">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-gray-300 mb-4">Browse</p>
+              <div className="flex items-baseline gap-1.5 mb-2">
+                <span className="text-5xl font-bold text-gray-900 tabular-nums">$0</span>
+                <span className="text-gray-400 text-sm">/month</span>
+              </div>
+              <p className="text-[13px] text-gray-400">No account needed</p>
+            </div>
+
+            <Link
+              href="/analyze"
+              className="w-full rounded-xl border-2 border-gray-200 py-3.5 text-[13.5px] font-semibold text-gray-500 hover:border-[#5F790B] hover:text-[#5F790B] transition-colors mb-8 min-h-[48px] flex items-center justify-center"
+            >
+              Explore the app →
+            </Link>
+
+            <ul className="space-y-3 flex-1">
+              {[
+                'Stock price + live chart (any ticker)',
+                'Verdict badge — Undervalued / Fair Value / Overvalued',
+                'Company description, sector, country',
+                'Landing page, pricing, all public pages',
+              ].map((text, i) => (
+                <li key={i} className="flex items-start gap-3">
+                  <Check size={15} className="text-gray-300 shrink-0 mt-0.5" strokeWidth={2.5} />
+                  <span className="text-[13.5px] text-gray-400 leading-snug">{text}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
 
           {/* Free */}
           <div className="rounded-2xl border border-gray-200 bg-white p-8 flex flex-col shadow-sm relative">
@@ -157,7 +192,7 @@ export default function PricingPage() {
                 <span className="text-5xl font-bold text-gray-900 tabular-nums">$0</span>
                 <span className="text-gray-400 text-sm">/month</span>
               </div>
-              <p className="text-[13px] text-gray-500">10 stocks per month · 10 saved analyses · No credit card</p>
+              <p className="text-[13px] text-gray-500">10 stocks · 5 saves · No credit card</p>
             </div>
 
             <button
@@ -263,23 +298,31 @@ export default function PricingPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="text-left px-6 py-4 font-semibold text-gray-700 w-1/2">Feature</th>
-                  <th className="text-center px-6 py-4 font-semibold text-gray-500 w-1/4">Free</th>
-                  <th className="text-center px-6 py-4 font-semibold text-[#5F790B] w-1/4">Pro</th>
+                  <th className="text-left px-6 py-4 font-semibold text-gray-700 w-[40%]">Feature</th>
+                  <th className="text-center px-4 py-4 font-semibold text-gray-400 w-[20%]">Browse</th>
+                  <th className="text-center px-4 py-4 font-semibold text-gray-500 w-[20%]">Free</th>
+                  <th className="text-center px-4 py-4 font-semibold text-[#5F790B] w-[20%]">Pro</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {COMPARISON_ROWS.map((row, i) => (
                   <tr key={i} className="hover:bg-gray-50/50 transition-colors">
                     <td className="px-6 py-3.5 text-gray-700 text-[13.5px]">{row.label}</td>
-                    <td className="px-6 py-3.5 text-center">
+                    <td className="px-4 py-3.5 text-center">
+                      {row.browse === true  && <Check size={16} className="text-gray-300 mx-auto" strokeWidth={2.5} />}
+                      {row.browse === false && <X    size={16} className="text-gray-200 mx-auto" strokeWidth={2} />}
+                      {typeof row.browse === 'string' && (
+                        <span className="text-[11px] font-semibold text-gray-400 bg-gray-100 rounded-full px-2 py-0.5">{row.browse}</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3.5 text-center">
                       {row.free === true  && <Check size={16} className="text-[#11875D] mx-auto" strokeWidth={2.5} />}
                       {row.free === false && <X    size={16} className="text-gray-300 mx-auto" strokeWidth={2} />}
                       {typeof row.free === 'string' && (
                         <span className="text-[12px] font-semibold text-gray-500 bg-gray-100 rounded-full px-2.5 py-0.5">{row.free}</span>
                       )}
                     </td>
-                    <td className="px-6 py-3.5 text-center">
+                    <td className="px-4 py-3.5 text-center">
                       {row.pro === true  && <Check size={16} className="text-[#5F790B] mx-auto" strokeWidth={2.5} />}
                       {row.pro === false && <X    size={16} className="text-gray-300 mx-auto" strokeWidth={2} />}
                       {typeof row.pro === 'string' && (
@@ -294,24 +337,24 @@ export default function PricingPage() {
 
           {/* Mobile cards */}
           <div className="sm:hidden space-y-4">
-            {(['Free', 'Pro'] as const).map((tier) => (
+            {(['Browse', 'Free', 'Pro'] as const).map((tier) => (
               <div key={tier} className="rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-                <div className={cn('px-5 py-3 border-b', tier === 'Pro' ? 'bg-gray-950 border-gray-800' : 'bg-gray-50 border-gray-200')}>
-                  <span className={cn('text-[11px] font-bold uppercase tracking-widest', tier === 'Pro' ? 'text-[#5F790B]' : 'text-gray-400')}>{tier}</span>
+                <div className={cn('px-5 py-3 border-b', tier === 'Pro' ? 'bg-gray-950 border-gray-800' : tier === 'Browse' ? 'bg-gray-50 border-gray-100' : 'bg-gray-50 border-gray-200')}>
+                  <span className={cn('text-[11px] font-bold uppercase tracking-widest', tier === 'Pro' ? 'text-[#5F790B]' : tier === 'Browse' ? 'text-gray-300' : 'text-gray-400')}>{tier}</span>
                 </div>
                 <ul className="divide-y divide-gray-100">
                   {COMPARISON_ROWS.map((row, i) => {
-                    const val = tier === 'Free' ? row.free : row.pro
+                    const val = tier === 'Browse' ? row.browse : tier === 'Free' ? row.free : row.pro
                     return (
                       <li key={i} className="flex items-center justify-between px-5 py-3 gap-3">
                         <span className="text-[13px] text-gray-700 leading-snug">{row.label}</span>
                         <span className="shrink-0">
-                          {val === true  && <Check size={15} className="text-[#11875D]" strokeWidth={2.5} />}
+                          {val === true  && <Check size={15} className={tier === 'Browse' ? 'text-gray-300' : tier === 'Free' ? 'text-[#11875D]' : 'text-[#5F790B]'} strokeWidth={2.5} />}
                           {val === false && <X    size={15} className="text-gray-300" strokeWidth={2} />}
                           {typeof val === 'string' && (
                             <span className={cn(
                               'text-[11px] font-semibold rounded-full px-2 py-0.5',
-                              tier === 'Pro' ? 'text-[#5F790B] bg-[#EEF2FA]' : 'text-gray-500 bg-gray-100',
+                              tier === 'Pro' ? 'text-[#5F790B] bg-[#EEF2FA]' : tier === 'Browse' ? 'text-gray-400 bg-gray-100' : 'text-gray-500 bg-gray-100',
                             )}>{val}</span>
                           )}
                         </span>

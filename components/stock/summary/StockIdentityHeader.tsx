@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import Image from 'next/image'
+import { useSession } from 'next-auth/react'
 import { fmtLargeCurrency as _fmtLargeCurrency } from '@/lib/formatters'
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -80,13 +81,13 @@ function PriceValuationPanel({
   currency, price, change, changePct,
   marketState, preMarketPrice, preMarketChangePct, postMarketPrice, postMarketChangePct,
   fairValue, analystTargetMean: _analystTargetMean, analystTargetLow: _analystTargetLow, analystTargetHigh: _analystTargetHigh, numAnalysts: _numAnalysts,
-  onViewValuation, onViewConviction,
+  onViewValuation, onViewConviction, isAuthenticated,
 }: Pick<Props,
   'currency' | 'price' | 'change' | 'changePct' |
   'marketState' | 'preMarketPrice' | 'preMarketChangePct' | 'postMarketPrice' | 'postMarketChangePct' |
   'fairValue' | 'analystTargetMean' | 'analystTargetLow' | 'analystTargetHigh' | 'numAnalysts' |
   'onViewValuation' | 'onViewConviction'
->) {
+> & { isAuthenticated: boolean }) {
   const isPositive  = change >= 0
   const prefix      = currencyPrefix(currency)
   const upside      = fairValue != null ? (fairValue - price) / price * 100 : null
@@ -146,9 +147,12 @@ function PriceValuationPanel({
           >
             <div>
               <p className="text-[10px] text-[#9B9B9B] leading-none mb-0.5">Fair value estimate</p>
-              <p className="text-[18px] font-[750] text-[#111111] leading-none tabular-nums">
+              <p className={`text-[18px] font-[750] text-[#111111] leading-none tabular-nums ${!isAuthenticated ? 'blur-sm select-none' : ''}`}>
                 {fmtPriceValue(fairValue, currency)}
               </p>
+              {!isAuthenticated && (
+                <p className="text-[9px] text-[#9B9B9B] mt-0.5">Sign in to see</p>
+              )}
             </div>
             <div className="flex flex-col items-end gap-0.5">
               <span className={`inline-flex rounded-full px-2.5 py-1 text-[13px] font-[700] ${
@@ -194,6 +198,8 @@ export default function StockIdentityHeader({
   high52: _high52, low52: _low52, nextEarningsDate,
   onViewValuation, onViewConviction,
 }: Props) {
+  const { data: session } = useSession()
+  const isAuthenticated = session !== null && session !== undefined
   const [logoError, setLogoError] = useState(false)
   const [descExpanded, setDescExpanded] = useState(false)
 
@@ -221,7 +227,7 @@ export default function StockIdentityHeader({
     currency, price, change, changePct,
     marketState, preMarketPrice, preMarketChangePct, postMarketPrice, postMarketChangePct,
     fairValue, analystTargetMean, analystTargetLow, analystTargetHigh, numAnalysts,
-    onViewValuation, onViewConviction,
+    onViewValuation, onViewConviction, isAuthenticated,
   }
 
   return (

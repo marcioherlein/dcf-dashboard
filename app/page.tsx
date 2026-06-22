@@ -6,6 +6,7 @@ import LiveVerdictStrip from '@/components/landing/LiveVerdictStrip'
 import ReverseDCFSection from '@/components/landing/ReverseDCFSection'
 import ConvictionScoreSection from '@/components/landing/ConvictionScoreSection'
 import ToolSurfaceSection from '@/components/landing/ToolSurfaceSection'
+import FeaturesShowcaseSection from '@/components/landing/FeaturesShowcaseSection'
 import TestimonialsSection from '@/components/landing/TestimonialsSection'
 import TransparencySection from '@/components/landing/TransparencySection'
 import PricingSection from '@/components/landing/PricingSection'
@@ -31,7 +32,9 @@ export default function LandingPage() {
         <ConvictionScoreSection />
         {/* 7. Light grey — differentiating tools */}
         <ToolSurfaceSection />
-        {/* 8. White — social proof */}
+        {/* 8. Screenshots — all features by tab */}
+        <FeaturesShowcaseSection />
+        {/* 9. White — social proof */}
         <TestimonialsSection />
         {/* 9. Off-white — transparency / no black boxes */}
         <TransparencySection />

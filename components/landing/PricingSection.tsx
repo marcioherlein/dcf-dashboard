@@ -9,6 +9,13 @@ const PayPalSubscribeButton = dynamic(
   { ssr: false, loading: () => <div className="h-12 rounded-xl bg-[#EEF2FA] animate-pulse" /> }
 )
 
+const BROWSE_FEATURES = [
+  'Stock price + live chart (any NYSE/NASDAQ ticker)',
+  'Verdict badge — Undervalued, Fair Value, Overvalued',
+  'Company description, sector, country',
+  'Landing page, pricing, and all public pages',
+]
+
 const FREE_FEATURES = [
   'Analyze up to 10 stocks/month',
   'Conviction Score + checklist',
@@ -31,13 +38,6 @@ const PRO_FEATURES = [
   'Weekly watchlist digest (email)',
 ]
 
-const PRO_DIFF = [
-  'Valuation cockpit',
-  'Sensitivity + Monte Carlo',
-  'Full screener',
-  'Compare + pairs',
-]
-
 export default function PricingSection() {
   const { data: session } = useSession()
   const isPro = (session?.user as { plan?: string } | undefined)?.plan === 'pro'
@@ -55,8 +55,32 @@ export default function PricingSection() {
           <p className="text-[15px] text-[#6B6B6B]">No credit card required to get started.</p>
         </div>
 
-        {/* Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-[680px] lg:max-w-[860px] mx-auto">
+        {/* Cards — 3 columns */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-[1040px] mx-auto">
+
+          {/* Browse — no account */}
+          <div className="rounded-2xl border border-[#EBEBEB] bg-[#FAFAFA] p-6 flex flex-col">
+            <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-[#BBBBBB] mb-3">Browse</p>
+            <div className="flex items-baseline gap-1 mb-1">
+              <span className="text-[44px] font-bold text-[#111111] leading-none tabular-nums">$0</span>
+              <span className="text-[13px] text-[#6B6B6B] font-medium">/month</span>
+            </div>
+            <p className="text-[12px] text-[#9B9B9B] mb-5">No account needed</p>
+            <Link
+              href="/analyze"
+              className="w-full rounded-md border border-[#DDDDDD] py-3 text-[13.5px] font-semibold text-[#888888] hover:border-[#5F790B] hover:text-[#5F790B] transition-colors mb-5 min-h-[48px] flex items-center justify-center"
+            >
+              Explore the app →
+            </Link>
+            <ul className="space-y-2.5 flex-1">
+              {BROWSE_FEATURES.map(f => (
+                <li key={f} className="flex items-start gap-2.5">
+                  <Check size={14} className="text-[#BBBBBB] shrink-0 mt-0.5" strokeWidth={2.5} />
+                  <span className="text-[13px] text-[#888888] leading-snug">{f}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
 
           {/* Free */}
           <div className="rounded-2xl border border-[#E5E5E5] bg-white p-6 flex flex-col shadow-card relative">
@@ -119,10 +143,17 @@ export default function PricingSection() {
           </div>
         </div>
 
-        {/* Pro-only quick-diff strip */}
-        <div className="mt-5 max-w-[680px] lg:max-w-[860px] mx-auto rounded-xl border border-[#BFD2A1] bg-[#F6FAEA] px-5 py-3.5 flex flex-wrap items-center gap-3">
-          <span className="text-[12px] font-bold text-[#5F790B] shrink-0">Pro adds:</span>
-          {PRO_DIFF.map(f => (
+        {/* Upgrade path strip */}
+        <div className="mt-5 max-w-[1040px] mx-auto rounded-xl border border-[#E5E5E5] bg-[#FAFAFA] px-5 py-3.5 flex flex-wrap items-center gap-3">
+          <span className="text-[12px] font-bold text-[#6B6B6B] shrink-0">Free adds:</span>
+          {['Conviction Score', 'Reverse DCF', 'Financials', 'Screener (20 results)'].map(f => (
+            <span key={f} className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[#111111] bg-white border border-[#E5E5E5] rounded-full px-3 py-1">
+              <Check size={11} className="text-[#5F790B] shrink-0" strokeWidth={2.5} />
+              {f}
+            </span>
+          ))}
+          <span className="text-[12px] font-bold text-[#5F790B] shrink-0 ml-2">Pro adds:</span>
+          {['Valuation cockpit', 'Sensitivity + Monte Carlo', 'Full screener', 'Compare + pairs'].map(f => (
             <span key={f} className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[#111111] bg-white border border-[#BFD2A1] rounded-full px-3 py-1">
               <Check size={11} className="text-[#5F790B] shrink-0" strokeWidth={2.5} />
               {f}
