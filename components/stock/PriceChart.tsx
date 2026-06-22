@@ -119,7 +119,7 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
   }
   const [rawBars, setRawBars]           = useState<OHLCVBar[]>([])
   const [loading, setLoading]           = useState(true)
-  const [activeMA, setActiveMA]         = useState<Set<MAKey>>(new Set(['sma50', 'sma200'] as MAKey[]))
+  const [activeMA, setActiveMA]         = useState<Set<MAKey>>(new Set([] as MAKey[]))
   const [showBB, setShowBB]             = useState(false)
   const [subPanel, setSubPanel]         = useState<SubPanel>('volume')
   const [showSubPanel, setShowSubPanel] = useState(true)
@@ -352,6 +352,9 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
       color: i > 0 && b.close < rawBars[i-1].close ? 'rgba(239,68,68,0.25)' : 'rgba(255,255,255,0.12)',
     })))
 
+    // Fit time scale to show all bars after data loads
+    mainChart.current?.timeScale().fitContent()
+
     for (const ind of MA_INDICATORS) {
       const vals = ind.calc(closes)
       const s = maSeries.current.get(ind.key)
@@ -503,23 +506,21 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
   return (
     <div {...shellProps}>
 
-      {/* ── Row 1: Timeframe + Compare + Indicators on one line ── */}
-      <div className="flex items-center gap-2 px-5 pt-3 pb-2 flex-wrap">
+      {/* ── Single row: Timeframe + Compare + active chips + Indicators ── */}
+      <div className="flex items-center gap-1.5 px-5 pt-3 pb-2 flex-wrap">
         {/* Timeframe pills */}
-        <div className="flex items-center gap-1 flex-wrap">
-          {PERIODS.map(p => (
-            <button key={p} onClick={() => setPeriod(p)}
-              aria-pressed={period === p}
-              className={`rounded-lg px-2.5 py-1 text-[11px] font-[600] transition-colors min-h-[30px] ${period === p ? 'text-[#25310b]' : 'text-[#566174] border border-[#E5E5E5] bg-white hover:bg-[#F0F1F6] hover:border-[#CDD1C8]'}`}
-              style={period === p ? { background: '#e8f0d2', border: '1px solid #c8dba0' } : undefined}
-            >
-              {PERIOD_LABELS[p]}
-            </button>
-          ))}
-        </div>
+        {PERIODS.map(p => (
+          <button key={p} onClick={() => setPeriod(p)}
+            aria-pressed={period === p}
+            className={`rounded-lg px-2.5 py-1 text-[11px] font-[600] transition-colors min-h-[30px] ${period === p ? 'text-[#25310b]' : 'text-[#566174] border border-[#E5E5E5] bg-white hover:bg-[#F0F1F6] hover:border-[#CDD1C8]'}`}
+            style={period === p ? { background: '#e8f0d2', border: '1px solid #c8dba0' } : undefined}
+          >
+            {PERIOD_LABELS[p]}
+          </button>
+        ))}
 
         {/* Divider */}
-        <div className="w-px h-4 bg-[#E5E5E5] shrink-0 hidden sm:block" />
+        <div className="w-px h-4 bg-[#E5E5E5] shrink-0" />
 
         {/* SPY quick-compare toggle */}
         {ticker.toUpperCase() !== 'SPY' && (() => {
@@ -568,7 +569,40 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
           </button>
         )}
 
-        {/* Indicators dropdown — right-aligned, only in non-compare mode */}
+        {/* Active MA/BB/RSI/Volume chips — inline, no separate row */}
+        {!isCompare && activeIndicators.map(ind => (
+          <span key={ind.key}
+            className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-[600] border"
+            style={{ borderColor: ind.color + '66', background: ind.color + '14', color: ind.color }}>
+            <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: ind.color }} />
+            {ind.label}
+            <button
+              onClick={() => {
+                if (ind.key === 'bb') setShowBB(false)
+                else if (ind.key === 'rsi') setShowSubPanel(false)
+                else if (ind.key === 'vol') setShowSubPanel(false)
+                else toggleMA(ind.key as MAKey)
+              }}
+              aria-label={`Remove ${ind.label}`}
+              className="opacity-60 hover:opacity-100 ml-0.5 leading-none"
+            >×</button>
+          </span>
+        ))}
+
+        {/* Valuation line chips — inline */}
+        {!isCompare && hasAnyLevel && VAL_LINES.map(vl => {
+          const v = levels[vl.key]
+          if (!v) return null
+          return (
+            <span key={vl.key} className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-[600] border"
+              style={{ borderColor: vl.color + '55', background: vl.color + '12', color: vl.color }}>
+              <span className="inline-block h-px w-4 border-t-2 border-dashed shrink-0" style={{ borderColor: vl.color }} />
+              {vl.label}
+            </span>
+          )
+        })}
+
+        {/* Indicators dropdown — right-aligned */}
         {!isCompare && (
           <div className="relative ml-auto" ref={indicatorsRef}>
             <button
@@ -646,51 +680,7 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
         )}
       </div>
 
-      {/* ── Row 3: Active indicator chips + valuation legend ── */}
-      {(!isCompare && (activeIndicators.length > 0 || (hasAnyLevel))) && (
-        <div className="flex flex-wrap items-center gap-1.5 px-5 pb-2">
-          {/* Price chip — always present */}
-          <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-[600] border border-[#d1d5db] bg-white text-[#374151]">
-            <span className="w-2 h-2 rounded-full bg-[#10b981] shrink-0" />
-            Price
-          </span>
-
-          {/* Active MA/BB/RSI/Volume chips */}
-          {activeIndicators.map(ind => (
-            <span key={ind.key}
-              className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-[600] border"
-              style={{ borderColor: ind.color + '66', background: ind.color + '14', color: ind.color }}>
-              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: ind.color }} />
-              {ind.label}
-              <button
-                onClick={() => {
-                  if (ind.key === 'bb') setShowBB(false)
-                  else if (ind.key === 'rsi') setShowSubPanel(false)
-                  else if (ind.key === 'vol') setShowSubPanel(false)
-                  else toggleMA(ind.key as MAKey)
-                }}
-                aria-label={`Remove ${ind.label}`}
-                className="opacity-60 hover:opacity-100 ml-0.5 leading-none"
-              >×</button>
-            </span>
-          ))}
-
-          {/* Valuation line chips */}
-          {hasAnyLevel && VAL_LINES.map(vl => {
-            const v = levels[vl.key]
-            if (!v) return null
-            return (
-              <span key={vl.key} className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-[600] border"
-                style={{ borderColor: vl.color + '55', background: vl.color + '12', color: vl.color }}>
-                <span className="inline-block h-px w-4 border-t-2 border-dashed shrink-0" style={{ borderColor: vl.color }} />
-                {vl.label}
-              </span>
-            )
-          })}
-        </div>
-      )}
-
-      {/* Main chart — flex-1 with responsive min-height */}
+      {/* Main chart */}
       <div className="relative px-1 flex-1 min-h-0">
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center text-sm text-[#8A95A6] z-10">Loading…</div>
