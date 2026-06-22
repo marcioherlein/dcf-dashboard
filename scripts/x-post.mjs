@@ -5866,6 +5866,101 @@ async function runLiEtfScan() {
   await postLinkedIn(lines.join('\n'))
 }
 
+// ─── Mode: movers ─────────────────────────────────────────────────────────────
+// Daily top gainers + losers from a large-cap pool.
+// Uses the same v8 chart endpoint as other modes — no extra API key needed.
+// Fires at 3PM ART (18:00 UTC) Mon–Fri — after most of the session is in.
+
+const MOVERS_POOL = [...new Set([
+  'AAPL','MSFT','NVDA','GOOGL','META','AMZN','TSLA','AMD','NFLX','SMCI',
+  'PLTR','INTC','QCOM','MU','CRM','NOW','ADBE','ORCL','IBM','AVGO',
+  'JPM','GS','BAC','V','MA','XOM','CVX','LLY','UNH','HD',
+  'COST','WMT','SBUX','MCD','NKE','PG','KO','PEP','JNJ','PFE',
+  'ABBV','MRK','TMO','DHR','HON','CAT','GE','RTX','BA','DE',
+  'SPOT','UBER','ABNB','BKNG','DASH','HOOD',
+])]
+
+async function runMovers() {
+  const dayName = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+
+  // Fetch quotes for the full pool in batches
+  const results = []
+  for (let i = 0; i < MOVERS_POOL.length; i += 8) {
+    const batch = MOVERS_POOL.slice(i, i + 8)
+    const settled = await Promise.allSettled(batch.map(async t => {
+      const res = await fetch(
+        `https://query1.finance.yahoo.com/v8/finance/chart/${t}?interval=1d&range=1d`,
+        { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(6000) }
+      ).catch(() => null)
+      if (!res?.ok) return null
+      const d = await res.json().catch(() => null)
+      const meta = d?.chart?.result?.[0]?.meta
+      if (!meta?.regularMarketPrice) return null
+      const prev = meta.chartPreviousClose ?? meta.previousClose ?? null
+      if (!prev) return null
+      const chgPct = (meta.regularMarketPrice - prev) / prev * 100
+      const marketCap = meta.marketCap ?? 0
+      return { symbol: t, price: meta.regularMarketPrice, chgPct, marketCap }
+    }))
+    for (const r of settled) if (r.status === 'fulfilled' && r.value) results.push(r.value)
+    if (i + 8 < MOVERS_POOL.length) await new Promise(r => setTimeout(r, 300))
+  }
+
+  if (results.length < 5) throw new Error('Not enough mover data')
+
+  results.sort((a, b) => b.chgPct - a.chgPct)
+  const gainers = results.slice(0, 3)
+  const losers  = results.slice(-3).reverse()
+  const biggestMover = Math.abs(gainers[0].chgPct) > Math.abs(losers[0].chgPct) ? gainers[0] : losers[0]
+  const isGainer = biggestMover.chgPct > 0
+
+  // Fetch DCF model context on the biggest mover
+  let dcfContext = null
+  try {
+    const data = await fetchValuation(biggestMover.symbol)
+    const fair   = appFairValue(data)
+    const upside = appUpside(data)
+    const impliedG = data.valuationMethods?.models?.reverseDcf?.impliedCAGR
+    if (fair && upside != null) {
+      if (impliedG != null) {
+        dcfContext = isGainer
+          ? `After today's move, the market is pricing in ~${pct(impliedG, false)}/yr growth. Our model puts fair value at ${fmt(fair)} — ${upside >= 0 ? `still ${pct(upside)} below that` : `now ${pct(Math.abs(upside))} above that`}.`
+          : `After the drop, the market is pricing in ~${pct(impliedG, false)}/yr growth. Our model puts fair value at ${fmt(fair)} — ${upside >= 0 ? `${pct(upside)} above today's price` : `${pct(Math.abs(upside))} below it`}.`
+      } else {
+        dcfContext = `Our model puts fair value at ${fmt(fair)} — ${pct(upside)} ${upside >= 0 ? 'above' : 'below'} current price.`
+      }
+    }
+  } catch { /* proceed without DCF context */ }
+
+  const fmtMover = (m) => {
+    const sign = m.chgPct >= 0 ? '+' : ''
+    const arrow = m.chgPct >= 0 ? '▲' : '▼'
+    return `${arrow} $${m.symbol} ${sign}${m.chgPct.toFixed(2)}%`
+  }
+
+  const bigMoverLine = isGainer
+    ? `$${biggestMover.symbol} leads the session at +${biggestMover.chgPct.toFixed(2)}% — the biggest move in today's large-cap universe.`
+    : `$${biggestMover.symbol} leads the selling at ${biggestMover.chgPct.toFixed(2)}% — the sharpest drop in today's large-cap universe.`
+
+  const lines = [
+    `Today's biggest movers — ${dayName}`,
+    ``,
+    `Winners`,
+    ...gainers.map(fmtMover),
+    ``,
+    `Losers`,
+    ...losers.map(fmtMover),
+    ``,
+    bigMoverLine,
+    dcfContext,
+    ``,
+    `Did the business change, or just the price? → ${APP_URL}/stock/${biggestMover.symbol}`,
+    `$${biggestMover.symbol} #Stocks #Markets #Investing`,
+  ].filter(Boolean)
+
+  await post(lines.join('\n'))
+}
+
 const MODES = {
   dcf:               runDcf,
   dcf2:              runDcf2,
@@ -5903,6 +5998,7 @@ const MODES = {
   li_divergence:     runLiDivergence,
   li_weekly_picks:   runLiWeeklyPicks,
   li_myth:           runLiMyth,
+  movers:            runMovers,
   conviction_score:  runConvictionScore,
   li_conviction:     runLiConviction,
   etf_value_scan:    runEtfValueScan,
