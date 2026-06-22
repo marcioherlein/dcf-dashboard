@@ -222,13 +222,15 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
       priceLineVisible: false, lastValueVisible: true,
     })
 
-    // Volume histogram (overlay at bottom 18% of main chart)
+    // Volume histogram — overlay price scale, only occupies bottom 12% visually
     volSeries.current = mc.addSeries(HistogramSeries, {
       color: 'rgba(255,255,255,0.1)',
       priceFormat: { type: 'volume' },
       priceScaleId: 'vol',
+      lastValueVisible: false,
+      priceLineVisible: false,
     })
-    mc.priceScale('vol').applyOptions({ scaleMargins: { top: 0.82, bottom: 0 } })
+    mc.priceScale('vol').applyOptions({ scaleMargins: { top: 0.88, bottom: 0 } })
 
     // MA lines
     for (const ind of MA_INDICATORS) {
