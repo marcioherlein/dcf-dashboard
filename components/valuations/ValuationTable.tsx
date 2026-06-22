@@ -919,12 +919,12 @@ export function ValuationTable({ entries, sparklines, livePrices = {}, groups, s
                       )}
                     >
                       {/* Checkbox */}
-                      <td className="w-8 px-2 py-1.5">
+                      <td className="w-8 px-2 py-2">
                         <input type="checkbox" className="w-3 h-3 rounded accent-[#5F790B]" />
                       </td>
 
                       {/* Expand chevron */}
-                      <td className="px-2 py-1.5 w-8">
+                      <td className="px-2 py-2 w-8">
                         <button
                           onClick={() => toggleExpand(entry.ticker)}
                           aria-label={isExpanded ? 'Collapse row' : 'Expand row'}
@@ -939,36 +939,38 @@ export function ValuationTable({ entries, sparklines, livePrices = {}, groups, s
                         </button>
                       </td>
 
-                      {/* Ticker & Company */}
-                      <td className="px-3 py-1.5 min-w-[160px]">
+                      {/* Ticker & Company — single compact line */}
+                      <td className="px-3 py-2 min-w-[160px]">
                         <div className="flex items-center gap-2">
                           <TickerAvatar ticker={entry.ticker} />
                           <div className="min-w-0">
                             <Link
                               href={`/stock/${entry.ticker}`}
-                              className="text-[12px] font-semibold font-mono text-[#111111] hover:text-olive-700 transition-colors leading-tight block"
+                              className="text-[12px] font-bold font-mono text-[#111111] hover:text-olive-700 transition-colors leading-none"
                             >
                               {entry.ticker}
                             </Link>
-                            <p className="text-[11px] text-[#6B6B6B] mt-0 truncate max-w-[130px]">{entry.companyName}</p>
+                            <p className="text-[11px] text-[#8A95A6] leading-tight truncate max-w-[130px] mt-0.5">
+                              {entry.companyName === entry.ticker ? '' : entry.companyName}
+                            </p>
                           </div>
                         </div>
                       </td>
 
                       {/* Tag */}
-                      <td className="px-3 py-1.5 whitespace-nowrap">
+                      <td className="px-3 py-2 whitespace-nowrap">
                         {tInfo ? (
                           <span className={cn('inline-flex items-center gap-1 text-[10px] font-bold rounded-full px-1.5 py-0.5 border', tInfo.cls)}>
                             <span className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', tInfo.dot)} />
                             {tInfo.label}
                           </span>
                         ) : (
-                          <span className="text-[#9B9B9B] text-[11px]">—</span>
+                          <span className="text-[#C0C0C0] text-[11px]">—</span>
                         )}
                       </td>
 
                       {/* 1M Sparkline */}
-                      <td className="px-3 py-1.5">
+                      <td className="px-3 py-2">
                         <div className="flex items-center justify-center" style={{ minWidth: 80 }}>
                           {sparkLoading ? (
                             <SparklineSkeleton width={80} height={24} />
@@ -980,78 +982,75 @@ export function ValuationTable({ entries, sparklines, livePrices = {}, groups, s
                         </div>
                       </td>
 
-                      {/* Price — live when available, snapshot with "saved" label when not */}
-                      <td className="px-3 py-1.5 text-right whitespace-nowrap">
-                        <div>
-                          <p className={cn('text-[12px] font-medium tabular-nums', isLivePrice ? 'text-[#111111]' : 'text-[#6B6B6B]')}>
+                      {/* Price — single line: price (change%) */}
+                      <td className="px-3 py-2 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <span className={cn('text-[12px] font-semibold tabular-nums', isLivePrice ? 'text-[#111111]' : 'text-[#6B6B6B]')}>
                             {displayPrice != null ? fmtPrice(displayPrice, 'USD') : '—'}
-                          </p>
-                          {isLivePrice ? (
-                            (() => {
-                              const prevPrice = prices?.[prices.length - 2] ?? null
-                              if (livePrice != null && prevPrice != null && prevPrice > 0) {
-                                const d = (livePrice - prevPrice) / prevPrice
-                                return (
-                                  <p className={cn('text-[11px] tabular-nums font-semibold', d >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
-                                    {d >= 0 ? '+' : ''}{(d * 100).toFixed(2)}%
-                                  </p>
-                                )
-                              }
-                              return null
-                            })()
-                          ) : (
-                            <p className="text-[9px] text-[#9B9B9B] font-medium">saved</p>
-                          )}
+                          </span>
+                          {isLivePrice && (() => {
+                            const prevPrice = prices?.[prices.length - 2] ?? null
+                            if (livePrice != null && prevPrice != null && prevPrice > 0) {
+                              const d = (livePrice - prevPrice) / prevPrice
+                              return (
+                                <span className={cn('text-[10px] tabular-nums font-semibold', d >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
+                                  {d >= 0 ? '+' : ''}{(d * 100).toFixed(1)}%
+                                </span>
+                              )
+                            }
+                            return null
+                          })()}
+                          {!isLivePrice && <span className="text-[9px] text-[#C0C0C0]">saved</span>}
                         </div>
                       </td>
 
                       {/* Fair Value */}
-                      <td className="px-3 py-1.5 text-right whitespace-nowrap">
-                        <p className="text-[12px] font-medium text-[#111111] tabular-nums">
+                      <td className="px-3 py-2 text-right whitespace-nowrap">
+                        <span className="text-[12px] font-semibold text-[#111111] tabular-nums">
                           {fmtPrice(entry.snapshot.fairValue, 'USD')}
-                        </p>
+                        </span>
                       </td>
 
                       {/* Upside */}
-                      <td className="px-3 py-1.5 text-right whitespace-nowrap">
+                      <td className="px-3 py-2 text-right whitespace-nowrap">
                         {upside != null ? (
-                          <p className={cn('text-[12px] font-semibold tabular-nums', upside >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
+                          <span className={cn('text-[12px] font-bold tabular-nums', upside >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
                             {upside >= 0 ? '+' : ''}{(upside * 100).toFixed(1)}%
-                          </p>
+                          </span>
                         ) : (
-                          <span className="text-[#9B9B9B] text-[12px]">—</span>
+                          <span className="text-[#C0C0C0] text-[12px]">—</span>
                         )}
                       </td>
 
                       {/* Verdict */}
-                      <td className="px-3 py-1.5 text-right whitespace-nowrap">
-                        <span className={cn('inline-flex items-center justify-center text-[10px] font-semibold rounded-full px-1.5 py-0.5 border whitespace-nowrap min-w-[88px]', vtInfo.cls)}>
+                      <td className="px-3 py-2 text-right whitespace-nowrap">
+                        <span className={cn('inline-flex items-center justify-center text-[10px] font-semibold rounded-full px-2 py-0.5 border whitespace-nowrap min-w-[88px]', vtInfo.cls)}>
                           {verdict}
                         </span>
                       </td>
 
                       {/* Confidence */}
-                      <td className="px-3 py-1.5">
+                      <td className="px-3 py-2">
                         <div className="flex justify-center">
-                          <ConfidenceRing score={entry.overallScore} size={24} />
+                          <ConfidenceRing score={entry.overallScore} size={22} />
                         </div>
                       </td>
 
-                      {/* Since Save */}
-                      <td className="hidden lg:table-cell px-3 py-1.5 text-right whitespace-nowrap">
+                      {/* Since Save — single line */}
+                      <td className="hidden lg:table-cell px-3 py-2 text-right whitespace-nowrap">
                         {priceDelta != null ? (
-                          <div>
-                            <p className={cn('text-[12px] font-semibold tabular-nums', priceDelta >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
+                          <div className="flex items-center justify-end gap-1">
+                            <span className={cn('text-[12px] font-semibold tabular-nums', priceDelta >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
                               {priceDelta >= 0 ? '+' : ''}{(priceDelta * 100).toFixed(1)}%
-                            </p>
+                            </span>
                             {towardFV != null && (
-                              <p className={cn('text-[10px] font-medium mt-0', towardFV ? 'text-[#11875D]' : 'text-[#9B9B9B]')}>
-                                {towardFV ? 'Toward FV' : 'Away from FV'}
-                              </p>
+                              <span className={cn('text-[9px] font-medium', towardFV ? 'text-[#11875D]' : 'text-[#9B9B9B]')}>
+                                {towardFV ? '↗ FV' : '↘'}
+                              </span>
                             )}
                           </div>
                         ) : (
-                          <span className="text-[#9B9B9B] text-[11px]">—</span>
+                          <span className="text-[#C0C0C0] text-[11px]">—</span>
                         )}
                       </td>
 
@@ -1063,7 +1062,7 @@ export function ValuationTable({ entries, sparklines, livePrices = {}, groups, s
                         const cls  = colValueClass(val, col.format, col.id)
                         const isStale = entry.snapshot.metricsUpdatedAt == null
                         return (
-                          <td key={col.id} className="px-3 py-1.5 text-right whitespace-nowrap" title={isStale && val == null ? 'Re-save this stock to populate this column' : undefined}>
+                          <td key={col.id} className="px-3 py-2 text-right whitespace-nowrap" title={isStale && val == null ? 'Re-save this stock to populate this column' : undefined}>
                             <span className={cn('text-[12px] font-semibold tabular-nums', cls, isStale && val == null ? 'opacity-40' : '')}>
                               {text}
                             </span>
@@ -1072,15 +1071,12 @@ export function ValuationTable({ entries, sparklines, livePrices = {}, groups, s
                       })}
 
                       {/* Updated — with staleness indicator */}
-                      <td className="px-3 py-1.5 text-right whitespace-nowrap">
+                      <td className="px-3 py-2 text-right whitespace-nowrap">
                         {(() => {
                           const d = daysSince(entry.updatedAt)
                           return (
                             <span
-                              className={cn(
-                                'text-[11px]',
-                                d > 30 ? 'text-[#B56A00] font-semibold' : 'text-[#6B6B6B]',
-                              )}
+                              className={cn('text-[11px]', d > 30 ? 'text-[#B56A00] font-semibold' : 'text-[#6B6B6B]')}
                               title={new Date(entry.updatedAt).toLocaleString()}
                             >
                               {d > 30 && '⚠ '}{relativeDate(entry.updatedAt)}
@@ -1090,7 +1086,7 @@ export function ValuationTable({ entries, sparklines, livePrices = {}, groups, s
                       </td>
 
                       {/* Actions */}
-                      <td className="px-2 py-1.5">
+                      <td className="px-2 py-2">
                         <ActionsMenu
                           entry={entry}
                           groups={groups}
