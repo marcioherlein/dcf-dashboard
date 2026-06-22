@@ -5870,6 +5870,7 @@ async function runLiEtfScan() {
 const MODES = {
   dcf:               runDcf,
   dcf2:              runDcf2,
+  earnings:          runEarnings,
   insider_buy:       runInsiderBuy,
   low_52w:           run52wLow,
   top_undervalued:   runTopUndervalued,
