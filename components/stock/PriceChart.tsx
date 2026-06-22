@@ -354,8 +354,25 @@ export default function PriceChart({ ticker, triangulatedFairValue, analystTarge
       color: i > 0 && b.close < rawBars[i-1].close ? 'rgba(239,68,68,0.25)' : 'rgba(255,255,255,0.12)',
     })))
 
-    // Fit time scale to show all bars after data loads
+    // Fit time axis so all bars are visible
     mainChart.current?.timeScale().fitContent()
+
+    // Tightly fit Y axis to the actual price range (+5% padding each side)
+    if (rawBars.length > 0) {
+      const prices = rawBars.map(b => b.close)
+      const lo = Math.min(...prices)
+      const hi = Math.max(...prices)
+      const pad = (hi - lo) * 0.08
+      mainChart.current?.priceScale('right').applyOptions({
+        autoScale: false,
+        scaleMargins: { top: 0.08, bottom: 0.04 },
+      })
+      areaSeries.current?.applyOptions({
+        autoscaleInfoProvider: () => ({
+          priceRange: { minValue: lo - pad, maxValue: hi + pad },
+        }),
+      })
+    }
 
     for (const ind of MA_INDICATORS) {
       const vals = ind.calc(closes)
