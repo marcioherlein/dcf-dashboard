@@ -640,7 +640,7 @@ function DcfDriverRow({
 // ─── SynthesisBox ─────────────────────────────────────────────────────────────
 
 function SynthesisBox({
-  blendedFairValue, upsidePct, currency: _currency, wacc, methods, validTotal,
+  blendedFairValue, upsidePct, currency, wacc, methods, validTotal,
 }: {
   blendedFairValue: number | null
   upsidePct: number | null
@@ -664,17 +664,24 @@ function SynthesisBox({
     >
       <div className="flex flex-col sm:flex-row sm:items-start gap-4">
 
-        {/* Left: description + stats */}
+        {/* Left: fair value + implied return + wacc */}
         <div className="shrink-0 min-w-0">
-          <p className="text-[10px] font-[700] uppercase tracking-widest text-[rgba(255,255,255,0.40)] mb-1">
+          <p className="text-[10px] font-[700] uppercase tracking-widest text-[rgba(255,255,255,0.40)] mb-2">
             Blended Fair Value
           </p>
-          <p className="text-[11px] text-[rgba(255,255,255,0.50)] leading-snug mb-3 max-w-[220px]">
-            {blendedFairValue == null || validMethods.length === 0
-              ? 'Insufficient data to compute fair value.'
-              : `Weighted average of ${validMethods.length} model${validMethods.length !== 1 ? 's' : ''} — adjust any assumption to see the blend update live.`
+
+          {/* The dollar value — primary signal */}
+          <p className="text-[28px] font-[900] tabular-nums leading-none text-white mb-1" style={{ letterSpacing: '-0.03em' }}>
+            {blendedFairValue != null && blendedFairValue > 0
+              ? fmtPrice(blendedFairValue, currency)
+              : '—'
             }
           </p>
+          {blendedFairValue == null || validMethods.length === 0
+            ? <p className="text-[11px] text-[rgba(255,255,255,0.40)] mb-3">Insufficient data to compute fair value.</p>
+            : <p className="text-[11px] text-[rgba(255,255,255,0.40)] mb-3">Weighted average of {validMethods.length} model{validMethods.length !== 1 ? 's' : ''}</p>
+          }
+
           <div className="flex items-center gap-4 flex-wrap">
             <div>
               <p className="text-[10px] text-[rgba(255,255,255,0.40)] mb-0.5">Implied Return</p>
