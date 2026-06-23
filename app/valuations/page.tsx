@@ -554,9 +554,9 @@ function _LoginWall() {
         <div className="mx-auto mb-5 w-14 h-14 rounded-xl bg-olive-100 border border-olive-100 flex items-center justify-center">
           <Bookmark size={24} className="text-olive-700" />
         </div>
-        <h1 className="text-[22px] font-bold text-[#111111] tracking-tight">My Valuations</h1>
+        <h1 className="text-[22px] font-bold text-[#111111] tracking-tight">Watchlist</h1>
         <p className="mt-2 text-[14px] text-[#6B6B6B] leading-relaxed max-w-xs mx-auto">
-          Your saved analyses and watchlist are private. Sign in to access your personal workspace.
+          Your saved stocks are private. Sign in to access your personal workspace.
         </p>
         <button
           onClick={() => signIn('google', { callbackUrl: '/valuations' })}

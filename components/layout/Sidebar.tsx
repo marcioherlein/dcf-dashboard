@@ -22,7 +22,7 @@ const RESEARCH_NAV: NavEntry[] = [
 ]
 
 const TRACK_NAV: NavEntry[] = [
-  { href: '/valuations',            label: 'My Valuations', icon: Bookmark,          match: (p) => p.startsWith('/valuations') },
+  { href: '/valuations',            label: 'Watchlist',     icon: Bookmark,          match: (p) => p.startsWith('/valuations') },
 ]
 
 const MARKETS_NAV: NavEntry[] = [

@@ -57,7 +57,7 @@ const RIGHT_NAV = [
 ]
 
 const MORE_ITEMS = [
-  { href: '/valuations',             label: 'My Valuations', icon: Bookmark   },
+  { href: '/valuations',             label: 'Watchlist',     icon: Bookmark   },
   { href: '/ideas',                  label: 'Ideas',         icon: Lightbulb  },
   { href: '/markets',                label: 'Markets',       icon: Globe      },
   { href: '/etf',                    label: 'ETF Tracker',   icon: PieChart   },

@@ -60,7 +60,7 @@ export default function FirstRunBanner() {
               <span className="mx-1.5 text-[#BFD2A1]">→</span>
               <span>2. See the fair value</span>
               <span className="mx-1.5 text-[#BFD2A1]">→</span>
-              <span>3. Save to My Valuations</span>
+              <span>3. Save to Watchlist</span>
             </p>
           </div>
 

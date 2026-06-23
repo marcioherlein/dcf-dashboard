@@ -12,7 +12,7 @@ export default function GatedTabOverlay({ tabName: _tabName }: Props) {
       <div className="flex items-center gap-2.5 min-w-0">
         <Bookmark size={14} className="text-[#5F790B] shrink-0" aria-hidden="true" />
         <p className="text-[13px] text-[#566174] leading-snug">
-          <strong className="text-[#06101F] font-semibold">Save this analysis</strong> — sign in to track it in My Valuations.
+          <strong className="text-[#06101F] font-semibold">Save this analysis</strong> — sign in to track it in your Watchlist.
         </p>
       </div>
       <button

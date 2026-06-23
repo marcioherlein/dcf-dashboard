@@ -737,7 +737,7 @@ function QuickActions() {
     },
     {
       icon: Bookmark,
-      title: 'My Valuations',
+      title: 'Watchlist',
       desc: 'Review saved analyses and track conviction over time.',
       href: '/valuations',
       iconCls: 'text-[#5F790B] bg-[#EEF2FA]',

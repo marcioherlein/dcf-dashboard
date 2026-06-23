@@ -182,14 +182,14 @@ export default function SaveToWatchlistDialog({ open, payload, onClose, onReview
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Bookmark size={16} className="text-[#2563EB]" />
-            {isETF ? `Save ${payload.ticker} to My Valuations` : `Save ${payload.ticker} Analysis`}
+            {isETF ? `Save ${payload.ticker} to Watchlist` : `Save ${payload.ticker} Analysis`}
           </DialogTitle>
         </DialogHeader>
 
         {status === 'done' ? (
           <div className="flex flex-col items-center gap-2 py-4 text-center">
             <CheckCircle2 size={32} className="text-[#11875D]" />
-            <p className="text-sm font-semibold text-[#8A95A6]">Saved to My Valuations</p>
+            <p className="text-sm font-semibold text-[#8A95A6]">Saved to Watchlist</p>
           </div>
         ) : (
           <>
@@ -288,10 +288,10 @@ export default function SaveToWatchlistDialog({ open, payload, onClose, onReview
             >
               {status === 'saving'
                 ? <><Loader2 size={14} className="animate-spin" /> Saving…</>
-                : isETF ? 'Save to My Valuations →'
+                : isETF ? 'Save to Watchlist →'
                 : listTag === 'buy'   ? 'Save as Buy →'
                 : listTag === 'pass'  ? 'Save as Pass →'
-                : 'Save to My Valuations →'
+                : 'Save to Watchlist →'
               }
             </button>
           </DialogFooter>

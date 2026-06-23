@@ -86,7 +86,7 @@ export default function PortfolioExposure({ portfolioExposure, modelAlerts }: Pr
 
         <div className="pt-1 border-t border-[#E5E5E5]">
           <Link href="/valuations" className="text-[12px] font-semibold text-[#2563EB] hover:text-[#2563EB] transition-colors">
-            Go to My Valuations →
+            Go to Watchlist →
           </Link>
         </div>
 
