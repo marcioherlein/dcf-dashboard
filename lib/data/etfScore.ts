@@ -144,7 +144,7 @@ export function explainScore(
 export function scoreColor(score: number): string {
   if (score >= 70) return 'text-[#11875D]'
   if (score >= 50) return 'text-[#2563EB]'
-  if (score >= 30) return 'text-[#B56A00]'
+  if (score >= 30) return 'text-[#92580A]'
   if (score === 0) return 'text-[#9B9B9B]'
   return 'text-[#D83B3B]'
 }
@@ -160,15 +160,15 @@ export function scoreBgCell(score: number): string {
 export function scoreBadge(score: number): string {
   if (score >= 70) return 'bg-[#DCFCE7] text-[#11875D]'
   if (score >= 50) return 'bg-[#EAF1FF] text-[#2563EB]'
-  if (score >= 30) return 'bg-[#FFF4DA] text-[#B56A00]'
-  if (score === 0) return 'bg-[#F5F5F5] text-[#9B9B9B]'
+  if (score >= 30) return 'bg-[#FFF4DA] text-[#92580A]'
+  if (score === 0) return 'bg-[#F5F5F5] text-[#767676]'
   return 'bg-[#FCEAEA] text-[#D83B3B]'
 }
 
 export function scoreBarColor(score: number): string {
   if (score >= 70) return 'bg-[#11875D]'
   if (score >= 50) return 'bg-[#2563EB]'
-  if (score >= 30) return 'bg-[#B56A00]'
+  if (score >= 30) return 'bg-[#92580A]'
   if (score === 0) return 'bg-[#9B9B9B]'
   return 'bg-[#D83B3B]'
 }

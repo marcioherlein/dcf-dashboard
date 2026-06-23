@@ -4,7 +4,7 @@ import { memo, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { Plus, Check, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { scoreColor, scoreLabel, scoreBadge, computeETFScore, explainScore } from '@/lib/data/etfScore'
+import { scoreColor, scoreLabel, scoreBadge } from '@/lib/data/etfScore'
 import { fmtMultiple } from '@/lib/formatters'
 import { Sparkline } from '@/components/ui/Sparkline'
 import { CATEGORY_AVG_EXPENSE } from '@/lib/data/etfUniverse'
@@ -23,43 +23,13 @@ interface Props {
   sparklines?: Record<string, number[] | null>
 }
 
-// ── Score breakdown tooltip ──────────────────────────────────────────────────
-function ScoreBreakdownTooltip({ item }: { item: ETFBatchItem }) {
-  const { score, breakdown } = computeETFScore(item.peRatio, item.pbRatio, item.yield, item.expenseRatio)
-  const explain = explainScore(breakdown, score, {
-    peRatio: item.peRatio,
-    pbRatio: item.pbRatio,
-    yieldVal: item.yield,
-    expenseRatio: item.expenseRatio,
-  })
-  const lines = [
-    item.peRatio != null ? `P/E ${item.peRatio.toFixed(1)}× → ${breakdown.pe}/30 pts` : null,
-    item.pbRatio != null ? `P/B ${item.pbRatio.toFixed(1)}× → ${breakdown.pb}/25 pts` : null,
-    item.yield != null && item.yield > 0 ? `Yield ${(item.yield * 100).toFixed(1)}% → ${breakdown.yieldPts}/25 pts` : null,
-    item.expenseRatio != null ? `Expense ${(item.expenseRatio * 100).toFixed(2)}% → −${breakdown.expensePenalty} pts` : null,
-  ].filter(Boolean).join('\n')
-  const fullText = lines ? `${explain}\n\n${lines}` : explain
-
-  return (
-    <button
-      data-no-min-h
-      title={fullText}
-      className="text-[9px] text-[#9B9B9B] hover:text-olive-700 transition-colors px-0.5"
-      onClick={(e) => e.preventDefault()}
-      aria-label="Why this score"
-    >
-      ?
-    </button>
-  )
-}
-
 // ── Expense ratio bar ────────────────────────────────────────────────────────
 function ExpenseBar({ expenseRatio, group }: { expenseRatio: number | null; group: ETFGroup }) {
   if (expenseRatio == null) return null
   const avg = CATEGORY_AVG_EXPENSE[group] ?? 0.002
   const isCheap    = expenseRatio <= avg * 0.75
   const isExpensive = expenseRatio > avg * 1.5
-  const barColor   = isCheap ? 'bg-[#11875D]' : isExpensive ? 'bg-[#D83B3B]' : 'bg-[#B56A00]'
+  const barColor   = isCheap ? 'bg-[#11875D]' : isExpensive ? 'bg-[#D83B3B]' : 'bg-[#92580A]'
   const maxRatio   = avg * 2
   const barW       = Math.min(100, (expenseRatio / maxRatio) * 100)
   const avgW       = Math.min(100, (avg / maxRatio) * 100)
@@ -72,7 +42,7 @@ function ExpenseBar({ expenseRatio, group }: { expenseRatio: number | null; grou
         <span className="text-[9px] font-[600] text-[#9B9B9B] tracking-wide uppercase leading-none">Expense ratio</span>
         <span className={cn(
           'text-[10px] font-[700] tabular-nums leading-none',
-          isCheap ? 'text-[#11875D]' : isExpensive ? 'text-[#D83B3B]' : 'text-[#B56A00]',
+          isCheap ? 'text-[#11875D]' : isExpensive ? 'text-[#D83B3B]' : 'text-[#92580A]',
         )}>
           {erPct}%
         </span>
@@ -269,16 +239,15 @@ export const ETFHeatmapGrid = memo(function ETFHeatmapGrid({
               )}
             </div>
 
-            {/* Score + rank + breakdown tooltip */}
+            {/* Score + rank */}
             <div className="relative z-10 flex items-center gap-1.5 flex-wrap px-3 pt-1.5 pb-0">
               {score != null ? (
                 <>
-                  <span className={cn('text-[12px] font-[700] tabular-nums leading-none', scoreColor(score))}>{score}</span>
+                  {score > 0 && <span className={cn('text-[12px] font-[700] tabular-nums leading-none', scoreColor(score))}>{score}</span>}
                   <span className={cn('text-[10px] font-[600] px-1.5 py-0.5 rounded-full leading-none', scoreBadge(score))}>
                     {scoreLabel(score)}
                   </span>
-                  {item && <ScoreBreakdownTooltip item={item} />}
-                  {allScores.length > 1 && <CategoryRankBadge score={score} allScores={allScores} />}
+                  {score > 0 && allScores.length > 1 && <CategoryRankBadge score={score} allScores={allScores} />}
                 </>
               ) : (
                 <div className="h-4 w-12 rounded bg-[#E5E5E5] motion-safe:animate-pulse" />
@@ -305,12 +274,12 @@ export const ETFHeatmapGrid = memo(function ETFHeatmapGrid({
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAdd(meta.ticker) }}
                   data-no-min-h
                   className={cn(
-                    'absolute bottom-1 right-2 z-20 w-6 h-6 flex items-center justify-center rounded-md transition-all',
+                    'absolute bottom-1 right-2 z-20 w-7 h-7 flex items-center justify-center rounded-md transition-all',
                     isWatchlisted ? 'text-[#11875D]' : 'text-[#9B9B9B] hover:text-olive-700',
                   )}
                   aria-label={isWatchlisted ? `${meta.ticker} is in your watchlist` : `Add ${meta.ticker} to watchlist`}
                 >
-                  {isWatchlisted ? <Check size={9} /> : <Plus size={9} />}
+                  {isWatchlisted ? <Check size={10} /> : <Plus size={10} />}
                 </button>
               )}
             </div>

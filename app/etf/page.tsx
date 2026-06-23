@@ -18,7 +18,7 @@ import {
   BROAD_META, BOND_META, DIVIDEND_META, THEMATIC_META, COMMODITY_META, CATEGORY_AVG_EXPENSE,
 } from '@/lib/data/etfUniverse'
 import { fmtLarge, fmtPctAbs, fmtMultiple } from '@/lib/formatters'
-import { scoreColor, scoreLabel, scoreBadge, computeETFScore, explainScore } from '@/lib/data/etfScore'
+import { scoreColor, scoreLabel, scoreBadge, computeETFScore } from '@/lib/data/etfScore'
 import { ChevronUp, ChevronsUpDown, Check } from 'lucide-react'
 import type { ETFMeta, ETFGroup } from '@/lib/data/etfUniverse'
 import type { ETFEntry, ETFBatchItem } from '@/lib/data/etfTypes'
@@ -42,7 +42,7 @@ const groupBadge: Record<ETFGroup, string> = {
   sector:    'bg-[#F0F1F6] text-[#566174] border-[#E3E1DA]',
   geo:       'bg-[#EFF6FF] text-[#2563EB] border-[#BFDBFE]',
   style:     'bg-[#F0FDF4] text-[#11875D] border-[#BBF7D0]',
-  bond:      'bg-[#FFF7ED] text-[#B56A00] border-[#FDE68A]',
+  bond:      'bg-[#FFF7ED] text-[#92580A] border-[#FDE68A]',
   dividend:  'bg-[#FDF4FF] text-[#9333EA] border-[#E9D5FF]',
   thematic:  'bg-[#FFF1F2] text-[#D83B3B] border-[#FECACA]',
   commodity: 'bg-[#F5F5F5] text-[#4B5563] border-[#D1D5DB]',
@@ -128,8 +128,9 @@ function Rankings({
             <button
               key={f.id}
               onClick={() => setFilter(f.id)}
+              aria-pressed={filter === f.id}
               className={cn(
-                'px-3 py-1.5 rounded-full text-[12px] font-[600] transition-colors border',
+                'px-3 py-2 rounded-full text-[12px] font-[600] transition-colors border min-h-[36px]',
                 filter === f.id
                   ? 'bg-olive-700 text-white border-olive-700'
                   : 'bg-white text-[#566174] border-[#E3E1DA] hover:border-[#BFD2A1] hover:text-olive-700 hover:bg-[#F0F4E8]',
@@ -139,7 +140,6 @@ function Rankings({
             </button>
           ))}
         </div>
-        <p className="text-[11px] text-[#8A95A6]">Click column to sort</p>
       </div>
 
       <div className="bg-white rounded-xl border border-[#E3E1DA] overflow-clip">
@@ -152,14 +152,17 @@ function Rankings({
                 {COLS.map((col) => (
                   <th
                     key={col.key}
-                    className="px-3 py-2 text-right cursor-pointer select-none whitespace-nowrap"
-                    onClick={() => toggleSort(col.key)}
+                    className="px-0 py-0 text-right whitespace-nowrap"
                     aria-sort={col.key === sortKey ? (sortDir === 'desc' ? 'descending' : 'ascending') : 'none'}
                   >
-                    <span className="inline-flex items-center justify-end gap-1 text-[11px] font-[600] text-[#566174] hover:text-[#111111] transition-colors">
+                    <button
+                      onClick={() => toggleSort(col.key)}
+                      className="w-full px-3 py-2 inline-flex items-center justify-end gap-1 text-[11px] font-[600] text-[#566174] hover:text-[#111111] transition-colors cursor-pointer select-none"
+                      aria-label={`Sort by ${col.label}`}
+                    >
                       {col.label}
                       <SortIcon col={col.key} sortKey={sortKey} sortDir={sortDir} />
-                    </span>
+                    </button>
                   </th>
                 ))}
                 <th className="px-3 py-2 w-10" />
@@ -170,26 +173,12 @@ function Rankings({
                 const score = item?.valueScore ?? null
                 const isWatchlisted = watchlistedTickers.has(meta.ticker)
 
-                // Per-row score breakdown tooltip
-                const scoreTooltip = (() => {
-                  if (!item || score == null) return 'Score = P/E (30 pts) + P/B (25 pts) + Yield (25 pts) − Expense ratio penalty (20 pts).'
-                  const { breakdown } = computeETFScore(item.peRatio, item.pbRatio, item.yield, item.expenseRatio)
-                  const explain = explainScore(breakdown, score, { peRatio: item.peRatio, pbRatio: item.pbRatio, yieldVal: item.yield, expenseRatio: item.expenseRatio })
-                  const lines = [
-                    item.peRatio != null ? `P/E ${item.peRatio.toFixed(1)}× → ${breakdown.pe}/30 pts` : null,
-                    item.pbRatio != null ? `P/B ${item.pbRatio.toFixed(1)}× → ${breakdown.pb}/25 pts` : null,
-                    item.yield != null && item.yield > 0 ? `Yield ${(item.yield * 100).toFixed(1)}% → ${breakdown.yieldPts}/25 pts` : null,
-                    item.expenseRatio != null ? `Expense ${(item.expenseRatio * 100).toFixed(2)}% → −${breakdown.expensePenalty} pts` : null,
-                  ].filter(Boolean).join('\n')
-                  return lines ? `${explain}\n\n${lines}` : explain
-                })()
-
                 // Expense ratio color vs group avg
                 const avg = CATEGORY_AVG_EXPENSE[meta.group] ?? 0.002
                 const erColor = item?.expenseRatio == null ? 'text-[#111111]'
                   : item.expenseRatio <= avg * 0.75 ? 'text-[#11875D]'
                   : item.expenseRatio > avg * 1.5   ? 'text-[#D83B3B]'
-                  : 'text-[#111111]'
+                  : 'text-[#92580A]'
                 return (
                   <tr key={meta.ticker} className="hover:bg-[#F9F8F5] transition-colors group">
                     <td className="pl-4 pr-3 py-2.5 sticky left-0 bg-white group-hover:bg-[#F9F8F5] transition-colors">
@@ -223,17 +212,8 @@ function Rankings({
                     <td className="px-3 py-2.5 text-right">
                       {score != null ? (
                         <div className="inline-flex items-center gap-1 justify-end">
-                          <span className={cn('text-[12px] font-[700]', scoreColor(score))}>{score}</span>
-                          <span className={cn('text-[10px] font-[600] hidden sm:block', scoreColor(score))}>{scoreLabel(score)}</span>
-                          <button
-                            data-no-min-h
-                            title={scoreTooltip}
-                            className="text-[9px] text-[#9B9B9B] hover:text-olive-700 transition-colors w-4 h-4 flex items-center justify-center"
-                            onClick={(e) => e.preventDefault()}
-                            aria-label="Score breakdown"
-                          >
-                            <Info size={10} />
-                          </button>
+                          {score > 0 && <span className={cn('text-[12px] font-[700]', scoreColor(score))}>{score}</span>}
+                          <span className={cn('text-[10px] font-[600] hidden sm:block', score > 0 ? scoreColor(score) : 'text-[#9B9B9B]')}>{scoreLabel(score)}</span>
                         </div>
                       ) : <span className="text-[#8A95A6]">—</span>}
                     </td>
@@ -292,7 +272,7 @@ function CollapsibleSection({
         <div className="flex items-center gap-2 min-w-0">
           <button
             onClick={() => setOpen((v) => !v)}
-            className="flex items-center gap-1.5 group"
+            className="flex items-center gap-1.5 group min-h-[44px]"
             aria-expanded={open}
           >
             <h2 className="text-[13px] font-[700] text-[#111111] group-hover:text-olive-700 transition-colors">
@@ -309,9 +289,9 @@ function CollapsibleSection({
         </div>
         <button
           onClick={onViewAll}
-          className="shrink-0 flex items-center gap-1 text-[11px] font-[600] text-[#566174] hover:text-olive-700 transition-colors"
+          className="shrink-0 flex items-center gap-1 text-[11px] font-[600] text-[#566174] hover:text-olive-700 transition-colors min-h-[44px]"
         >
-          Full table
+          Rankings
           <ArrowUpRight size={11} />
         </button>
       </div>
@@ -351,7 +331,7 @@ function WatchlistRow({
       <button
         onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(entry.ticker) }}
         aria-label={`Remove ${entry.ticker} from watchlist`}
-        className="absolute top-1/2 -translate-y-1/2 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-lg text-transparent group-hover:text-[#9B9B9B] hover:!text-[#D83B3B] hover:bg-[#FCEAEA] transition-all focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:outline-none"
+        className="absolute top-1/2 -translate-y-1/2 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-lg text-[#C8C8C8] group-hover:text-[#9B9B9B] hover:!text-[#D83B3B] hover:bg-[#FCEAEA] transition-all focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:outline-none"
       >
         <Trash2 size={13} />
       </button>
@@ -396,7 +376,7 @@ function WatchlistRow({
         {/* Right: score chip + price + change */}
         <div className="w-[100px] shrink-0 text-right flex flex-col items-end gap-0.5">
           <span className={cn('inline-flex text-[10px] font-[650] px-1.5 py-0.5 rounded-full leading-none', scoreBadge(score))}>
-            {score} · {scoreLabel(score)}
+            {score > 0 ? `${score} · ` : ''}{scoreLabel(score)}
           </span>
           {price && (
             <p className="text-[14px] font-[700] text-[#111111] tabular-nums leading-tight mt-0.5">
@@ -890,7 +870,7 @@ export default function ETFTrackerPage() {
             {/* Fixed Income */}
             <CollapsibleSection
               title="Fixed Income"
-              description="Treasury, corporate, and TIPS bonds"
+              description="Treasury, corporate, and TIPS bonds · Not rated (equity multiples N/A)"
               onViewAll={() => goToRankings('bond')}
               defaultOpen={false}
             >
@@ -944,7 +924,7 @@ export default function ETFTrackerPage() {
             {/* Commodities */}
             <CollapsibleSection
               title="Commodities & Alternatives"
-              description="Gold, silver, REITs, broad commodities"
+              description="Gold, silver, REITs, broad commodities · Not rated (equity multiples N/A)"
               onViewAll={() => goToRankings('commodity')}
               defaultOpen={false}
             >

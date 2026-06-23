@@ -36,7 +36,7 @@ const groupBadge: Record<ETFGroup, string> = {
   sector:    'bg-[#F0F1F6] text-[#566174] border-[#E3E1DA]',
   geo:       'bg-[#EFF6FF] text-[#2563EB] border-[#BFDBFE]',
   style:     'bg-[#F0FDF4] text-[#11875D] border-[#BBF7D0]',
-  bond:      'bg-[#FFF7ED] text-[#B56A00] border-[#FDE68A]',
+  bond:      'bg-[#FFF7ED] text-[#92580A] border-[#FDE68A]',
   dividend:  'bg-[#FDF4FF] text-[#9333EA] border-[#E9D5FF]',
   thematic:  'bg-[#FFF1F2] text-[#D83B3B] border-[#FECACA]',
   commodity: 'bg-[#F5F5F5] text-[#4B5563] border-[#D1D5DB]',
@@ -135,8 +135,9 @@ function Leaderboard({
             <button
               key={f.id}
               onClick={() => setFilter(f.id)}
+              aria-pressed={filter === f.id}
               className={cn(
-                'px-3 py-2 rounded-full text-[12px] font-semibold transition-colors border',
+                'px-3 py-2 rounded-full text-[12px] font-semibold transition-colors border min-h-[36px]',
                 filter === f.id
                   ? 'bg-olive-700 text-white border-olive-700'
                   : 'bg-white text-[#566174] border-[#E3E1DA] hover:border-[#BFD2A1] hover:text-olive-700',
@@ -222,9 +223,9 @@ function Leaderboard({
                     <td className="px-3 py-3 text-right">
                       {score != null ? (
                         <div className="inline-flex items-center gap-1.5 justify-end">
-                          <span className={cn('text-[13px] font-[700]', scoreColor(score))}>{score}</span>
-                          <span className={cn('text-[10px] font-semibold', scoreColor(score))}>{scoreLabel(score)}</span>
-                          <InfoTooltip text="Score = P/E (30 pts) + P/B (25 pts) + Yield (25 pts) − Expense ratio penalty (20 pts). 70+ = Deep Value." side="top" />
+                          {score > 0 && <span className={cn('text-[13px] font-[700]', scoreColor(score))}>{score}</span>}
+                          <span className={cn('text-[10px] font-semibold', score > 0 ? scoreColor(score) : 'text-[#767676]')}>{scoreLabel(score)}</span>
+                          {score > 0 && <InfoTooltip text="Score = P/E (30 pts) + P/B (25 pts) + Yield (25 pts) − Expense ratio penalty (20 pts). 70+ = Deep Value." side="top" />}
                         </div>
                       ) : (
                         <span className="text-[#8A95A6]">—</span>
@@ -295,8 +296,8 @@ function EmptyWatchlistCTA({
                 >
                   <span className="text-[13px] font-bold text-[#06101F]">+ {t}</span>
                   {score != null && (
-                    <span className={cn('text-[11px] font-semibold mt-0.5', scoreColor(score))}>
-                      {score} · {scoreLabel(score)}
+                    <span className={cn('text-[11px] font-semibold mt-0.5', score > 0 ? scoreColor(score) : 'text-[#767676]')}>
+                      {score > 0 ? `${score} · ` : ''}{scoreLabel(score)}
                     </span>
                   )}
                 </button>
