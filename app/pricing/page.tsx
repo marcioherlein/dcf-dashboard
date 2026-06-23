@@ -16,23 +16,19 @@ import { InsicLogoLockup } from '@/components/ui/InsicLogo'
 // ─── Plan definitions ──────────────────────────────────────────────────────
 
 const FREE_FEATURES = [
-  'Analyze up to 10 stocks per month',
-  'Save up to 5 analyses to Watchlist',
-  'Full Overview — price chart, KPI sidebar, peer comparison',
-  'Conviction Score — 16-criterion checklist + 0–100 score',
-  'Reverse DCF — see what growth the market is pricing in',
-  'Full 3-statement financials, analyst estimates, EPS surprises',
+  'Full access to every feature — nothing locked',
+  'Valuation cockpit — all models, editable assumptions',
+  'Conviction Score, Reverse DCF, Monte Carlo',
+  'Full 3-statement financials, analyst estimates',
   'Markets page, ETF Tracker, Screener (20 results)',
-  'News feed per stock',
+  '5 stock analyses per month',
+  '5 saved valuations',
 ]
 
 const PRO_FEATURES = [
-  { icon: Zap,        text: 'Unlimited stocks — no monthly cap' },
-  { icon: BarChart2,  text: 'Valuation cockpit — edit WACC, growth, margins, multiples' },
-  { icon: BarChart2,  text: 'Sensitivity table — fair value at every CAGR × WACC combination' },
-  { icon: TrendingUp, text: 'Monte Carlo simulation — probability distribution of outcomes' },
-  { icon: Zap,        text: 'Full DCF model — year-by-year projections, editable' },
+  { icon: Zap,        text: 'Unlimited stock analyses — no monthly cap' },
   { icon: TrendingUp, text: 'Unlimited saved analyses to Watchlist' },
+  { icon: BarChart2,  text: 'Sensitivity table — fair value at every CAGR × WACC combination' },
   { icon: BarChart2,  text: 'Full screener — unlimited results + scatter chart view' },
   { icon: BarChart2,  text: 'Multi-ticker comparison with correlation & pairs signals' },
   { icon: Users,      text: 'Quant Strategy Library — 5 academic factor strategies' },
@@ -41,20 +37,20 @@ const PRO_FEATURES = [
 ]
 
 const COMPARISON_ROWS = [
-  { label: 'Stocks per month',                                      browse: 'Any',  free: '10',  pro: '∞'   },
+  { label: 'Stocks per month',                                      browse: 'Any',  free: '5',   pro: '∞'   },
   { label: 'Saved analyses (Watchlist)',                             browse: false,  free: '5',   pro: '∞'   },
   { label: 'Price + chart (any NYSE/NASDAQ ticker)',                 browse: true,   free: true,  pro: true  },
   { label: 'Verdict badge (Undervalued / Fair Value / Overvalued)',  browse: 'Blurred fair value', free: true, pro: true },
-  { label: 'Overview tab (chart, KPIs, peers, ETF exposure)',        browse: false,  free: true,  pro: true  },
+  { label: 'Overview — chart, KPIs, peers, ETF exposure',           browse: false,  free: true,  pro: true  },
   { label: 'Conviction Score + 16-criterion checklist',             browse: false,  free: true,  pro: true  },
   { label: 'Reverse DCF — market-implied CAGR',                     browse: false,  free: true,  pro: true  },
+  { label: 'Valuation cockpit — editable DCF assumptions',          browse: false,  free: true,  pro: true  },
+  { label: 'Monte Carlo simulation',                                browse: false,  free: true,  pro: true  },
+  { label: 'Full DCF model — year-by-year projections',             browse: false,  free: true,  pro: true  },
   { label: 'Financials (3-statement, analyst estimates)',            browse: false,  free: true,  pro: true  },
   { label: 'Markets page, ETF Tracker',                             browse: false,  free: true,  pro: true  },
   { label: 'Screener — fundamental filters',                        browse: false,  free: '20 results', pro: '∞ + scatter' },
-  { label: 'Valuation cockpit — editable DCF assumptions',          browse: false,  free: false, pro: true  },
   { label: 'Sensitivity table (CAGR × WACC heat map)',              browse: false,  free: false, pro: true  },
-  { label: 'Monte Carlo simulation',                                browse: false,  free: false, pro: true  },
-  { label: 'Full DCF model — year-by-year projections',             browse: false,  free: false, pro: true  },
   { label: 'Multi-ticker comparison + pairs signals',               browse: false,  free: false, pro: true  },
   { label: 'Quant Strategy Library (all 5 strategies)',             browse: false,  free: false, pro: true  },
   { label: 'Weekly watchlist digest (email)',                       browse: false,  free: false, pro: true  },
@@ -64,11 +60,11 @@ const COMPARISON_ROWS = [
 const FAQS = [
   {
     q: 'Is the free plan really free forever?',
-    a: 'Yes. Free is not a trial. You get 10 stock analyses per month and 5 saved valuations at no cost, forever. We only charge for the advanced analytical tools — the cockpit, sensitivity analysis, Monte Carlo, and full screener access.',
+    a: 'Yes. Free is not a trial. You get 5 full stock analyses per month — every feature unlocked, nothing hidden. The only limit is how many stocks you can analyze each month. Upgrade to Pro for unlimited analyses.',
   },
   {
-    q: 'What happens when I hit the 10-stock limit?',
-    a: 'You\'ll see an upgrade prompt. Stocks you\'ve already viewed this month remain accessible — the limit only applies to new tickers. The count resets at the start of each calendar month.',
+    q: 'What happens when I hit the 5-stock limit?',
+    a: 'You\'ll see an upgrade prompt. Stocks you\'ve already viewed this month remain fully accessible — the limit only applies to new tickers. The count resets at the start of each calendar month.',
   },
   {
     q: 'How accurate is the DCF model?',
@@ -190,7 +186,7 @@ export default function PricingPage() {
                 <span className="text-5xl font-bold text-gray-900 tabular-nums">$0</span>
                 <span className="text-gray-400 text-sm">/month</span>
               </div>
-              <p className="text-[13px] text-gray-500">10 stocks · 5 saves · No credit card</p>
+              <p className="text-[13px] text-gray-500">5 stocks/month · 5 saves · No credit card</p>
             </div>
 
             <button

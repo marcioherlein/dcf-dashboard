@@ -553,8 +553,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
       {/* ── 2. COLLAPSIBLE GUIDANCE ──────────────────────────────────────────── */}
       <GuidanceStrip />
 
-      {/* ── 3. VALUATION MODELS — Pro feature ──────────────────────────────────── */}
-      <ProGate featureName="Valuation Cockpit" isPro={isPro} placeholderHeight="h-64">
+      {/* ── 3. VALUATION MODELS ─────────────────────────────────────────────── */}
       <div ref={assumptionsPanelRef} id="assumptions-panel">
         {clampNote && (
           <p className="mb-2 text-[11px] text-[#D97706] bg-[#FFFBEB] border border-[#FDE68A] rounded-lg px-3 py-2">
@@ -727,7 +726,6 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
         </ProGate>
 
         {/* ── 6. MONTE CARLO ───────────────────────────────────────────────────── */}
-        <ProGate featureName="Monte Carlo simulation" isPro={isPro} placeholderHeight="h-40">
         <MonteCarloPanel
           assumptions={assumptions}
           snapshot={effectiveSnapshot}
@@ -737,13 +735,10 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
           currency={currency}
           compact
         />
-        </ProGate>
 
       </div>
-      </ProGate>
 
-      {/* ── 7. FULL DCF MODEL — Pro feature ──────────────────────────────────────── */}
-      <ProGate featureName="Full DCF Model" isPro={isPro} placeholderHeight="h-20">
+      {/* ── 7. FULL DCF MODEL ─────────────────────────────────────────────────── */}
       <details ref={fullDcfRef} className="group" id="full_dcf">
         <summary className="flex items-center gap-2 cursor-pointer list-none bg-white rounded-xl border border-[#E3E1DA] shadow-card px-4 sm:px-5 py-3.5 hover:bg-[#EAF1FF] transition-colors select-none">
           <span className="text-[#2563EB] text-xs group-open:rotate-90 transition-transform inline-block">▶</span>
@@ -770,7 +765,6 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
           />
         </div>
       </details>
-      </ProGate>
 
       {/* ── 8. MODEL EVIDENCE (collapsed) ───────────────────────────────────── */}
       <details className="group" id="model_evidence">

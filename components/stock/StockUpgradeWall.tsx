@@ -23,11 +23,11 @@ interface Props {
 const LIMIT = FREE_STOCK_ANALYSES_PER_MONTH
 
 const PRO_HIGHLIGHTS = [
-  'Unlimited analyses — no monthly cap',
+  'Unlimited stock analyses — no monthly cap',
+  'Unlimited saved valuations',
   'Sensitivity table (CAGR × WACC heat map)',
   'Multi-ticker comparison with pairs signals',
   'Quant Strategy Library — 5 academic strategies',
-  'Market Screener with factor ranking',
   'Weekly watchlist digest (email)',
 ]
 
