@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { Lock } from 'lucide-react'
 import type { StrategyRow, UniverseCategory } from '@/lib/strategies/types'
 import { FREE_STRATEGIES_VISIBLE } from '@/lib/constants'
+import { useSetTopBarTabs } from '@/contexts/TopBarTabsContext'
 
 // ─── Strategy definitions ─────────────────────────────────────────────────────
 
@@ -535,6 +536,19 @@ export default function StrategiesPage() {
   const stratReduced = useReducedMotion()
   const STRAT_SPRING = { type: 'spring', stiffness: 500, damping: 38, mass: 0.6 } as const
 
+  // Push strategy tabs into TopBar (desktop)
+  const stratTopTabs = useMemo(() => [
+    { id: 'consensus', label: 'Consensus' },
+    ...STRATEGIES.map((s, i) => ({
+      id: s.id,
+      label: s.shortLabel,
+      badge: (!isPro && i >= FREE_STRATEGIES_VISIBLE)
+        ? <span className="text-[9px] bg-[#EEF2FA] text-[#5F790B] font-bold px-1 py-0.5 rounded uppercase">Pro</span>
+        : undefined,
+    })),
+  ], [isPro])
+  useSetTopBarTabs(stratTopTabs, activeStrategy, setActiveStrategy)
+
   const filteredRows = useMemo(() =>
     activeCategory === 'All' ? rows : rows.filter(r => r.category === activeCategory),
     [rows, activeCategory]
@@ -585,9 +599,9 @@ export default function StrategiesPage() {
           })}
         </div>
 
-        {/* Strategy tabs — pill-within-pill */}
+        {/* Strategy tabs — mobile only; desktop tabs in TopBar */}
         <div
-          className="flex items-center gap-0.5 overflow-x-auto overscroll-x-contain scrollbar-hide mb-5 rounded-full p-[3px]"
+          className="lg:hidden flex items-center gap-0.5 overflow-x-auto overscroll-x-contain scrollbar-hide mb-5 rounded-full p-[3px]"
           style={{
             background: 'rgba(240,241,246,0.85)',
             backdropFilter: 'blur(12px)',

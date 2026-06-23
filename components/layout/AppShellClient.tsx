@@ -5,6 +5,7 @@ import TopBar from './TopBar'
 import BottomNav from './BottomNav'
 import Sidebar from './Sidebar'
 import { StockNavProvider } from '@/contexts/StockNavContext'
+import { TopBarTabsProvider } from '@/contexts/TopBarTabsContext'
 import FeedbackButton from '@/components/ui/FeedbackButton'
 
 function AppShellInner({ children }: { children: React.ReactNode }) {
@@ -27,6 +28,7 @@ export default function AppShellClient({ children }: { children: React.ReactNode
 
   return (
     <StockNavProvider>
+      <TopBarTabsProvider>
       <div className="min-h-dvh insic-bg">
         <Suspense fallback={<header className="fixed top-0 left-0 right-0 min-h-[52px] pt-safe glass-toolbar border-b z-40" />}>
           <TopBar />
@@ -36,6 +38,7 @@ export default function AppShellClient({ children }: { children: React.ReactNode
         <BottomNav />
         <FeedbackButton />
       </div>
+      </TopBarTabsProvider>
     </StockNavProvider>
   )
 }

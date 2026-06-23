@@ -9,6 +9,7 @@ import { Bookmark, FileText, Search, Share2, X, BarChart2, DollarSign, Table2, A
 import { cn } from '@/lib/utils'
 import { slideDown } from '@/lib/motion'
 import { useStockNav } from '@/contexts/StockNavContext'
+import { useTopBarTabs } from '@/contexts/TopBarTabsContext'
 import { InsicLogoLockup, InsicAppIcon } from '@/components/ui/InsicLogo'
 import type { TabId } from '@/components/stock/TabNav'
 
@@ -552,6 +553,9 @@ export default function TopBar() {
   const { stockNav, onSaveRef, onShareRef } = useStockNav()
 
   const pageTitle = !stockNav ? getPageTitle(pathname) : null
+  const { tabsState } = useTopBarTabs()
+  const pagePillId = useId()
+  const pageTabSpring = { type: 'spring', stiffness: 500, damping: 38, mass: 0.6 } as const
 
   const [query, setQuery]     = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
@@ -703,11 +707,56 @@ export default function TopBar() {
                     {pageTitle.sub && <p className="text-[11px] text-[#8A95A6] leading-none mt-0.5 hidden sm:block">{pageTitle.sub}</p>}
                   </div>
                 </div>
-                <div className="hidden lg:flex items-center gap-4 w-full">
+                <div className="hidden lg:flex items-center gap-3 w-full min-w-0">
+                  {/* Page title — left */}
                   <div className="shrink-0">
                     <p className="text-[14px] font-[700] text-[#111111] leading-tight tracking-tight">{pageTitle.title}</p>
-                    {pageTitle.sub && <p className="text-[11px] text-[#8A95A6] leading-none mt-0.5">{pageTitle.sub}</p>}
+                    {pageTitle.sub && !tabsState && <p className="text-[11px] text-[#8A95A6] leading-none mt-0.5">{pageTitle.sub}</p>}
                   </div>
+
+                  {/* Tab pills — center (when page has tabs) */}
+                  {tabsState && (
+                    <div
+                      className="flex items-center gap-0.5 rounded-full p-[3px] flex-shrink-0"
+                      style={{
+                        background: 'rgba(240,241,246,0.85)',
+                        backdropFilter: 'blur(12px)',
+                        WebkitBackdropFilter: 'blur(12px)',
+                        border: '1px solid rgba(0,0,0,0.07)',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.5)',
+                      }}
+                    >
+                      {tabsState.tabs.map(tab => {
+                        const isActive = tabsState.activeId === tab.id
+                        return (
+                          <button
+                            key={tab.id}
+                            onClick={() => tabsState.onChange(tab.id)}
+                            className="relative flex items-center gap-1 rounded-full px-3 py-1.5 text-[13px] min-h-[28px] whitespace-nowrap transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(95,121,11,0.6)]"
+                            style={{ color: isActive ? '#111111' : '#6B6B6B', fontWeight: isActive ? 650 : 500 }}
+                          >
+                            {isActive && (
+                              <motion.span
+                                layoutId={`${pagePillId}-page-tab`}
+                                className="absolute inset-0 rounded-full"
+                                style={{
+                                  background: 'rgba(255,255,255,0.95)',
+                                  border: '1px solid rgba(0,0,0,0.08)',
+                                  boxShadow: '0 1px 4px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.9)',
+                                }}
+                                transition={reduced ? { duration: 0 } : pageTabSpring}
+                                aria-hidden="true"
+                              />
+                            )}
+                            <span className="relative z-10">{tab.label}</span>
+                            {tab.badge && <span className="relative z-10">{tab.badge}</span>}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  )}
+
+                  {/* Search — right */}
                   <div className="flex-1 flex justify-end">
                     <NonStockSearchBar
                       query={query} setQuery={setQuery} open={open} loading={loading}
@@ -716,7 +765,7 @@ export default function TopBar() {
                       reduced={reduced} searchRef={searchRef} select={select}
                       handleSubmit={handleSubmit} setOpen={setOpen} setActiveIdx={setActiveIdx}
                       setUnsupportedError={setUnsupportedError} setSearchError={setSearchError}
-                      maxWidth="360px"
+                      maxWidth="280px"
                     />
                   </div>
                 </div>

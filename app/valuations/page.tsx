@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef, useId } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
+import { useSetTopBarTabs } from '@/contexts/TopBarTabsContext'
 import Link from 'next/link'
 import { useSession, signIn } from 'next-auth/react'
 import {
@@ -586,6 +587,10 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
 
   // UI state
   const [activeTab,         setActiveTab]         = useState<TabId>('all')
+
+  // Push tabs into TopBar (desktop)
+  const valTabs = useMemo(() => TABS.map(t => ({ id: t.id, label: t.labelMobile ?? t.label })), [])
+  useSetTopBarTabs(valTabs, activeTab, (id) => setActiveTab(id as TabId))
   const [view,              setView]              = useState<ViewMode>('table')
   const [searchQuery,       setSearch]            = useState('')
   const [sortKey,           setSortKey]           = useState<SortKey>('updatedAt')
@@ -753,7 +758,8 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
           {/* Toolbar */}
           <div className="bg-white border border-[#E5E5E5] rounded-xl overflow-hidden shadow-sm">
             {/* Segment tabs */}
-            <div className="flex items-center gap-2 px-4 pt-1">
+            {/* Segment tabs — mobile only; desktop tabs in TopBar */}
+            <div className="flex items-center gap-2 px-4 pt-1 lg:hidden">
               <div className="flex-1 min-w-0 overflow-x-auto scrollbar-hide">
                 <SegmentTabs active={activeTab} counts={tabCounts} onSelect={setActiveTab} />
               </div>
