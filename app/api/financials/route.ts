@@ -552,6 +552,14 @@ export async function GET(req: NextRequest) {
     // financialData module often misses these; quote module is a reliable second source
     let evToEbitda = (fd.enterpriseToEbitda ?? (q.enterpriseToEbitda ?? null)) as number | null
     let evToRevenue = (fd.enterpriseToRevenue ?? (q.enterpriseToRevenue ?? null)) as number | null
+    // Sanity guard: evToEbitda < 1 is economically impossible for a profitable company
+    // (it would mean the entire enterprise could be bought back in < 1 year from EBITDA).
+    // This occurs for TWD/HKD-reporting ADRs where Yahoo's enterprise value is in USD
+    // but the EBITDA is in local currency — producing a ~32× understatement.
+    // Force recomputation from FMP statements (which are already fxRate-converted) in this case.
+    if (evToEbitda != null && evToEbitda < 1) evToEbitda = null
+    // Similarly, evToRevenue > 50 is implausible for most companies (signals unit mismatch).
+    if (evToRevenue != null && evToRevenue > 50) evToRevenue = null
 
     // Compute EV/EBITDA from FMP statements when Yahoo doesn't provide it
     if (evToEbitda === null && fmp.incomeStatements[0] != null) {
@@ -1712,10 +1720,29 @@ export async function GET(req: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const _fwd1y = analystForwardEstimates.find((e: any) => e.period === '+1y')
     const _fwdEPS: number | null = _fwd1y?.eps?.avg ?? null
-    // For non-USD reporters (e.g. STNE=BRL), Yahoo returns analyst EPS in local currency.
-    // Dividing USD price by local-currency EPS produces a nonsense P/E (e.g. 0.8× for STNE).
-    // Convert by dividing by fxRate to get USD EPS before computing forward P/E.
-    const _fwdEPSUSD = _fwdEPS != null && fxRate > 0 ? _fwdEPS * fxRate : _fwdEPS
+    // Yahoo returns analyst EPS in the *trading* currency, not the reporting currency.
+    // For NYSE/NASDAQ-listed ADRs (TSM, BABA, etc.): quoteCurrency=USD, financialCurrency=TWD/HKD.
+    //   → EPS avg is in USD per ADR. No conversion needed.
+    // For USD-listed stocks reporting in USD: fxRate=1. No conversion needed.
+    // For local-exchange stocks (STNE=BRL on NASDAQ but Yahoo returns BRL EPS):
+    //   → quoteCurrency=USD, financialCurrency=BRL, but EPS avg is in BRL.
+    //   → Need to convert: EPS_USD = EPS_local * fxRate.
+    // Detection heuristic: if the EPS avg value is plausible as a USD per-share value
+    // (i.e. EPS / price gives a reasonable P/E of 5–200×), skip conversion.
+    // If EPS * fxRate gives a more plausible P/E, apply conversion.
+    let _fwdEPSUSD = _fwdEPS
+    if (_fwdEPS != null && _fwdEPS > 0 && currentPrice > 0 && fxRate > 0 && fxRate < 1) {
+      const peRaw = currentPrice / _fwdEPS           // assume EPS is already USD
+      const peConverted = currentPrice / (_fwdEPS * fxRate)  // assume EPS is local currency
+      // If raw P/E is in 5–200× range, EPS is already in USD — no conversion needed
+      // If converted P/E is more plausible and raw P/E is extreme (< 2 or > 500), apply conversion
+      const rawIsPlausible = peRaw >= 5 && peRaw <= 200
+      const convertedIsPlausible = peConverted >= 5 && peConverted <= 200
+      if (!rawIsPlausible && convertedIsPlausible) {
+        _fwdEPSUSD = _fwdEPS * fxRate
+      }
+      // else: keep _fwdEPS as-is (already USD)
+    }
     const analystForwardPE: number | null =
       _fwdEPSUSD != null && _fwdEPSUSD > 0 && currentPrice > 0
         ? Math.round((currentPrice / _fwdEPSUSD) * 10) / 10
