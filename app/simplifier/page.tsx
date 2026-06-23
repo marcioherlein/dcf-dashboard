@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useId } from 'react'
+import { motion, useReducedMotion } from 'motion/react'
 import { useSession, signIn } from 'next-auth/react'
 import type { WatchlistEntry, ListTag } from '@/lib/simplifier/types'
 import { loadWatchlist, deleteWatchlistEntry, updateListTag } from '@/lib/simplifier/watchlistStore'
@@ -23,6 +24,9 @@ export default function SimplifierPage() {
   const [activeTab,  setActiveTab]  = useState<FilterTab>('all')
 
   const userEmail = session?.user?.email ?? null
+  const filtPillId  = useId()
+  const filtReduced = useReducedMotion()
+  const FILT_SPRING = { type: 'spring', stiffness: 500, damping: 38, mass: 0.6 } as const
 
   useEffect(() => {
     setLoading(true)
@@ -83,43 +87,52 @@ export default function SimplifierPage() {
             </div>
           </div>
 
-          {/* Filter tabs — horizontal scroll on mobile */}
-          <div className="border-b border-[#E8E6E0] overflow-x-auto scrollbar-hide">
-            <div className="flex items-center min-w-max px-4 sm:px-6">
-              <div className="flex items-center gap-1">
-                {FILTER_CONFIG.map(tab => {
-                  const isActive = activeTab === tab.id
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`flex items-center gap-1.5 px-3 py-3 text-[12px] font-semibold border-b-2 transition-colors whitespace-nowrap min-h-[44px] ${
-                        isActive
-                          ? 'border-[#2D2C31] text-[#2D2C31]'
-                          : 'border-transparent text-[#6B6A72] hover:text-[#2D2C31]'
-                      }`}
-                    >
+          {/* Filter tabs — pill-within-pill */}
+          <div className="px-4 sm:px-6 py-3 flex items-center gap-3 flex-wrap">
+            <div
+              className="flex w-full sm:w-auto items-center gap-0.5 rounded-full p-[3px]"
+              style={{
+                background: 'rgba(240,241,246,0.85)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                border: '1px solid rgba(0,0,0,0.07)',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.5)',
+              }}
+            >
+              {FILTER_CONFIG.map(tab => {
+                const isActive = activeTab === tab.id
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className="relative flex flex-1 sm:flex-none items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] min-h-[32px] whitespace-nowrap transition-colors duration-150 focus-visible:outline-none"
+                    style={{ color: isActive ? '#111111' : '#6B6A72', fontWeight: isActive ? 650 : 500 }}
+                  >
+                    {isActive && (
+                      <motion.span
+                        layoutId={`${filtPillId}-filt-pill`}
+                        className="absolute inset-0 rounded-full"
+                        style={{
+                          background: 'rgba(255,255,255,0.95)',
+                          border: '1px solid rgba(0,0,0,0.08)',
+                          boxShadow: '0 1px 4px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.9)',
+                        }}
+                        transition={filtReduced ? { duration: 0 } : FILT_SPRING}
+                        aria-hidden="true"
+                      />
+                    )}
+                    <span className="relative z-10 flex items-center gap-1.5">
                       <span className="size-1.5 rounded-full shrink-0" style={{ backgroundColor: tab.dot }} />
                       {tab.label}
-                      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
-                        isActive ? 'bg-[#2D2C31] text-white' : 'bg-[#F3F4F6] text-[#6B6A72]'
-                      }`}>
-                        {counts[tab.id]}
-                      </span>
-                    </button>
-                  )
-                })}
+                      <span className="text-[10px] font-semibold">{counts[tab.id]}</span>
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
 
-                <button className="flex items-center gap-1 px-3 py-3 text-[12px] text-[#6B6A72] hover:text-[#2D2C31] transition-colors border-b-2 border-transparent whitespace-nowrap min-h-[44px]">
-                  <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor">
-                    <path d="M7.75 2a.75.75 0 0 1 .75.75V7h4.25a.75.75 0 0 1 0 1.5H8.5v4.25a.75.75 0 0 1-1.5 0V8.5H2.75a.75.75 0 0 1 0-1.5H7V2.75A.75.75 0 0 1 7.75 2Z"/>
-                  </svg>
-                  New List
-                </button>
-              </div>
-
-              {/* Right side: sign in + filter */}
-              <div className="flex items-center gap-2 ml-auto pl-3">
+            {/* Right side: sign in */}
+            <div className="flex items-center gap-2 ml-auto">
                 {!session && (
                   <button
                     onClick={() => signIn('google')}
@@ -141,7 +154,6 @@ export default function SimplifierPage() {
                   Filter
                 </button>
               </div>
-            </div>
           </div>
 
           {/* Table */}

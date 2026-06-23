@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useId } from 'react'
+import { motion, useReducedMotion } from 'motion/react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { Lock } from 'lucide-react'
@@ -530,6 +531,9 @@ export default function StrategiesPage() {
   const [error, setError] = useState<string | null>(null)
   const [activeStrategy, setActiveStrategy] = useState<string>('consensus')
   const [activeCategory, setActiveCategory] = useState<UniverseCategory | 'All'>('All')
+  const stratPillId = useId()
+  const stratReduced = useReducedMotion()
+  const STRAT_SPRING = { type: 'spring', stiffness: 500, damping: 38, mass: 0.6 } as const
 
   const filteredRows = useMemo(() =>
     activeCategory === 'All' ? rows : rows.filter(r => r.category === activeCategory),
@@ -581,23 +585,44 @@ export default function StrategiesPage() {
           })}
         </div>
 
-        {/* Strategy tabs */}
-        <div className="flex gap-1 overflow-x-auto overscroll-x-contain mb-5 bg-white border border-[#E3E1DA] rounded-xl p-1">
-          <TabBtn
-            active={activeStrategy === 'consensus'}
-            onClick={() => setActiveStrategy('consensus')}
-            label="Consensus"
-          />
-          {STRATEGIES.map((s, i) => {
-            const locked = !isPro && i >= FREE_STRATEGIES_VISIBLE
+        {/* Strategy tabs — pill-within-pill */}
+        <div
+          className="flex items-center gap-0.5 overflow-x-auto overscroll-x-contain scrollbar-hide mb-5 rounded-full p-[3px]"
+          style={{
+            background: 'rgba(240,241,246,0.85)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            border: '1px solid rgba(0,0,0,0.07)',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.5)',
+          }}
+        >
+          {[{ id: 'consensus', shortLabel: 'Consensus', locked: false }, ...STRATEGIES.map((s, i) => ({ id: s.id, shortLabel: s.shortLabel, locked: !isPro && i >= FREE_STRATEGIES_VISIBLE }))].map(tab => {
+            const isActive = activeStrategy === tab.id
             return (
-              <TabBtn
-                key={s.id}
-                active={activeStrategy === s.id}
-                onClick={() => setActiveStrategy(s.id)}
-                label={s.shortLabel}
-                locked={locked}
-              />
+              <button
+                key={tab.id}
+                onClick={() => setActiveStrategy(tab.id)}
+                className="relative flex items-center gap-1 rounded-full px-3.5 py-1.5 text-[13px] min-h-[32px] whitespace-nowrap transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(95,121,11,0.6)]"
+                style={{ color: isActive ? '#111111' : '#566174', fontWeight: isActive ? 650 : 500 }}
+              >
+                {isActive && (
+                  <motion.span
+                    layoutId={`${stratPillId}-strat-pill`}
+                    className="absolute inset-0 rounded-full"
+                    style={{
+                      background: 'rgba(255,255,255,0.95)',
+                      border: '1px solid rgba(0,0,0,0.08)',
+                      boxShadow: '0 1px 4px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.9)',
+                    }}
+                    transition={stratReduced ? { duration: 0 } : STRAT_SPRING}
+                    aria-hidden="true"
+                  />
+                )}
+                <span className="relative z-10">{tab.shortLabel}</span>
+                {tab.locked && (
+                  <span className="relative z-10 text-[9px] bg-[#EEF2FA] text-[#5F790B] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide">Pro</span>
+                )}
+              </button>
             )
           })}
         </div>
@@ -672,19 +697,4 @@ export default function StrategiesPage() {
   )
 }
 
-function TabBtn({ active, onClick, label, locked }: { active: boolean; onClick: () => void; label: string; locked?: boolean }) {
-  return (
-    <button
-      onClick={onClick}
-      className={[
-        'px-3.5 py-1.5 rounded-lg text-[13px] font-medium transition-colors shrink-0 min-h-[44px] flex items-center gap-1.5',
-        active
-          ? 'bg-blue-600 text-white'
-          : 'text-[#566174] hover:text-[#06101F] hover:bg-[#F0F1F6]',
-      ].join(' ')}
-    >
-      {label}
-      {locked && <span className="text-[10px] bg-[#EEF2FA] text-[#5F790B] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide">Pro</span>}
-    </button>
-  )
-}
+// end of file

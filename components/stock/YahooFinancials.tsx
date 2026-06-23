@@ -1,5 +1,6 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useId } from 'react'
+import { motion, useReducedMotion } from 'motion/react'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -241,6 +242,9 @@ interface Props {
 export default function YahooFinancials({ statementsData, currency = '$', reportingCurrency, highlight }: Props) {
   const [period, setPeriod]       = useState<Period>('annual')
   const [statement, setStatement] = useState<StatementType>('income')
+  const pillId  = useId()
+  const reduced = useReducedMotion()
+  const SPRING  = { type: 'spring', stiffness: 500, damping: 38, mass: 0.6 } as const
   const [expanded, setExpanded]   = useState<Record<string, boolean>>({})
   const [flashKey, setFlashKey]   = useState<string | null>(null)
 
@@ -347,41 +351,86 @@ export default function YahooFinancials({ statementsData, currency = '$', report
         .row-flash { animation: row-flash-anim 2s ease-out forwards; }
       `}</style>
 
-      {/* Controls — two rows on mobile, one row on sm+ */}
+      {/* Controls — statement tabs + period toggle */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-3 sm:px-4 py-3 border-b border-[#E3E1DA]">
-        {/* Statement tabs — scrollable strip on mobile */}
+        {/* Statement tabs */}
         <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0 sm:flex-1">
-          <div className="flex gap-0 min-w-max">
-            {STATEMENT_TABS.map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setStatement(tab.id)}
-                className={`px-3 sm:px-4 py-2 text-[12px] sm:text-[13px] font-medium border-b-2 transition-colors whitespace-nowrap ${
-                  statement === tab.id
-                    ? 'border-olive-700 text-olive-700'
-                    : 'border-transparent text-[#8A95A6] hover:text-[#06101F]'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+          <div
+            className="inline-flex items-center gap-0.5 rounded-full p-[3px]"
+            style={{
+              background: 'rgba(240,241,246,0.85)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+              border: '1px solid rgba(0,0,0,0.07)',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.5)',
+            }}
+          >
+            {STATEMENT_TABS.map(tab => {
+              const isActive = statement === tab.id
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setStatement(tab.id)}
+                  className="relative flex items-center rounded-full px-3 sm:px-3.5 py-1.5 text-[12px] sm:text-[13px] min-h-[32px] whitespace-nowrap transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(95,121,11,0.6)]"
+                  style={{ color: isActive ? '#111111' : '#8A95A6', fontWeight: isActive ? 650 : 500 }}
+                >
+                  {isActive && (
+                    <motion.span
+                      layoutId={`${pillId}-stmt-pill`}
+                      className="absolute inset-0 rounded-full"
+                      style={{
+                        background: 'rgba(255,255,255,0.95)',
+                        border: '1px solid rgba(0,0,0,0.08)',
+                        boxShadow: '0 1px 4px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.9)',
+                      }}
+                      transition={reduced ? { duration: 0 } : SPRING}
+                      aria-hidden="true"
+                    />
+                  )}
+                  <span className="relative z-10">{tab.label}</span>
+                </button>
+              )
+            })}
           </div>
         </div>
         {/* Right controls */}
         <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex rounded-lg overflow-hidden border border-[#E3E1DA] text-[12px]">
-            <button
-              onClick={() => setPeriod('annual')}
-              className={`px-3 py-1.5 ${period === 'annual' ? 'bg-olive-50 text-olive-700 font-semibold' : 'text-[#8A95A6] hover:bg-[#F0F1F6]'}`}
-            >
-              Annual
-            </button>
-            <button
-              onClick={() => setPeriod('quarterly')}
-              className={`px-3 py-1.5 border-l border-[#E3E1DA] ${period === 'quarterly' ? 'bg-olive-50 text-olive-700 font-semibold' : 'text-[#8A95A6] hover:bg-[#F0F1F6]'}`}
-            >
-              Quarterly
-            </button>
+          <div
+            className="flex items-center gap-0.5 rounded-full p-[3px]"
+            style={{
+              background: 'rgba(240,241,246,0.85)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+              border: '1px solid rgba(0,0,0,0.07)',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.5)',
+            }}
+          >
+            {(['annual', 'quarterly'] as const).map(p => {
+              const isActive = period === p
+              return (
+                <button
+                  key={p}
+                  onClick={() => setPeriod(p)}
+                  className="relative flex items-center rounded-full px-3 py-1.5 text-[11px] min-h-[28px] whitespace-nowrap transition-colors duration-150 capitalize"
+                  style={{ color: isActive ? '#111111' : '#8A95A6', fontWeight: isActive ? 650 : 500 }}
+                >
+                  {isActive && (
+                    <motion.span
+                      layoutId={`${pillId}-period-pill`}
+                      className="absolute inset-0 rounded-full"
+                      style={{
+                        background: 'rgba(255,255,255,0.95)',
+                        border: '1px solid rgba(0,0,0,0.08)',
+                        boxShadow: '0 1px 4px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.9)',
+                      }}
+                      transition={reduced ? { duration: 0 } : SPRING}
+                      aria-hidden="true"
+                    />
+                  )}
+                  <span className="relative z-10">{p}</span>
+                </button>
+              )
+            })}
           </div>
           <button onClick={() => toggleAll(false)} className="text-[12px] text-[#566174] hover:text-[#06101F] whitespace-nowrap min-h-[44px] px-2.5 py-1 rounded-full border border-[#E3E1DA] hover:border-[#CDD1C8] hover:bg-[#F0F1F6] transition-colors">
             Collapse all

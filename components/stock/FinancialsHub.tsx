@@ -1,5 +1,6 @@
 'use client'
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useId } from 'react'
+import { motion, useReducedMotion } from 'motion/react'
 import YahooFinancials from './YahooFinancials'
 import FinancialCharts from './FinancialCharts'
 import InsiderTransactionsWidget from './InsiderTransactionsWidget'
@@ -623,44 +624,96 @@ export default function FinancialsHub({ statementsData, financialsData, currency
     && finCF.length > 0
     && finIS.filter((r: { isProjected: boolean }) => !r.isProjected).length >= 2
 
+  const pillId  = useId()
+  const reduced = useReducedMotion()
+  const SPRING  = { type: 'spring', stiffness: 500, damping: 38, mass: 0.6 } as const
+
   return (
     <>
     <div className="rounded-xl card">
-      {/* Sub-tab nav — scrollable on mobile */}
-      <div className="flex items-center justify-between px-2 sm:px-5 pt-4 pb-0 border-b border-[#E3E1DA] overflow-x-auto scrollbar-none">
-        <div role="tablist" className="flex gap-0 min-w-max">
-          {SUB_TABS.map(({ id, label }) => (
-            <button
-              key={id}
-              role="tab"
-              aria-selected={subTab === id}
-              aria-controls={`panel-${id}`}
-              onClick={() => setSubTab(id)}
-              className={`px-3 sm:px-4 py-3 min-h-[44px] text-[12px] sm:text-[13px] font-medium border-b-2 transition-colors whitespace-nowrap ${
-                subTab === id
-                  ? 'border-olive-700 text-olive-700'
-                  : 'border-transparent text-[#566174] hover:text-[#06101F]'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
+      {/* Sub-tab nav — pill-within-pill */}
+      <div className="flex items-center justify-between px-3 sm:px-5 pt-3 pb-3 gap-3 flex-wrap">
+        <div
+          role="tablist"
+          aria-label="Financials sections"
+          className="flex items-center gap-0.5 overflow-x-auto scrollbar-hide rounded-full p-[3px] flex-shrink-0"
+          style={{
+            background: 'rgba(240,241,246,0.85)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            border: '1px solid rgba(0,0,0,0.07)',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.5)',
+          }}
+        >
+          {SUB_TABS.map(({ id, label }) => {
+            const isActive = subTab === id
+            return (
+              <button
+                key={id}
+                role="tab"
+                aria-selected={isActive}
+                aria-controls={`panel-${id}`}
+                onClick={() => setSubTab(id)}
+                className="relative flex items-center rounded-full px-3 py-1.5 text-[12px] sm:text-[13px] min-h-[32px] whitespace-nowrap transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(95,121,11,0.6)]"
+                style={{ color: isActive ? '#111111' : '#566174', fontWeight: isActive ? 650 : 500 }}
+              >
+                {isActive && (
+                  <motion.span
+                    layoutId={`${pillId}-fin-pill`}
+                    className="absolute inset-0 rounded-full"
+                    style={{
+                      background: 'rgba(255,255,255,0.95)',
+                      border: '1px solid rgba(0,0,0,0.08)',
+                      boxShadow: '0 1px 4px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.9)',
+                    }}
+                    transition={reduced ? { duration: 0 } : SPRING}
+                    aria-hidden="true"
+                  />
+                )}
+                <span className="relative z-10">{label}</span>
+              </button>
+            )
+          })}
         </div>
-        {/* Annual / Quarterly toggle — only for analytical sub-tabs */}
+
+        {/* Annual / Quarterly toggle — pill style */}
         {['growth', 'profitability', 'solvency'].includes(subTab) && (
-          <div className="flex rounded-lg overflow-hidden border border-[#E3E1DA] text-[11px] shrink-0 ml-3">
-            <button
-              onClick={() => handlePeriodChange('annual')}
-              className={`px-2.5 py-1.5 transition-colors ${analyticsPeriod === 'annual' ? 'bg-olive-50 text-olive-700 font-semibold' : 'text-[#8A95A6] hover:bg-[#F0F1F6]'}`}
-            >
-              Annual
-            </button>
-            <button
-              onClick={() => handlePeriodChange('quarterly')}
-              className={`px-2.5 py-1.5 border-l border-[#E3E1DA] transition-colors ${analyticsPeriod === 'quarterly' ? 'bg-olive-50 text-olive-700 font-semibold' : 'text-[#8A95A6] hover:bg-[#F0F1F6]'}`}
-            >
-              Quarterly
-            </button>
+          <div
+            className="flex items-center gap-0.5 rounded-full p-[3px] shrink-0"
+            style={{
+              background: 'rgba(240,241,246,0.85)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+              border: '1px solid rgba(0,0,0,0.07)',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.5)',
+            }}
+          >
+            {(['annual', 'quarterly'] as const).map(p => {
+              const isActive = analyticsPeriod === p
+              return (
+                <button
+                  key={p}
+                  onClick={() => handlePeriodChange(p)}
+                  className="relative flex items-center rounded-full px-3 py-1.5 text-[11px] min-h-[28px] whitespace-nowrap transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(95,121,11,0.6)]"
+                  style={{ color: isActive ? '#111111' : '#8A95A6', fontWeight: isActive ? 650 : 500 }}
+                >
+                  {isActive && (
+                    <motion.span
+                      layoutId={`${pillId}-period-pill`}
+                      className="absolute inset-0 rounded-full"
+                      style={{
+                        background: 'rgba(255,255,255,0.95)',
+                        border: '1px solid rgba(0,0,0,0.08)',
+                        boxShadow: '0 1px 4px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.9)',
+                      }}
+                      transition={reduced ? { duration: 0 } : SPRING}
+                      aria-hidden="true"
+                    />
+                  )}
+                  <span className="relative z-10 capitalize">{p}</span>
+                </button>
+              )
+            })}
           </div>
         )}
       </div>
