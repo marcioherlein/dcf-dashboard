@@ -175,16 +175,16 @@ function IdeaCard({
         {/* Company name */}
         <p className="text-[12px] text-[rgba(255,255,255,0.50)] mb-1 truncate">{stock.name}</p>
 
-        {/* Price + upside */}
+        {/* Price + upside vs analyst target */}
         <div className="flex items-baseline gap-3 mb-4">
           <span className="text-[26px] font-[900] leading-none tabular-nums" style={{ color: sig.accentColor, letterSpacing: '-0.02em' }}>
             {fmtUpside(stock.upsidePct)}
           </span>
           <div className="flex flex-col">
-            <span className="text-[11px] text-[rgba(255,255,255,0.35)] leading-tight">vs fair value</span>
+            <span className="text-[11px] text-[rgba(255,255,255,0.35)] leading-tight">vs analyst target</span>
             {stock.price != null && (
               <span className="text-[11px] text-[rgba(255,255,255,0.55)] tabular-nums leading-tight">
-                {fmtPrice(stock.price, 'USD')}
+                {fmtPrice(stock.price, 'USD')} today
               </span>
             )}
           </div>
@@ -224,12 +224,18 @@ function IdeaCard({
             </div>
           )}
 
+          {/* Analyst target shown as a price for context — clearly labelled */}
           {stock.analystTarget != null && (
             <div className="flex items-center justify-between">
-              <span className="text-[10px] text-[rgba(255,255,255,0.40)]">Analyst target (12m)</span>
-              <span className="text-[11px] font-[700] tabular-nums text-white">{fmtPrice(stock.analystTarget, 'USD')}</span>
+              <span className="text-[10px] text-[rgba(255,255,255,0.40)]">Analyst 12m target</span>
+              <span className="text-[11px] font-[700] tabular-nums text-[rgba(255,255,255,0.65)]">{fmtPrice(stock.analystTarget, 'USD')}</span>
             </div>
           )}
+
+          {/* Explicit separator — insic DCF is on the stock page */}
+          <p className="text-[9px] text-[rgba(255,255,255,0.22)] pt-0.5">
+            Open for insic DCF fair value →
+          </p>
         </div>
       </Link>
     </motion.div>
