@@ -603,6 +603,7 @@ function StockPageBody() {
                     analystCAGR={data.cagrAnalysis?.analystEstimate1y ?? null}
                     isEmergingMarket={computedScores?.altman?.isReliable === false}
                     revenueHistory={data.financialStatements?.incomeStatement ?? []}
+                    fcfHistory={data.financialStatements?.cashFlow ?? []}
                     scenarios={cockpitOutput ? {
                       bull: { fairValue: cockpitOutput.scenarios.bull.fairValue ?? 0, wacc: cockpitOutput.scenarios.bull.wacc, cagr: cockpitOutput.scenarios.bull.cagr, terminalG: data.terminalG ?? 0.025 },
                       base: { fairValue: cockpitOutput.scenarios.base.fairValue ?? 0, wacc: cockpitOutput.scenarios.base.wacc, cagr: cockpitOutput.scenarios.base.cagr, terminalG: data.terminalG ?? 0.025 },

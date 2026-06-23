@@ -122,7 +122,9 @@ const FCFBar = dynamic(
 type AnyRecord = Record<string, any>
 
 interface Props {
-  statementsData: any // { annual: { cashFlow: Array<{year,operatingCashFlow,capitalExpenditures}> }, quarterly: { cashFlow: Array<{...}> } }
+  statementsData?: any // { annual: { cashFlow: Array<{year,operatingCashFlow,capitalExpenditures}> }, quarterly: { cashFlow: Array<{...}> } }
+  /** FMP-sourced annual cash flow rows — used as fallback when statementsData is unavailable */
+  financialStatements?: Array<{ year: string; freeCashFlow: number | null; isProjected?: boolean }>
   currency?: string
   /** Override chart height */
   chartHeight?: number
@@ -191,14 +193,24 @@ function buildQuarterlyPoints(statementsData: any): ChartPoint[] {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function FCFChartCard({ statementsData, currency: _currency = 'USD', chartHeight: chartHeightProp, barCategoryGap }: Props) {
+export default function FCFChartCard({ statementsData, financialStatements, currency: _currency = 'USD', chartHeight: chartHeightProp, barCategoryGap }: Props) {
   const [period, setPeriod] = useState<PeriodTab>('Y')
 
   const points = useMemo<ChartPoint[]>(() => {
-    if (!statementsData) return []
-    if (period === 'Y') return buildAnnualPoints(statementsData)
-    return buildQuarterlyPoints(statementsData)
-  }, [statementsData, period])
+    // Primary: Yahoo statementsData
+    if (statementsData) {
+      if (period === 'Y') return buildAnnualPoints(statementsData)
+      return buildQuarterlyPoints(statementsData)
+    }
+    // Fallback: FMP financialStatements cashFlow
+    if (financialStatements && period === 'Y') {
+      return financialStatements
+        .filter(r => r.freeCashFlow != null && !r.isProjected)
+        .slice(-6)
+        .map(r => ({ label: String(r.year).slice(0, 4), fcf: r.freeCashFlow! }))
+    }
+    return []
+  }, [statementsData, financialStatements, period])
 
   const { useB, label: unitLabel } = useMemo(() => {
     if (points.length === 0) return { useB: false, label: '(M USD)' }
@@ -208,7 +220,7 @@ export default function FCFChartCard({ statementsData, currency: _currency = 'US
 
   const hasNeg = points.some(p => p.fcf < 0)
 
-  if (!statementsData || points.length === 0) {
+  if (points.length === 0) {
     return (
       <div className="border border-[#E2E8F0] rounded-xl overflow-hidden">
         <div className="px-4 py-3" >

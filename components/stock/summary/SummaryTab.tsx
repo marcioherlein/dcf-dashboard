@@ -58,6 +58,7 @@ interface SummaryTabProps {
   analystCAGR: number | null
   isEmergingMarket?: boolean
   revenueHistory?: Array<{ year: string; revenue: number | null; isProjected: boolean }>
+  fcfHistory?: Array<{ year: string; freeCashFlow: number | null; isProjected?: boolean }>
   // scenarios
   scenarios: {
     bull: ScenarioData
@@ -130,7 +131,7 @@ export default function SummaryTab({
   fairValue, upsidePct,
   sharesM, cashM, debtM, revenueM, fcfMargin: fcfMarginProp,
   wacc, terminalG, historicalCAGR, analystCAGR, isEmergingMarket,
-  revenueHistory,
+  revenueHistory, fcfHistory,
   scenarios: _scenarios, ratings, scores, businessProfile, cagrAnalysis, statementsData,
   valuationMethods, quote, analystTargetMean,
   ratiosQuarterly, historicalMultiples,
@@ -275,10 +276,17 @@ export default function SummaryTab({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 divide-y lg:divide-y-0 lg:divide-x divide-[#F5F5F5]">
           <div className="divide-y divide-[#F5F5F5]">
             <div className="p-3">
-              {statementsData && <RevenueChartCard statementsData={statementsData} currency={currency} chartHeight={200} barCategoryGap="8%" />}
+              {/* Pass both FMP financialStatements (via revenueHistory) AND Yahoo statementsData */}
+              <RevenueChartCard
+                financialStatements={revenueHistory ?? undefined}
+                statementsData={statementsData}
+                currency={currency}
+                chartHeight={200}
+                barCategoryGap="8%"
+              />
             </div>
             <div className="p-3">
-              {statementsData && <FCFChartCard statementsData={statementsData} currency={currency} chartHeight={200} barCategoryGap="8%" />}
+              <FCFChartCard statementsData={statementsData} financialStatements={fcfHistory ?? undefined} currency={currency} chartHeight={200} barCategoryGap="8%" />
             </div>
           </div>
           <div className="p-3 flex flex-col gap-3">
