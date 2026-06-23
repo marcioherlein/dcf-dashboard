@@ -118,12 +118,12 @@ function KpiCard({ icon: Icon, iconCls, label, value, sub }: {
 
 // ── Segment Tabs ───────────────────────────────────────────────────────────────
 
-const TABS: Array<{ id: TabId; label: string }> = [
+const TABS: Array<{ id: TabId; label: string; labelMobile?: string }> = [
   { id: 'all',    label: 'All' },
   { id: 'watch',  label: 'Watch' },
-  { id: 'buy',    label: 'High Conviction' },
+  { id: 'buy',    label: 'High Conviction', labelMobile: 'Conviction' },
   { id: 'pass',   label: 'Avoid' },
-  { id: 'recent', label: 'Recently Updated' },
+  { id: 'recent', label: 'Recently Updated', labelMobile: 'Recent' },
 ]
 
 const SPRING = { type: 'spring', stiffness: 500, damping: 38, mass: 0.6 } as const
@@ -139,7 +139,7 @@ function SegmentTabs({ active, counts, onSelect }: {
     <div
       role="tablist"
       aria-label="Valuation lists"
-      className="flex items-center gap-0.5 overflow-x-auto scrollbar-hide rounded-full p-[3px]"
+      className="flex w-full sm:w-auto items-center gap-0.5 rounded-full p-[3px]"
       style={{
         background: 'rgba(240,241,246,0.85)',
         backdropFilter: 'blur(12px)',
@@ -148,7 +148,7 @@ function SegmentTabs({ active, counts, onSelect }: {
         boxShadow: '0 1px 3px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.5)',
       }}
     >
-      {TABS.map(({ id, label }) => {
+      {TABS.map(({ id, label, labelMobile }) => {
         const isActive = active === id
         const count    = counts[id]
         return (
@@ -157,7 +157,7 @@ function SegmentTabs({ active, counts, onSelect }: {
             role="tab"
             aria-selected={isActive}
             onClick={() => onSelect(id)}
-            className="relative flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] whitespace-nowrap min-h-[32px] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(95,121,11,0.6)]"
+            className="relative flex flex-1 sm:flex-none items-center justify-center gap-1 rounded-full px-2.5 sm:px-3.5 py-1.5 text-[12px] sm:text-[13px] whitespace-nowrap min-h-[32px] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(95,121,11,0.6)]"
             style={{ color: isActive ? '#111111' : '#6B6B6B', fontWeight: isActive ? 650 : 500 }}
           >
             {isActive && (
@@ -173,9 +173,11 @@ function SegmentTabs({ active, counts, onSelect }: {
                 aria-hidden="true"
               />
             )}
-            <span className="relative z-10">{label}</span>
+            {/* mobile: shortened label; sm+: full label */}
+            <span className="relative z-10 sm:hidden">{labelMobile ?? label}</span>
+            <span className="relative z-10 hidden sm:inline">{label}</span>
             {count > 0 && (
-              <span className="relative z-10 text-[10px] font-[700] tabular-nums rounded-full px-1.5 py-px min-w-[18px] text-center"
+              <span className="relative z-10 text-[10px] font-[700] tabular-nums rounded-full px-1.5 py-px min-w-[18px] text-center hidden sm:inline-block"
                 style={{ background: isActive ? 'rgba(95,121,11,0.10)' : 'rgba(0,0,0,0.06)', color: isActive ? '#5F790B' : '#9B9B9B' }}>
                 {count}
               </span>

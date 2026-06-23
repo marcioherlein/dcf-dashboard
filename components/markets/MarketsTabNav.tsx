@@ -26,7 +26,7 @@ export default function MarketsTabNav({ active, onChange }: Props) {
     <div
       role="tablist"
       aria-label="Markets sections"
-      className="inline-flex items-center rounded-full p-[3px]"
+      className="flex w-full sm:w-auto sm:inline-flex items-center gap-0.5 rounded-full p-[3px]"
       style={{
         background: 'rgba(240,241,246,0.85)',
         backdropFilter: 'blur(12px)',
@@ -45,7 +45,7 @@ export default function MarketsTabNav({ active, onChange }: Props) {
             aria-controls={`markets-panel-${tab.id}`}
             id={`markets-tab-${tab.id}`}
             onClick={() => onChange(tab.id)}
-            className="relative flex items-center rounded-full px-3.5 py-1.5 text-[13px] min-h-[32px] whitespace-nowrap transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(95,121,11,0.6)]"
+            className="relative flex flex-1 sm:flex-none items-center justify-center rounded-full px-3.5 py-1.5 text-[13px] min-h-[32px] whitespace-nowrap transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(95,121,11,0.6)]"
             style={{ color: isActive ? '#111111' : '#6B6B6B', fontWeight: isActive ? 650 : 500 }}
           >
             {isActive && (

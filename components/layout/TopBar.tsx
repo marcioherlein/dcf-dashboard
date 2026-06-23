@@ -125,12 +125,12 @@ function StockTabPills() {
             role="tab"
             aria-selected={active}
             onClick={() => onTabChangeRef.current?.(id)}
+            style={{ padding: '6px 8px' }}
             className={cn(
               'relative flex items-center gap-1.5 rounded-[10px] whitespace-nowrap shrink-0 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[rgba(95,121,11,0.7)]',
-              'text-[13px]',
+              'text-[13px] sm:gap-1.5',
               active ? 'text-white font-[650]' : 'text-[rgba(255,255,255,0.42)] hover:text-[rgba(255,255,255,0.80)] font-[500]',
             )}
-            style={{ padding: '6px 10px' }}
           >
             {active && (
               <motion.span
@@ -150,8 +150,8 @@ function StockTabPills() {
               className={cn('relative z-10 shrink-0', active ? 'text-[#7CB518]' : 'text-[rgba(255,255,255,0.30)]')}
               aria-hidden="true"
             />
+            {/* sm+: show full label. mobile: icon only — saves ~100px in the tab row */}
             <span className="relative z-10 hidden sm:inline">{label}</span>
-            <span className="relative z-10 sm:hidden text-[12px]">{label.slice(0, 3)}</span>
           </button>
         )
       })}

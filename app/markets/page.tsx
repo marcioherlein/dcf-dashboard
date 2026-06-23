@@ -188,7 +188,7 @@ export default function MarketsPage() {
         </div>
 
         {/* ── Tab navigation ───────────────────────────────────────────────── */}
-        <div className="flex items-center">
+        <div className="flex items-center w-full sm:w-auto">
           <MarketsTabNav active={activeTab} onChange={setActiveTab} />
         </div>
 
