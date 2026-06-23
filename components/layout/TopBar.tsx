@@ -287,6 +287,239 @@ function NonStockSearchBar({
   )
 }
 
+// ── Liquid glass pill helper ─────────────────────────────────────────────────
+
+const GLASS_PILL = {
+  background: 'rgba(30,40,58,0.55)',
+  backdropFilter: 'blur(32px) saturate(180%)',
+  WebkitBackdropFilter: 'blur(32px) saturate(180%)',
+  border: '1px solid rgba(255,255,255,0.13)',
+  boxShadow: '0 4px 24px rgba(0,0,0,0.22), 0 1px 0 rgba(255,255,255,0.08) inset',
+  borderRadius: '14px',
+} as const
+
+// ── Stock floating bar — four separate pills ─────────────────────────────────
+
+interface StockFloatingBarProps {
+  stockNav: import('@/contexts/StockNavContext').StockNavState
+  onSaveRef: React.MutableRefObject<(() => void) | null>
+  onShareRef: React.MutableRefObject<(() => void) | null>
+  query: string; setQuery: (v: string) => void
+  results: SearchResult[]; open: boolean; loading: boolean
+  searchError: boolean; activeIdx: number
+  unsupportedError: string | null; topbarListboxId: string
+  reduced: boolean | null
+  select: (s: string) => void
+  handleSubmit: (raw: string) => void
+  setOpen: (v: boolean) => void
+  setActiveIdx: React.Dispatch<React.SetStateAction<number>>
+  setUnsupportedError: (v: string | null) => void
+  setSearchError: (v: boolean) => void
+}
+
+function StockFloatingBar({
+  stockNav, onSaveRef, onShareRef,
+  query, setQuery, results, open, loading,
+  searchError: _searchError, activeIdx, unsupportedError, topbarListboxId,
+  reduced: _reduced, select, handleSubmit,
+  setOpen, setActiveIdx, setUnsupportedError, setSearchError,
+}: StockFloatingBarProps) {
+  const [searchExpanded, setSearchExpanded] = useState(false)
+  const searchInputRef = useRef<HTMLInputElement>(null)
+  const searchPillRef = useRef<HTMLDivElement>(null)
+
+  // Close search on outside click
+  useEffect(() => {
+    if (!searchExpanded) return
+    const h = (e: MouseEvent) => {
+      if (searchPillRef.current && !searchPillRef.current.contains(e.target as Node)) {
+        setSearchExpanded(false)
+        setOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', h)
+    return () => document.removeEventListener('mousedown', h)
+  }, [searchExpanded, setOpen])
+
+  const openSearch = () => {
+    setSearchExpanded(true)
+    setTimeout(() => searchInputRef.current?.focus(), 60)
+  }
+
+  const closeSearch = () => {
+    setSearchExpanded(false)
+    setQuery('')
+    setOpen(false)
+  }
+
+  return (
+    <div
+      className="pointer-events-auto flex items-center gap-2 px-3 sm:px-4"
+      style={{ height: '52px' }}
+    >
+      {/* ── Pill 1: Tab navigation ─────────────────────────────────────── */}
+      <div style={GLASS_PILL} className="flex items-center shrink-0 overflow-hidden" role="tablist" aria-label="Stock sections">
+        <StockTabPills />
+      </div>
+
+      {/* Spacer */}
+      <div className="flex-1" />
+
+      {/* ── Pill 2: Stock identity ─────────────────────────────────────── */}
+      <div
+        className="flex items-center gap-2 shrink-0"
+        aria-label={`${stockNav.ticker} stock price`}
+        style={{
+          ...GLASS_PILL,
+          height: '36px',
+          paddingLeft: '10px',
+          paddingRight: '12px',
+        }}
+      >
+        <CompanyLogo ticker={stockNav.ticker} />
+        <span className="font-[700] text-[13px] text-white tracking-tight leading-none">
+          {stockNav.ticker}
+        </span>
+        {stockNav.price != null && (
+          <>
+            <span className="font-[600] text-[12px] text-[rgba(255,255,255,0.75)] tabular-nums leading-none hidden sm:block">
+              {stockNav.currency}{stockNav.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
+            {stockNav.changePct != null && (
+              <span
+                className="text-[11px] font-[650] tabular-nums leading-none hidden sm:block"
+                style={{ color: stockNav.changePct >= 0 ? '#4ade80' : '#fca5a5' }}
+              >
+                {stockNav.changePct >= 0 ? '+' : ''}{stockNav.changePct.toFixed(2)}%
+              </span>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* ── Pill 3: Features (share, pdf, save) ───────────────────────── */}
+      <div
+        className="flex items-center gap-0.5 px-1.5 shrink-0"
+        style={{ ...GLASS_PILL, height: '36px', paddingLeft: '6px', paddingRight: '6px' }}
+      >
+        <button
+          onClick={() => onShareRef.current?.()}
+          className="flex items-center justify-center w-8 h-8 rounded-xl text-[rgba(255,255,255,0.55)] hover:text-white hover:bg-[rgba(255,255,255,0.10)] transition-all"
+          aria-label="Share analysis"
+        >
+          <Share2 size={14} strokeWidth={2} />
+        </button>
+        <a
+          href="/pricing"
+          title="Pro feature"
+          className="hidden sm:flex items-center justify-center w-8 h-8 rounded-xl text-[rgba(255,255,255,0.55)] hover:text-white hover:bg-[rgba(255,255,255,0.10)] transition-all"
+          aria-label="Export PDF (Pro)"
+        >
+          <FileText size={14} strokeWidth={2} />
+        </a>
+        <button
+          onClick={() => onSaveRef.current?.()}
+          className="flex items-center gap-1.5 pl-2 pr-2.5 h-7 rounded-xl text-[11px] font-[650] transition-all"
+          style={{ background: 'rgba(95,121,11,0.32)', border: '1px solid rgba(124,154,25,0.38)', color: '#a3e635' }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(95,121,11,0.50)' }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(95,121,11,0.32)' }}
+        >
+          <Bookmark size={11} strokeWidth={2.5} />
+          <span className="hidden sm:inline">Save</span>
+        </button>
+      </div>
+
+      {/* ── Pill 4: Search — expands on click ─────────────────────────── */}
+      <div
+        ref={searchPillRef}
+        className="relative shrink-0"
+        style={{ minWidth: searchExpanded ? 'min(280px, 45vw)' : '36px', transition: 'min-width 0.25s cubic-bezier(0.34,1.56,0.64,1)' }}
+      >
+        {!searchExpanded ? (
+          /* Collapsed — just the icon */
+          <button
+            onClick={openSearch}
+            className="flex items-center justify-center text-[rgba(255,255,255,0.55)] hover:text-white transition-all"
+            style={{ ...GLASS_PILL, width: '36px', height: '36px', padding: 0 }}
+            aria-label="Search for a stock"
+          >
+            <Search size={14} strokeWidth={2} />
+          </button>
+        ) : (
+          /* Expanded — search input */
+          <div
+            className="flex items-center gap-2 px-2.5"
+            style={{ ...GLASS_PILL, height: '36px', border: '1px solid rgba(124,154,25,0.45)', boxShadow: '0 0 0 3px rgba(95,121,11,0.15), 0 4px 24px rgba(0,0,0,0.25)' }}
+          >
+            {loading
+              ? <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[rgba(255,255,255,0.20)] border-t-[#7CB518] shrink-0" />
+              : <Search size={13} className="text-[rgba(255,255,255,0.45)] shrink-0" />
+            }
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={query}
+              onChange={e => { setQuery(e.target.value); setUnsupportedError(null); setSearchError(false) }}
+              onKeyDown={e => {
+                if (e.key === 'Escape') { closeSearch(); setActiveIdx(-1) }
+                else if (e.key === 'ArrowDown') { e.preventDefault(); if (!open && results.length > 0) setOpen(true); setActiveIdx(i => Math.min(i + 1, results.length - 1)) }
+                else if (e.key === 'ArrowUp') { e.preventDefault(); setActiveIdx(i => Math.max(i - 1, -1)) }
+                else if (e.key === 'Enter') {
+                  if (activeIdx >= 0 && results[activeIdx]?.supported) select(results[activeIdx].symbol)
+                  else if (query.trim()) handleSubmit(query)
+                }
+              }}
+              placeholder="Search ticker…"
+              className="flex-1 min-w-0 bg-transparent text-[13px] text-white placeholder-[rgba(255,255,255,0.30)] focus:outline-none"
+              autoCorrect="off" autoCapitalize="characters" spellCheck={false}
+            />
+            <button
+              onClick={closeSearch}
+              className="text-[rgba(255,255,255,0.35)] hover:text-white transition-colors shrink-0"
+              aria-label="Close search"
+            >
+              <X size={12} />
+            </button>
+          </div>
+        )}
+
+        {/* Search results dropdown */}
+        {searchExpanded && open && results.length > 0 && (
+          <div
+            className="absolute right-0 top-full mt-1.5 overflow-hidden rounded-xl z-50"
+            style={{ width: 'min(320px, 80vw)', background: 'rgba(18,26,42,0.97)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)', border: '1px solid rgba(255,255,255,0.10)', boxShadow: '0 16px 48px rgba(0,0,0,0.40)' }}
+            role="listbox"
+            id={topbarListboxId}
+          >
+            {results.slice(0, 6).map((r, idx) => (
+              <button
+                key={r.symbol}
+                id={`topbar-result-${idx}`}
+                role="option"
+                aria-selected={idx === activeIdx}
+                onClick={() => { if (!r.supported) return; select(r.symbol); closeSearch() }}
+                className={cn(
+                  'w-full flex items-center gap-3 px-3.5 py-2.5 border-b border-[rgba(255,255,255,0.06)] last:border-b-0 text-left transition-colors',
+                  r.supported ? 'hover:bg-[rgba(95,121,11,0.14)] cursor-pointer' : 'opacity-40 cursor-not-allowed',
+                  idx === activeIdx ? 'bg-[rgba(95,121,11,0.14)]' : '',
+                )}
+              >
+                <span className="font-mono font-bold text-[13px] text-white w-14 shrink-0">{r.symbol}</span>
+                <span className="text-[12px] text-[rgba(255,255,255,0.50)] truncate flex-1">{r.longname ?? r.shortname}</span>
+              </button>
+            ))}
+            {unsupportedError && (
+              <div className="px-3.5 py-2.5 flex items-start gap-2 bg-[rgba(181,106,0,0.15)] border-t border-[rgba(181,106,0,0.30)]">
+                <p className="text-[11px] text-[#fcd34d] leading-snug">{unsupportedError}</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function TopBar() {
   const router = useRouter()
   const pathname = usePathname()
@@ -304,7 +537,7 @@ export default function TopBar() {
   const [unsupportedError, setUnsupportedError] = useState<string | null>(null)
   const [isPro, setIsPro]     = useState(false)
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
-  const mobileSearchRef = useRef<HTMLInputElement>(null)
+  const _mobileSearchRef = useRef<HTMLInputElement>(null)
   const reduced   = useReducedMotion()
   const debounce  = useRef<ReturnType<typeof setTimeout>>()
   const searchRef = useRef<HTMLDivElement>(null)
@@ -364,184 +597,41 @@ export default function TopBar() {
   }
 
   return (
-    <header className="fixed top-0 left-0 lg:left-[192px] right-0 z-40 glass-toolbar" data-topbar>
+    <header
+      className="fixed top-0 left-0 lg:left-[192px] right-0 z-40 pointer-events-none"
+      style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+      data-topbar
+    >
 
       {/* ══════════════════════════════════════════════════════════════════════
-          STOCK PAGE — single floating iOS-glass pill row
-          Three grouped segments inside one pill: tabs · ticker+price · actions
+          STOCK PAGE — four separate liquid-glass pills, no background
           ══════════════════════════════════════════════════════════════════════ */}
       {stockNav && (
-        <>
-          {/* Mobile search overlay — full row */}
-          {mobileSearchOpen && (
-            <div className="flex items-center px-3 gap-2" style={{ height: '52px' }}>
-              <Search size={14} className="text-[rgba(255,255,255,0.50)] shrink-0" />
-              <input
-                ref={mobileSearchRef}
-                type="text"
-                value={query}
-                onChange={e => { setQuery(e.target.value); setUnsupportedError(null) }}
-                onKeyDown={e => {
-                  if (e.key === 'Enter' && query.trim()) { handleSubmit(query); setMobileSearchOpen(false) }
-                  if (e.key === 'Escape') { setMobileSearchOpen(false); setQuery(''); setOpen(false) }
-                }}
-                placeholder="Search ticker…"
-                className="flex-1 text-[16px] bg-transparent text-white placeholder-[rgba(255,255,255,0.35)] focus:outline-none"
-                autoFocus
-                autoCorrect="off"
-                autoCapitalize="characters"
-                spellCheck={false}
-              />
-              <button
-                onClick={() => { setMobileSearchOpen(false); setQuery(''); setOpen(false) }}
-                className="min-h-[44px] min-w-[44px] flex items-center justify-center text-[rgba(255,255,255,0.50)] hover:text-white transition-colors shrink-0"
-                aria-label="Close search"
-              >
-                <X size={15} />
-              </button>
-              {/* Search dropdown */}
-              {open && results.length > 0 && (
-                <div
-                  className="absolute left-0 right-0 z-50 overflow-hidden"
-                  style={{
-                    top: 'calc(52px + env(safe-area-inset-top, 0px))',
-                    background: 'rgba(15,23,42,0.97)',
-                    backdropFilter: 'blur(24px)',
-                    WebkitBackdropFilter: 'blur(24px)',
-                    borderBottom: '1px solid rgba(255,255,255,0.08)',
-                    boxShadow: '0 16px 40px rgba(0,0,0,0.35)',
-                  }}
-                >
-                  {results.slice(0, 6).map(r => (
-                    <button
-                      key={r.symbol}
-                      onClick={() => { if (!r.supported) return; select(r.symbol); setMobileSearchOpen(false) }}
-                      className={cn(
-                        'w-full flex items-center gap-3 px-4 py-3 border-b border-[rgba(255,255,255,0.06)] last:border-b-0 text-left transition-colors',
-                        r.supported ? 'hover:bg-[rgba(95,121,11,0.12)]' : 'opacity-40 cursor-not-allowed',
-                      )}
-                    >
-                      <span className="font-mono font-bold text-[13px] text-white w-14 shrink-0">{r.symbol}</span>
-                      <span className="text-[12px] text-[rgba(255,255,255,0.50)] truncate flex-1">{r.longname ?? r.shortname}</span>
-                      <span className="text-[10px] text-[rgba(255,255,255,0.28)] shrink-0">{r.exchDisp ?? r.exchange}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ── The floating pill ─────────────────────────────────────────── */}
-          {!mobileSearchOpen && (
-            <div className="flex items-center px-3 sm:px-4" style={{ height: '52px' }}>
-              <div
-                className="flex items-center w-full rounded-2xl overflow-hidden"
-                style={{
-                  background: 'rgba(15,23,42,0.72)',
-                  backdropFilter: 'blur(24px)',
-                  WebkitBackdropFilter: 'blur(24px)',
-                  border: '1px solid rgba(255,255,255,0.10)',
-                  boxShadow: '0 4px 24px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.06)',
-                  height: '40px',
-                }}
-              >
-
-                {/* ── Segment 1: Tab pills ─────────────────────────────────── */}
-                <StockTabPills />
-
-                {/* ── Divider ──────────────────────────────────────────────── */}
-                <div className="w-px self-stretch mx-1" style={{ background: 'rgba(255,255,255,0.10)' }} aria-hidden="true" />
-
-                {/* ── Segment 2: Stock identity ─────────────────────────────── */}
-                <div className="flex items-center gap-2 px-3 shrink-0 min-w-0">
-                  <CompanyLogo ticker={stockNav.ticker} />
-                  <span className="font-bold text-[13px] text-white tracking-tight shrink-0 hidden sm:block">
-                    {stockNav.ticker}
-                  </span>
-                  <span className="font-bold text-[12px] text-white tracking-tight shrink-0 sm:hidden">
-                    {stockNav.ticker}
-                  </span>
-                  {stockNav.price != null && (
-                    <div className="hidden sm:flex items-baseline gap-1 shrink-0">
-                      <span className="font-semibold text-[12px] text-white tabular-nums">
-                        {stockNav.currency}{stockNav.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </span>
-                      {stockNav.changePct != null && (
-                        <span className={cn(
-                          'text-[10px] font-semibold tabular-nums',
-                          stockNav.changePct >= 0 ? 'text-[#4ade80]' : 'text-[#fca5a5]',
-                        )}>
-                          {stockNav.changePct >= 0 ? '+' : ''}{stockNav.changePct.toFixed(2)}%
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {/* ── Divider ──────────────────────────────────────────────── */}
-                <div className="w-px self-stretch mx-1" style={{ background: 'rgba(255,255,255,0.10)' }} aria-hidden="true" />
-
-                {/* ── Segment 3: Actions ───────────────────────────────────── */}
-                <div className="flex items-center gap-0.5 px-1.5 shrink-0">
-                  {/* Search */}
-                  <button
-                    onClick={() => { setMobileSearchOpen(true); setTimeout(() => mobileSearchRef.current?.focus(), 50) }}
-                    className="flex items-center justify-center w-8 h-8 rounded-xl text-[rgba(255,255,255,0.50)] hover:text-white hover:bg-[rgba(255,255,255,0.08)] transition-all"
-                    aria-label="Search for a stock"
-                  >
-                    <Search size={14} strokeWidth={2} />
-                  </button>
-
-                  {/* Share */}
-                  <button
-                    onClick={() => onShareRef.current?.()}
-                    className="flex items-center justify-center w-8 h-8 rounded-xl text-[rgba(255,255,255,0.50)] hover:text-white hover:bg-[rgba(255,255,255,0.08)] transition-all"
-                    aria-label="Share analysis"
-                  >
-                    <Share2 size={14} strokeWidth={2} />
-                  </button>
-
-                  {/* PDF */}
-                  <a
-                    href="/pricing"
-                    title="Pro feature — upgrade to export"
-                    className="hidden sm:flex items-center justify-center w-8 h-8 rounded-xl text-[rgba(255,255,255,0.50)] hover:text-white hover:bg-[rgba(255,255,255,0.08)] transition-all"
-                    aria-label="Export PDF (Pro)"
-                  >
-                    <FileText size={14} strokeWidth={2} />
-                  </a>
-
-                  {/* Save */}
-                  <button
-                    onClick={() => onSaveRef.current?.()}
-                    className="flex items-center gap-1 px-2.5 h-7 rounded-xl text-[11px] font-[650] transition-all"
-                    style={{
-                      background: 'rgba(95,121,11,0.30)',
-                      border: '1px solid rgba(124,154,25,0.40)',
-                      color: '#a3e635',
-                    }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(95,121,11,0.45)' }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(95,121,11,0.30)' }}
-                  >
-                    <Bookmark size={11} strokeWidth={2.5} />
-                    <span className="hidden sm:inline">Save</span>
-                  </button>
-                </div>
-
-              </div>
-            </div>
-          )}
-        </>
+        <StockFloatingBar
+          stockNav={stockNav}
+          onSaveRef={onSaveRef}
+          onShareRef={onShareRef}
+          query={query} setQuery={setQuery}
+          results={results} open={open} loading={loading}
+          searchError={searchError} activeIdx={activeIdx}
+          unsupportedError={unsupportedError}
+          topbarListboxId={topbarListboxId}
+          reduced={reduced}
+          select={select} handleSubmit={handleSubmit}
+          setOpen={setOpen} setActiveIdx={setActiveIdx}
+          setUnsupportedError={setUnsupportedError}
+          setSearchError={setSearchError}
+        />
       )}
 
       {/* ══════════════════════════════════════════════════════════════════════
-          NON-STOCK PAGES — standard topbar
+          NON-STOCK PAGES — standard topbar with background
           ══════════════════════════════════════════════════════════════════════ */}
       {!stockNav && (
-        <>
+        <div className="glass-toolbar pointer-events-auto" style={{ borderBottom: '1px solid #E3E1DA' }}>
           {/* Mobile page-title search overlay */}
           {pageTitle && mobileSearchOpen && (
-            <div className="sm:hidden flex items-center justify-between px-3 gap-2 border-t border-[#E5E5E5] bg-white" style={{ height: '52px' }}>
+            <div className="sm:hidden flex items-center justify-between px-3 gap-2 bg-white" style={{ height: '52px' }}>
               <Search size={14} className="text-[#9B9B9B] shrink-0" />
               <input
                 type="text"
@@ -553,10 +643,7 @@ export default function TopBar() {
                 }}
                 placeholder="Search ticker or company…"
                 className="flex-1 text-[16px] bg-transparent text-[#111111] placeholder-[#9B9B9B] focus:outline-none"
-                autoFocus
-                autoCorrect="off"
-                autoCapitalize="characters"
-                spellCheck={false}
+                autoFocus autoCorrect="off" autoCapitalize="characters" spellCheck={false}
               />
               <button
                 onClick={() => { setMobileSearchOpen(false); setQuery(''); setOpen(false) }}
@@ -570,12 +657,7 @@ export default function TopBar() {
 
           <div
             className="relative px-3 sm:px-4 grid"
-            style={{
-              height: '52px',
-              gridTemplateColumns: 'auto 1fr auto',
-              alignItems: 'center',
-              gap: '8px',
-            }}
+            style={{ height: '52px', gridTemplateColumns: 'auto 1fr auto', alignItems: 'center', gap: '8px' }}
           >
             {/* Col 1: Logo */}
             <div className="flex items-center lg:hidden">
@@ -639,48 +721,26 @@ export default function TopBar() {
                   <Search size={16} />
                 </button>
               )}
-
               {session ? (
                 <div className="flex items-center gap-2 shrink-0 lg:hidden">
                   <UserAvatar image={session.user?.image ?? null} name={session.user?.name ?? null} />
-                  {isPro && (
-                    <button onClick={openBillingPortal} className="text-[12px] text-[#6B6B6B] hover:text-[#111111] transition-colors whitespace-nowrap hidden sm:block">
-                      Billing
-                    </button>
-                  )}
+                  {isPro && <button onClick={openBillingPortal} className="text-[12px] text-[#6B6B6B] hover:text-[#111111] transition-colors whitespace-nowrap hidden sm:block">Billing</button>}
                   <button
-                    onClick={() => {
-                      try {
-                        localStorage.removeItem('etf_watchlist')
-                        localStorage.removeItem('simplifier_watchlist')
-                        localStorage.removeItem('intrinsico_recent')
-                      } catch {}
-                      signOut()
-                    }}
+                    onClick={() => { try { localStorage.removeItem('etf_watchlist'); localStorage.removeItem('simplifier_watchlist'); localStorage.removeItem('intrinsico_recent') } catch {} signOut() }}
                     className="text-[12px] text-[#6B6B6B] hover:text-[#111111] transition-colors whitespace-nowrap"
-                  >
-                    Sign out
-                  </button>
+                  >Sign out</button>
                 </div>
               ) : (
                 <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    onClick={() => signIn('google')}
-                    className="text-[12.5px] text-white px-3.5 py-2.5 min-h-[44px] rounded-[10px] transition-colors font-semibold bg-[#5F790B] hover:bg-[#526A08] active:bg-[#4A5E07] shadow-sm whitespace-nowrap"
-                  >
-                    Get started free
-                  </button>
-                  <button onClick={() => signIn('google')} className="text-[12.5px] text-[#6B6B6B] hover:text-[#111111] transition-colors whitespace-nowrap hidden md:block">
-                    Sign in
-                  </button>
+                  <button onClick={() => signIn('google')} className="text-[12.5px] text-white px-3.5 py-2.5 min-h-[44px] rounded-[10px] transition-colors font-semibold bg-[#5F790B] hover:bg-[#526A08] shadow-sm whitespace-nowrap">Get started free</button>
+                  <button onClick={() => signIn('google')} className="text-[12.5px] text-[#6B6B6B] hover:text-[#111111] transition-colors whitespace-nowrap hidden md:block">Sign in</button>
                 </div>
               )}
             </div>
           </div>
-        </>
+        </div>
       )}
     </header>
   )
 
-      {/* ── Mobile page-title search overlay ── */}
 }
