@@ -8,14 +8,13 @@ import { cn } from '@/lib/utils'
 import { useSession, signIn } from 'next-auth/react'
 import { ETFSearchBar } from '@/components/etf/ETFSearchBar'
 import { ETFMarketPulse } from '@/components/etf/ETFMarketPulse'
-import { ETFHeatmapGrid } from '@/components/etf/ETFHeatmapGrid'
+import { ETFHeatmapGrid as _ETFHeatmapGrid } from '@/components/etf/ETFHeatmapGrid'
 import { ETFHelpButton } from '@/components/etf/ETFOnboardBanner'
 import ETFLoginToSaveModal from '@/components/etf/ETFLoginToSaveModal'
 import { Sparkline, SparklineSkeleton } from '@/components/ui/Sparkline'
 import { loadETFWatchlist, deleteETFEntry, saveETFEntry, readLocalWatchlist } from '@/lib/data/etfWatchlistStore'
 import {
-  ALL_TICKERS, ALL_META, SECTOR_META, GEO_META, STYLE_META,
-  BROAD_META, BOND_META, DIVIDEND_META, THEMATIC_META, COMMODITY_META, CATEGORY_AVG_EXPENSE,
+  ALL_TICKERS, ALL_META, CATEGORY_AVG_EXPENSE,
 } from '@/lib/data/etfUniverse'
 import { fmtLarge, fmtPctAbs, fmtMultiple } from '@/lib/formatters'
 import { scoreColor, scoreLabel, scoreBadge, computeETFScore } from '@/lib/data/etfScore'
@@ -23,6 +22,10 @@ import { ChevronUp, ChevronsUpDown, Check } from 'lucide-react'
 import type { ETFMeta, ETFGroup } from '@/lib/data/etfUniverse'
 import type { ETFEntry, ETFBatchItem } from '@/lib/data/etfTypes'
 import { useSetTopBarTabs } from '@/contexts/TopBarTabsContext'
+import { ETFWatchlistTable } from '@/components/etf/ETFWatchlistTable'
+import { ETFScreenerInsights } from '@/components/etf/ETFScreenerInsights'
+import { ETFRebalanceIdeas } from '@/components/etf/ETFRebalanceIdeas'
+import { ETFThemeGrid } from '@/components/etf/ETFThemeGrid'
 
 // ── Inline Rankings table ─────────────────────────────────────────────────────
 
@@ -251,6 +254,7 @@ function Rankings({
 
 // ── Collapsible section ───────────────────────────────────────────────────────
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function CollapsibleSection({
   title,
   description,
@@ -600,26 +604,35 @@ export default function ETFTrackerPage() {
 
   const hasWatchlist = !wlLoading && watchlist.length > 0
 
-  // ── Tab state (2 tabs only) ──────────────────────────────────────────────────
-  const [activeTab, setActiveTab] = useState<'overview' | 'rankings'>('overview')
+  // ── Selected tickers for comparison ──────────────────────────────────────────
+  const [selectedTickers, setSelectedTickers] = useState<Set<string>>(new Set())
+  const handleToggleSelect = (ticker: string) => setSelectedTickers(prev => {
+    const next = new Set(prev)
+    if (next.has(ticker)) { next.delete(ticker) } else { next.add(ticker) }
+    return next
+  })
+
+  // ── Tab state (3 tabs) ────────────────────────────────────────────────────────
+  const [activeTab, setActiveTab] = useState<'overview' | 'watchlist' | 'screener'>('overview')
   const [rankingsFilter, setRankingsFilter] = useState<FilterGroup>('all')
   const etfPillId  = useId()
   const etfReduced = useReducedMotion()
   const ETF_SPRING = { type: 'spring', stiffness: 500, damping: 38, mass: 0.6 } as const
 
-  function goToRankings(filter: FilterGroup = 'all') {
+  function _goToScreener(filter: FilterGroup = 'all') {
     setRankingsFilter(filter)
-    setActiveTab('rankings')
+    setActiveTab('screener')
   }
 
   const TABS = [
     { id: 'overview' as const,  label: 'Overview'  },
-    { id: 'rankings' as const,  label: 'Rankings'  },
+    { id: 'watchlist' as const, label: 'Watchlist'  },
+    { id: 'screener' as const,  label: 'Screener'   },
   ]
 
   // Push tabs into TopBar
   const etfTopTabs = useMemo(() => TABS, []) // eslint-disable-line react-hooks/exhaustive-deps
-  useSetTopBarTabs(etfTopTabs, activeTab, (id) => setActiveTab(id as 'overview' | 'rankings'))
+  useSetTopBarTabs(etfTopTabs, activeTab, (id) => setActiveTab(id as 'overview' | 'watchlist' | 'screener'))
 
   const watchlistTickers = new Set(watchlist.map((e) => e.ticker))
 
@@ -724,12 +737,9 @@ export default function ETFTrackerPage() {
         {/* ── OVERVIEW TAB ─────────────────────────────────────────────────── */}
         {activeTab === 'overview' && (
           <>
-            {/* Market Pulse — 4 summary cards */}
-            {!batchError && (
-              <ETFMarketPulse data={batchData} loading={batchLoading} sparklines={pulseSparklines} />
-            )}
+            {!batchError && <ETFMarketPulse data={batchData} loading={batchLoading} sparklines={pulseSparklines} />}
 
-            {/* My Watchlist */}
+            {/* My Watchlist — show at top when user has saved ETFs */}
             {hasWatchlist && (
               <section>
                 <div className="flex items-center justify-between gap-2 mb-3">
@@ -739,216 +749,114 @@ export default function ETFTrackerPage() {
                       {watchlist.length}
                     </span>
                   </div>
-                  {!userEmail && (
-                    <button
-                      onClick={() => signIn('google', { callbackUrl: window.location.href })}
-                      className="text-[11px] font-[600] text-olive-700 hover:text-olive-600 transition-colors"
-                    >
-                      Sign in to sync
+                  <button onClick={() => setActiveTab('watchlist')} className="text-[11px] font-[600] text-olive-700 hover:text-olive-600 transition-colors flex items-center gap-1">
+                    Full view <ArrowUpRight size={11} />
+                  </button>
+                </div>
+                {/* Show first 3 WatchlistRow cards in overview, full table in Watchlist tab */}
+                <div className="flex flex-col gap-2">
+                  {watchlist.slice(0, 3).map((entry) => (
+                    <WatchlistRow key={entry.ticker} entry={entry} sparklineData={entry.ticker in sparklines ? sparklines[entry.ticker] : undefined} onDelete={handleDelete} />
+                  ))}
+                  {watchlist.length > 3 && (
+                    <button onClick={() => setActiveTab('watchlist')} className="text-center py-2 text-[11px] font-[600] text-[#566174] hover:text-olive-700 transition-colors">
+                      +{watchlist.length - 3} more in Watchlist &rarr;
                     </button>
                   )}
-                </div>
-                <div className="flex flex-col gap-2">
-                  {watchlist.map((entry) => (
-                    <WatchlistRow
-                      key={entry.ticker}
-                      entry={entry}
-                      sparklineData={entry.ticker in sparklines ? sparklines[entry.ticker] : undefined}
-                      onDelete={handleDelete}
-                    />
-                  ))}
                 </div>
               </section>
             )}
 
-            {wlLoading && (
-              <div className="flex flex-col gap-2">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="h-[72px] bg-white rounded-xl border border-[#E5E5E5] motion-safe:animate-pulse" />
-                ))}
-              </div>
-            )}
+            {wlLoading && <div className="flex flex-col gap-2">{Array.from({length:2}).map((_,i)=><div key={i} className="h-[72px] bg-white rounded-xl border border-[#E5E5E5] motion-safe:animate-pulse"/>)}</div>}
 
             {!hasWatchlist && !wlLoading && (
               <div className="bg-white border border-[#E3E1DA] rounded-xl p-5 flex flex-col items-center text-center gap-3">
                 <p className="text-[13px] font-[600] text-[#111111]">Track ETFs by what they&apos;re actually worth</p>
-                <p className="text-[12px] text-[#8A95A6] max-w-xs">Search above or add from any section below.</p>
-                <div className="flex gap-2 flex-wrap justify-center">
-                  {['SPY', 'VTV', 'VYM'].map((t) => {
-                    const item = batchData[t]
-                    const score = item?.valueScore ?? null
-                    return (
-                      <button
-                        key={t}
-                        onClick={() => handleQuickAdd(t)}
-                        className="flex flex-col items-center px-4 py-2 rounded-xl border border-[#E3E1DA] bg-white hover:border-[#BFD2A1] hover:bg-olive-50 transition-colors"
-                      >
-                        <span className="text-[12px] font-[700] text-[#111111]">+ {t}</span>
-                        {score != null && (
-                          <span className={cn('text-[10px] font-[600] mt-0.5', scoreColor(score))}>
-                            {score} · {scoreLabel(score)}
-                          </span>
-                        )}
-                      </button>
-                    )
-                  })}
-                </div>
+                <p className="text-[12px] text-[#8A95A6] max-w-xs">Search above or add from any group below.</p>
               </div>
             )}
 
-            {/* Broad Market */}
-            <CollapsibleSection
-              title="Broad Market"
-              description="S&P 500, Nasdaq 100, total market"
-              onViewAll={() => goToRankings('broad')}
-            >
-              <ETFHeatmapGrid
-                metas={BROAD_META}
-                data={batchData}
-                watchlistedTickers={watchlistTickers}
-                onAdd={handleQuickAdd}
-                cols={4}
-                hasError={!!batchError}
-                sparklines={pulseSparklines}
-              />
-            </CollapsibleSection>
-
-            {/* Sectors */}
-            <CollapsibleSection
-              title="Sectors"
-              description="US SPDR sector ETFs"
-              onViewAll={() => goToRankings('sector')}
-              defaultOpen={false}
-            >
-              <ETFHeatmapGrid
-                metas={SECTOR_META}
-                data={batchData}
-                watchlistedTickers={watchlistTickers}
-                onAdd={handleQuickAdd}
-                cols={4}
-                hasError={!!batchError}
-                sparklines={pulseSparklines}
-              />
-            </CollapsibleSection>
-
-            {/* International */}
-            <CollapsibleSection
-              title="International"
-              description="Regional and country exposure"
-              onViewAll={() => goToRankings('geo')}
-              defaultOpen={false}
-            >
-              <ETFHeatmapGrid
-                metas={GEO_META}
-                data={batchData}
-                watchlistedTickers={watchlistTickers}
-                onAdd={handleQuickAdd}
-                cols={3}
-                hasError={!!batchError}
-                sparklines={pulseSparklines}
-              />
-            </CollapsibleSection>
-
-            {/* Styles */}
-            <CollapsibleSection
-              title="Style / Factor"
-              description="Value, growth, quality, momentum, low-vol"
-              onViewAll={() => goToRankings('style')}
-              defaultOpen={false}
-            >
-              <ETFHeatmapGrid
-                metas={STYLE_META}
-                data={batchData}
-                watchlistedTickers={watchlistTickers}
-                onAdd={handleQuickAdd}
-                cols={4}
-                hasError={!!batchError}
-                sparklines={pulseSparklines}
-              />
-            </CollapsibleSection>
-
-            {/* Fixed Income */}
-            <CollapsibleSection
-              title="Fixed Income"
-              description="Treasury, corporate, and TIPS bonds · Not rated (equity multiples N/A)"
-              onViewAll={() => goToRankings('bond')}
-              defaultOpen={false}
-            >
-              <ETFHeatmapGrid
-                metas={BOND_META}
-                data={batchData}
-                watchlistedTickers={watchlistTickers}
-                onAdd={handleQuickAdd}
-                cols={4}
-                hasError={!!batchError}
-                sparklines={pulseSparklines}
-              />
-            </CollapsibleSection>
-
-            {/* Dividend */}
-            <CollapsibleSection
-              title="Dividend & Income"
-              description="High dividend and dividend growth ETFs"
-              onViewAll={() => goToRankings('dividend')}
-              defaultOpen={false}
-            >
-              <ETFHeatmapGrid
-                metas={DIVIDEND_META}
-                data={batchData}
-                watchlistedTickers={watchlistTickers}
-                onAdd={handleQuickAdd}
-                cols={4}
-                hasError={!!batchError}
-                sparklines={pulseSparklines}
-              />
-            </CollapsibleSection>
-
-            {/* Thematic */}
-            <CollapsibleSection
-              title="Thematic"
-              description="Semiconductors, biotech, clean energy, and more"
-              onViewAll={() => goToRankings('thematic')}
-              defaultOpen={false}
-            >
-              <ETFHeatmapGrid
-                metas={THEMATIC_META}
-                data={batchData}
-                watchlistedTickers={watchlistTickers}
-                onAdd={handleQuickAdd}
-                cols={4}
-                hasError={!!batchError}
-                sparklines={pulseSparklines}
-              />
-            </CollapsibleSection>
-
-            {/* Commodities */}
-            <CollapsibleSection
-              title="Commodities & Alternatives"
-              description="Gold, silver, REITs, broad commodities · Not rated (equity multiples N/A)"
-              onViewAll={() => goToRankings('commodity')}
-              defaultOpen={false}
-            >
-              <ETFHeatmapGrid
-                metas={COMMODITY_META}
-                data={batchData}
-                watchlistedTickers={watchlistTickers}
-                onAdd={handleQuickAdd}
-                cols={4}
-                hasError={!!batchError}
-                sparklines={pulseSparklines}
-              />
-            </CollapsibleSection>
+            {/* Theme grid — replaces 8 collapsible sections */}
+            <section>
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <h2 className="text-[13px] font-[700] text-[#111111]">Browse by Theme</h2>
+              </div>
+              <ETFThemeGrid data={batchData} sparklines={pulseSparklines} onViewGroup={(group) => { setRankingsFilter(group); setActiveTab('screener') }} loading={batchLoading} />
+            </section>
           </>
         )}
 
-        {/* ── RANKINGS TAB ─────────────────────────────────────────────────── */}
-        {activeTab === 'rankings' && (
-          <Rankings
-            data={batchData}
-            watchlistedTickers={watchlistTickers}
-            onAdd={handleQuickAdd}
-            initialFilter={rankingsFilter}
-          />
+        {/* ── WATCHLIST TAB ─────────────────────────────────────────────────── */}
+        {activeTab === 'watchlist' && (
+          <div className="space-y-4">
+            {/* Sign-in prompt if not logged in */}
+            {!userEmail && watchlist.length > 0 && (
+              <div className="rounded-xl border border-[#DCE6F5] bg-[#EEF4FF] px-4 py-3 flex items-center gap-3">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="#1f6feb"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"/></svg>
+                <p className="text-[12px] text-[#1f6feb]">Your data is saved locally. <button onClick={() => signIn('google')} className="font-semibold underline hover:no-underline">Sign in</button> to sync across devices.</p>
+              </div>
+            )}
+
+            {/* Loading */}
+            {wlLoading && <div className="flex flex-col gap-2">{Array.from({length:3}).map((_,i)=><div key={i} className="h-12 bg-white rounded-xl border border-[#E5E5E5] motion-safe:animate-pulse"/>)}</div>}
+
+            {/* Empty state */}
+            {!wlLoading && watchlist.length === 0 && (
+              <div className="bg-white border border-[#E3E1DA] rounded-xl p-8 flex flex-col items-center text-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-olive-100 flex items-center justify-center"><Plus size={20} className="text-olive-700" /></div>
+                <p className="text-[14px] font-[600] text-[#111111]">Your watchlist is empty</p>
+                <p className="text-[12px] text-[#8A95A6] max-w-xs">Search for an ETF above, or browse the Overview tab to find one worth tracking.</p>
+              </div>
+            )}
+
+            {/* Dense watchlist table */}
+            {!wlLoading && watchlist.length > 0 && (
+              <>
+                <ETFWatchlistTable
+                  entries={watchlist}
+                  batchData={batchData}
+                  sparklines={sparklines}
+                  watchlistTickers={watchlistTickers}
+                  selectedTickers={selectedTickers}
+                  onToggleSelect={handleToggleSelect}
+                  onDelete={handleDelete}
+                  onAdd={handleQuickAdd}
+                  loading={batchLoading}
+                />
+                <ETFRebalanceIdeas watchlist={watchlist} batchData={batchData} />
+              </>
+            )}
+
+            {/* Inline compare panel — appears when 2+ ETFs selected */}
+            {selectedTickers.size >= 2 && (
+              <div className="rounded-xl border border-[#BFD2A1] bg-[#F0F4E8] px-4 py-3 flex items-center justify-between gap-3">
+                <p className="text-[12px] font-[600] text-[#5F790B]">{selectedTickers.size} ETFs selected for comparison</p>
+                <Link
+                  href={"/etf/compare?tickers=" + Array.from(selectedTickers).join(",")}
+                  className="shrink-0 px-3 py-1.5 bg-olive-700 text-white rounded-lg text-[12px] font-[600] hover:bg-olive-600 transition-colors"
+                >
+                  Compare &rarr;
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── SCREENER TAB ─────────────────────────────────────────────────── */}
+        {activeTab === 'screener' && (
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-5 items-start">
+            <div>
+              <Rankings
+                data={batchData}
+                watchlistedTickers={watchlistTickers}
+                onAdd={handleQuickAdd}
+                initialFilter={rankingsFilter}
+              />
+            </div>
+            <div className="hidden lg:block">
+              <ETFScreenerInsights data={batchData} loading={batchLoading} />
+            </div>
+          </div>
         )}
 
       </div>
