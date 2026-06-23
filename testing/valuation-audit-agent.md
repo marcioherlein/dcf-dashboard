@@ -263,6 +263,7 @@ State: `medianEbitMargin`, `ttmEbitMargin`, `medianFcfMargin`. Is the path corre
 - Content companies (NFLX, DIS): D&A/revenue may be 30-40%+. Is content amortization captured in the `dna` field or reported separately as "amortization of streaming content assets"? NFLX FY2025: D&A=37% of revenue — is this all captured?
 - Acquisition companies (COHR, MELI): `amortizationOfIntangibles` covers acquisition-related intangibles — is it included in the dna fallback chain?
 - **[Finding 5 — integrated]** Is D&A% monotonically rising? If yes and D&A is driven by capex (MSFT, AMZN), the 3Y-median blend understates future D&A. Flag if TTM D&A% > blended D&A% by >2pp.
+- **[Finding 27 — integrated]** For non-financial companies with sector=Consumer Cyclical or Technology (not financial/fintech companyType): if all projected D&A values = 0 AND historical D&A% > 1%, flag as critical bug — `isFinancialSector=true` was incorrectly set via the FINTECH_INDUSTRY_RE_NWC regex (e.g. `internet.*retail` matching MELI/AMZN/JD). Confirmed affected tickers: AMZN, JD, PDD, BABA, SE, W, ETSY, EBAY, MELI. Fixed in `normalizeInputs.ts` by separating `zeroNwcOnly` from full `isFinancialSector` treatment.
 
 ### CapEx $M / CapEx % Revenue
 

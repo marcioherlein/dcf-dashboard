@@ -602,3 +602,18 @@ BABA: EV=$264.8B USD, EBITDA=¥186B CNY (= $27.6B USD). Yahoo returns 264.8/186 
 **File / location:** `lib/dcf/projectCashFlows.ts` or `lib/dcf/cagrAnalysis.ts` — foreignCurrency CAGR weighting path
 **Suggested check to add:** Phase 2A: for foreign-currency reporters, verify that `weights.historical × historicalCagr3y + weights.analyst × analystCAGR + weights.fundamental × fundamentalGrowth = blended`. If the driver says "historical discarded" but the historical weight is non-zero, flag as driver/weight inconsistency.
 
+
+### Finding 27: FINTECH_INDUSTRY_RE_NWC zeroing D&A and Capex for internet retail companies
+**Agent:** audit-valuation
+**Date:** 2026-06-22
+**Ticker / Context:** MELI — projected D&A=0.00, Capex=0.00 in all forecast years. Affects all Internet Retail (Consumer Cyclical) companies: AMZN, JD, PDD, BABA, SE, W, ETSY, EBAY, MELI.
+**Run count:** 1
+**Status:** integrated
+
+**Observed:** `normalizeInputs.ts` `FINTECH_INDUSTRY_RE_NWC` regex matched "Consumer Cyclical Internet Retail" via `internet.*retail`, setting `isFinancialSectorEarly=true`. This triggered the full financial company treatment in `buildProjectedRows`: D&A=0 and Capex=0 in all projected years. MELI FY2026 had dna=1017M and capex=−792M in the API response but the ModellingWorkspace showed 0.00 for both. Same issue for AMZN (~$78B capex/yr), JD, BABA, SE, W, ETSY, EBAY.
+**Expected:** The `internet.*retail` match was intended only to zero NWC (quasi-financial receivables, merchant payables). Physical D&A and Capex should be projected from historical medians.
+**File / location:** `lib/valuation/normalizeInputs.ts` — `buildProjectedRows` `isFinancialSector` guard. `isFintechHybridForNWC` was OR'd into `isFinancialSectorEarly` which controlled both NWC and D&A/Capex zeroing.
+**Fix applied:** Separated `isFinancialSectorEarly` (full treatment, D&A+Capex+NWC zero) from `zeroNwcOnly` (NWC-only zero for fintech-hybrids). `buildProjectedRows` now takes `zeroNwcOnly` param; `effectiveZeroNwc = isFinancialSector || zeroNwcOnly` controls only NWC delta. Verified: AMZN 2026E dna=78052M capex=−78449M, MELI dna=1017M capex=−792M.
+**Suggested check to add:** Phase 3 D&A+Capex: if projected rows show dna=0 AND capex=0 for a non-financial company, flag as critical. Applies to any company with historical D&A%>1% and Capex%>1%. For internet retail specifically: check `multiples.EV/Revenue` — if the company is internet retail with companyType≠financial but projected D&A and Capex are both 0, flag normalizeInputs bug.
+
+---
