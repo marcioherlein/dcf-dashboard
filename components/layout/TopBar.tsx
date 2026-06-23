@@ -280,27 +280,32 @@ function NonStockSearchBar({
   )
 }
 
-// ── Liquid glass pill style ──────────────────────────────────────────────────
-// Single source of truth — all four pills use identical visual treatment.
-// Height 40px: comfortable touch target, visually balanced at 52px header.
+// ── Liquid glass shared style ────────────────────────────────────────────────
+// Applied to all four pills. display:flex + align-items:center included
+// so spreading onto a div gives full layout + visual treatment.
 
-const PILL_H = 40 // px
+const PILL_H = 40
 
-const GLASS_PILL: React.CSSProperties = {
-  background: 'rgba(28, 38, 56, 0.62)',
-  backdropFilter: 'blur(32px) saturate(200%)',
-  WebkitBackdropFilter: 'blur(32px) saturate(200%)',
-  border: '1px solid rgba(255, 255, 255, 0.14)',
-  boxShadow: [
-    '0 8px 32px rgba(0, 0, 0, 0.28)',      // drop shadow
-    '0 1px 0 rgba(255,255,255,0.10) inset', // top specular edge
-    '0 -1px 0 rgba(0,0,0,0.18) inset',     // bottom inner shadow
-  ].join(', '),
-  borderRadius: '14px',
-  height: `${PILL_H}px`,
+function glassPill(extra: React.CSSProperties = {}): React.CSSProperties {
+  return {
+    display: 'flex',
+    alignItems: 'center',
+    height: PILL_H,
+    background: 'rgba(20, 30, 48, 0.68)',
+    backdropFilter: 'blur(28px) saturate(200%)',
+    WebkitBackdropFilter: 'blur(28px) saturate(200%)',
+    border: '1px solid rgba(255, 255, 255, 0.15)',
+    boxShadow: [
+      '0 8px 32px rgba(0,0,0,0.32)',
+      'inset 0 1px 0 rgba(255,255,255,0.12)',
+      'inset 0 -1px 0 rgba(0,0,0,0.20)',
+    ].join(', '),
+    borderRadius: 14,
+    ...extra,
+  }
 }
 
-// ── Stock floating bar — four separate pills ─────────────────────────────────
+// ── Stock floating bar ───────────────────────────────────────────────────────
 
 interface StockFloatingBarProps {
   stockNav: import('@/contexts/StockNavContext').StockNavState
@@ -341,206 +346,204 @@ function StockFloatingBar({
     return () => document.removeEventListener('mousedown', h)
   }, [searchExpanded, setOpen])
 
-  const openSearch = () => {
-    setSearchExpanded(true)
-    setTimeout(() => searchInputRef.current?.focus(), 80)
-  }
+  const openSearch = () => { setSearchExpanded(true); setTimeout(() => searchInputRef.current?.focus(), 60) }
   const closeSearch = () => { setSearchExpanded(false); setQuery(''); setOpen(false) }
 
   return (
+    // Full-width row, 52px tall, transparent — pills float inside it
     <div
-      className="pointer-events-auto flex items-center gap-2 px-3 sm:px-5"
-      style={{ height: '52px' }}
+      className="pointer-events-auto flex items-center gap-2 px-4 sm:px-6"
+      style={{ height: 52 }}
     >
 
-      {/* ── Pill 1: Tabs ──────────────────────────────────────────────────── */}
-      <div
-        className="flex items-center overflow-x-auto scrollbar-hide shrink-0"
-        style={{ ...GLASS_PILL, padding: '0 4px' }}
+      {/* ── Pill 1: Tabs (left-aligned, takes natural width) ──────────────── */}
+      <nav
+        style={glassPill({ padding: '0 6px', gap: 2, flexShrink: 0 })}
         role="tablist"
         aria-label="Stock sections"
       >
         <StockTabPills />
-      </div>
+      </nav>
 
-      {/* ── Push right group to the end ───────────────────────────────────── */}
-      <div className="flex-1" />
+      {/* ── Spacer ────────────────────────────────────────────────────────── */}
+      <div className="flex-1 min-w-0" />
 
-      {/* ── Pill 2: Stock identity ────────────────────────────────────────── */}
-      <div
-        className="flex items-center gap-2 shrink-0"
-        style={{ ...GLASS_PILL, padding: '0 12px' }}
-      >
-        <CompanyLogo ticker={stockNav.ticker} />
-        <span className="font-[700] text-[13.5px] text-white tracking-tight">
-          {stockNav.ticker}
-        </span>
-        {stockNav.price != null && (
-          <span className="font-[500] text-[12.5px] text-[rgba(255,255,255,0.70)] tabular-nums hidden sm:block">
-            {stockNav.currency}{stockNav.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+      {/* ── Right group: stock · features · search ────────────────────────── */}
+      <div className="flex items-center gap-2 shrink-0">
+
+        {/* Pill 2: Stock identity */}
+        <div style={glassPill({ padding: '0 12px', gap: 8 })}>
+          <CompanyLogo ticker={stockNav.ticker} />
+          <span className="font-[700] text-[13.5px] text-white tracking-tight leading-none">
+            {stockNav.ticker}
           </span>
-        )}
-        {stockNav.changePct != null && (
-          <span
-            className="text-[12px] font-[650] tabular-nums hidden sm:block"
-            style={{ color: stockNav.changePct >= 0 ? '#4ade80' : '#fca5a5' }}
+          {stockNav.price != null && (
+            <span className="text-[13px] font-[500] text-[rgba(255,255,255,0.72)] tabular-nums hidden sm:block">
+              {stockNav.currency}{stockNav.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
+          )}
+          {stockNav.changePct != null && (
+            <span
+              className="text-[12px] font-[650] tabular-nums hidden sm:block"
+              style={{ color: stockNav.changePct >= 0 ? '#4ade80' : '#fca5a5' }}
+            >
+              {stockNav.changePct >= 0 ? '+' : ''}{stockNav.changePct.toFixed(2)}%
+            </span>
+          )}
+        </div>
+
+        {/* Pill 3: Features */}
+        <div style={glassPill({ padding: '0 6px', gap: 2 })}>
+          <button
+            onClick={() => onShareRef.current?.()}
+            className="flex items-center justify-center rounded-xl text-[rgba(255,255,255,0.55)] hover:text-white hover:bg-[rgba(255,255,255,0.10)] transition-all"
+            style={{ width: 32, height: 32 }}
+            aria-label="Share analysis"
           >
-            {stockNav.changePct >= 0 ? '+' : ''}{stockNav.changePct.toFixed(2)}%
-          </span>
-        )}
-      </div>
+            <Share2 size={15} strokeWidth={1.8} />
+          </button>
+          <a
+            href="/pricing"
+            title="Pro — upgrade to export"
+            className="hidden sm:flex items-center justify-center rounded-xl text-[rgba(255,255,255,0.55)] hover:text-white hover:bg-[rgba(255,255,255,0.10)] transition-all"
+            style={{ width: 32, height: 32 }}
+            aria-label="Export PDF (Pro)"
+          >
+            <FileText size={15} strokeWidth={1.8} />
+          </a>
+          <button
+            onClick={() => onSaveRef.current?.()}
+            className="flex items-center gap-1.5 rounded-xl text-[12px] font-[650] transition-colors"
+            style={{
+              height: 30, paddingLeft: 10, paddingRight: 12,
+              background: 'rgba(95,121,11,0.30)',
+              border: '1px solid rgba(124,154,25,0.40)',
+              color: '#a3e635',
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(95,121,11,0.50)' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(95,121,11,0.30)' }}
+            aria-label="Save valuation"
+          >
+            <Bookmark size={13} strokeWidth={2} />
+            <span className="hidden sm:inline">Save</span>
+          </button>
+        </div>
 
-      {/* ── Pill 3: Features ──────────────────────────────────────────────── */}
-      <div
-        className="flex items-center shrink-0"
-        style={{ ...GLASS_PILL, padding: '0 6px', gap: '2px' }}
-      >
-        {/* Share */}
-        <button
-          onClick={() => onShareRef.current?.()}
-          className="flex items-center justify-center rounded-[10px] text-[rgba(255,255,255,0.55)] hover:text-white hover:bg-[rgba(255,255,255,0.10)] transition-all"
-          style={{ width: 32, height: 32 }}
-          aria-label="Share analysis"
-        >
-          <Share2 size={15} strokeWidth={1.8} />
-        </button>
-        {/* PDF */}
-        <a
-          href="/pricing"
-          title="Pro feature — upgrade to export"
-          className="hidden sm:flex items-center justify-center rounded-[10px] text-[rgba(255,255,255,0.55)] hover:text-white hover:bg-[rgba(255,255,255,0.10)] transition-all"
-          style={{ width: 32, height: 32 }}
-          aria-label="Export PDF (Pro)"
-        >
-          <FileText size={15} strokeWidth={1.8} />
-        </a>
-        {/* Save — olive accent */}
-        <button
-          onClick={() => onSaveRef.current?.()}
-          className="flex items-center gap-1.5 rounded-[10px] text-[12px] font-[650] transition-all"
-          style={{
-            height: 30, paddingLeft: 10, paddingRight: 12,
-            background: 'rgba(95,121,11,0.30)',
-            border: '1px solid rgba(124,154,25,0.40)',
-            color: '#a3e635',
-          }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(95,121,11,0.50)' }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(95,121,11,0.30)' }}
-        >
-          <Bookmark size={13} strokeWidth={2} />
-          <span className="hidden sm:inline">Save</span>
-        </button>
-      </div>
+        {/* Pill 4: Search — collapses to icon, springs open on click */}
+        <div ref={searchPillRef} className="relative">
+          <AnimatePresence mode="popLayout" initial={false}>
+            {!searchExpanded ? (
+              <motion.button
+                key="search-collapsed"
+                initial={{ opacity: 0, scale: 0.80 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.80 }}
+                transition={{ type: 'spring', stiffness: 420, damping: 28 }}
+                onClick={openSearch}
+                aria-label="Search for a stock"
+                className="flex items-center justify-center text-[rgba(255,255,255,0.55)] hover:text-white transition-colors"
+                style={glassPill({ width: PILL_H, padding: 0, justifyContent: 'center' })}
+              >
+                <Search size={16} strokeWidth={1.8} />
+              </motion.button>
+            ) : (
+              <motion.div
+                key="search-expanded"
+                initial={{ opacity: 0, scaleX: 0.6, originX: 1 }}
+                animate={{ opacity: 1, scaleX: 1, originX: 1 }}
+                exit={{ opacity: 0, scaleX: 0.6, originX: 1 }}
+                transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                className="flex items-center gap-2"
+                style={glassPill({
+                  padding: '0 12px',
+                  width: 'min(280px, 48vw)',
+                  border: '1px solid rgba(124,154,25,0.50)',
+                  boxShadow: '0 0 0 3px rgba(95,121,11,0.16), 0 8px 32px rgba(0,0,0,0.32)',
+                })}
+              >
+                {loading
+                  ? <div className="w-3.5 h-3.5 rounded-full border-2 border-[rgba(255,255,255,0.15)] border-t-[#7CB518] animate-spin shrink-0" />
+                  : <Search size={14} className="text-[rgba(255,255,255,0.40)] shrink-0" strokeWidth={1.8} />
+                }
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  value={query}
+                  onChange={e => { setQuery(e.target.value); setUnsupportedError(null); setSearchError(false) }}
+                  onKeyDown={e => {
+                    if (e.key === 'Escape') { closeSearch(); setActiveIdx(-1) }
+                    else if (e.key === 'ArrowDown') { e.preventDefault(); if (!open && results.length > 0) setOpen(true); setActiveIdx(i => Math.min(i + 1, results.length - 1)) }
+                    else if (e.key === 'ArrowUp')   { e.preventDefault(); setActiveIdx(i => Math.max(i - 1, -1)) }
+                    else if (e.key === 'Enter') {
+                      if (activeIdx >= 0 && results[activeIdx]?.supported) select(results[activeIdx].symbol)
+                      else if (query.trim()) handleSubmit(query)
+                    }
+                  }}
+                  placeholder="Ticker or company…"
+                  className="flex-1 min-w-0 bg-transparent text-[13px] text-white placeholder-[rgba(255,255,255,0.28)] focus:outline-none"
+                  autoCorrect="off" autoCapitalize="characters" spellCheck={false}
+                />
+                <button
+                  onClick={closeSearch}
+                  className="text-[rgba(255,255,255,0.35)] hover:text-white transition-colors shrink-0"
+                  aria-label="Close search"
+                >
+                  <X size={14} strokeWidth={1.8} />
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-      {/* ── Pill 4: Search — springs open ─────────────────────────────────── */}
-      <div ref={searchPillRef} className="relative shrink-0 flex items-center">
-        <AnimatePresence mode="popLayout" initial={false}>
-          {!searchExpanded ? (
-            <motion.button
-              key="search-icon"
-              initial={{ opacity: 0, scale: 0.85 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.85 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-              onClick={openSearch}
-              className="flex items-center justify-center text-[rgba(255,255,255,0.55)] hover:text-white transition-colors"
-              style={{ ...GLASS_PILL, width: PILL_H, padding: 0, flexShrink: 0 }}
-              aria-label="Search for a stock"
-            >
-              <Search size={16} strokeWidth={1.8} />
-            </motion.button>
-          ) : (
+          {/* Search results dropdown */}
+          {searchExpanded && open && results.length > 0 && (
             <motion.div
-              key="search-expanded"
-              initial={{ opacity: 0, width: PILL_H, scale: 0.95 }}
-              animate={{ opacity: 1, width: 'min(300px, 50vw)', scale: 1 }}
-              exit={{ opacity: 0, width: PILL_H, scale: 0.95 }}
-              transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-              className="flex items-center gap-2 overflow-hidden"
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+              className="absolute right-0 overflow-hidden rounded-[14px] z-50"
               style={{
-                ...GLASS_PILL,
-                padding: '0 12px',
-                border: '1px solid rgba(124,154,25,0.50)',
-                boxShadow: '0 0 0 3px rgba(95,121,11,0.16), 0 8px 32px rgba(0,0,0,0.30)',
+                top: PILL_H + 6,
+                width: 'min(320px, 80vw)',
+                background: 'rgba(16, 24, 40, 0.98)',
+                backdropFilter: 'blur(32px) saturate(200%)',
+                WebkitBackdropFilter: 'blur(32px) saturate(200%)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                boxShadow: '0 24px 64px rgba(0,0,0,0.48)',
               }}
+              role="listbox"
+              id={topbarListboxId}
             >
-              {loading
-                ? <div className="w-3.5 h-3.5 rounded-full border-2 border-[rgba(255,255,255,0.15)] border-t-[#7CB518] animate-spin shrink-0" />
-                : <Search size={14} className="text-[rgba(255,255,255,0.40)] shrink-0" strokeWidth={1.8} />
-              }
-              <input
-                ref={searchInputRef}
-                type="text"
-                value={query}
-                onChange={e => { setQuery(e.target.value); setUnsupportedError(null); setSearchError(false) }}
-                onKeyDown={e => {
-                  if (e.key === 'Escape') { closeSearch(); setActiveIdx(-1) }
-                  else if (e.key === 'ArrowDown') { e.preventDefault(); if (!open && results.length > 0) setOpen(true); setActiveIdx(i => Math.min(i + 1, results.length - 1)) }
-                  else if (e.key === 'ArrowUp') { e.preventDefault(); setActiveIdx(i => Math.max(i - 1, -1)) }
-                  else if (e.key === 'Enter') {
-                    if (activeIdx >= 0 && results[activeIdx]?.supported) select(results[activeIdx].symbol)
-                    else if (query.trim()) handleSubmit(query)
-                  }
-                }}
-                placeholder="Ticker or company…"
-                className="flex-1 min-w-0 bg-transparent text-[13px] text-white placeholder-[rgba(255,255,255,0.28)] focus:outline-none"
-                autoCorrect="off" autoCapitalize="characters" spellCheck={false}
-              />
-              <button onClick={closeSearch} className="text-[rgba(255,255,255,0.35)] hover:text-white transition-colors shrink-0" aria-label="Close search">
-                <X size={14} strokeWidth={1.8} />
-              </button>
+              {results.slice(0, 6).map((r, idx) => (
+                <button
+                  key={r.symbol}
+                  id={`topbar-result-${idx}`}
+                  role="option"
+                  aria-selected={idx === activeIdx}
+                  onClick={() => { if (!r.supported) return; select(r.symbol); closeSearch() }}
+                  className={cn(
+                    'w-full flex items-center gap-3 px-4 py-3 border-b border-[rgba(255,255,255,0.06)] last:border-b-0 text-left transition-colors',
+                    r.supported ? 'hover:bg-[rgba(95,121,11,0.14)] cursor-pointer' : 'opacity-40 cursor-not-allowed',
+                    idx === activeIdx ? 'bg-[rgba(95,121,11,0.14)]' : '',
+                  )}
+                >
+                  <span className="font-mono font-bold text-[13px] text-white w-14 shrink-0">{r.symbol}</span>
+                  <span className="text-[12px] text-[rgba(255,255,255,0.50)] truncate flex-1">{r.longname ?? r.shortname}</span>
+                </button>
+              ))}
+              {unsupportedError && (
+                <div className="px-4 py-3 border-t border-[rgba(181,106,0,0.30)] bg-[rgba(181,106,0,0.10)]">
+                  <p className="text-[11px] text-[#fcd34d] leading-snug">{unsupportedError}</p>
+                </div>
+              )}
             </motion.div>
           )}
-        </AnimatePresence>
+        </div>
 
-        {/* Search results dropdown */}
-        {searchExpanded && open && results.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-            className="absolute right-0 overflow-hidden rounded-[14px] z-50"
-            style={{
-              top: `${PILL_H + 6}px`,
-              width: 'min(320px, 80vw)',
-              background: 'rgba(18, 26, 44, 0.97)',
-              backdropFilter: 'blur(32px) saturate(200%)',
-              WebkitBackdropFilter: 'blur(32px) saturate(200%)',
-              border: '1px solid rgba(255,255,255,0.12)',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.45)',
-            }}
-            role="listbox"
-            id={topbarListboxId}
-          >
-            {results.slice(0, 6).map((r, idx) => (
-              <button
-                key={r.symbol}
-                id={`topbar-result-${idx}`}
-                role="option"
-                aria-selected={idx === activeIdx}
-                onClick={() => { if (!r.supported) return; select(r.symbol); closeSearch() }}
-                className={cn(
-                  'w-full flex items-center gap-3 px-4 py-3 border-b border-[rgba(255,255,255,0.06)] last:border-b-0 text-left transition-colors',
-                  r.supported ? 'hover:bg-[rgba(95,121,11,0.14)] cursor-pointer' : 'opacity-40 cursor-not-allowed',
-                  idx === activeIdx ? 'bg-[rgba(95,121,11,0.14)]' : '',
-                )}
-              >
-                <span className="font-mono font-bold text-[13px] text-white w-14 shrink-0">{r.symbol}</span>
-                <span className="text-[12px] text-[rgba(255,255,255,0.50)] truncate flex-1">{r.longname ?? r.shortname}</span>
-              </button>
-            ))}
-            {unsupportedError && (
-              <div className="px-4 py-3 border-t border-[rgba(181,106,0,0.30)] bg-[rgba(181,106,0,0.12)]">
-                <p className="text-[11px] text-[#fcd34d] leading-snug">{unsupportedError}</p>
-              </div>
-            )}
-          </motion.div>
-        )}
       </div>
-
     </div>
   )
 }
+
 
 export default function TopBar() {
   const router = useRouter()
