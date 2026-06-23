@@ -1,0 +1,101 @@
+name: LinkedIn Auto-Post
+
+# LinkedIn posts are scheduled here (NOT via Vercel) because Vercel Hobby
+# plan limits cron execution and silently drops entries beyond the limit.
+# GitHub Actions free plan allows unlimited scheduled workflows.
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'LinkedIn post mode'
+        required: true
+        default: 'li_morning_brief'
+        type: choice
+        options: [li_valuation, li_market_wrap, li_deep_dive, li_sector_scan, li_morning_brief, li_divergence, li_weekly_picks, li_myth, li_conviction, li_etf_scan]
+      ticker:
+        description: 'Ticker override (li_valuation / li_conviction only)'
+        required: false
+      dry_run:
+        description: 'Dry run (print without posting)'
+        required: false
+        default: 'true'
+        type: choice
+        options: ['true', 'false']
+
+  # LinkedIn schedule — all times UTC
+  # Mon–Fri morning brief at 07:45 ART = 10:45 UTC
+  schedule:
+    - cron: '45 10 * * 1-5'   # li_morning_brief  — 07:45 ART Mon–Fri
+    - cron: '0 14 * * 1,3'    # li_myth           — 11:00 ART Mon/Wed
+    - cron: '30 15 * * 2,4'   # li_divergence     — 12:30 ART Tue/Thu
+    - cron: '0 17 * * 2,4'    # li_conviction     — 14:00 ART Tue/Thu
+    - cron: '30 20 * * 1-5'   # li_market_wrap    — 17:30 ART Mon–Fri
+    - cron: '30 21 * * 1-5'   # li_valuation      — 18:30 ART Mon–Fri
+    - cron: '0 16 * * 5'      # li_weekly_picks   — 13:00 ART Friday
+    - cron: '0 15 * * 3'      # li_deep_dive      — 12:00 ART Wednesday
+    - cron: '30 15 * * 0'     # li_etf_scan       — 12:30 ART Sunday
+    - cron: '0 17 * * 0'      # li_sector_scan    — 14:00 ART Sunday
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: scripts
+
+      - name: Determine mode from schedule
+        id: mode
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "mode=${{ github.event.inputs.mode }}" >> $GITHUB_OUTPUT
+            echo "dry_run=${{ github.event.inputs.dry_run }}" >> $GITHUB_OUTPUT
+            echo "ticker=${{ github.event.inputs.ticker }}" >> $GITHUB_OUTPUT
+          else
+            # Map cron schedule to mode using UTC hour and minute
+            HOUR=$(date -u +%H)
+            MIN=$(date -u +%M)
+            DOW=$(date -u +%u)  # 1=Mon … 7=Sun
+            echo "Scheduled at UTC ${HOUR}:${MIN} DOW=${DOW}"
+
+            if   [ "$HOUR" = "10" ] && [ "$MIN" -lt "50" ]; then MODE="li_morning_brief"
+            elif [ "$HOUR" = "14" ] && [ "$MIN" -lt "10" ] && ([ "$DOW" = "1" ] || [ "$DOW" = "3" ]); then MODE="li_myth"
+            elif [ "$HOUR" = "15" ] && [ "$MIN" -ge "25" ] && [ "$MIN" -lt "40" ] && ([ "$DOW" = "2" ] || [ "$DOW" = "4" ]); then MODE="li_divergence"
+            elif [ "$HOUR" = "15" ] && [ "$MIN" -ge "25" ] && [ "$MIN" -lt "40" ] && [ "$DOW" = "7" ]; then MODE="li_etf_scan"
+            elif [ "$HOUR" = "16" ] && [ "$MIN" -lt "10" ] && [ "$DOW" = "5" ]; then MODE="li_weekly_picks"
+            elif [ "$HOUR" = "17" ] && [ "$MIN" -lt "10" ] && ([ "$DOW" = "2" ] || [ "$DOW" = "4" ]); then MODE="li_conviction"
+            elif [ "$HOUR" = "17" ] && [ "$MIN" -lt "10" ] && [ "$DOW" = "7" ]; then MODE="li_sector_scan"
+            elif [ "$HOUR" = "15" ] && [ "$MIN" -lt "10" ] && [ "$DOW" = "3" ]; then MODE="li_deep_dive"
+            elif [ "$HOUR" = "20" ] && [ "$MIN" -ge "25" ] && [ "$MIN" -lt "40" ]; then MODE="li_market_wrap"
+            elif [ "$HOUR" = "21" ] && [ "$MIN" -ge "25" ] && [ "$MIN" -lt "40" ]; then MODE="li_valuation"
+            else MODE="li_morning_brief"
+            fi
+
+            echo "mode=${MODE}" >> $GITHUB_OUTPUT
+            echo "dry_run=false" >> $GITHUB_OUTPUT
+            echo "ticker=" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Post to LinkedIn
+        env:
+          MODE:                        ${{ steps.mode.outputs.mode }}
+          TICKER:                      ${{ steps.mode.outputs.ticker }}
+          DRY_RUN:                     ${{ steps.mode.outputs.dry_run }}
+          APP_URL:                     https://insic.app
+          BUFFER_API_KEY:              ${{ secrets.BUFFER_API_KEY }}
+          BUFFER_CHANNEL_ID:           ${{ secrets.BUFFER_CHANNEL_ID }}
+          LINKEDIN_CHANNEL_ID:         ${{ secrets.LINKEDIN_CHANNEL_ID }}
+          ALPHA_VANTAGE_KEY:           ${{ secrets.ALPHA_VANTAGE_KEY }}
+          AUTOMATION_API_KEY:          ${{ secrets.AUTOMATION_API_KEY }}
+          FINNHUB_KEY:                 ${{ secrets.FINNHUB_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL:    ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY:   ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/x-post.mjs
