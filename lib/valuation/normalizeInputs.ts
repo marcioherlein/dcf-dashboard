@@ -115,7 +115,14 @@ export function normalizeModellingInputs(ticker: string, apiData: any, statement
   const sectorForNWC = (apiData?.quote?.sector ?? '').toLowerCase()
   const industryForNWC = (apiData?.quote?.industry ?? '').toLowerCase()
   const isFintechHybridForNWC = FINTECH_INDUSTRY_RE_NWC.test(sectorForNWC + ' ' + industryForNWC)
-  const isFinancialSectorEarly = FINANCIAL_TYPES_EARLY.has(companyTypeEarly) || isFintechHybridForNWC
+  // isFinancialSector: full treatment — zeros D&A, Capex, and NWC, uses NI-derived EBIT.
+  // Only applies to true financial/fintech companyTypes, NOT fintech-hybrids like MELI.
+  // MELI has real physical capex (warehouses, POS hardware) and meaningful D&A — these
+  // should NOT be zeroed, only NWC should be (via isFintechHybridForNWC).
+  const isFinancialSectorEarly = FINANCIAL_TYPES_EARLY.has(companyTypeEarly)
+  // isFinancialSectorOrHybridNWC: controls NWC zeroing only — true for both pure financials
+  // and fintech-hybrids (MELI, Grab, GoJek, Sea). Passed separately to buildProjectedRows.
+  const isFinancialSectorOrHybridNWC = isFinancialSectorEarly || isFintechHybridForNWC
 
   // Build rows: prefer statements data if available, fall back to financialStatements
   let rows: ModellingRow[]
@@ -150,7 +157,7 @@ export function normalizeModellingInputs(ticker: string, apiData: any, statement
   if (!rows.some(r => r.isProjected)) {
     const nYears = apiData?.growthModel === 'three-stage' ? 7 : 5
     const projectionCagr = cagrOverride !== undefined ? cagrOverride : cagr
-    rows = [...rows, ...buildProjectedRows(rows, projectionCagr, nYears, isFinancialSectorEarly, companyTypeEarly)]
+    rows = [...rows, ...buildProjectedRows(rows, projectionCagr, nYears, isFinancialSectorEarly, companyTypeEarly, isFintechHybridForNWC && !isFinancialSectorEarly)]
   }
 
   // Base FCF: prefer TTM FCF from statements (raw dollars → millions)
@@ -253,7 +260,10 @@ function computeMedian(values: (number | null)[]): number | null {
   return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid]
 }
 
-function buildProjectedRows(historicalRows: ModellingRow[], cagr: number, nYears: number, isFinancialSector = false, companyType: ModellingInput['companyType'] = 'standard'): ModellingRow[] {
+function buildProjectedRows(historicalRows: ModellingRow[], cagr: number, nYears: number, isFinancialSector = false, companyType: ModellingInput['companyType'] = 'standard', zeroNwcOnly = false): ModellingRow[] {
+  // zeroNwcOnly: true for fintech-hybrid companies like MELI that need NWC zeroed
+  // but still have real physical D&A and Capex (should NOT use the full financial path).
+  const effectiveZeroNwc = isFinancialSector || zeroNwcOnly
   const annualRows = historicalRows.filter(r => r.year !== 'TTM' && !r.isProjected)
   const recent = annualRows.slice(-3)
   if (recent.length === 0) return []
@@ -354,7 +364,7 @@ function buildProjectedRows(historicalRows: ModellingRow[], cagr: number, nYears
     if (r.totalCurrentAssets == null || r.cash == null || r.totalCurrentLiabilities == null) return null
     return (r.totalCurrentAssets - r.cash) - r.totalCurrentLiabilities
   }
-  const nwcDeltaRevRatios = isFinancialSector ? [] : recent.map((r, i) => {
+  const nwcDeltaRevRatios = effectiveZeroNwc ? [] : recent.map((r, i) => {
     if (i === 0) return null
     const prev = recent[i - 1]
     const nwcCurr = deriveNwc(r)
