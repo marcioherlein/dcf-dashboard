@@ -1,0 +1,19 @@
+name: NU Post (one-off)
+on:
+  workflow_dispatch:
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install
+        working-directory: scripts
+      - name: Post NU tweet
+        env:
+          BUFFER_API_KEY:     ${{ secrets.BUFFER_API_KEY }}
+          BUFFER_CHANNEL_ID:  ${{ secrets.BUFFER_CHANNEL_ID }}
+          DRY_RUN:            'false'
+        run: node scripts/nu-post.mjs
