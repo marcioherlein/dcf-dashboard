@@ -122,7 +122,7 @@ export function normalizeModellingInputs(ticker: string, apiData: any, statement
   const isFinancialSectorEarly = FINANCIAL_TYPES_EARLY.has(companyTypeEarly)
   // isFinancialSectorOrHybridNWC: controls NWC zeroing only — true for both pure financials
   // and fintech-hybrids (MELI, Grab, GoJek, Sea). Passed separately to buildProjectedRows.
-  const _isFinancialSectorOrHybridNWC = isFinancialSectorEarly || isFintechHybridForNWC
+  // (Unused as a standalone variable — logic is inlined in the buildProjectedRows call below.)
 
   // Build rows: prefer statements data if available, fall back to financialStatements
   let rows: ModellingRow[]
