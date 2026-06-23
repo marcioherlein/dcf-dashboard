@@ -10,6 +10,15 @@ export interface ETFBatchItem {
   valueScore: number
   price: number | null
   priceChangePct: number | null
+  /** Trailing returns from fundPerformance module */
+  return1M: number | null
+  return3M: number | null
+  return1Y: number | null
+  return3Y: number | null
+  return5Y: number | null
+  /** Risk metrics from fundPerformance.riskOverview */
+  sharpeRatio: number | null
+  beta3Y: number | null
 }
 
 export interface ETFEntry {

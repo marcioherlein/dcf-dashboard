@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getETFData } from '@/lib/data/yahooClient'
 import { computeETFScore } from '@/lib/data/etfScore'
+import type { ETFBatchItem } from '@/lib/data/etfTypes'
 
 // Simple in-memory IP rate limiter: max 5 requests per 60s per IP
 const ipRequestMap = new Map<string, { count: number; resetAt: number }>()
@@ -24,20 +25,6 @@ function toMultiple(v: unknown): number | null {
   return v < 1 ? Math.round((1 / v) * 10) / 10 : Math.round(v * 10) / 10
 }
 
-export interface ETFBatchItem {
-  ticker: string
-  name: string
-  category: string | null
-  peRatio: number | null
-  pbRatio: number | null
-  expenseRatio: number | null
-  yield: number | null
-  aum: number | null
-  valueScore: number
-  price: number | null
-  priceChangePct: number | null
-}
-
 async function fetchOne(ticker: string): Promise<ETFBatchItem | null> {
   try {
     // 5-second timeout to avoid hanging on Yahoo rate limits
@@ -56,6 +43,7 @@ async function fetchOne(ticker: string): Promise<ETFBatchItem | null> {
     const fund = raw?.fundProfile ?? {}
     const detail = raw?.summaryDetail ?? {}
     const price = raw?.price ?? {}
+    const perf = raw?.fundPerformance ?? {}
 
     const eq = top.equityHoldings ?? {}
     const peRatio = toMultiple(eq.priceToEarnings)
@@ -71,6 +59,15 @@ async function fetchOne(ticker: string): Promise<ETFBatchItem | null> {
     const regularMarketPrice: number | null = typeof price.regularMarketPrice === 'number' ? price.regularMarketPrice : null
     const priceChangePct: number | null = typeof price.regularMarketChangePercent === 'number' ? price.regularMarketChangePercent : null
 
+    // Trailing returns from fundPerformance.trailingReturns
+    const tr = perf.trailingReturns ?? {}
+    const toReturn = (v: unknown): number | null => typeof v === 'number' ? v : null
+
+    // Risk overview from fundPerformance.riskOverview
+    const risk = perf.riskOverview ?? {}
+    const sharpeRatio: number | null = toReturn(risk.sharpeRatio ?? risk['3YearSharpeRatio'] ?? null)
+    const beta3Y: number | null = toReturn(risk.beta ?? risk['3YearBeta'] ?? null)
+
     return {
       ticker,
       name: (price.longName ?? price.shortName ?? ticker) as string,
@@ -83,6 +80,13 @@ async function fetchOne(ticker: string): Promise<ETFBatchItem | null> {
       valueScore,
       price: regularMarketPrice,
       priceChangePct,
+      return1M: toReturn(tr.oneMonth ?? tr['1MonthTotalReturn'] ?? null),
+      return3M: toReturn(tr.threeMonth ?? tr['3MonthTotalReturn'] ?? null),
+      return1Y: toReturn(tr.oneYear ?? tr['1YearTotalReturn'] ?? null),
+      return3Y: toReturn(tr.threeYear ?? tr['3YearTotalReturn'] ?? null),
+      return5Y: toReturn(tr.fiveYear ?? tr['5YearTotalReturn'] ?? null),
+      sharpeRatio,
+      beta3Y,
     }
   } catch {
     return null

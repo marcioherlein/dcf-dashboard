@@ -7,15 +7,9 @@ import { cn } from '@/lib/utils'
 import { scoreColor, scoreLabel, scoreBadge, computeETFScore, explainScore } from '@/lib/data/etfScore'
 import { fmtMultiple } from '@/lib/formatters'
 import { Sparkline } from '@/components/ui/Sparkline'
-import type { ETFMeta } from '@/lib/data/etfUniverse'
+import { CATEGORY_AVG_EXPENSE } from '@/lib/data/etfUniverse'
+import type { ETFMeta, ETFGroup } from '@/lib/data/etfUniverse'
 import type { ETFBatchItem } from '@/lib/data/etfTypes'
-
-// ── Category-average expense ratios ─────────────────────────────────────────
-const CATEGORY_AVG_EXPENSE: Record<string, number> = {
-  sector: 0.0013,  // SPDR sectors ~0.13%
-  geo:    0.0035,  // international ETFs ~0.35%
-  style:  0.0015,  // factor/style ETFs ~0.15%
-}
 
 interface TopHolding { symbol: string; holdingName?: string; holdingPercent?: number | null }
 
@@ -60,7 +54,7 @@ function ScoreBreakdownTooltip({ item }: { item: ETFBatchItem }) {
 }
 
 // ── Expense ratio bar ────────────────────────────────────────────────────────
-function ExpenseBar({ expenseRatio, group }: { expenseRatio: number | null; group: string }) {
+function ExpenseBar({ expenseRatio, group }: { expenseRatio: number | null; group: ETFGroup }) {
   if (expenseRatio == null) return null
   const avg = CATEGORY_AVG_EXPENSE[group] ?? 0.002
   const isCheap    = expenseRatio <= avg * 0.75

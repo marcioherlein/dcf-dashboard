@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import { RefreshCw } from 'lucide-react'
 import { useInView, useReducedMotion } from 'motion/react'
 
@@ -16,6 +16,7 @@ import ValuationContext      from '@/components/markets/ValuationContext'
 import PortfolioExposure     from '@/components/markets/PortfolioExposure'
 import MarketNewsSection     from '@/components/markets/MarketNewsSection'
 import MarketsTabNav         from '@/components/markets/MarketsTabNav'
+import { useSetTopBarTabs }  from '@/contexts/TopBarTabsContext'
 import CalendarTab           from '@/components/markets/CalendarTab'
 import YieldCurveChart       from '@/components/markets/YieldCurveChart'
 import type { MarketTab }    from '@/components/markets/MarketsTabNav'
@@ -82,6 +83,15 @@ export default function MarketsPage() {
   const [lastFetch,  setLastFetch]  = useState<number>(0)
   const [status]                    = useState(getMarketStatus)
   const [activeTab,  setActiveTab]  = useState<MarketTab>('overview')
+
+  // Push tabs into TopBar
+  const marketTabs = useMemo(() => [
+    { id: 'overview',  label: 'Overview'  },
+    { id: 'sectors',   label: 'Sectors'   },
+    { id: 'calendar',  label: 'Calendar'  },
+    { id: 'valuation', label: 'Valuation' },
+  ], [])
+  useSetTopBarTabs(marketTabs, activeTab, (id: string) => setActiveTab(id as MarketTab))
   const intervalRef                 = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const [, setTick] = useState(0)
@@ -187,8 +197,8 @@ export default function MarketsPage() {
           )}
         </div>
 
-        {/* ── Tab navigation ───────────────────────────────────────────────── */}
-        <div className="flex items-center w-full sm:w-auto">
+        {/* ── Tab navigation — mobile only (desktop tabs live in TopBar) ──── */}
+        <div className="flex items-center w-full lg:hidden">
           <MarketsTabNav active={activeTab} onChange={setActiveTab} />
         </div>
 

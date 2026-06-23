@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef, useId } from 'react'
+import { useState, useEffect, useCallback, useRef, useId, useMemo } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import { RefreshCw, ChevronDown, ChevronRight, Plus, ArrowUpRight, Trash2, Info } from 'lucide-react'
 import Link from 'next/link'
@@ -13,12 +13,16 @@ import { ETFHelpButton } from '@/components/etf/ETFOnboardBanner'
 import ETFLoginToSaveModal from '@/components/etf/ETFLoginToSaveModal'
 import { Sparkline, SparklineSkeleton } from '@/components/ui/Sparkline'
 import { loadETFWatchlist, deleteETFEntry, saveETFEntry, readLocalWatchlist } from '@/lib/data/etfWatchlistStore'
-import { ALL_TICKERS, SECTOR_META, GEO_META, STYLE_META, ALL_META } from '@/lib/data/etfUniverse'
+import {
+  ALL_TICKERS, ALL_META, SECTOR_META, GEO_META, STYLE_META,
+  BROAD_META, BOND_META, DIVIDEND_META, THEMATIC_META, COMMODITY_META, CATEGORY_AVG_EXPENSE,
+} from '@/lib/data/etfUniverse'
 import { fmtLarge, fmtPctAbs, fmtMultiple } from '@/lib/formatters'
 import { scoreColor, scoreLabel, scoreBadge, computeETFScore, explainScore } from '@/lib/data/etfScore'
 import { ChevronUp, ChevronsUpDown, Check } from 'lucide-react'
 import type { ETFMeta, ETFGroup } from '@/lib/data/etfUniverse'
 import type { ETFEntry, ETFBatchItem } from '@/lib/data/etfTypes'
+import { useSetTopBarTabs } from '@/contexts/TopBarTabsContext'
 
 // ── Inline Rankings table ─────────────────────────────────────────────────────
 
@@ -34,11 +38,19 @@ function SortIcon({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey; s
 }
 
 const groupBadge: Record<ETFGroup, string> = {
-  sector: 'bg-[#F0F1F6] text-[#566174] border-[#E3E1DA]',
-  geo:    'bg-[#EFF6FF] text-[#2563EB] border-[#BFDBFE]',
-  style:  'bg-[#F0FDF4] text-[#11875D] border-[#BBF7D0]',
+  broad:     'bg-[#F0F4E8] text-[#5F790B] border-[#BFD2A1]',
+  sector:    'bg-[#F0F1F6] text-[#566174] border-[#E3E1DA]',
+  geo:       'bg-[#EFF6FF] text-[#2563EB] border-[#BFDBFE]',
+  style:     'bg-[#F0FDF4] text-[#11875D] border-[#BBF7D0]',
+  bond:      'bg-[#FFF7ED] text-[#B56A00] border-[#FDE68A]',
+  dividend:  'bg-[#FDF4FF] text-[#9333EA] border-[#E9D5FF]',
+  thematic:  'bg-[#FFF1F2] text-[#D83B3B] border-[#FECACA]',
+  commodity: 'bg-[#F5F5F5] text-[#4B5563] border-[#D1D5DB]',
 }
-const groupLabel: Record<ETFGroup, string> = { sector: 'Sector', geo: 'Geography', style: 'Style' }
+const groupLabelDisplay: Record<ETFGroup, string> = {
+  broad: 'Broad', sector: 'Sector', geo: 'Geography', style: 'Style',
+  bond: 'Bond', dividend: 'Income', thematic: 'Thematic', commodity: 'Commodity',
+}
 
 function Rankings({
   data,
@@ -65,10 +77,15 @@ function Rankings({
   }
 
   const FILTERS: { id: FilterGroup; label: string }[] = [
-    { id: 'all', label: 'All' },
-    { id: 'sector', label: 'Sectors' },
-    { id: 'geo', label: 'Geographies' },
-    { id: 'style', label: 'Styles' },
+    { id: 'all',       label: 'All' },
+    { id: 'broad',     label: 'Broad Market' },
+    { id: 'sector',    label: 'Sectors' },
+    { id: 'geo',       label: 'International' },
+    { id: 'style',     label: 'Styles' },
+    { id: 'bond',      label: 'Bonds' },
+    { id: 'dividend',  label: 'Income' },
+    { id: 'thematic',  label: 'Thematic' },
+    { id: 'commodity', label: 'Commodity' },
   ]
 
   const COLS: { key: SortKey; label: string }[] = [
@@ -96,6 +113,15 @@ function Rankings({
 
   return (
     <div>
+      {/* Disclosure banner */}
+      <div className="mb-3 flex items-start gap-2 rounded-xl border border-[#FDE68A] bg-[#FFFBEB] px-3 py-2.5">
+        <Info size={13} className="mt-0.5 shrink-0 text-[#B56A00]" />
+        <p className="text-[11px] text-[#8A95A6] leading-snug">
+          <strong className="text-[#B56A00]">Value Score</strong> measures cheapness via P/E, P/B, yield, and cost.
+          Growth ETFs (QQQ, XLK) and non-equity ETFs (GLD, TLT) score low <em>by design</em> — not mispriced.
+          Bonds and commodities are rated &ldquo;Not rated&rdquo; since traditional multiples don&apos;t apply.
+        </p>
+      </div>
       <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
         <div className="flex gap-1.5 flex-wrap">
           {FILTERS.map((f) => (
@@ -159,8 +185,7 @@ function Rankings({
                 })()
 
                 // Expense ratio color vs group avg
-                const CATEGORY_AVG: Record<string, number> = { sector: 0.0013, geo: 0.0035, style: 0.0015 }
-                const avg = CATEGORY_AVG[meta.group] ?? 0.002
+                const avg = CATEGORY_AVG_EXPENSE[meta.group] ?? 0.002
                 const erColor = item?.expenseRatio == null ? 'text-[#111111]'
                   : item.expenseRatio <= avg * 0.75 ? 'text-[#11875D]'
                   : item.expenseRatio > avg * 1.5   ? 'text-[#D83B3B]'
@@ -175,7 +200,7 @@ function Rankings({
                     </td>
                     <td className="px-3 py-2.5">
                       <span className={cn('inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-[600] border', groupBadge[meta.group])}>
-                        {groupLabel[meta.group]}
+                        {groupLabelDisplay[meta.group]}
                       </span>
                     </td>
                     <td className="px-3 py-2.5 text-right tabular-nums text-[12px] text-[#111111]">
@@ -612,6 +637,10 @@ export default function ETFTrackerPage() {
     { id: 'rankings' as const,  label: 'Rankings'  },
   ]
 
+  // Push tabs into TopBar
+  const etfTopTabs = useMemo(() => TABS, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useSetTopBarTabs(etfTopTabs, activeTab, (id) => setActiveTab(id as 'overview' | 'rankings'))
+
   const watchlistTickers = new Set(watchlist.map((e) => e.ticker))
 
   return (
@@ -651,7 +680,7 @@ export default function ETFTrackerPage() {
             <ETFHelpButton />
           </div>
 
-          <div className="flex items-center mt-3 w-full sm:w-auto">
+          <div className="flex items-center mt-3 w-full sm:w-auto lg:hidden">
             <div
               role="tablist"
               aria-label="ETF Tracker sections"
@@ -787,11 +816,29 @@ export default function ETFTrackerPage() {
               </div>
             )}
 
+            {/* Broad Market */}
+            <CollapsibleSection
+              title="Broad Market"
+              description="S&P 500, Nasdaq 100, total market"
+              onViewAll={() => goToRankings('broad')}
+            >
+              <ETFHeatmapGrid
+                metas={BROAD_META}
+                data={batchData}
+                watchlistedTickers={watchlistTickers}
+                onAdd={handleQuickAdd}
+                cols={4}
+                hasError={!!batchError}
+                sparklines={pulseSparklines}
+              />
+            </CollapsibleSection>
+
             {/* Sectors */}
             <CollapsibleSection
               title="Sectors"
               description="US SPDR sector ETFs"
               onViewAll={() => goToRankings('sector')}
+              defaultOpen={false}
             >
               <ETFHeatmapGrid
                 metas={SECTOR_META}
@@ -804,9 +851,9 @@ export default function ETFTrackerPage() {
               />
             </CollapsibleSection>
 
-            {/* Geographies */}
+            {/* International */}
             <CollapsibleSection
-              title="Geographies"
+              title="International"
               description="Regional and country exposure"
               onViewAll={() => goToRankings('geo')}
               defaultOpen={false}
@@ -824,13 +871,85 @@ export default function ETFTrackerPage() {
 
             {/* Styles */}
             <CollapsibleSection
-              title="Styles"
-              description="Factor tilts and smart beta"
+              title="Style / Factor"
+              description="Value, growth, quality, momentum, low-vol"
               onViewAll={() => goToRankings('style')}
               defaultOpen={false}
             >
               <ETFHeatmapGrid
                 metas={STYLE_META}
+                data={batchData}
+                watchlistedTickers={watchlistTickers}
+                onAdd={handleQuickAdd}
+                cols={4}
+                hasError={!!batchError}
+                sparklines={pulseSparklines}
+              />
+            </CollapsibleSection>
+
+            {/* Fixed Income */}
+            <CollapsibleSection
+              title="Fixed Income"
+              description="Treasury, corporate, and TIPS bonds"
+              onViewAll={() => goToRankings('bond')}
+              defaultOpen={false}
+            >
+              <ETFHeatmapGrid
+                metas={BOND_META}
+                data={batchData}
+                watchlistedTickers={watchlistTickers}
+                onAdd={handleQuickAdd}
+                cols={4}
+                hasError={!!batchError}
+                sparklines={pulseSparklines}
+              />
+            </CollapsibleSection>
+
+            {/* Dividend */}
+            <CollapsibleSection
+              title="Dividend & Income"
+              description="High dividend and dividend growth ETFs"
+              onViewAll={() => goToRankings('dividend')}
+              defaultOpen={false}
+            >
+              <ETFHeatmapGrid
+                metas={DIVIDEND_META}
+                data={batchData}
+                watchlistedTickers={watchlistTickers}
+                onAdd={handleQuickAdd}
+                cols={4}
+                hasError={!!batchError}
+                sparklines={pulseSparklines}
+              />
+            </CollapsibleSection>
+
+            {/* Thematic */}
+            <CollapsibleSection
+              title="Thematic"
+              description="Semiconductors, biotech, clean energy, and more"
+              onViewAll={() => goToRankings('thematic')}
+              defaultOpen={false}
+            >
+              <ETFHeatmapGrid
+                metas={THEMATIC_META}
+                data={batchData}
+                watchlistedTickers={watchlistTickers}
+                onAdd={handleQuickAdd}
+                cols={4}
+                hasError={!!batchError}
+                sparklines={pulseSparklines}
+              />
+            </CollapsibleSection>
+
+            {/* Commodities */}
+            <CollapsibleSection
+              title="Commodities & Alternatives"
+              description="Gold, silver, REITs, broad commodities"
+              onViewAll={() => goToRankings('commodity')}
+              defaultOpen={false}
+            >
+              <ETFHeatmapGrid
+                metas={COMMODITY_META}
                 data={batchData}
                 watchlistedTickers={watchlistTickers}
                 onAdd={handleQuickAdd}

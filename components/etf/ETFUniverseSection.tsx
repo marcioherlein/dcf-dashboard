@@ -8,7 +8,11 @@ import { fmtLarge, fmtPctAbs, fmtMultiple } from '@/lib/formatters'
 import { scoreColor, scoreLabel } from '@/lib/data/etfScore'
 import { InfoTooltip } from '@/components/ui/info-tooltip'
 import { ETFHeatmapGrid } from '@/components/etf/ETFHeatmapGrid'
-import { SECTOR_META, GEO_META, STYLE_META, ALL_META } from '@/lib/data/etfUniverse'
+import {
+  BROAD_META, SECTOR_META, GEO_META, STYLE_META,
+  BOND_META, DIVIDEND_META, THEMATIC_META, COMMODITY_META,
+  ALL_META,
+} from '@/lib/data/etfUniverse'
 import type { ETFBatchItem } from '@/lib/data/etfTypes'
 import type { ETFEntry } from '@/lib/data/etfTypes'
 import type { ETFMeta, ETFGroup } from '@/lib/data/etfUniverse'
@@ -27,16 +31,19 @@ function SortIcon({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey; s
     : <ChevronUp size={11} className="text-olive-700" />
 }
 
-// Group badge — uses neutral palette, distinguished by shape/icon rather than random colors
 const groupBadge: Record<ETFGroup, string> = {
-  sector: 'bg-[#F0F1F6] text-[#566174] border-[#E3E1DA]',
-  geo:    'bg-[#EFF6FF] text-[#2563EB] border-[#BFDBFE]',
-  style:  'bg-[#F0FDF4] text-[#11875D] border-[#BBF7D0]',
+  broad:     'bg-[#F0F4E8] text-[#5F790B] border-[#BFD2A1]',
+  sector:    'bg-[#F0F1F6] text-[#566174] border-[#E3E1DA]',
+  geo:       'bg-[#EFF6FF] text-[#2563EB] border-[#BFDBFE]',
+  style:     'bg-[#F0FDF4] text-[#11875D] border-[#BBF7D0]',
+  bond:      'bg-[#FFF7ED] text-[#B56A00] border-[#FDE68A]',
+  dividend:  'bg-[#FDF4FF] text-[#9333EA] border-[#E9D5FF]',
+  thematic:  'bg-[#FFF1F2] text-[#D83B3B] border-[#FECACA]',
+  commodity: 'bg-[#F5F5F5] text-[#4B5563] border-[#D1D5DB]',
 }
-const groupLabel: Record<ETFGroup, string> = {
-  sector: 'Sector',
-  geo:    'Geography',
-  style:  'Style',
+const groupLabelDisplay: Record<ETFGroup, string> = {
+  broad: 'Broad', sector: 'Sector', geo: 'Geography', style: 'Style',
+  bond: 'Bond', dividend: 'Income', thematic: 'Thematic', commodity: 'Commodity',
 }
 
 function Leaderboard({
@@ -83,10 +90,15 @@ function Leaderboard({
   }
 
   const FILTERS: { id: FilterGroup; label: string }[] = [
-    { id: 'all',    label: 'All'         },
-    { id: 'sector', label: 'Sectors'     },
-    { id: 'geo',    label: 'Geographies' },
-    { id: 'style',  label: 'Styles'      },
+    { id: 'all',       label: 'All'          },
+    { id: 'broad',     label: 'Broad Market' },
+    { id: 'sector',    label: 'Sectors'      },
+    { id: 'geo',       label: 'International'},
+    { id: 'style',     label: 'Styles'       },
+    { id: 'bond',      label: 'Bonds'        },
+    { id: 'dividend',  label: 'Income'       },
+    { id: 'thematic',  label: 'Thematic'     },
+    { id: 'commodity', label: 'Commodity'    },
   ]
 
   type ColDef = { key: SortKey; label: string }
@@ -187,7 +199,7 @@ function Leaderboard({
                     </td>
                     <td className="px-3 py-3">
                       <span className={cn('inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border', groupBadge[meta.group])}>
-                        {groupLabel[meta.group]}
+                        {groupLabelDisplay[meta.group]}
                       </span>
                     </td>
                     <td className="px-3 py-3 text-right tabular-nums text-[12px] text-[#06101F]">
@@ -357,47 +369,66 @@ export function ETFUniverseSection({ data, watchlist, userEmail, onWatchlistUpda
       {/* Heatmap grids */}
       <section>
         <div className="mb-3">
+          <h2 className="text-[13px] font-[700] text-[#111111]">Broad Market</h2>
+          <p className="text-[12px] text-[#8A95A6] mt-0.5">S&amp;P 500, Nasdaq 100, total market</p>
+        </div>
+        <ETFHeatmapGrid metas={BROAD_META} data={data} watchlistedTickers={watchlistedTickers} onAdd={handleAdd} cols={4} hasError={hasError} />
+      </section>
+
+      <section>
+        <div className="mb-3">
           <h2 className="text-[13px] font-[700] text-[#111111]">Sectors</h2>
           <p className="text-[12px] text-[#8A95A6] mt-0.5">US SPDR sector ETFs (GICS)</p>
         </div>
-        <ETFHeatmapGrid
-          metas={SECTOR_META}
-          data={data}
-          watchlistedTickers={watchlistedTickers}
-          onAdd={handleAdd}
-          cols={4}
-          hasError={hasError}
-        />
+        <ETFHeatmapGrid metas={SECTOR_META} data={data} watchlistedTickers={watchlistedTickers} onAdd={handleAdd} cols={4} hasError={hasError} />
       </section>
 
       <section>
         <div className="mb-3">
-          <h2 className="text-[13px] font-[700] text-[#111111]">Geographies</h2>
+          <h2 className="text-[13px] font-[700] text-[#111111]">International</h2>
           <p className="text-[12px] text-[#8A95A6] mt-0.5">Regional and country exposure</p>
         </div>
-        <ETFHeatmapGrid
-          metas={GEO_META}
-          data={data}
-          watchlistedTickers={watchlistedTickers}
-          onAdd={handleAdd}
-          cols={3}
-          hasError={hasError}
-        />
+        <ETFHeatmapGrid metas={GEO_META} data={data} watchlistedTickers={watchlistedTickers} onAdd={handleAdd} cols={3} hasError={hasError} />
       </section>
 
       <section>
         <div className="mb-3">
-          <h2 className="text-[13px] font-[700] text-[#111111]">Styles</h2>
-          <p className="text-[12px] text-[#8A95A6] mt-0.5">Factor tilts and smart beta</p>
+          <h2 className="text-[13px] font-[700] text-[#111111]">Style / Factor</h2>
+          <p className="text-[12px] text-[#8A95A6] mt-0.5">Value, growth, quality, momentum</p>
         </div>
-        <ETFHeatmapGrid
-          metas={STYLE_META}
-          data={data}
-          watchlistedTickers={watchlistedTickers}
-          onAdd={handleAdd}
-          cols={4}
-          hasError={hasError}
-        />
+        <ETFHeatmapGrid metas={STYLE_META} data={data} watchlistedTickers={watchlistedTickers} onAdd={handleAdd} cols={4} hasError={hasError} />
+      </section>
+
+      <section>
+        <div className="mb-3">
+          <h2 className="text-[13px] font-[700] text-[#111111]">Fixed Income</h2>
+          <p className="text-[12px] text-[#8A95A6] mt-0.5">Treasury, corporate, and TIPS bonds — value scoring N/A</p>
+        </div>
+        <ETFHeatmapGrid metas={BOND_META} data={data} watchlistedTickers={watchlistedTickers} onAdd={handleAdd} cols={4} hasError={hasError} />
+      </section>
+
+      <section>
+        <div className="mb-3">
+          <h2 className="text-[13px] font-[700] text-[#111111]">Dividend &amp; Income</h2>
+          <p className="text-[12px] text-[#8A95A6] mt-0.5">High dividend and dividend growth ETFs</p>
+        </div>
+        <ETFHeatmapGrid metas={DIVIDEND_META} data={data} watchlistedTickers={watchlistedTickers} onAdd={handleAdd} cols={4} hasError={hasError} />
+      </section>
+
+      <section>
+        <div className="mb-3">
+          <h2 className="text-[13px] font-[700] text-[#111111]">Thematic</h2>
+          <p className="text-[12px] text-[#8A95A6] mt-0.5">Semiconductors, biotech, clean energy</p>
+        </div>
+        <ETFHeatmapGrid metas={THEMATIC_META} data={data} watchlistedTickers={watchlistedTickers} onAdd={handleAdd} cols={4} hasError={hasError} />
+      </section>
+
+      <section>
+        <div className="mb-3">
+          <h2 className="text-[13px] font-[700] text-[#111111]">Commodities &amp; Alternatives</h2>
+          <p className="text-[12px] text-[#8A95A6] mt-0.5">Gold, silver, REITs — value scoring N/A</p>
+        </div>
+        <ETFHeatmapGrid metas={COMMODITY_META} data={data} watchlistedTickers={watchlistedTickers} onAdd={handleAdd} cols={4} hasError={hasError} />
       </section>
     </div>
   )

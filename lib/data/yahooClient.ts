@@ -90,6 +90,7 @@ export async function getETFData(ticker: string): Promise<any> {
       'defaultKeyStatistics',
       'summaryDetail',
       'price',
+      'fundPerformance',
     ],
   }, { validateResult: false })
 }
