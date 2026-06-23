@@ -177,23 +177,28 @@ interface NonStockSearchBarProps {
   setUnsupportedError: (v: string | null) => void
   setSearchError: (v: boolean) => void
   maxWidth: string
+  onFocus?: () => void
+  onBlur?: () => void
 }
 
 function NonStockSearchBar({
   query, setQuery, open, loading, searchError, activeIdx, results, unsupportedError,
   topbarListboxId, reduced, searchRef, select, handleSubmit,
   setOpen, setActiveIdx, setUnsupportedError, setSearchError, maxWidth,
+  onFocus, onBlur,
 }: NonStockSearchBarProps) {
   return (
     <div className="relative w-full" style={{ maxWidth }} ref={searchRef}>
       <div
         className="flex items-center gap-2 rounded-[999px] px-3.5 py-2 transition-all border"
         style={{
-          background: 'rgba(255,255,255,0.80)',
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)',
-          borderColor: open ? 'rgba(95,121,11,0.45)' : '#E5E5E5',
-          boxShadow: open ? '0 0 0 3px rgba(95,121,11,0.09)' : 'none',
+          background: open ? 'rgba(255,255,255,0.97)' : 'rgba(255,255,255,0.88)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          borderColor: open ? 'rgba(95,121,11,0.45)' : 'rgba(0,0,0,0.13)',
+          boxShadow: open
+            ? '0 0 0 3px rgba(95,121,11,0.09), 0 2px 8px rgba(0,0,0,0.08)'
+            : '0 1px 3px rgba(0,0,0,0.06)',
         }}
       >
         {loading
@@ -210,6 +215,8 @@ function NonStockSearchBar({
           aria-activedescendant={activeIdx >= 0 ? `topbar-result-${activeIdx}` : undefined}
           value={query}
           onChange={e => { setQuery(e.target.value); setUnsupportedError(null); setSearchError(false) }}
+          onFocus={onFocus}
+          onBlur={onBlur}
           onKeyDown={e => {
             if (e.key === 'Escape') { setOpen(false); setActiveIdx(-1); return }
             if (e.key === 'ArrowDown') { e.preventDefault(); if (!open && results.length > 0) setOpen(true); setActiveIdx(prev => Math.min(prev + 1, results.length - 1)); return }
@@ -566,11 +573,13 @@ export default function TopBar() {
   const [unsupportedError, setUnsupportedError] = useState<string | null>(null)
   const [isPro, setIsPro]     = useState(false)
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
+  const [searchExpanded, setSearchExpanded] = useState(false)
   const _mobileSearchRef = useRef<HTMLInputElement>(null)
   const reduced   = useReducedMotion()
   const debounce  = useRef<ReturnType<typeof setTimeout>>()
   const searchRef = useRef<HTMLDivElement>(null)
   const topbarListboxId = 'topbar-search-listbox'
+  const expandSpring = { type: 'spring', stiffness: 420, damping: 36 } as const
 
   useEffect(() => {
     if (!session?.user?.email) return
@@ -605,7 +614,7 @@ export default function TopBar() {
   const select = (symbol: string) => {
     const match = results.find(r => r.symbol === symbol)
     if (match && !match.supported) return
-    setOpen(false); setQuery(''); setUnsupportedError(null)
+    setOpen(false); setQuery(''); setUnsupportedError(null); setSearchExpanded(false)
     const dest = match?.quoteType === 'ETF' ? `/etf/${symbol}` : `/stock/${symbol}`
     router.push(dest)
   }
@@ -620,7 +629,7 @@ export default function TopBar() {
       setOpen(false)
       return
     }
-    setOpen(false); setQuery(''); setUnsupportedError(null)
+    setOpen(false); setQuery(''); setUnsupportedError(null); setSearchExpanded(false)
     const dest = match?.quoteType === 'ETF' ? `/etf/${trimmed}` : `/stock/${trimmed}`
     router.push(dest)
   }
@@ -658,7 +667,7 @@ export default function TopBar() {
           ══════════════════════════════════════════════════════════════════════ */}
       {!stockNav && (
         <div className="glass-toolbar pointer-events-auto" style={{ borderBottom: '1px solid #E3E1DA' }}>
-          {/* Mobile page-title search overlay */}
+          {/* ── Mobile: search overlay when mobileSearchOpen ─────────── */}
           {pageTitle && mobileSearchOpen && (
             <div className="sm:hidden flex items-center justify-between px-3 gap-2 bg-white" style={{ height: '52px' }}>
               <Search size={14} className="text-[#9B9B9B] shrink-0" />
@@ -674,6 +683,26 @@ export default function TopBar() {
                 className="flex-1 text-[16px] bg-transparent text-[#111111] placeholder-[#9B9B9B] focus:outline-none"
                 autoFocus autoCorrect="off" autoCapitalize="characters" spellCheck={false}
               />
+              {open && results.length > 0 && (
+                <div className="absolute left-0 right-0 top-[52px] overflow-hidden glass-card-light rounded-xl z-50 max-h-[60vh] overflow-y-auto border border-[#E5E5E5] shadow-lg">
+                  {results.map((r) => (
+                    <button
+                      key={r.symbol}
+                      onClick={() => { if (r.supported) { select(r.symbol); setMobileSearchOpen(false) } }}
+                      disabled={!r.supported}
+                      className={`flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left border-b border-[#F5F5F5] last:border-b-0 ${r.supported ? 'hover:bg-[#F6FAEA] active:bg-[#F6FAEA]' : 'opacity-40'}`}
+                    >
+                      <div className="min-w-0">
+                        <span className="text-[15px] font-bold text-[#111111] font-mono block">{r.symbol}</span>
+                        <span className="text-[12px] text-[#6B6B6B] truncate block">{r.longname ?? r.shortname}</span>
+                      </div>
+                      {r.supported && r.quoteType && (
+                        <span className="shrink-0 text-[11px] font-semibold text-[#5F790B] bg-[#EEF2FA] border border-[#BFD2A1] px-2 py-0.5 rounded-md">{r.quoteType === 'EQUITY' ? 'Stock' : r.quoteType}</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
               <button
                 onClick={() => { setMobileSearchOpen(false); setQuery(''); setOpen(false) }}
                 className="text-[#9B9B9B] hover:text-[#111111] min-w-[44px] min-h-[44px] flex items-center justify-center"
@@ -698,66 +727,84 @@ export default function TopBar() {
               </Link>
             </div>
 
-            {/* Col 2: page title or search */}
+            {/* Col 2: page title + tabs + search (desktop)  |  just search (mobile when expanded) */}
             {pageTitle ? (
               <>
-                <div className="flex items-center gap-3 min-w-0 pl-1 lg:hidden">
+                {/* Mobile: hidden when search overlay is open */}
+                <div className={`flex items-center gap-3 min-w-0 pl-1 lg:hidden ${mobileSearchOpen ? 'hidden' : ''}`}>
                   <div className="min-w-0">
                     <p className="text-[14px] font-[700] text-[#111111] leading-tight tracking-tight">{pageTitle.title}</p>
                     {pageTitle.sub && <p className="text-[11px] text-[#8A95A6] leading-none mt-0.5 hidden sm:block">{pageTitle.sub}</p>}
                   </div>
                 </div>
-                <div className="hidden lg:flex items-center gap-3 w-full min-w-0">
-                  {/* Page title — left */}
-                  <div className="shrink-0">
-                    <p className="text-[14px] font-[700] text-[#111111] leading-tight tracking-tight">{pageTitle.title}</p>
-                    {pageTitle.sub && !tabsState && <p className="text-[11px] text-[#8A95A6] leading-none mt-0.5">{pageTitle.sub}</p>}
-                  </div>
 
-                  {/* Tab pills — center (when page has tabs) */}
-                  {tabsState && (
-                    <div
-                      className="flex items-center gap-0.5 rounded-full p-[3px] flex-shrink-0"
-                      style={{
-                        background: 'rgba(240,241,246,0.85)',
-                        backdropFilter: 'blur(12px)',
-                        WebkitBackdropFilter: 'blur(12px)',
-                        border: '1px solid rgba(0,0,0,0.07)',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.5)',
-                      }}
-                    >
-                      {tabsState.tabs.map(tab => {
-                        const isActive = tabsState.activeId === tab.id
-                        return (
-                          <button
-                            key={tab.id}
-                            onClick={() => tabsState.onChange(tab.id)}
-                            className="relative flex items-center gap-1 rounded-full px-3 py-1.5 text-[13px] min-h-[28px] whitespace-nowrap transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(95,121,11,0.6)]"
-                            style={{ color: isActive ? '#111111' : '#6B6B6B', fontWeight: isActive ? 650 : 500 }}
+                {/* Desktop: expanding search */}
+                <div className="hidden lg:flex items-center gap-3 w-full min-w-0 overflow-hidden">
+                  {/* Page title + tabs — collapse when search is expanded */}
+                  <AnimatePresence>
+                    {!searchExpanded && (
+                      <motion.div
+                        key="title-tabs"
+                        className="flex items-center gap-3 shrink-0 overflow-hidden"
+                        initial={reduced ? {} : { opacity: 0, x: -12 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={reduced ? {} : { opacity: 0, x: -12 }}
+                        transition={reduced ? { duration: 0 } : expandSpring}
+                      >
+                        <div className="shrink-0">
+                          <p className="text-[14px] font-[700] text-[#111111] leading-tight tracking-tight">{pageTitle.title}</p>
+                          {pageTitle.sub && !tabsState && <p className="text-[11px] text-[#8A95A6] leading-none mt-0.5">{pageTitle.sub}</p>}
+                        </div>
+                        {tabsState && (
+                          <div
+                            className="flex items-center gap-0.5 rounded-full p-[3px] flex-shrink-0"
+                            style={{
+                              background: 'rgba(240,241,246,0.85)',
+                              backdropFilter: 'blur(12px)',
+                              WebkitBackdropFilter: 'blur(12px)',
+                              border: '1px solid rgba(0,0,0,0.07)',
+                              boxShadow: '0 1px 3px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.5)',
+                            }}
                           >
-                            {isActive && (
-                              <motion.span
-                                layoutId={`${pagePillId}-page-tab`}
-                                className="absolute inset-0 rounded-full"
-                                style={{
-                                  background: 'rgba(255,255,255,0.95)',
-                                  border: '1px solid rgba(0,0,0,0.08)',
-                                  boxShadow: '0 1px 4px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.9)',
-                                }}
-                                transition={reduced ? { duration: 0 } : pageTabSpring}
-                                aria-hidden="true"
-                              />
-                            )}
-                            <span className="relative z-10">{tab.label}</span>
-                            {tab.badge && <span className="relative z-10">{tab.badge}</span>}
-                          </button>
-                        )
-                      })}
-                    </div>
-                  )}
+                            {tabsState.tabs.map(tab => {
+                              const isActive = tabsState.activeId === tab.id
+                              return (
+                                <button
+                                  key={tab.id}
+                                  onClick={() => tabsState.onChange(tab.id)}
+                                  className="relative flex items-center gap-1 rounded-full px-3 py-1.5 text-[13px] min-h-[28px] whitespace-nowrap transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(95,121,11,0.6)]"
+                                  style={{ color: isActive ? '#111111' : '#6B6B6B', fontWeight: isActive ? 650 : 500 }}
+                                >
+                                  {isActive && (
+                                    <motion.span
+                                      layoutId={`${pagePillId}-page-tab`}
+                                      className="absolute inset-0 rounded-full"
+                                      style={{
+                                        background: 'rgba(255,255,255,0.95)',
+                                        border: '1px solid rgba(0,0,0,0.08)',
+                                        boxShadow: '0 1px 4px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.9)',
+                                      }}
+                                      transition={reduced ? { duration: 0 } : pageTabSpring}
+                                      aria-hidden="true"
+                                    />
+                                  )}
+                                  <span className="relative z-10">{tab.label}</span>
+                                  {tab.badge && <span className="relative z-10">{tab.badge}</span>}
+                                </button>
+                              )
+                            })}
+                          </div>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
 
-                  {/* Search — right */}
-                  <div className="flex-1 flex justify-end">
+                  {/* Search — expands to fill available space on focus */}
+                  <motion.div
+                    className="min-w-0"
+                    animate={reduced ? {} : { flex: searchExpanded ? '1 1 0%' : '0 0 260px' }}
+                    transition={reduced ? { duration: 0 } : expandSpring}
+                  >
                     <NonStockSearchBar
                       query={query} setQuery={setQuery} open={open} loading={loading}
                       searchError={searchError} activeIdx={activeIdx} results={results}
@@ -765,9 +812,11 @@ export default function TopBar() {
                       reduced={reduced} searchRef={searchRef} select={select}
                       handleSubmit={handleSubmit} setOpen={setOpen} setActiveIdx={setActiveIdx}
                       setUnsupportedError={setUnsupportedError} setSearchError={setSearchError}
-                      maxWidth="280px"
+                      maxWidth="100%"
+                      onFocus={() => setSearchExpanded(true)}
+                      onBlur={() => { if (!open) setSearchExpanded(false) }}
                     />
-                  </div>
+                  </motion.div>
                 </div>
               </>
             ) : (
