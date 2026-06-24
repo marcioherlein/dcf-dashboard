@@ -1,15 +1,12 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef, useId, useMemo } from 'react'
-import { motion, useReducedMotion } from 'motion/react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { RefreshCw, ChevronDown, ChevronRight, Plus, ArrowUpRight, Trash2, Info } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { useSession, signIn } from 'next-auth/react'
-import { ETFSearchBar } from '@/components/etf/ETFSearchBar'
 import { ETFMarketPulse } from '@/components/etf/ETFMarketPulse'
 import { ETFHeatmapGrid as _ETFHeatmapGrid } from '@/components/etf/ETFHeatmapGrid'
-import { ETFHelpButton } from '@/components/etf/ETFOnboardBanner'
 import ETFLoginToSaveModal from '@/components/etf/ETFLoginToSaveModal'
 import { Sparkline, SparklineSkeleton } from '@/components/ui/Sparkline'
 import { loadETFWatchlist, deleteETFEntry, saveETFEntry, readLocalWatchlist } from '@/lib/data/etfWatchlistStore'
@@ -622,9 +619,6 @@ export default function ETFTrackerPage() {
   // ── Tab state (3 tabs) ────────────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState<'overview' | 'watchlist' | 'screener'>('overview')
   const [rankingsFilter, setRankingsFilter] = useState<FilterGroup>('all')
-  const etfPillId  = useId()
-  const etfReduced = useReducedMotion()
-  const ETF_SPRING = { type: 'spring', stiffness: 500, damping: 38, mass: 0.6 } as const
 
   function _goToScreener(filter: FilterGroup = 'all') {
     setRankingsFilter(filter)
@@ -654,77 +648,6 @@ export default function ETFTrackerPage() {
           onClose={() => setLoginModal(null)}
         />
       )}
-
-      {/* ── Page header ─────────────────────────────────────────────────────── */}
-      <div className="bg-white border-b border-[#E3E1DA] px-4 sm:px-8 pt-4 pb-3">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center gap-3">
-            <ETFSearchBar
-              onAdd={async (symbol, name) => {
-                const item = batchData[symbol]
-                await handleSaveWithGate(symbol, item?.name ?? name, {
-                  valueScore: item?.valueScore ?? null, expenseRatio: item?.expenseRatio ?? null,
-                  yield: item?.yield ?? null, peRatio: item?.peRatio ?? null, pbRatio: item?.pbRatio ?? null,
-                  totalAssets: item?.aum ?? null, price: item?.price ?? null,
-                  priceChangePct: item?.priceChangePct ?? null, metricsUpdatedAt: new Date().toISOString(),
-                }, item?.valueScore ?? null)
-              }}
-              watchlistedTickers={watchlistTickers}
-            />
-            <Link
-              href="/etf/compare"
-              className="shrink-0 hidden sm:flex items-center gap-1.5 text-[12px] font-[600] text-[#566174] hover:text-olive-700 border border-[#E3E1DA] hover:border-[#BFD2A1] rounded-lg px-3 py-2.5 transition-colors bg-white whitespace-nowrap"
-            >
-              Compare
-            </Link>
-            <ETFHelpButton />
-          </div>
-
-          <div className="flex items-center mt-3 w-full sm:w-auto lg:hidden">
-            <div
-              role="tablist"
-              aria-label="ETF Tracker sections"
-              className="flex w-full sm:w-auto sm:inline-flex items-center gap-0.5 rounded-full p-[3px]"
-              style={{
-                background: 'rgba(240,241,246,0.85)',
-                backdropFilter: 'blur(12px)',
-                WebkitBackdropFilter: 'blur(12px)',
-                border: '1px solid rgba(0,0,0,0.07)',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.5)',
-              }}
-            >
-              {TABS.map((tab) => {
-                const isActive = activeTab === tab.id
-                return (
-                  <button
-                    key={tab.id}
-                    role="tab"
-                    aria-selected={isActive}
-                    onClick={() => setActiveTab(tab.id)}
-                    className="relative flex flex-1 sm:flex-none items-center justify-center rounded-full px-3.5 py-1.5 text-[13px] min-h-[32px] whitespace-nowrap transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(95,121,11,0.6)]"
-                    style={{ color: isActive ? '#111111' : '#6B6B6B', fontWeight: isActive ? 650 : 500 }}
-                  >
-                    {isActive && (
-                      <motion.span
-                        layoutId={`${etfPillId}-etf-pill`}
-                        className="absolute inset-0 rounded-full"
-                        style={{
-                          background: 'rgba(255,255,255,0.95)',
-                          border: '1px solid rgba(0,0,0,0.08)',
-                          boxShadow: '0 1px 4px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.9)',
-                        }}
-                        transition={etfReduced ? { duration: 0 } : ETF_SPRING}
-                        aria-hidden="true"
-                      />
-                    )}
-                    <span className="relative z-10">{tab.label}</span>
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* ── Content ─────────────────────────────────────────────────────────── */}
       <div className="px-4 sm:px-8 py-5 sm:py-6 max-w-7xl mx-auto space-y-6">
