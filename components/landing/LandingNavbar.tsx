@@ -129,7 +129,7 @@ export default function LandingNavbar() {
             <div className="flex items-center justify-end gap-3">
               {!session && (
                 <Link
-                  href="/analyze"
+                  href="/auth/sign-in"
                   className="hidden sm:inline-flex items-center justify-center rounded-md px-4 py-2 text-[13.5px] font-medium transition-colors whitespace-nowrap"
                   style={{ color: atTop ? 'rgba(255,255,255,0.65)' : '#6B6B6B', minHeight: '44px' }}
                   onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = atTop ? 'rgba(255,255,255,0.95)' : '#111111' }}
@@ -196,7 +196,7 @@ export default function LandingNavbar() {
               </Link>
               {!session && (
                 <Link
-                  href="/analyze"
+                  href="/auth/sign-in"
                   onClick={() => setMobileOpen(false)}
                   className="w-full text-center rounded-md py-3 text-[14px] font-medium text-[#6B6B6B] hover:text-[#111111] transition-colors"
                   style={{ minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}

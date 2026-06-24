@@ -23,6 +23,7 @@
     "@supabase/supabase-js": "^2.99.1",
     "@tanstack/react-table": "^8.21.3",
     "@vercel/og": "^0.11.1",
+    "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "html2canvas": "^1.4.1",
@@ -44,6 +45,7 @@
     "yahoo-finance2": "^3.13.2"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/jest": "^30.0.0",
     "@types/node": "^20",
     "@types/react": "^18",

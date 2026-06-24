@@ -1,6 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 import type { NextAuthOptions } from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
+import CredentialsProvider from 'next-auth/providers/credentials'
+import bcrypt from 'bcryptjs'
 import { Resend } from 'resend'
 import WelcomeEmail from '@/emails/WelcomeEmail'
 
@@ -35,14 +37,54 @@ export const authOptions: NextAuthOptions = {
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
+    CredentialsProvider({
+      name: 'credentials',
+      credentials: {
+        email:    { label: 'Email',    type: 'email'    },
+        password: { label: 'Password', type: 'password' },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) return null
+        const sb = serviceClient()
+        const { data: user } = await sb
+          .from('users')
+          .select('id, email, name, avatar_url, password_hash, email_verified_at')
+          .eq('email', credentials.email.toLowerCase().trim())
+          .maybeSingle()
+
+        if (!user || !user.password_hash) return null
+
+        if (!user.email_verified_at) {
+          throw new Error('EMAIL_NOT_VERIFIED')
+        }
+
+        const valid = await bcrypt.compare(credentials.password, user.password_hash)
+        if (!valid) return null
+
+        await sb
+          .from('users')
+          .update({ last_seen: new Date().toISOString() })
+          .eq('id', user.id)
+
+        return {
+          id:    user.id,
+          email: user.email,
+          name:  user.name  ?? null,
+          image: user.avatar_url ?? null,
+        }
+      },
+    }),
   ],
   callbacks: {
-    async signIn({ user }) {
+    async signIn({ user, account }) {
+      // Credentials users are created during registration — skip upsert
+      if (account?.provider === 'credentials') return true
+
+      // Google OAuth upsert
       if (user.email) {
         try {
           const sb = serviceClient()
 
-          // Upsert first, then check if it was an insert (new user) via count
           const { data: existing } = await sb
             .from('users')
             .select('id')
@@ -53,11 +95,12 @@ export const authOptions: NextAuthOptions = {
 
           const { error: upsertError } = await sb.from('users').upsert(
             {
-              email: user.email,
-              name: user.name ?? null,
+              email:      user.email,
+              name:       user.name  ?? null,
               avatar_url: user.image ?? null,
-              last_seen: new Date().toISOString(),
-              ...(isNew ? { terms_accepted_at: new Date().toISOString() } : {}),
+              last_seen:  new Date().toISOString(),
+              auth_method: 'google',
+              ...(isNew ? { terms_accepted_at: new Date().toISOString(), email_verified_at: new Date().toISOString() } : {}),
             },
             { onConflict: 'email' },
           )
@@ -75,13 +118,11 @@ export const authOptions: NextAuthOptions = {
           }
         } catch (err) {
           console.error('[auth] signIn callback error:', err)
-          // Never block login
         }
       }
       return true
     },
     async jwt({ token, user }) {
-      // On first sign-in, fetch the user's plan from Supabase and cache it in the token
       if (user?.email) {
         try {
           const sb = serviceClient()
@@ -106,6 +147,9 @@ export const authOptions: NextAuthOptions = {
     },
   },
   pages: {
-    signIn: '/',
+    signIn: '/auth/sign-in',
+  },
+  session: {
+    strategy: 'jwt',
   },
 }
