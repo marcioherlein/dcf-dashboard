@@ -14,6 +14,10 @@ export type FeatureGate =
   | 'scenario_builder'
   | 'compare_tool'
   | 'macro_brief'
+  | 'etf_basket_dcf'
+  | 'etf_metric_history'
+  | 'etf_compare'
+  | 'etf_unlimited_watchlist'
 
 interface GateConfig {
   label: string
@@ -65,6 +69,26 @@ export const GATE_CONFIG: Record<FeatureGate, GateConfig> = {
   macro_brief: {
     label: 'AI Macro Brief',
     description: 'Claude-generated market regime analysis and investment implications',
+    tier: 'pro',
+  },
+  etf_basket_dcf: {
+    label: 'ETF Basket DCF',
+    description: 'See the weighted fair value signal across all ETF holdings',
+    tier: 'pro',
+  },
+  etf_metric_history: {
+    label: 'ETF Metric History',
+    description: 'Track P/E, P/B, yield, and value score over time for any ETF',
+    tier: 'pro',
+  },
+  etf_compare: {
+    label: 'ETF Comparison',
+    description: 'Compare up to 5 ETFs side-by-side across all metrics',
+    tier: 'pro',
+  },
+  etf_unlimited_watchlist: {
+    label: 'Unlimited ETF Watchlist',
+    description: 'Track more than 5 ETFs in your personal watchlist',
     tier: 'pro',
   },
 }

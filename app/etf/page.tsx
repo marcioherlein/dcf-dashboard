@@ -26,6 +26,9 @@ import { ETFWatchlistTable } from '@/components/etf/ETFWatchlistTable'
 import { ETFScreenerInsights } from '@/components/etf/ETFScreenerInsights'
 import { ETFRebalanceIdeas } from '@/components/etf/ETFRebalanceIdeas'
 import { ETFThemeGrid } from '@/components/etf/ETFThemeGrid'
+import { ETFProGate } from '@/components/etf/ETFProGate'
+import { useFeatureGate } from '@/lib/monetization/featureGates'
+import { FREE_ETF_WATCHLIST_LIMIT } from '@/lib/constants'
 
 // ── Inline Rankings table ─────────────────────────────────────────────────────
 
@@ -432,6 +435,10 @@ export default function ETFTrackerPage() {
   const { data: session } = useSession()
   const userEmail = session?.user?.email ?? null
 
+  // Feature gates
+  const { allowed: canCompareETF }        = useFeatureGate('etf_compare')
+  const { allowed: canUnlimitedWatchlist } = useFeatureGate('etf_unlimited_watchlist')
+
   const [loginModal, setLoginModal] = useState<{ ticker: string; name: string | null; valueScore: number | null } | null>(null)
 
   useEffect(() => {
@@ -827,17 +834,30 @@ export default function ETFTrackerPage() {
               </>
             )}
 
-            {/* Inline compare panel — appears when 2+ ETFs selected */}
+            {/* Watchlist limit nudge — free users at 5+ */}
+            {!wlLoading && !canUnlimitedWatchlist && watchlist.length >= FREE_ETF_WATCHLIST_LIMIT && (
+              <ETFProGate gate="etf_unlimited_watchlist" variant="inline">
+                <></>
+              </ETFProGate>
+            )}
+
+            {/* Inline compare panel — Pro only, appears when 2+ ETFs selected */}
             {selectedTickers.size >= 2 && (
-              <div className="rounded-xl border border-[#BFD2A1] bg-[#F0F4E8] px-4 py-3 flex items-center justify-between gap-3">
-                <p className="text-[12px] font-[600] text-[#5F790B]">{selectedTickers.size} ETFs selected for comparison</p>
-                <Link
-                  href={"/etf/compare?tickers=" + Array.from(selectedTickers).join(",")}
-                  className="shrink-0 px-3 py-1.5 bg-olive-700 text-white rounded-lg text-[12px] font-[600] hover:bg-olive-600 transition-colors"
-                >
-                  Compare &rarr;
-                </Link>
-              </div>
+              canCompareETF ? (
+                <div className="rounded-xl border border-[#BFD2A1] bg-[#F0F4E8] px-4 py-3 flex items-center justify-between gap-3">
+                  <p className="text-[12px] font-[600] text-[#5F790B]">{selectedTickers.size} ETFs selected for comparison</p>
+                  <Link
+                    href={"/etf/compare?tickers=" + Array.from(selectedTickers).join(",")}
+                    className="shrink-0 px-3 py-1.5 bg-olive-700 text-white rounded-lg text-[12px] font-[600] hover:bg-olive-600 transition-colors"
+                  >
+                    Compare &rarr;
+                  </Link>
+                </div>
+              ) : (
+                <ETFProGate gate="etf_compare" variant="inline">
+                  <></>
+                </ETFProGate>
+              )
             )}
           </div>
         )}

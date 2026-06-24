@@ -12,6 +12,7 @@ import { ETFHoldingsTable } from '@/components/etf/ETFHoldingsTable'
 import { ETFSectorAllocation } from '@/components/etf/ETFSectorAllocation'
 import { ETFMetricHistory } from '@/components/etf/ETFMetricHistory'
 import { ETFBasketDCF } from '@/components/etf/ETFBasketDCF'
+import { ETFProGate } from '@/components/etf/ETFProGate'
 import { saveETFEntry, deleteETFEntry, getETFEntry } from '@/lib/data/etfWatchlistStore'
 import type { ETFProfileResponse } from '@/lib/data/etfTypes'
 
@@ -131,11 +132,15 @@ export default function ETFDetailPage() {
         {/* Metrics grid + Score Rationale */}
         <ETFMetricsGrid metrics={profile} />
 
-        {/* Metric History (P/E, P/B, Yield, Score) */}
-        <ETFMetricHistory ticker={symbol} />
+        {/* Metric History — Pro */}
+        <ETFProGate gate="etf_metric_history">
+          <ETFMetricHistory ticker={symbol} />
+        </ETFProGate>
 
-        {/* Basket DCF Signal */}
-        <ETFBasketDCF holdings={profile.holdings ?? []} />
+        {/* Basket DCF Signal — Pro */}
+        <ETFProGate gate="etf_basket_dcf">
+          <ETFBasketDCF holdings={profile.holdings ?? []} />
+        </ETFProGate>
 
         {/* Holdings + Sector side by side */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
