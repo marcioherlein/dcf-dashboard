@@ -12,6 +12,8 @@ const VALID_MODES = [
   'li_morning_brief','li_divergence','li_weekly_picks','li_myth',
   'conviction_score','li_conviction','etf_value_scan','li_etf_scan',
   'movers','undervalued_list','sector_undervalued',
+  'biggest_losers_day','biggest_winners_day','ytd_losers','ytd_winners',
+  'near_52w_high','most_shorted',
 ]
 
 export async function GET(req: NextRequest) {

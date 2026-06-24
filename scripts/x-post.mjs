@@ -98,10 +98,10 @@ function validatePost(text) {
     if (p > 100000) issues.push(`Price value $${p} looks unrealistic`)
   }
 
-  // 5. Percentage values sanity — nothing above ±200% in a single move
+  // 5. Percentage values sanity — nothing above ±500% (allows YTD returns like +242%)
   const pcts = [...text.matchAll(/([-+]?\d+\.?\d*)%/g)].map(m => parseFloat(m[1]))
   for (const p of pcts) {
-    if (Math.abs(p) > 200) issues.push(`Percentage ${p}% looks unrealistic`)
+    if (Math.abs(p) > 500) issues.push(`Percentage ${p}% looks unrealistic`)
   }
 
   // 6. Date "999" or single/double digit dates that look like index leakage
@@ -6145,6 +6145,481 @@ async function runSectorUndervalued() {
   await post(lines.join('\n'))
 }
 
+// Shared question pools used across list modes
+const LIST_QUESTIONS_BULLISH = [
+  `Are you buying any of these?`,
+  `Which one would you add to the watchlist?`,
+  `Any of these in your portfolio?`,
+  `Which one has the strongest case?`,
+  `Any surprises on this list?`,
+  `Which one would you bet on?`,
+  `Would you buy at today's price?`,
+]
+const LIST_QUESTIONS_BEARISH = [
+  `Which one do you think bounces first?`,
+  `Any of these turnaround candidates?`,
+  `Which one would you avoid?`,
+  `Capitulation or value trap?`,
+  `Any of these worth a closer look?`,
+  `Which one has the weakest thesis right now?`,
+  `Would you buy the dip on any of these?`,
+]
+const LIST_QUESTIONS_MIXED = [
+  `Which side of this list are you on?`,
+  `Any surprises here?`,
+  `Which one stands out to you?`,
+  `Would you buy, hold, or sell any of these?`,
+  `Which one do you think the market has most wrong?`,
+]
+
+// ─── Mode: biggest_losers_day ─────────────────────────────────────────────────
+// Today's biggest session losers from a large-cap pool — with DCF context.
+// The key question: price drop or business problem? Drives debate and replies.
+// Fires at 5:30PM ART (20:30 UTC) Mon-Fri — after the close.
+
+async function runBiggestLosersDay() {
+  const dayName = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+
+  const results = []
+  for (let i = 0; i < MOVERS_POOL.length; i += 8) {
+    const batch = MOVERS_POOL.slice(i, i + 8)
+    const settled = await Promise.allSettled(batch.map(async t => {
+      const res = await fetch(
+        `https://query1.finance.yahoo.com/v8/finance/chart/${t}?interval=1d&range=1d`,
+        { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(6000) }
+      ).catch(() => null)
+      if (!res?.ok) return null
+      const d = await res.json().catch(() => null)
+      const meta = d?.chart?.result?.[0]?.meta
+      if (!meta?.regularMarketPrice) return null
+      const prev = meta.chartPreviousClose ?? meta.previousClose ?? null
+      if (!prev) return null
+      const chgPct = (meta.regularMarketPrice - prev) / prev * 100
+      if (chgPct > -1.5) return null  // only meaningful drops
+      return { symbol: t, price: meta.regularMarketPrice, chgPct, marketCap: meta.marketCap ?? 0 }
+    }))
+    for (const r of settled) if (r.status === 'fulfilled' && r.value) results.push(r.value)
+    if (i + 8 < MOVERS_POOL.length) await new Promise(r => setTimeout(r, 300))
+  }
+
+  if (results.length < 3) { console.warn('biggest_losers_day: not enough data'); return }
+
+  results.sort((a, b) => a.chgPct - b.chgPct)  // worst first
+  const losers = results.slice(0, 5)
+  const worst = losers[0]
+
+  // Get DCF context on the biggest loser
+  let dcfLine = null
+  try {
+    const data = await fetchValuation(worst.symbol)
+    const fair   = appFairValue(data)
+    const upside = appUpside(data)
+    const impliedG = data.valuationMethods?.models?.reverseDcf?.impliedCAGR
+    if (fair && upside != null) {
+      dcfLine = impliedG != null
+        ? `After the drop, $${worst.symbol} is pricing in ~${pct(impliedG, false)}/yr growth. Model fair value: ${fmt(fair)} (${upside >= 0 ? '+' : ''}${(upside * 100).toFixed(0)}% from here).`
+        : `Model puts fair value at ${fmt(fair)} — ${upside >= 0 ? `${(upside * 100).toFixed(0)}% above` : `${Math.abs(upside * 100).toFixed(0)}% below`} today's close.`
+    }
+  } catch { /* proceed without */ }
+
+  const question = LIST_QUESTIONS_BEARISH[dayOfYear % LIST_QUESTIONS_BEARISH.length]
+
+  const lines = [
+    `Today's biggest losers — ${dayName}`,
+    ``,
+    `$${worst.symbol} leads the selling at ${worst.chgPct.toFixed(1)}%.`,
+    ``,
+    ...losers.map((s, i) => `${i + 1}. $${s.symbol} — ${s.chgPct.toFixed(2)}% · now ${fmt(s.price)}`),
+    ``,
+    dcfLine,
+    ``,
+    `Price drops ≠ business breaks. Worth checking which.`,
+    question,
+    ``,
+    `${APP_URL}`,
+    `#StockMarket #Losers #Investing #DCF`,
+  ].filter(Boolean)
+
+  await post(lines.join('\n'))
+}
+
+// ─── Mode: biggest_winners_day ────────────────────────────────────────────────
+// Today's biggest session winners — with DCF context on whether the move
+// is justified or euphoric. Fires at 5:30PM ART (20:30 UTC) alternating days.
+
+async function runBiggestWinnersDay() {
+  const dayName = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+
+  const results = []
+  for (let i = 0; i < MOVERS_POOL.length; i += 8) {
+    const batch = MOVERS_POOL.slice(i, i + 8)
+    const settled = await Promise.allSettled(batch.map(async t => {
+      const res = await fetch(
+        `https://query1.finance.yahoo.com/v8/finance/chart/${t}?interval=1d&range=1d`,
+        { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(6000) }
+      ).catch(() => null)
+      if (!res?.ok) return null
+      const d = await res.json().catch(() => null)
+      const meta = d?.chart?.result?.[0]?.meta
+      if (!meta?.regularMarketPrice) return null
+      const prev = meta.chartPreviousClose ?? meta.previousClose ?? null
+      if (!prev) return null
+      const chgPct = (meta.regularMarketPrice - prev) / prev * 100
+      if (chgPct < 1.5) return null  // only meaningful moves
+      return { symbol: t, price: meta.regularMarketPrice, chgPct, marketCap: meta.marketCap ?? 0 }
+    }))
+    for (const r of settled) if (r.status === 'fulfilled' && r.value) results.push(r.value)
+    if (i + 8 < MOVERS_POOL.length) await new Promise(r => setTimeout(r, 300))
+  }
+
+  if (results.length < 3) { console.warn('biggest_winners_day: not enough data'); return }
+
+  results.sort((a, b) => b.chgPct - a.chgPct)  // best first
+  const winners = results.slice(0, 5)
+  const best = winners[0]
+
+  let dcfLine = null
+  try {
+    const data = await fetchValuation(best.symbol)
+    const fair   = appFairValue(data)
+    const upside = appUpside(data)
+    const impliedG = data.valuationMethods?.models?.reverseDcf?.impliedCAGR
+    if (fair && upside != null) {
+      const note = upside < -0.10
+        ? `Model says fair value is ${fmt(fair)} — still ${Math.abs((upside * 100).toFixed(0))}% below today's price even after the move.`
+        : upside > 0.10
+        ? `Model says fair value is ${fmt(fair)} — still ${(upside * 100).toFixed(0)}% above today's price. The move may have more room.`
+        : `Model puts fair value near ${fmt(fair)} — roughly where it's trading now.`
+      dcfLine = note
+    }
+  } catch { /* proceed without */ }
+
+  const question = LIST_QUESTIONS_BULLISH[dayOfYear % LIST_QUESTIONS_BULLISH.length]
+
+  const lines = [
+    `Today's biggest winners — ${dayName}`,
+    ``,
+    `$${best.symbol} leads at +${best.chgPct.toFixed(1)}%.`,
+    ``,
+    ...winners.map((s, i) => `${i + 1}. $${s.symbol} — +${s.chgPct.toFixed(2)}% · now ${fmt(s.price)}`),
+    ``,
+    dcfLine,
+    ``,
+    `A big move is information. The question is whether the business changed or just the price.`,
+    question,
+    ``,
+    `${APP_URL}`,
+    `#StockMarket #Winners #Investing #DCF`,
+  ].filter(Boolean)
+
+  await post(lines.join('\n'))
+}
+
+// ─── Mode: ytd_losers ─────────────────────────────────────────────────────────
+// Stocks down the most year-to-date from the large-cap pool.
+// The most controversial list — every name has a contrarian bull thesis.
+// Fires Saturday afternoon — high weekend engagement.
+
+async function runYtdLosers() {
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+
+  const results = []
+  for (let i = 0; i < MOVERS_POOL.length; i += 8) {
+    const batch = MOVERS_POOL.slice(i, i + 8)
+    const settled = await Promise.allSettled(batch.map(async t => {
+      // Use 1y range to get YTD change
+      const res = await fetch(
+        `https://query1.finance.yahoo.com/v8/finance/chart/${t}?interval=1d&range=ytd`,
+        { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(6000) }
+      ).catch(() => null)
+      if (!res?.ok) return null
+      const d = await res.json().catch(() => null)
+      const result = d?.chart?.result?.[0]
+      const closes = result?.indicators?.quote?.[0]?.close?.filter(v => v != null) ?? []
+      const meta = result?.meta
+      if (closes.length < 10 || !meta?.regularMarketPrice) return null
+      const ytdStart = closes[0]
+      const ytdChg = (meta.regularMarketPrice - ytdStart) / ytdStart * 100
+      if (ytdChg > -10) return null  // only meaningful YTD losers
+      return { symbol: t, price: meta.regularMarketPrice, ytdChg, high52: meta.fiftyTwoWeekHigh ?? null }
+    }))
+    for (const r of settled) if (r.status === 'fulfilled' && r.value) results.push(r.value)
+    if (i + 8 < MOVERS_POOL.length) await new Promise(r => setTimeout(r, 300))
+  }
+
+  if (results.length < 3) { console.warn('ytd_losers: not enough data'); return }
+
+  results.sort((a, b) => a.ytdChg - b.ytdChg)
+  const losers = results.slice(0, 6)
+  const worst = losers[0]
+
+  // Get DCF context on the worst YTD loser
+  let dcfLine = null
+  try {
+    const data = await fetchValuation(worst.symbol)
+    const fair   = appFairValue(data)
+    const upside = appUpside(data)
+    if (fair && upside != null) {
+      dcfLine = upside > 0.10
+        ? `Our model on $${worst.symbol}: fair value ${fmt(fair)} — ${(upside * 100).toFixed(0)}% above today's price. The selloff may have created an entry.`
+        : upside < -0.05
+        ? `Our model on $${worst.symbol}: fair value ${fmt(fair)} — still ${Math.abs((upside * 100).toFixed(0))}% below current price even after the drop.`
+        : `Our model on $${worst.symbol}: fair value near ${fmt(fair)} — roughly fair at current levels.`
+    }
+  } catch { /* proceed without */ }
+
+  const question = LIST_QUESTIONS_BEARISH[(dayOfYear + 2) % LIST_QUESTIONS_BEARISH.length]
+
+  const lines = [
+    `The biggest large-cap losers of ${new Date().getFullYear()} so far.`,
+    ``,
+    `$${worst.symbol} leads — down ${Math.abs(worst.ytdChg).toFixed(0)}% year-to-date.`,
+    ``,
+    ...losers.map((s, i) => {
+      const fromHigh = s.high52 ? ` · ${Math.abs(((s.price - s.high52) / s.high52) * 100).toFixed(0)}% off high` : ''
+      return `${i + 1}. $${s.symbol} — ${s.ytdChg.toFixed(0)}% YTD · now ${fmt(s.price)}${fromHigh}`
+    }),
+    ``,
+    dcfLine,
+    ``,
+    question,
+    ``,
+    `${APP_URL}`,
+    `#StockMarket #YTD #ValueInvesting #DCF`,
+  ].filter(Boolean)
+
+  await post(lines.join('\n'))
+}
+
+// ─── Mode: ytd_winners ────────────────────────────────────────────────────────
+// Stocks up the most year-to-date — with valuation check.
+// "Are these still cheap after the run?" drives engagement.
+// Fires Sunday afternoon.
+
+async function runYtdWinners() {
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+
+  const results = []
+  for (let i = 0; i < MOVERS_POOL.length; i += 8) {
+    const batch = MOVERS_POOL.slice(i, i + 8)
+    const settled = await Promise.allSettled(batch.map(async t => {
+      const res = await fetch(
+        `https://query1.finance.yahoo.com/v8/finance/chart/${t}?interval=1d&range=ytd`,
+        { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(6000) }
+      ).catch(() => null)
+      if (!res?.ok) return null
+      const d = await res.json().catch(() => null)
+      const result = d?.chart?.result?.[0]
+      const closes = result?.indicators?.quote?.[0]?.close?.filter(v => v != null) ?? []
+      const meta = result?.meta
+      if (closes.length < 10 || !meta?.regularMarketPrice) return null
+      const ytdStart = closes[0]
+      const ytdChg = (meta.regularMarketPrice - ytdStart) / ytdStart * 100
+      if (ytdChg < 15) return null  // only meaningful YTD winners
+      return { symbol: t, price: meta.regularMarketPrice, ytdChg }
+    }))
+    for (const r of settled) if (r.status === 'fulfilled' && r.value) results.push(r.value)
+    if (i + 8 < MOVERS_POOL.length) await new Promise(r => setTimeout(r, 300))
+  }
+
+  if (results.length < 3) { console.warn('ytd_winners: not enough data'); return }
+
+  results.sort((a, b) => b.ytdChg - a.ytdChg)
+  const winners = results.slice(0, 6)
+  const best = winners[0]
+
+  let dcfLine = null
+  try {
+    const data = await fetchValuation(best.symbol)
+    const fair   = appFairValue(data)
+    const upside = appUpside(data)
+    const impliedG = data.valuationMethods?.models?.reverseDcf?.impliedCAGR
+    if (fair && upside != null) {
+      dcfLine = upside < -0.15
+        ? `After a ${best.ytdChg.toFixed(0)}% run, our model puts $${best.symbol} fair value at ${fmt(fair)} — the stock is now ${Math.abs((upside * 100).toFixed(0))}% above it. A lot of good news is priced in.`
+        : upside > 0.10
+        ? `Despite the ${best.ytdChg.toFixed(0)}% run, model still sees ${(upside * 100).toFixed(0)}% upside on $${best.symbol}. Fair value: ${fmt(fair)}.`
+        : `Model puts $${best.symbol} fair value near ${fmt(fair)} — roughly in line with today's price after the run.`
+      if (impliedG != null) dcfLine += ` Market pricing in ~${pct(impliedG, false)}/yr growth.`
+    }
+  } catch { /* proceed without */ }
+
+  const question = LIST_QUESTIONS_MIXED[dayOfYear % LIST_QUESTIONS_MIXED.length]
+
+  const lines = [
+    `The best-performing large caps of ${new Date().getFullYear()} so far.`,
+    ``,
+    `$${best.symbol} leads — up ${best.ytdChg.toFixed(0)}% year-to-date.`,
+    ``,
+    ...winners.map((s, i) => `${i + 1}. $${s.symbol} — +${s.ytdChg.toFixed(0)}% YTD · now ${fmt(s.price)}`),
+    ``,
+    dcfLine,
+    ``,
+    question,
+    ``,
+    `${APP_URL}`,
+    `#StockMarket #YTD #Investing #DCF`,
+  ].filter(Boolean)
+
+  await post(lines.join('\n'))
+}
+
+// ─── Mode: near_52w_high ──────────────────────────────────────────────────────
+// Stocks approaching or at 52-week highs — momentum + valuation tension.
+// "Breaking out or running out of room?" is the question readers want answered.
+
+async function runNear52wHigh() {
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+
+  const results = []
+  for (let i = 0; i < MOVERS_POOL.length; i += 8) {
+    const batch = MOVERS_POOL.slice(i, i + 8)
+    const settled = await Promise.allSettled(batch.map(async t => {
+      const res = await fetch(
+        `https://query1.finance.yahoo.com/v8/finance/chart/${t}?interval=1d&range=1y`,
+        { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(6000) }
+      ).catch(() => null)
+      if (!res?.ok) return null
+      const d = await res.json().catch(() => null)
+      const meta = d?.chart?.result?.[0]?.meta
+      if (!meta?.regularMarketPrice || !meta?.fiftyTwoWeekHigh) return null
+      const pctFromHigh = (meta.regularMarketPrice - meta.fiftyTwoWeekHigh) / meta.fiftyTwoWeekHigh * 100
+      if (pctFromHigh < -5) return null  // only within 5% of 52W high
+      return { symbol: t, price: meta.regularMarketPrice, high52: meta.fiftyTwoWeekHigh, pctFromHigh }
+    }))
+    for (const r of settled) if (r.status === 'fulfilled' && r.value) results.push(r.value)
+    if (i + 8 < MOVERS_POOL.length) await new Promise(r => setTimeout(r, 300))
+  }
+
+  if (results.length < 3) { console.warn('near_52w_high: not enough data'); return }
+
+  results.sort((a, b) => b.pctFromHigh - a.pctFromHigh)  // closest to high first
+  const picks = results.slice(0, 6)
+
+  // DCF check on the one at highest relative to its peak
+  const featured = picks[0]
+  let dcfLine = null
+  try {
+    const data = await fetchValuation(featured.symbol)
+    const fair   = appFairValue(data)
+    const upside = appUpside(data)
+    if (fair && upside != null) {
+      dcfLine = upside < -0.15
+        ? `$${featured.symbol} at a 52-week high — and our model puts fair value at ${fmt(fair)}, ${Math.abs((upside * 100).toFixed(0))}% below current price. Momentum vs fundamentals.`
+        : upside > 0.10
+        ? `Interesting: $${featured.symbol} near a 52-week high and the model still sees ${(upside * 100).toFixed(0)}% upside. Fair value: ${fmt(fair)}.`
+        : `Model puts $${featured.symbol} fair value near ${fmt(fair)} — consistent with where it's trading at the high.`
+    }
+  } catch { /* proceed without */ }
+
+  const question = LIST_QUESTIONS_MIXED[(dayOfYear + 1) % LIST_QUESTIONS_MIXED.length]
+
+  const lines = [
+    `These large caps are trading at or near 52-week highs right now.`,
+    ``,
+    ...picks.map((s, i) => {
+      const atHigh = s.pctFromHigh >= -0.5 ? ' — AT HIGH' : ` — ${Math.abs(s.pctFromHigh).toFixed(1)}% below high`
+      return `${i + 1}. $${s.symbol} — ${fmt(s.price)}${atHigh}`
+    }),
+    ``,
+    dcfLine,
+    ``,
+    `Breaking out, or running out of room?`,
+    question,
+    ``,
+    `${APP_URL}`,
+    `#StockMarket #Breakout #52WeekHigh #Investing`,
+  ].filter(Boolean)
+
+  await post(lines.join('\n'))
+}
+
+// ─── Mode: most_shorted ───────────────────────────────────────────────────────
+// Stocks with the highest short interest in our large-cap universe.
+// High short interest + positive ROIC = squeeze candidate. Drives debate.
+// Uses Yahoo Finance data (shortPercentOfFloat available in quote).
+
+async function runMostShorted() {
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+
+  // Fetch short interest data via Yahoo v7 quote endpoint
+  const BATCH = MOVERS_POOL.slice(0, 40)
+  const results = []
+  for (let i = 0; i < BATCH.length; i += 8) {
+    const batch = BATCH.slice(i, i + 8)
+    const settled = await Promise.allSettled(batch.map(async t => {
+      const res = await fetch(
+        `https://query1.finance.yahoo.com/v8/finance/chart/${t}?interval=1d&range=1d`,
+        { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(6000) }
+      ).catch(() => null)
+      if (!res?.ok) return null
+      const d = await res.json().catch(() => null)
+      const meta = d?.chart?.result?.[0]?.meta
+      if (!meta?.regularMarketPrice) return null
+      return { symbol: t, price: meta.regularMarketPrice, chgPct: ((meta.regularMarketPrice - (meta.chartPreviousClose ?? meta.regularMarketPrice)) / (meta.chartPreviousClose ?? meta.regularMarketPrice)) * 100 }
+    }))
+    for (const r of settled) if (r.status === 'fulfilled' && r.value) results.push(r.value)
+    if (i + 8 < BATCH.length) await new Promise(r => setTimeout(r, 300))
+  }
+
+  // Get short interest from /api/financials for a sample
+  const candidates = []
+  for (const r of results.slice(0, 20)) {
+    try {
+      const data = await fetchValuation(r.symbol)
+      const shortPct = data?.ownership?.shortPct ?? null
+      if (!shortPct || shortPct < 0.04) continue  // >4% short interest
+      const upside    = appUpside(data)
+      const fair      = appFairValue(data)
+      const roicSpread = data?.scores?.roic?.spread ?? null
+      candidates.push({ symbol: r.symbol, price: r.price, shortPct, upside, fair, roicSpread })
+    } catch { /* skip */ }
+  }
+
+  if (candidates.length < 3) { console.warn('most_shorted: not enough data'); return }
+
+  candidates.sort((a, b) => b.shortPct - a.shortPct)
+  const picks = candidates.slice(0, 5)
+  const featured = picks[0]
+
+  const squeezeNote = (() => {
+    const highShort = picks.filter(p => p.shortPct > 0.08)
+    const bullishModel = picks.filter(p => (p.upside ?? 0) > 0.10)
+    if (highShort.length > 0 && bullishModel.length > 0) {
+      const overlap = highShort.filter(p => bullishModel.find(b => b.symbol === p.symbol))
+      if (overlap.length > 0) return `$${overlap[0].symbol} is heavily shorted — and our model sees ${(overlap[0].upside * 100).toFixed(0)}% upside. That's a setup worth watching.`
+    }
+    return `High short interest can mean the market is right, or it can mean crowded pessimism. The model helps separate the two.`
+  })()
+
+  const question = LIST_QUESTIONS_MIXED[(dayOfYear + 4) % LIST_QUESTIONS_MIXED.length]
+
+  const lines = [
+    `The most shorted large-cap stocks right now.`,
+    ``,
+    `High short interest = the market is betting against these.`,
+    ``,
+    ...picks.map((s, i) => {
+      const shortStr = `${(s.shortPct * 100).toFixed(1)}% of float shorted`
+      const modelStr = s.upside != null && s.fair != null
+        ? ` · model ${(s.upside >= 0 ? '+' : '') + (s.upside * 100).toFixed(0)}% to ${fmt(s.fair)}`
+        : ''
+      return `${i + 1}. $${s.symbol} — ${shortStr}${modelStr}`
+    }),
+    ``,
+    squeezeNote,
+    ``,
+    question,
+    ``,
+    `${APP_URL}`,
+    `#ShortSqueeze #StockMarket #Investing #DCF`,
+  ].filter(Boolean)
+
+  await post(lines.join('\n'))
+}
+
 const MODES = {
   dcf:               runDcf,
   dcf2:              runDcf2,
@@ -6185,6 +6660,12 @@ const MODES = {
   movers:             runMovers,
   undervalued_list:   runUndervaluedList,
   sector_undervalued: runSectorUndervalued,
+  biggest_losers_day: runBiggestLosersDay,
+  biggest_winners_day: runBiggestWinnersDay,
+  ytd_losers:         runYtdLosers,
+  ytd_winners:        runYtdWinners,
+  near_52w_high:      runNear52wHigh,
+  most_shorted:       runMostShorted,
   conviction_score:  runConvictionScore,
   li_conviction:     runLiConviction,
   etf_value_scan:    runEtfValueScan,
