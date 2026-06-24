@@ -5064,11 +5064,11 @@ async function runLiMorningBrief() {
     const impliedG = focusData.valuationMethods?.models?.reverseDcf?.impliedCAGR
     if (impliedG != null && Math.abs(upside ?? 0) > 0.08) {
       return (upside ?? 0) > 0
-        ? `One to watch: $${focusTicker} at ${fmt(price)}. Market pricing in ~${pct(impliedG, false)}/yr growth — our model sees ${pct(upside)} upside. insic.app/stock/${focusTicker}`
-        : `One to watch: $${focusTicker} at ${fmt(price)}. Market pricing in ~${pct(impliedG, false)}/yr growth to justify this price — that's a lot to deliver. insic.app/stock/${focusTicker}`
+        ? `One to watch: $${focusTicker} at ${fmt(price)}. Market pricing in ~${pct(impliedG, false)}/yr growth — our model sees ${pct(upside)} upside.`
+        : `One to watch: $${focusTicker} at ${fmt(price)}. Market pricing in ~${pct(impliedG, false)}/yr growth to justify this price — that's a lot to deliver.`
     }
     return Math.abs(upside ?? 0) > 0.08
-      ? `One to watch today: $${focusTicker}. Our model puts fair value at ${fmt(fair)} — ${pct(upside)} ${(upside ?? 0) > 0 ? 'above' : 'below'} current price. insic.app/stock/${focusTicker}`
+      ? `One to watch today: $${focusTicker}. Our model puts fair value at ${fmt(fair)} — ${pct(upside)} ${(upside ?? 0) > 0 ? 'above' : 'below'} current price.`
       : null
   })() : null
 
