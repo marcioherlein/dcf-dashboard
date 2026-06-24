@@ -820,16 +820,45 @@ export function computeCockpitOutput(
 
   // Reverse DCF for market-implied growth
   const safeTG = Math.min(Math.max(assumptions.terminalG, 0.005), assumptions.wacc - 0.02)
+
+  // Normalize FCF margin before passing to reverse DCF.
+  // For fintech-hybrids and internet retail companies (MELI, AMZN, JD, SE…), Yahoo's OCF
+  // includes loan originations and receivables growth treated as operating cash. This inflates
+  // FCF/revenue to 30–45% when sustainable free-cash-flow is much lower. The result: even at
+  // 0% growth the model produces a massive EV, forcing the reverse DCF to output a deeply
+  // negative implied CAGR (e.g. −8% for MELI) that misreads as "market prices in decline."
+  //
+  // Fix: cap at min(fcfMargin, netMargin × 2, 0.30) for companies where OCF-distortion risk
+  // is high — specifically internet retail and financial/fintech-hybrid sectors.
+  // netMargin × 2 ≈ maximum sustainable FCF conversion for a non-financial business;
+  // the 0.30 hard cap catches cases where even netMargin × 2 is too generous.
+  // For true financial/fintech companies (already using NI-based FCF proxy), leave as-is.
+  const isFintechOrInternetRetail =
+    /internet.*retail/i.test((snapshot.sector ?? '') + ' ' + (snapshot.industry ?? '')) ||
+    /fintech|neobank|digital.?bank|payment|credit.?service|consumer.?finance/i.test(snapshot.industry ?? '')
+  const rawFcfMargin = snapshot.fcfMargin
+  let normalizedFcfMargin = rawFcfMargin
+  if (
+    rawFcfMargin != null &&
+    rawFcfMargin > 0.25 &&
+    isFintechOrInternetRetail &&
+    !['financial', 'fintech', 'bdc', 'mreeit'].includes(snapshot.companyType ?? '')
+  ) {
+    const nmBased = assumptions.netMargin > 0 ? assumptions.netMargin * 2 : rawFcfMargin
+    normalizedFcfMargin = Math.min(rawFcfMargin, nmBased, 0.30)
+  }
+
   const reverseDcf = computeReverseDCF({
     currentPrice,
     sharesOutstanding: snapshot.sharesRaw,
     cashM: snapshot.cashM,
     debtM: snapshot.debtM,
     lastRevenue: snapshot.ttmRevenueDollars ?? snapshot.ltvRevenueDollars,
-    lastFCFMargin: snapshot.fcfMargin,
+    lastFCFMargin: normalizedFcfMargin,
     wacc: assumptions.wacc,
     terminalG: safeTG,
     historicalCAGR: snapshot.historicalCAGR,
+    exitNetMargin: isFintechOrInternetRetail ? assumptions.netMargin : null,
   })
 
   const divergence = computeDivergence(methods, blendedFairValue, assumptions, snapshot, debtOverhangDropped)

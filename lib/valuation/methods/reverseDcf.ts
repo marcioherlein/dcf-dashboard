@@ -18,11 +18,15 @@ export interface ReverseDCFInputs {
   cashM: number | null             // cash in millions
   debtM: number | null             // total debt in millions
   lastRevenue: number | null       // LTM revenue in $ (not millions)
-  lastFCFMargin: number | null     // FCF / Revenue (decimal)
+  lastFCFMargin: number | null     // FCF / Revenue (decimal) — caller should normalize before passing
   wacc: number
   terminalG: number
   historicalCAGR?: number | null   // for interpretation benchmarking
   yearsToTarget?: number
+  // Optional: when provided, used as a secondary cap on fcfMargin to prevent
+  // fintech-hybrid OCF distortion from producing spurious negative implied CAGRs.
+  // Pass the assumed exit net margin; effective cap = min(fcfMargin, netMargin × 2, 0.30).
+  exitNetMargin?: number | null
 }
 
 export type ReverseDCFInterpretation =
@@ -148,7 +152,13 @@ export function computeReverseDCF(inputs: ReverseDCFInputs): ReverseDCFResult {
   // Defensive ceiling: FCF margins above 45% are distortion artifacts (fintechs with
   // loan-origination-distorted OCF, one-off working-capital releases, etc.) that make
   // the model over-produce EV at zero growth and force a spuriously negative implied CAGR.
-  const effectiveFcfMargin = Math.min(lastFCFMargin, 0.45)
+  // Secondary cap via exitNetMargin: for any company where OCF is inflated by lending-book
+  // growth (internet retail + fintech hybrids), sustainable FCF can't meaningfully exceed
+  // net margin × 2. Callers that detect this condition should pass exitNetMargin.
+  let effectiveFcfMargin = Math.min(lastFCFMargin, 0.45)
+  if (inputs.exitNetMargin != null && inputs.exitNetMargin > 0) {
+    effectiveFcfMargin = Math.min(effectiveFcfMargin, inputs.exitNetMargin * 2, 0.30)
+  }
 
   // Binary search for CAGR
   let lo = -0.10
