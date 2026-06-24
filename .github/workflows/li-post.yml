@@ -77,26 +77,28 @@ jobs:
             DOW=$(date -u +%u)  # 1=Mon … 7=Sun
             echo "Scheduled at UTC ${HOUR}:${MIN} DOW=${DOW}"
 
-            if   [ "$HOUR" = "10" ] && [ "$MIN" -lt "50" ]; then MODE="li_morning_brief"
-            elif [ "$HOUR" = "14" ] && [ "$MIN" -lt "10" ] && ([ "$DOW" = "1" ] || [ "$DOW" = "3" ]); then MODE="li_myth"
-            elif [ "$HOUR" = "15" ] && [ "$MIN" -lt "10" ] && [ "$DOW" = "3" ]; then MODE="li_deep_dive"
-            elif [ "$HOUR" = "15" ] && [ "$MIN" -ge "25" ] && [ "$MIN" -lt "40" ] && ([ "$DOW" = "2" ] || [ "$DOW" = "4" ]); then MODE="li_divergence"
-            elif [ "$HOUR" = "15" ] && [ "$MIN" -ge "25" ] && [ "$MIN" -lt "40" ] && [ "$DOW" = "7" ]; then MODE="li_etf_scan"
-            elif [ "$HOUR" = "16" ] && [ "$MIN" -lt "10" ] && [ "$DOW" = "5" ]; then MODE="li_weekly_picks"
-            elif [ "$HOUR" = "17" ] && [ "$MIN" -lt "10" ] && ([ "$DOW" = "2" ] || [ "$DOW" = "4" ]); then MODE="li_conviction"
-            elif [ "$HOUR" = "17" ] && [ "$MIN" -lt "10" ] && [ "$DOW" = "7" ]; then MODE="li_sector_scan"
-            elif [ "$HOUR" = "18" ] && [ "$MIN" -lt "10" ] && ([ "$DOW" = "1" ] || [ "$DOW" = "2" ] || [ "$DOW" = "3" ] || [ "$DOW" = "4" ] || [ "$DOW" = "5" ]); then MODE="li_undervalued_list"
-            elif [ "$HOUR" = "18" ] && [ "$MIN" -ge "25" ] && [ "$MIN" -lt "40" ] && ([ "$DOW" = "1" ] || [ "$DOW" = "2" ] || [ "$DOW" = "3" ] || [ "$DOW" = "4" ] || [ "$DOW" = "5" ]); then MODE="li_sector_undervalued"
-            elif [ "$HOUR" = "18" ] && [ "$MIN" -lt "10" ] && [ "$DOW" = "6" ]; then MODE="li_ytd_losers"
-            elif [ "$HOUR" = "19" ] && [ "$MIN" -ge "25" ] && [ "$MIN" -lt "40" ] && ([ "$DOW" = "1" ] || [ "$DOW" = "3" ] || [ "$DOW" = "5" ]); then MODE="li_biggest_losers_day"
-            elif [ "$HOUR" = "19" ] && [ "$MIN" -ge "25" ] && [ "$MIN" -lt "40" ] && ([ "$DOW" = "2" ] || [ "$DOW" = "4" ]); then MODE="li_biggest_winners_day"
-            elif [ "$HOUR" = "19" ] && [ "$MIN" -lt "10" ] && [ "$DOW" = "7" ]; then MODE="li_ytd_winners"
-            elif [ "$HOUR" = "20" ] && [ "$MIN" -lt "10" ]; then MODE="li_movers"
-            elif [ "$HOUR" = "20" ] && [ "$MIN" -ge "25" ] && [ "$MIN" -lt "40" ]; then MODE="li_market_wrap"
-            elif [ "$HOUR" = "20" ] && [ "$MIN" -lt "10" ] && [ "$DOW" = "6" ]; then MODE="li_most_shorted"
-            elif [ "$HOUR" = "21" ] && [ "$MIN" -ge "25" ] && [ "$MIN" -lt "40" ]; then MODE="li_valuation"
-            elif [ "$HOUR" = "22" ] && [ "$MIN" -lt "10" ]; then MODE="li_near_52w_high"
-            else MODE="li_morning_brief"
+            if   [ "$HOUR" = "10" ] && [ "$MIN" -ge "44" ] && [ "$MIN" -lt "50" ]; then MODE="li_morning_brief"
+            elif [ "$HOUR" = "14" ] && [ "$MIN" -lt "5" ] && ([ "$DOW" = "1" ] || [ "$DOW" = "3" ]); then MODE="li_myth"
+            elif [ "$HOUR" = "15" ] && [ "$MIN" -lt "5" ] && [ "$DOW" = "3" ]; then MODE="li_deep_dive"
+            elif [ "$HOUR" = "15" ] && [ "$MIN" -ge "29" ] && [ "$MIN" -lt "35" ] && ([ "$DOW" = "2" ] || [ "$DOW" = "4" ]); then MODE="li_divergence"
+            elif [ "$HOUR" = "15" ] && [ "$MIN" -ge "29" ] && [ "$MIN" -lt "35" ] && [ "$DOW" = "7" ]; then MODE="li_etf_scan"
+            elif [ "$HOUR" = "16" ] && [ "$MIN" -lt "5" ] && [ "$DOW" = "5" ]; then MODE="li_weekly_picks"
+            elif [ "$HOUR" = "17" ] && [ "$MIN" -lt "5" ] && ([ "$DOW" = "2" ] || [ "$DOW" = "4" ]); then MODE="li_conviction"
+            elif [ "$HOUR" = "17" ] && [ "$MIN" -lt "5" ] && [ "$DOW" = "7" ]; then MODE="li_sector_scan"
+            elif [ "$HOUR" = "18" ] && [ "$MIN" -lt "5" ] && ([ "$DOW" = "1" ] || [ "$DOW" = "2" ] || [ "$DOW" = "3" ] || [ "$DOW" = "4" ] || [ "$DOW" = "5" ]); then MODE="li_undervalued_list"
+            elif [ "$HOUR" = "18" ] && [ "$MIN" -ge "29" ] && [ "$MIN" -lt "35" ] && ([ "$DOW" = "1" ] || [ "$DOW" = "2" ] || [ "$DOW" = "3" ] || [ "$DOW" = "4" ] || [ "$DOW" = "5" ]); then MODE="li_sector_undervalued"
+            elif [ "$HOUR" = "18" ] && [ "$MIN" -lt "5" ] && [ "$DOW" = "6" ]; then MODE="li_ytd_losers"
+            elif [ "$HOUR" = "19" ] && [ "$MIN" -ge "29" ] && [ "$MIN" -lt "35" ] && ([ "$DOW" = "1" ] || [ "$DOW" = "3" ] || [ "$DOW" = "5" ]); then MODE="li_biggest_losers_day"
+            elif [ "$HOUR" = "19" ] && [ "$MIN" -ge "29" ] && [ "$MIN" -lt "35" ] && ([ "$DOW" = "2" ] || [ "$DOW" = "4" ]); then MODE="li_biggest_winners_day"
+            elif [ "$HOUR" = "19" ] && [ "$MIN" -lt "5" ] && [ "$DOW" = "7" ]; then MODE="li_ytd_winners"
+            elif [ "$HOUR" = "20" ] && [ "$MIN" -lt "5" ] && ([ "$DOW" = "1" ] || [ "$DOW" = "2" ] || [ "$DOW" = "3" ] || [ "$DOW" = "4" ] || [ "$DOW" = "5" ]); then MODE="li_movers"
+            elif [ "$HOUR" = "20" ] && [ "$MIN" -ge "29" ] && [ "$MIN" -lt "35" ] && ([ "$DOW" = "1" ] || [ "$DOW" = "2" ] || [ "$DOW" = "3" ] || [ "$DOW" = "4" ] || [ "$DOW" = "5" ]); then MODE="li_market_wrap"
+            elif [ "$HOUR" = "20" ] && [ "$MIN" -lt "5" ] && [ "$DOW" = "6" ]; then MODE="li_most_shorted"
+            elif [ "$HOUR" = "21" ] && [ "$MIN" -ge "29" ] && [ "$MIN" -lt "35" ] && ([ "$DOW" = "1" ] || [ "$DOW" = "2" ] || [ "$DOW" = "3" ] || [ "$DOW" = "4" ] || [ "$DOW" = "5" ]); then MODE="li_valuation"
+            elif [ "$HOUR" = "22" ] && [ "$MIN" -lt "5" ] && ([ "$DOW" = "1" ] || [ "$DOW" = "2" ] || [ "$DOW" = "3" ] || [ "$DOW" = "4" ] || [ "$DOW" = "5" ]); then MODE="li_near_52w_high"
+            else
+              echo "No matching mode for UTC ${HOUR}:${MIN} DOW=${DOW} — skipping"
+              exit 0
             fi
 
             echo "mode=${MODE}" >> $GITHUB_OUTPUT
@@ -105,6 +107,7 @@ jobs:
           fi
 
       - name: Post to LinkedIn
+        if: steps.mode.outputs.mode != ''
         env:
           MODE:                        ${{ steps.mode.outputs.mode }}
           TICKER:                      ${{ steps.mode.outputs.ticker }}
