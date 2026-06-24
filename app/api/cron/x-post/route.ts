@@ -14,6 +14,9 @@ const VALID_MODES = [
   'movers','undervalued_list','sector_undervalued',
   'biggest_losers_day','biggest_winners_day','ytd_losers','ytd_winners',
   'near_52w_high','most_shorted',
+  'li_undervalued_list','li_sector_undervalued','li_biggest_losers_day',
+  'li_biggest_winners_day','li_ytd_losers','li_ytd_winners',
+  'li_near_52w_high','li_most_shorted','li_movers',
 ]
 
 export async function GET(req: NextRequest) {
