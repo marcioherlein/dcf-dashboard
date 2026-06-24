@@ -798,7 +798,7 @@ async function runNews() {
     ``,
     `If yes to any of the above, the fair value just moved.`,
     ``,
-    ...(tickerMentions.length > 0 ? [`Run the updated model on ${tickerMentions.join(', ')} → ${APP_URL}`, ``] : [`${APP_URL}`, ``]),
+    ...(tickerMentions.length > 0 ? [`Run the updated model on ${tickerMentions.join(', ')}`, ``] : [`insic.app`, ``]),
     hashPart,
   ]
 
@@ -931,7 +931,7 @@ async function runMacro() {
         `A 1% change in WACC typically moves a growth stock's fair value by 15–25%.`,
         `If you're holding stocks with elevated valuations, this print matters.`,
         ``,
-        `Re-run your models with updated rates → ${APP_URL}`,
+        `Re-run your models with updated rates`,
         `#CPI #Inflation #Fed #Macro #Investing`,
       ]
     } else if (todayEvent.type === 'NFP') {
@@ -955,7 +955,7 @@ async function runMacro() {
         `A healthy labor market is good for consumer stocks, banks, and cyclicals.`,
         `A weak print is good for rate-sensitive growth names.`,
         ``,
-        `See which stocks benefit most → ${APP_URL}`,
+        `See which stocks benefit most`,
         `#NFP #JobsReport #Fed #Macro #Investing`,
       ]
     } else if (todayEvent.type === 'FOMC') {
@@ -976,7 +976,7 @@ async function runMacro() {
           ? `Rate cut → lower WACC → higher DCF fair values.\n\nGrowth stocks benefit most. Every 1% drop in WACC adds 15–25% to a typical growth stock's fair value.\n\nAlready priced in? The market usually front-runs cuts — check if the current price already reflects the new rate regime.`
           : `No change — in line with expectations.\n\nThe real signal is in the guidance: how many cuts are projected for the year? Any shift in the dot plot changes the path of WACC, which flows directly into every valuation model.`,
         ``,
-        `Re-run your valuations with the new rate → ${APP_URL}`,
+        `Re-run your valuations with the new rate`,
         `#FOMC #Fed #InterestRates #Macro #Investing`,
       ]
     }
@@ -1003,7 +1003,7 @@ async function runMacro() {
       ``,
       `What to watch: does the print change your WACC assumptions? That's the question that matters.`,
       ``,
-      `Run your models ahead of the release → ${APP_URL}`,
+      `Run your models ahead of the release`,
       `#${tomorrowEvent.type} #Macro #FedWatch #Investing`,
     ]
     await post(lines.join('\n'))
@@ -1032,7 +1032,6 @@ async function runMacro() {
     '',
     upcomingContext[upcoming.type] ?? `${upcoming.label} is ${daysAway} days away.`,
     '',
-    `${APP_URL}`,
     `#${upcoming.type} #Macro #FedWatch`,
   ]
   await post(lines.join('\n'))
@@ -1068,7 +1067,7 @@ const FEATURE_POSTS = {
       ``,
       `Most investors skip this step and pay whatever the market asks. That's how they overpay.`,
       ``,
-      `Free DCF on any NYSE/NASDAQ stock → ${APP_URL}`,
+      `Free DCF on any NYSE/NASDAQ stock`,
       `#DCF #Investing #StockValuation #FundamentalAnalysis`,
     ],
   },
@@ -1102,7 +1101,7 @@ const FEATURE_POSTS = {
       `• Cost of debt × (1 - tax rate)`,
       `• Capital structure (debt/equity mix)`,
       ``,
-      `WACC breakdown for any stock, free → ${APP_URL}`,
+      `WACC breakdown for any stock, free`,
       `#WACC #DCF #Investing #InterestRates`,
     ],
   },
@@ -1132,7 +1131,7 @@ const FEATURE_POSTS = {
       `A stock pricing in 30% perpetual growth is almost always a bad bet.`,
       `A stock pricing in 8% growth on a business delivering 20% might be a great one.`,
       ``,
-      `Growth model for any stock → ${APP_URL}`,
+      `Growth model for any stock`,
       `#Valuation #DCF #GrowthInvesting #FinancialModeling`,
     ],
   },
@@ -1169,7 +1168,7 @@ const FEATURE_POSTS = {
       `A stock where the bear case = current price is a stock with no margin of safety.`,
       `A stock where the bear case is 30% below and the bull is 100% above? That's an asymmetric bet.`,
       ``,
-      `Bear/base/bull scenarios for any stock → ${APP_URL}`,
+      `Bear/base/bull scenarios for any stock`,
       `#DCF #ScenarioAnalysis #Investing #RiskManagement`,
     ],
   },
@@ -1200,7 +1199,7 @@ const FEATURE_POSTS = {
       `Most "expensive" stocks look cheap when you account for ROIC spread.`,
       `Many "cheap" stocks are value traps when ROIC is below WACC.`,
       ``,
-      `ROIC vs WACC for any stock → ${APP_URL}`,
+      `ROIC vs WACC for any stock`,
       `#ROIC #Moat #ValueInvesting #Buffett #DCF`,
     ],
   },
@@ -1237,7 +1236,7 @@ const FEATURE_POSTS = {
       ``,
       `No black box. No opinion. Just a transparent model you can stress-test.`,
       ``,
-      `Free for any stock → ${APP_URL}`,
+      `Free for any stock`,
       `#DCF #Investing #StockAnalysis #FinancialModeling`,
     ],
   },
@@ -1270,7 +1269,7 @@ const FEATURE_POSTS = {
       ``,
       `DCF doesn't care what the market is doing. It asks one question: what will this business generate in cash, and what's that worth today?`,
       ``,
-      `Worth asking before you invest → ${APP_URL}`,
+      `Worth asking before you invest`,
       `#Investing #ValueInvesting #DCF #StockMarket`,
     ],
   },
@@ -1355,7 +1354,7 @@ async function runWeeklyWrap() {
 
   lines.push(`Which one would you bet on?`)
   lines.push(``)
-  lines.push(`${APP_URL}`)
+  // link removed — no card
   lines.push(`#DCF #Investing #ValueInvesting`)
 
   await post(lines.join('\n'))
@@ -1373,7 +1372,7 @@ const QUESTIONS = [
     ``,
     `Do you actually believe that? Or are you just buying because it went up?`,
     ``,
-    `Check what any stock is implying → ${APP_URL}`,
+    `Check what any stock is implying`,
     `#Investing #Tesla #TSLA #ValueInvesting`,
   ],
   [
@@ -1385,7 +1384,6 @@ const QUESTIONS = [
     ``,
     `Which framework are you using?`,
     ``,
-    `${APP_URL}`,
     `#Investing #Stocks #WallStreet`,
   ],
   [
@@ -1397,7 +1395,7 @@ const QUESTIONS = [
     ``,
     `Do you agree with the market's bet?`,
     ``,
-    `See the full reverse DCF → ${APP_URL}/stock/NVDA`,
+    `See the full reverse DCF insic.app/stock/NVDA`,
     `$NVDA #Nvidia #DCF #Investing`,
   ],
   [
@@ -1410,7 +1408,7 @@ const QUESTIONS = [
     ``,
     `Which stocks in your portfolio have a real margin of safety right now?`,
     ``,
-    `Free model for any stock → ${APP_URL}`,
+    `Free model for any stock`,
     `#DCF #ValueInvesting #Investing`,
   ],
   [
@@ -1420,7 +1418,7 @@ const QUESTIONS = [
     ``,
     `"Great company" and "great investment at this price" are two completely different things.`,
     ``,
-    `Check the implied growth for any stock → ${APP_URL}`,
+    `Check the implied growth for any stock`,
     `#Investing #ValueInvesting #StockMarket`,
   ],
 ]
@@ -1646,7 +1644,7 @@ async function runEtfPulse() {
       lines.push(`VIX ${vix.price.toFixed(1)} — ${sentiment.label.toLowerCase()}`)
       lines.push(``, sentiment.note)
     }
-    lines.push(``, `${APP_URL}`)
+    // link removed — no card
     lines.push(`#SPY #QQQ #Markets #Investing`)
 
     await post(lines.join('\n'))
@@ -1682,7 +1680,7 @@ async function runEtfPulse() {
     }
 
     lines.push(``, rotationRead)
-    lines.push(``, `${APP_URL}`)
+    // link removed — no card
     lines.push(`#SectorRotation #${ETF_NAMES[best.symbol].replace(/\s/g,'')} #Markets`)
 
     await post(lines.join('\n'))
@@ -1712,7 +1710,7 @@ const SENTIMENT_POSTS = [
     `Weekly price movements are noise. Business fundamentals change quarterly.`,
     `The investors who build wealth over decades are the ones who stay focused on the second, not the first.`,
     ``,
-    `Review your positions this weekend → ${APP_URL}`,
+    `Review your positions this weekend`,
     `#Weekend #StockMarket #Investing #ValueInvesting`,
   ],
   // Forward-looking
@@ -1739,7 +1737,7 @@ const SENTIMENT_POSTS = [
     ``,
     `A process beats a prediction. Every time.`,
     ``,
-    `Build your process → ${APP_URL}`,
+    `Build your process`,
     `#Investing #StockMarket #WeekendInvesting #DCF`,
   ],
 ]
@@ -1869,7 +1867,7 @@ async function runSentiment() {
     lines.push(``, `Before earnings: run the model. The pre-earnings DCF tells you whether a stock needs to beat just to be fairly valued — or can miss and still be cheap.`)
   }
 
-  lines.push(``, `${APP_URL}`, `#WeekAhead #Investing #DCF #StockMarket`)
+  lines.push(``, `#WeekAhead #Investing #DCF #StockMarket`)
 
   await post(lines.join('\n'))
 }
@@ -2072,7 +2070,7 @@ async function runMorningBrief() {
   if (tomorrowNote) lines.push(``, tomorrowNote)
 
   lines.push(``, `The price moved. Did the value?`)
-  lines.push(`${APP_URL}`)
+  // link removed — no card
   lines.push(`#Markets #Investing #DCF`)
 
   await post(lines.join('\n'))
@@ -2188,7 +2186,7 @@ async function runMiddayPulse() {
 
   if (macroNote.length > 0) lines.push(``, ...macroNote)
 
-  lines.push(``, hooks[weekOfYear % hooks.length], ``, `${APP_URL}`)
+  lines.push(``, hooks[weekOfYear % hooks.length])
   lines.push(`#Markets #StockMarket #Investing`)
 
   await post(lines.join('\n'))
@@ -2270,10 +2268,10 @@ async function runMarketClose() {
 
   const weekOfYear = Math.floor((Date.now() / 86400000 + 4) / 7)
   const hooks = [
-    `The price moved. Did the value? ${APP_URL}`,
-    `Worth running the model after a session like this — ${APP_URL}`,
-    `The market priced something in today. Was it already in your model? ${APP_URL}`,
-    `Some of these moves will matter. Most won't. Hard part is knowing which. ${APP_URL}`,
+    `The price moved. Did the value? insic.app`,
+    `Worth running the model after a session like this — insic.app`,
+    `The market priced something in today. Was it already in your model? insic.app`,
+    `Some of these moves will matter. Most won't. Hard part is knowing which. insic.app`,
   ]
 
   const sp = sp500 ? `S&P ${sp500.changePct >= 0 ? '+' : ''}${sp500.changePct.toFixed(2)}%` : null
@@ -2358,7 +2356,6 @@ async function runMarketOpen() {
     ``,
     processNote,
     ``,
-    `insic.app`,
     `#OpeningBell #Markets #Investing`,
   ].filter(Boolean)
 
@@ -2424,7 +2421,7 @@ async function runSectorSpotlight() {
     gapStr,
     stocks.length > 0 ? `Names moving in ${sectorName[best.symbol]}: ${stocks.slice(0, 3).map(t => `$${t}`).join(' · ')}` : null,
     ``,
-    `Which sector holds up at current valuations? ${APP_URL}/etf`,
+    `Which sector holds up at current valuations? insic.app/etf`,
     `#SectorRotation #${sectorName[best.symbol]?.replace(/\s/g,'') ?? best.symbol} #Investing`,
   ].filter(Boolean)
 
@@ -2570,7 +2567,7 @@ async function runPreClose() {
     lateSignal,
     ...(macroTomorrow.length > 0 ? [``, `Tomorrow: ${macroTomorrow.map(e => e.label).join(' · ')}`] : []),
     ``,
-    `The price moved. Did the value? ${APP_URL}`,
+    `The price moved. Did the value? insic.app`,
     `#Markets #PreClose #Investing`,
   ].filter(Boolean)
 
@@ -2648,7 +2645,7 @@ async function runAfterHours() {
     lines.push(``, `Tomorrow: ${macroTomorrow.map(e => e.label).join(' · ')}`)
   }
 
-  lines.push(``, `${APP_URL}`, `#AfterHours #Earnings #Markets #Investing`)
+  lines.push(``, `#AfterHours #Earnings #Markets #Investing`)
 
   await post(lines.join('\n'))
 }
@@ -2677,7 +2674,6 @@ const THEORY_POSTS = {
       ``,
       `A DCF model gives you an estimate. The margin of safety is what you demand below it.`,
       ``,
-      `${APP_URL}`,
       `#GrahamInvesting #MarginOfSafety #ValueInvesting`,
     ],
   },
@@ -2702,7 +2698,6 @@ const THEORY_POSTS = {
       ``,
       `Neither replaces a DCF. Both are shortcuts.`,
       ``,
-      `${APP_URL}`,
       `#Valuation #EV #Multiples #Investing`,
     ],
   },
@@ -2724,7 +2719,6 @@ const THEORY_POSTS = {
       ``,
       `Owner earnings is essentially what we're discounting in a FCFF model. The best investors aren't doing anything exotic — they're just being rigorous about this one number.`,
       ``,
-      `${APP_URL}`,
       `#Buffett #OwnerEarnings #ValueInvesting #DCF`,
     ],
   },
@@ -2747,7 +2741,6 @@ const THEORY_POSTS = {
       ``,
       `That gap — between the market's implied CAGR and your estimate — is where the edge lives.`,
       ``,
-      `${APP_URL}`,
       `#MeanReversion #Valuation #DCF #ValueInvesting`,
     ],
   },
@@ -2771,7 +2764,6 @@ const THEORY_POSTS = {
       ``,
       `That duration is what separates a 10× stock from the rest.`,
       ``,
-      `${APP_URL}`,
       `#ROIC #Moat #CompoundingReturns #ValueInvesting`,
     ],
   },
@@ -2797,7 +2789,6 @@ const THEORY_POSTS = {
       ``,
       `That's what a DCF tries to systematize.`,
       ``,
-      `${APP_URL}`,
       `#ValueInvesting #QualityInvesting #DCF #Damodaran`,
     ],
   },
@@ -2821,7 +2812,6 @@ const THEORY_POSTS = {
       ``,
       `The implied CAGR converts a price judgment into a business belief. You don't need to know if the stock is cheap. You need to decide if you believe in the business trajectory the price is embedding.`,
       ``,
-      `${APP_URL}`,
       `#ReverseDCF #ImpliedGrowth #Valuation #Investing`,
     ],
   },
@@ -2846,7 +2836,6 @@ const THEORY_POSTS = {
       ``,
       `The terminal value is where most valuation errors hide.`,
       ``,
-      `${APP_URL}`,
       `#TerminalValue #DCF #Valuation #ValueInvesting`,
     ],
   },
@@ -2870,7 +2859,6 @@ const THEORY_POSTS = {
       ``,
       `That's the only question that matters.`,
       ``,
-      `${APP_URL}`,
       `#WACC #DiscountRate #DCF #FedPolicy #Investing`,
     ],
   },
@@ -2895,7 +2883,6 @@ const THEORY_POSTS = {
       ``,
       `Intrinsic value is the anchor you use when the market is being irrational — in either direction.`,
       ``,
-      `${APP_URL}`,
       `#IntrinsicValue #PriceTarget #ValueInvesting #DCF`,
     ],
   },
@@ -3080,7 +3067,7 @@ async function runEarningsResults() {
       revLine,
       reactionLine,
       ``,
-      `Did the business actually change, or just the price? Fair value → ${APP_URL}/stock/${c.ticker}`,
+      `Did the business actually change, or just the price? Fair value insic.app/stock/${c.ticker}`,
       `#${c.ticker} #Earnings #DCF`,
     ].filter(Boolean)
 
@@ -3171,7 +3158,6 @@ async function runEconomicResults() {
     ``,
     narrative,
     ``,
-    `${APP_URL}`,
     `#${todayEvent.type} #Macro #Investing`,
   ].filter(Boolean)
 
@@ -3206,7 +3192,6 @@ const HOLIDAY_POSTS = [
       `The ERP is not fixed. It expands in recessions, contracts in bull markets.`,
       `When you use insic, we use Damodaran's current implied ERP — updated monthly.`,
       ``,
-      `${APP_URL}`,
       `#EquityRiskPremium #WACC #Damodaran #ValueInvesting`,
     ],
   },
@@ -3235,7 +3220,6 @@ const HOLIDAY_POSTS = [
       `DCF formalizes what Fama-French quantified empirically.`,
       `You're not doing something different from academic finance — you're doing the same thing with more transparency.`,
       ``,
-      `${APP_URL}`,
       `#FamaFrench #FactorInvesting #DCF #AcademicFinance`,
     ],
   },
@@ -3265,7 +3249,6 @@ const HOLIDAY_POSTS = [
       `The right use of CAPE: macro context, not stock-picking.`,
       `For individual companies, DCF with honest assumptions is more reliable.`,
       ``,
-      `${APP_URL}`,
       `#CAPE #Shiller #MarketValuation #ValueInvesting`,
     ],
   },
@@ -3293,7 +3276,6 @@ const HOLIDAY_POSTS = [
       `Value comes from operations: higher ROIC, better margins, faster growth.`,
       `Financing is just execution. The DCF is what captures the real value.`,
       ``,
-      `${APP_URL}`,
       `#ModiglianiMiller #CorporateFinance #WACC #DCF`,
     ],
   },
@@ -3326,7 +3308,6 @@ const HOLIDAY_POSTS = [
       ``,
       `That's exactly what insic is built for.`,
       ``,
-      `${APP_URL}`,
       `#Graham #MrMarket #IntelligentInvestor #ValueInvesting`,
     ],
   },
@@ -3357,7 +3338,6 @@ const HOLIDAY_POSTS = [
       `A 30% margin of safety on a reliable business might warrant 5-10% of portfolio.`,
       `A 5% margin of safety on a speculative one: maybe 1-2%.`,
       ``,
-      `${APP_URL}`,
       `#Kelly #PositionSizing #ValueInvesting #RiskManagement`,
     ],
   },
@@ -3388,7 +3368,6 @@ const HOLIDAY_POSTS = [
       ``,
       `Net income is noise. Economic Profit is signal.`,
       ``,
-      `${APP_URL}`,
       `#NOPAT #EconomicProfit #ROIC #Valuation`,
     ],
   },
@@ -3670,7 +3649,7 @@ async function runSectorScan() {
     ``,
     ...insights,
     ``,
-    `Full interactive models → ${APP_URL}`,
+    `Full interactive models`,
     scan.hashtags,
   ].filter(Boolean)
 
@@ -3832,7 +3811,7 @@ async function run52wLow() {
     ``,
     `Price and value diverge all the time. The gap closes eventually — one way or the other.`,
     ``,
-    `${APP_URL}/stock/${ticker}`,
+    `insic.app/stock/${ticker}`,
     `$${ticker} #ValueInvesting #DCF`,
   ].filter(Boolean)
 
@@ -3891,7 +3870,6 @@ async function runTopUndervalued() {
     ``,
     `Model outputs, not financial advice — but the gap is real. The model says these are cheap. The market disagrees. One of them is right.`,
     ``,
-    `${APP_URL}`,
     `#ValueInvesting #DCF #StockMarket #Investing`,
   ].filter(Boolean)
 
@@ -3958,7 +3936,7 @@ async function runMarketVsModel() {
       ? `Analysts tend to anchor to near-term numbers. DCF captures the longer arc. If the model's right, there's a gap worth exploring.`
       : `If our growth assumptions are too conservative, the Street wins. If they're too generous, the consensus target doesn't hold. Worth stress-testing either way.`,
     ``,
-    `Run the assumptions yourself → ${APP_URL}/stock/${ticker}`,
+    `Run the assumptions yourself insic.app/stock/${ticker}`,
     `$${ticker} #DCF #Valuation #Investing`,
   ].filter(Boolean)
 
@@ -4315,7 +4293,7 @@ async function runRatioExplained() {
       ``,
       `This week we're breaking it down: what it measures, how to read it, and when it's useful vs misleading.`,
       ``,
-      `(Live data temporarily unavailable — check ${APP_URL}/stock/${anchorTicker} for current numbers.)`,
+      `(Live data temporarily unavailable — check insic.app/stock/${anchorTicker} for current numbers.)`,
     ]
   }
 
@@ -4324,7 +4302,7 @@ async function runRatioExplained() {
     ``,
     ...bodyLines,
     ``,
-    `See every ratio for any stock, free → ${APP_URL}/stock/${anchorTicker}`,
+    `See every ratio for any stock, free insic.app/stock/${anchorTicker}`,
     meta.hashtags,
   ].filter(l => l !== null && l !== undefined)
 
@@ -5221,7 +5199,6 @@ async function runLiWeeklyPicks() {
     ``,
     `Every model is interactive — change cost of capital, growth rate, or terminal value and see the fair value update in real time. Build your own thesis.`,
     ``,
-    `insic.app`,
     ``,
     `#ValueInvesting #DCF #StockPicks #Finance #Investing`,
   ].filter(Boolean)
@@ -5306,7 +5283,6 @@ const LI_MYTHS = [
     ``,
     `DCF intrinsic value asks a different question: if I owned this business forever and collected all its cash flows, what would I pay for it today? That's the more honest frame.`,
     ``,
-    `insic.app`,
     ``,
     `#AnalystTargets #DCF #ValueInvesting #Finance`,
   ],
@@ -5346,7 +5322,6 @@ const LI_MYTHS = [
     ``,
     `Price history is irrelevant to intrinsic value. The business fundamentals are not.`,
     ``,
-    `insic.app`,
     ``,
     `#ValueInvesting #DCF #Valuation #Finance #Investing`,
   ],
@@ -5644,7 +5619,7 @@ async function runConvictionScore() {
     ``,
     fair && price ? `Fair value estimate: ${fmt(fair)} · Current price: ${fmt(price)}` : null,
     ``,
-    `Full breakdown → ${APP_URL}/stock/${ticker}`,
+    `Full breakdown insic.app/stock/${ticker}`,
     `$${ticker} #ConvictionScore #Investing`,
   ].filter(Boolean)
 
@@ -5808,7 +5783,7 @@ async function runEtfValueScan() {
     ``,
     `The score blends P/E, P/B, yield, and fees into a single number — higher means cheaper relative to what you're getting.`,
     ``,
-    `Which sector holds up at current valuations? ${APP_URL}/etf`,
+    `Which sector holds up at current valuations? insic.app/etf`,
     `#ETF #ValueInvesting #SectorRotation #Investing`,
   ]
 
@@ -5960,8 +5935,8 @@ async function runMovers() {
 
 
   const ctaLine = isGainer
-    ? `Is $${biggestMover.symbol} worth what it's pricing in after today? ${APP_URL}/stock/${biggestMover.symbol}`
-    : `$${biggestMover.symbol} down ${Math.abs(biggestMover.chgPct).toFixed(1)}% — the value case just got cheaper or the thesis just broke. ${APP_URL}/stock/${biggestMover.symbol}`
+    ? `Is $${biggestMover.symbol} worth what it's pricing in after today? insic.app/stock/${biggestMover.symbol}`
+    : `$${biggestMover.symbol} down ${Math.abs(biggestMover.chgPct).toFixed(1)}% — the value case just got cheaper or the thesis just broke. insic.app/stock/${biggestMover.symbol}`
   const lines = [
     `Today's biggest movers — ${dayName}`,
     ``,
@@ -6063,7 +6038,7 @@ async function runUndervaluedList() {
     ``,
     question,
     ``,
-    `Full models → ${APP_URL}`,
+    `Full models`,
     `#ValueInvesting #DCF #Stocks #Investing`,
   ]
 
@@ -6138,7 +6113,7 @@ async function runSectorUndervalued() {
     ``,
     question,
     ``,
-    `Run any of these → ${APP_URL}`,
+    `Run any of these`,
     `#${theme.name.replace(/[^a-zA-Z]/g, '')} #ValueInvesting #DCF #Stocks`,
   ]
 
@@ -6237,7 +6212,6 @@ async function runBiggestLosersDay() {
     `Price drops ≠ business breaks. Worth checking which.`,
     question,
     ``,
-    `${APP_URL}`,
     `#StockMarket #Losers #Investing #DCF`,
   ].filter(Boolean)
 
@@ -6310,7 +6284,6 @@ async function runBiggestWinnersDay() {
     `A big move is information. The question is whether the business changed or just the price.`,
     question,
     ``,
-    `${APP_URL}`,
     `#StockMarket #Winners #Investing #DCF`,
   ].filter(Boolean)
 
@@ -6386,7 +6359,6 @@ async function runYtdLosers() {
     ``,
     question,
     ``,
-    `${APP_URL}`,
     `#StockMarket #YTD #ValueInvesting #DCF`,
   ].filter(Boolean)
 
@@ -6459,7 +6431,6 @@ async function runYtdWinners() {
     ``,
     question,
     ``,
-    `${APP_URL}`,
     `#StockMarket #YTD #Investing #DCF`,
   ].filter(Boolean)
 
@@ -6529,7 +6500,6 @@ async function runNear52wHigh() {
     `Breaking out, or running out of room?`,
     question,
     ``,
-    `${APP_URL}`,
     `#StockMarket #Breakout #52WeekHigh #Investing`,
   ].filter(Boolean)
 
@@ -6613,7 +6583,6 @@ async function runMostShorted() {
     ``,
     question,
     ``,
-    `${APP_URL}`,
     `#ShortSqueeze #StockMarket #Investing #DCF`,
   ].filter(Boolean)
 
