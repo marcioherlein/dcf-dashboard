@@ -22,6 +22,7 @@ const FREE_FEATURES = [
   'Conviction Score, Reverse DCF, Monte Carlo',
   'Full financials + analyst estimates',
   'Markets, ETF Tracker, Screener (20 results)',
+  'ETF watchlist — up to 5 ETFs',
   '5 stock analyses per month · 5 saved',
 ]
 
@@ -31,6 +32,8 @@ const PRO_FEATURES = [
   'Sensitivity table (CAGR × WACC heat map)',
   'Full screener — unlimited results + scatter chart',
   'Multi-ticker comparison + pairs signals',
+  'ETF Basket DCF — weighted fair value across holdings',
+  'ETF metric history + unlimited ETF watchlist',
   'Quant Strategy Library — 5 strategies',
   'Weekly watchlist digest (email)',
 ]
@@ -143,7 +146,7 @@ export default function PricingSection() {
         {/* Upgrade path strip */}
         <div className="mt-5 max-w-[1040px] mx-auto rounded-xl border border-[#E5E5E5] bg-[#FAFAFA] px-5 py-3.5 flex flex-wrap items-center gap-3">
           <span className="text-[12px] font-bold text-[#6B6B6B] shrink-0">Free includes everything except:</span>
-          {['Unlimited analyses', 'Sensitivity table', 'Full screener', 'Compare + pairs', 'Weekly digest'].map(f => (
+          {['Unlimited analyses', 'Sensitivity table', 'Full screener', 'Compare + pairs', 'ETF Basket DCF', 'Weekly digest'].map(f => (
             <span key={f} className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[#111111] bg-white border border-[#BFD2A1] rounded-full px-3 py-1">
               <Check size={11} className="text-[#5F790B] shrink-0" strokeWidth={2.5} />
               {f}

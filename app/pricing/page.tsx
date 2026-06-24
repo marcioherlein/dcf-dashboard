@@ -21,6 +21,7 @@ const FREE_FEATURES = [
   'Conviction Score, Reverse DCF, Monte Carlo',
   'Full 3-statement financials, analyst estimates',
   'Markets page, ETF Tracker, Screener (20 results)',
+  'ETF watchlist — track up to 5 ETFs',
   '5 stock analyses per month',
   '5 saved valuations',
 ]
@@ -31,6 +32,9 @@ const PRO_FEATURES = [
   { icon: BarChart2,  text: 'Sensitivity table — fair value at every CAGR × WACC combination' },
   { icon: BarChart2,  text: 'Full screener — unlimited results + scatter chart view' },
   { icon: BarChart2,  text: 'Multi-ticker comparison with correlation & pairs signals' },
+  { icon: TrendingUp, text: 'ETF Basket DCF — weighted fair value signal across all holdings' },
+  { icon: TrendingUp, text: 'ETF metric history (P/E, P/B, yield, score over time)' },
+  { icon: TrendingUp, text: 'Unlimited ETF watchlist + inline compare' },
   { icon: Users,      text: 'Quant Strategy Library — 5 academic factor strategies' },
   { icon: Bell,       text: 'Weekly watchlist digest (email)' },
   { icon: Shield,     text: 'Priority support' },
@@ -48,7 +52,13 @@ const COMPARISON_ROWS = [
   { label: 'Monte Carlo simulation',                                browse: false,  free: true,  pro: true  },
   { label: 'Full DCF model — year-by-year projections',             browse: false,  free: true,  pro: true  },
   { label: 'Financials (3-statement, analyst estimates)',            browse: false,  free: true,  pro: true  },
-  { label: 'Markets page, ETF Tracker',                             browse: false,  free: true,  pro: true  },
+  { label: 'Markets page',                                          browse: false,  free: true,  pro: true  },
+  { label: 'ETF Tracker — screener, theme grid, heatmap',           browse: false,  free: true,  pro: true  },
+  { label: 'ETF detail page — profile, holdings, sector allocation', browse: false, free: true,  pro: true  },
+  { label: 'ETF watchlist',                                         browse: false,  free: '5 ETFs', pro: '∞' },
+  { label: 'ETF Basket DCF — weighted fair value across holdings',  browse: false,  free: false, pro: true  },
+  { label: 'ETF metric history (P/E, P/B, yield, score over time)', browse: false,  free: false, pro: true  },
+  { label: 'ETF inline compare (multi-select + side-by-side)',       browse: false,  free: false, pro: true  },
   { label: 'Screener — fundamental filters',                        browse: false,  free: '20 results', pro: '∞ + scatter' },
   { label: 'Sensitivity table (CAGR × WACC heat map)',              browse: false,  free: false, pro: true  },
   { label: 'Multi-ticker comparison + pairs signals',               browse: false,  free: false, pro: true  },
@@ -65,6 +75,10 @@ const FAQS = [
   {
     q: 'What happens when I hit the 5-stock limit?',
     a: 'You\'ll see an upgrade prompt. Stocks you\'ve already viewed this month remain fully accessible — the limit only applies to new tickers. The count resets at the start of each calendar month.',
+  },
+  {
+    q: 'What ETF features are free vs. Pro?',
+    a: 'The full ETF Tracker is free — screener, theme grid, heatmap, rankings, and the ETF detail page (profile, holdings, sector allocation). You can also save up to 5 ETFs to your watchlist for free. Pro unlocks: ETF Basket DCF (weighted fair value across holdings), metric history (P/E, P/B, yield trend over time), unlimited watchlist, and the inline compare panel.',
   },
   {
     q: 'How accurate is the DCF model?',

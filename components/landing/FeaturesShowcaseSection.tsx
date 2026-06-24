@@ -101,6 +101,22 @@ const TABS: Tab[] = [
     url: 'insic.app/screener',
     href: '/screener',
   },
+  {
+    id: 'etf',
+    label: 'ETF Tracker',
+    badge: null,
+    headline: 'Track ETFs by value, cost, and holdings — not just price.',
+    bullets: [
+      'Value score — P/E, P/B, yield, expense ratio in one number',
+      'Watchlist table with 1M/1Y returns, Sharpe, beta',
+      'ETF Basket DCF — fair value signal across all holdings (Pro)',
+      '60 ETFs across 8 groups: broad, sector, bond, thematic & more',
+    ],
+    src: '/screenshots/tab-etf.png',
+    fallback: '/screenshots/summary-desktop.png',
+    url: 'insic.app/etf',
+    href: '/etf',
+  },
 ]
 
 export default function FeaturesShowcaseSection() {
@@ -122,7 +138,7 @@ export default function FeaturesShowcaseSection() {
             Every page. Every feature.
           </h2>
           <p className="text-[15px] text-[#6B6B6B] mt-2">
-            Five focused views — from raw verdict to editable model to macro context.
+            Six focused views — from raw verdict to editable model to ETF decision cockpit.
           </p>
         </div>
 
