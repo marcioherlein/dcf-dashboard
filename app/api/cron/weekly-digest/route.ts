@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import Anthropic from '@anthropic-ai/sdk'
-import WeeklyDigestEmail, { type DigestContent, type WatchlistStock, type SpotlightStock } from '@/emails/WeeklyDigestEmail'
+import WeeklyDigestEmail, { type DigestContent, type WatchlistStock } from '@/emails/WeeklyDigestEmail'
 
 export const maxDuration = 300 // 5-minute timeout for AI generation + bulk send
 
