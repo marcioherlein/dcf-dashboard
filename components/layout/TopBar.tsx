@@ -839,9 +839,10 @@ export default function TopBar() {
                 <button
                   onClick={() => setMobileSearchOpen(v => !v)}
                   aria-label="Search stocks"
-                  className="flex items-center justify-center min-w-[44px] min-h-[44px] text-[#6B6B6B] hover:text-[#111111] transition-colors"
+                  className="flex items-center justify-center min-w-[44px] min-h-[44px] rounded-xl transition-colors hover:bg-[#F0F1F6] active:bg-[#E8E9EF]"
+                  style={{ color: '#111111' }}
                 >
-                  <Search size={16} />
+                  <Search size={18} strokeWidth={2} />
                 </button>
               )}
               {session ? (

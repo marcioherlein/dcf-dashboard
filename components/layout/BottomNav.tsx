@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { Bell, Settings, HelpCircle, PieChart, X, Globe, Bookmark, SlidersHorizontal, Lightbulb } from 'lucide-react'
+import { PieChart, X, Globe, Bookmark, SlidersHorizontal, Settings } from 'lucide-react'
 
 const LEFT_NAV = [
   {
@@ -13,19 +13,19 @@ const LEFT_NAV = [
     match: (p: string) => p.startsWith('/markets'),
     icon: (active: boolean) => (
       <Globe
-        className={cn('w-5 h-5', active ? 'text-[#5F790B]' : 'text-[#9B9B9B]')}
-        strokeWidth={active ? 2 : 1.5}
+        className={cn('w-5 h-5', active ? 'text-[#7C9A19]' : 'text-[rgba(255,255,255,0.45)]')}
+        strokeWidth={active ? 2.2 : 1.6}
       />
     ),
   },
   {
-    href: '/ideas',
-    label: 'Ideas',
-    match: (p: string) => p.startsWith('/ideas'),
+    href: '/valuations',
+    label: 'Watchlist',
+    match: (p: string) => p.startsWith('/valuations'),
     icon: (active: boolean) => (
-      <Lightbulb
-        className={cn('w-5 h-5', active ? 'text-[#5F790B]' : 'text-[#9B9B9B]')}
-        strokeWidth={active ? 2 : 1.5}
+      <Bookmark
+        className={cn('w-5 h-5', active ? 'text-[#7C9A19]' : 'text-[rgba(255,255,255,0.45)]')}
+        strokeWidth={active ? 2.2 : 1.6}
       />
     ),
   },
@@ -38,8 +38,8 @@ const RIGHT_NAV = [
     match: (p: string) => p.startsWith('/screener'),
     icon: (active: boolean) => (
       <SlidersHorizontal
-        className={cn('w-5 h-5', active ? 'text-[#5F790B]' : 'text-[#9B9B9B]')}
-        strokeWidth={active ? 2 : 1.5}
+        className={cn('w-5 h-5', active ? 'text-[#7C9A19]' : 'text-[rgba(255,255,255,0.45)]')}
+        strokeWidth={active ? 2.2 : 1.6}
       />
     ),
   },
@@ -49,21 +49,19 @@ const RIGHT_NAV = [
     match: (p: string) => p.startsWith('/etf'),
     icon: (active: boolean) => (
       <PieChart
-        className={cn('w-5 h-5', active ? 'text-[#5F790B]' : 'text-[#9B9B9B]')}
-        strokeWidth={active ? 2 : 1.5}
+        className={cn('w-5 h-5', active ? 'text-[#7C9A19]' : 'text-[rgba(255,255,255,0.45)]')}
+        strokeWidth={active ? 2.2 : 1.6}
       />
     ),
   },
 ]
 
 const MORE_ITEMS = [
-  { href: '/valuations',             label: 'Watchlist',     icon: Bookmark   },
-  { href: '/ideas',                  label: 'Ideas',         icon: Lightbulb  },
-  { href: '/markets',                label: 'Markets',       icon: Globe      },
-  { href: '/etf',                    label: 'ETF Tracker',   icon: PieChart   },
-  { href: '/alerts',                 label: 'Alerts',        icon: Bell       },
-  { href: '/settings',               label: 'Settings',      icon: Settings   },
-  { href: '/help',                   label: 'Help & Support', icon: HelpCircle },
+  { href: '/markets',    label: 'Markets',     icon: Globe           },
+  { href: '/valuations', label: 'Watchlist',   icon: Bookmark        },
+  { href: '/screener',   label: 'Screener',    icon: SlidersHorizontal },
+  { href: '/etf',        label: 'ETF Tracker', icon: PieChart        },
+  { href: '/settings',   label: 'Settings',    icon: Settings        },
 ]
 
 export default function BottomNav() {
@@ -74,10 +72,8 @@ export default function BottomNav() {
   const isMoreActive = MORE_ITEMS.some((item) => pathname.startsWith(item.href.split('?')[0]))
   const isCenterActive = pathname === '/' || pathname.startsWith('/stock') || pathname.startsWith('/analyze')
 
-  // Close drawer on navigation
   useEffect(() => { setMoreOpen(false) }, [pathname])
 
-  // Focus trap + Escape key handler (H5)
   useEffect(() => {
     if (!moreOpen) return
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -91,7 +87,6 @@ export default function BottomNav() {
       }
     }
     document.addEventListener('keydown', handleKeyDown)
-    // Focus first item on open
     const firstFocusable = drawerRef.current?.querySelector<HTMLElement>('a, button')
     firstFocusable?.focus()
     return () => document.removeEventListener('keydown', handleKeyDown)
@@ -107,8 +102,8 @@ export default function BottomNav() {
       >
         {icon(active)}
         <span className={cn(
-          'text-[11px] font-medium',
-          active ? 'text-[#5F790B]' : 'text-[#9B9B9B]',
+          'text-[10px] font-medium',
+          active ? 'text-[#7C9A19]' : 'text-[rgba(255,255,255,0.45)]',
         )}>
           {label}
         </span>
@@ -121,30 +116,36 @@ export default function BottomNav() {
       {/* More drawer backdrop */}
       {moreOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/15 lg:hidden"
+          className="fixed inset-0 z-40 bg-black/40 lg:hidden"
           onClick={() => setMoreOpen(false)}
           role="presentation"
           aria-hidden="true"
         />
       )}
 
-      {/* More drawer panel */}
+      {/* More drawer panel — dark glass to match sidebar */}
       <div
         ref={drawerRef}
         role="dialog"
         aria-modal="true"
         aria-label="More navigation options"
         className={cn(
-          'fixed left-0 right-0 z-50 lg:hidden bg-white rounded-t-2xl shadow-xl border-t border-[#E5E5E5] transition-transform duration-200',
+          'fixed left-0 right-0 z-50 lg:hidden rounded-t-2xl shadow-2xl border-t transition-transform duration-200',
           moreOpen ? 'translate-y-0' : 'translate-y-full',
         )}
-        style={{ bottom: 'calc(56px + env(safe-area-inset-bottom))' }}
+        style={{
+          bottom: 'calc(56px + env(safe-area-inset-bottom))',
+          background: 'rgba(13,17,23,0.92)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          borderColor: 'rgba(255,255,255,0.10)',
+        }}
       >
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[#E5E5E5]">
-          <span className="text-sm font-semibold text-[#111111]">More</span>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[rgba(255,255,255,0.08)]">
+          <span className="text-[13px] font-semibold text-white">More</span>
           <button
             onClick={() => setMoreOpen(false)}
-            className="text-[#9B9B9B] hover:text-[#6B6B6B] p-2 -mr-1 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-[#F5F5F5] transition-colors"
+            className="text-[rgba(255,255,255,0.45)] hover:text-white p-2 -mr-1 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-[rgba(255,255,255,0.08)] transition-colors"
             aria-label="Close menu"
           >
             <X size={16} />
@@ -160,12 +161,14 @@ export default function BottomNav() {
                 onClick={() => setMoreOpen(false)}
                 className={cn(
                   'flex items-center gap-3 px-3 py-3 min-h-[44px] rounded-xl text-[14px] font-medium transition-colors',
-                  active ? 'bg-[#EEF2FA] text-[#111111]' : 'text-[#6B6B6B] hover:bg-[#F6FAEA]',
+                  active
+                    ? 'bg-[rgba(124,154,25,0.18)] text-white'
+                    : 'text-[rgba(255,255,255,0.65)] hover:bg-[rgba(255,255,255,0.06)] hover:text-white',
                 )}
               >
                 <Icon
                   size={18}
-                  className={active ? 'text-[#5F790B]' : 'text-[#9B9B9B]'}
+                  className={active ? 'text-[#7C9A19]' : 'text-[rgba(255,255,255,0.45)]'}
                   strokeWidth={active ? 2.2 : 1.8}
                 />
                 {label}
@@ -176,10 +179,17 @@ export default function BottomNav() {
         <div className="h-2" />
       </div>
 
-      {/* Bottom nav bar */}
+      {/* Bottom nav bar — dark glass matching TopBar/Sidebar */}
       <nav
-        className="fixed bottom-0 left-0 right-0 z-50 lg:hidden glass-bottom-nav"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+        className="fixed bottom-0 left-0 right-0 z-50 lg:hidden"
+        style={{
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+          background: 'rgba(10,16,28,0.88)',
+          backdropFilter: 'blur(28px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(28px) saturate(180%)',
+          borderTop: '1px solid rgba(255,255,255,0.08)',
+          boxShadow: '0 -1px 0 rgba(255,255,255,0.04)',
+        }}
       >
         <div className="flex items-center justify-around min-h-[56px]">
 
@@ -194,18 +204,20 @@ export default function BottomNav() {
             style={{ minHeight: '56px' }}
           >
             <div className={cn(
-              'w-11 h-11 rounded-full flex items-center justify-center ring-2 ring-white shadow-md -mt-4',
+              'w-11 h-11 rounded-full flex items-center justify-center ring-2 ring-[rgba(255,255,255,0.12)] shadow-lg -mt-4',
               isCenterActive
                 ? 'bg-[#5F790B]'
-                : 'bg-[#5F790B] opacity-90',
-            )}>
+                : 'bg-[#4a6009]',
+            )}
+              style={{ boxShadow: '0 4px 16px rgba(95,121,11,0.40)' }}
+            >
               <svg className="w-[18px] h-[18px] text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M16.65 16.65A7.5 7.5 0 114.5 4.5a7.5 7.5 0 0112.15 12.15z" />
               </svg>
             </div>
             <span className={cn(
               'text-[10px] font-medium',
-              isCenterActive ? 'text-[#5F790B]' : 'text-[#9B9B9B]',
+              isCenterActive ? 'text-[#7C9A19]' : 'text-[rgba(255,255,255,0.45)]',
             )}>
               Analyze
             </span>
@@ -222,7 +234,7 @@ export default function BottomNav() {
             style={{ minHeight: '56px' }}
           >
             <svg
-              className={cn('w-5 h-5', isMoreActive || moreOpen ? 'text-[#5F790B]' : 'text-[#9B9B9B]')}
+              className={cn('w-5 h-5', isMoreActive || moreOpen ? 'text-[#7C9A19]' : 'text-[rgba(255,255,255,0.45)]')}
               fill="none" viewBox="0 0 24 24"
             >
               <circle cx="5" cy="12" r="1.5" fill="currentColor" />
@@ -230,8 +242,8 @@ export default function BottomNav() {
               <circle cx="19" cy="12" r="1.5" fill="currentColor" />
             </svg>
             <span className={cn(
-              'text-[11px] font-medium',
-              isMoreActive || moreOpen ? 'text-[#5F790B]' : 'text-[#9B9B9B]',
+              'text-[10px] font-medium',
+              isMoreActive || moreOpen ? 'text-[#7C9A19]' : 'text-[rgba(255,255,255,0.45)]',
             )}>
               More
             </span>
