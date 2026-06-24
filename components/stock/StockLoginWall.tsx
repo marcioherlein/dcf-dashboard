@@ -1,6 +1,8 @@
 'use client'
 import { signIn } from 'next-auth/react'
+import Link from 'next/link'
 import { Check, Lock } from 'lucide-react'
+import { DEMO_TICKER } from '@/lib/constants'
 
 interface Props {
   ticker: string
@@ -132,8 +134,13 @@ export default function StockLoginWall({ ticker, companyName, price, currency, f
 
         {/* CTA */}
         <div className="px-5 pt-5 pb-4 border-b border-[#E3E1DA]">
-          <h3 className="text-[17px] font-bold text-[#06101F] mb-0.5">Sign in free to unlock</h3>
-          <p className="text-[13px] text-[#566174] mb-4">No credit card required. Free plan, no time limit.</p>
+          <h3 className="text-[17px] font-bold text-[#06101F] mb-0.5">Sign in to analyze {ticker}</h3>
+          <p className="text-[13px] text-[#566174] mb-4">
+            Free account · 5 stocks/month · No credit card.{' '}
+            <Link href={`/stock/${DEMO_TICKER}`} className="text-[#5F790B] font-semibold hover:underline underline-offset-2">
+              Try the {DEMO_TICKER} demo →
+            </Link>
+          </p>
 
           <button
             onClick={() => signIn('google', { callbackUrl: typeof window !== 'undefined' ? window.location.href : '/' })}

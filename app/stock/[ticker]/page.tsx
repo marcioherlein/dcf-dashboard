@@ -17,7 +17,7 @@ import StockUpgradeWall from '@/components/stock/StockUpgradeWall'
 import { calculatePiotroski, calculateAltman, calculateBeneish } from '@/lib/dcf/calculateScores'
 import { track } from '@/lib/analytics/events'
 import { loadPreLoginState, clearPreLoginState } from '@/lib/auth/preLoginState'
-import { useSession } from 'next-auth/react'
+import { useSession, signIn } from 'next-auth/react'
 import SaveToWatchlistDialog, { type WatchlistSavePayload } from '@/components/watchlist/SaveToWatchlistDialog'
 import ShareCardModal from '@/components/valuation/ShareCardModal'
 import ValuationNotAvailableCard from '@/components/stock/ValuationNotAvailableCard'
@@ -28,6 +28,7 @@ import { LoginGateProvider } from '@/components/auth/LoginGateProvider'
 import TabErrorBoundary from '@/components/stock/TabErrorBoundary'
 import GatedTabOverlay from '@/components/stock/GatedTabOverlay'
 import NextTabBanner from '@/components/stock/NextTabBanner'
+import { DEMO_TICKER } from '@/lib/constants'
 
 
 interface CAGRAnalysisData {
@@ -232,7 +233,9 @@ function StockPageBody() {
   useEffect(() => {
     if (session === undefined) return // still loading
     if (!session?.user) {
-      setViewGate('allowed') // unauthenticated users see Overview + Financials; other tabs gate individually
+      // Unauthenticated: only the demo ticker is accessible
+      const isDemo = ticker.toUpperCase() === DEMO_TICKER
+      setViewGate(isDemo ? 'allowed' : 'login')
       return
     }
     fetch('/api/stock-views', {
@@ -245,7 +248,7 @@ function StockPageBody() {
         setViewCount(res.viewCount)
         setViewGate(res.allowed ? 'allowed' : 'upgrade')
       })
-      .catch(() => setViewGate(session?.user ? 'upgrade' : 'allowed')) // fail-closed
+      .catch(() => setViewGate(session?.user ? 'upgrade' : 'login'))
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, ticker])
 
@@ -558,6 +561,20 @@ function StockPageBody() {
             )}
             {viewGate === 'allowed' && (
             <div className="min-w-0">
+            {/* Demo banner — shown to unauthenticated visitors on the demo ticker */}
+            {!session?.user && ticker.toUpperCase() === DEMO_TICKER && (
+              <div className="mb-3 flex items-center justify-between gap-3 rounded-xl border border-[#BFD2A1] bg-[#F6FAEA] px-4 py-3">
+                <p className="text-[13px] text-[#5F790B] leading-snug">
+                  <span className="font-[700]">Demo mode</span> — full access to {DEMO_TICKER}. Sign in to analyze any stock.
+                </p>
+                <button
+                  onClick={() => signIn('google', { callbackUrl: typeof window !== 'undefined' ? window.location.href : '/' })}
+                  className="shrink-0 rounded-lg bg-[#5F790B] hover:bg-[#526A08] text-white text-[12px] font-[700] px-3 py-1.5 transition-colors min-h-[36px]"
+                >
+                  Sign in free →
+                </button>
+              </div>
+            )}
             <AnimatePresence mode="wait">
               {/* ── Overview tab ── */}
               {activeTab === 'overview' && (
