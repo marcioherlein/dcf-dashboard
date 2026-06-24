@@ -5981,6 +5981,170 @@ async function runMovers() {
   await post(lines.join('\n'))
 }
 
+// ─── Mode: undervalued_list ───────────────────────────────────────────────────
+// Daily weekday post at 2PM ART. Core engagement driver — StockWorthy's
+// top-performing format. 5–6 undervalued stocks from a broad quality pool,
+// sorted by DCF upside, with rotating question at end to drive replies/bookmarks.
+
+const UNDERVALUED_QUESTIONS = [
+  `Are you buying any of these?`,
+  `Which one would you add to the watchlist?`,
+  `Any of these in your portfolio?`,
+  `Which one has the strongest case?`,
+  `Which one are you most skeptical about?`,
+  `Would you buy at today's price?`,
+  `Any surprises on this list?`,
+]
+
+const UNDERVALUED_POOL = [...new Set([
+  'AAPL','MSFT','GOOGL','META','AMZN','NVDA','TSLA','JPM','V','MA',
+  'UNH','LLY','AVGO','MRK','PG','HD','KO','PEP','TMO','ABT',
+  'COST','WMT','SBUX','MCD','NKE','JNJ','PFE','ABBV','BMY','GILD',
+  'JPM','BAC','GS','MS','BLK','AXP','V','MA',
+  'XOM','CVX','COP','EOG','SLB',
+  'INTC','AMD','QCOM','TXN','MU','AMAT','AVGO',
+  'CRM','NOW','ADBE','ORCL','INTU','WDAY',
+  'HON','CAT','GE','RTX','DE','MMM',
+  'NFLX','DIS','CMCSA','T','VZ',
+])]
+
+async function runUndervaluedList() {
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+  const dayOfWeek = new Date().getDay()
+
+  // Rotate which slice of the pool we screen each day
+  const sliceStart = (dayOfYear * 13) % (UNDERVALUED_POOL.length - 30)
+  const pool = UNDERVALUED_POOL.slice(sliceStart, sliceStart + 30)
+
+  const scored = []
+  await Promise.all(pool.map(async ticker => {
+    try {
+      const d = await fetchValuation(ticker)
+      const upside     = appUpside(d)
+      const fair       = appFairValue(d)
+      const price      = d?.quote?.price
+      const roicSpread = d?.scores?.roic?.spread ?? null
+      const piotroski  = d?.scores?.piotroski?.score ?? null
+      if (upside == null || !fair || !price) return
+      if (upside < 0.10) return  // minimum 10% upside
+      // Quality filter — exclude businesses destroying capital severely
+      if (roicSpread != null && roicSpread < -0.05) return
+      if (piotroski != null && piotroski < 3) return
+      const sector   = d?.quote?.sector ?? ''
+      const fwdPE    = d?.analystForwardPE ?? null
+      const analyst1y = d?.cagrAnalysis?.analystEstimate1y ?? null
+      scored.push({ ticker, upside, fair, price, sector, fwdPE, analyst1y, roicSpread, d })
+    } catch { /* skip */ }
+  }))
+
+  if (scored.length < 3) { console.warn('undervalued_list: not enough data'); return }
+
+  scored.sort((a, b) => b.upside - a.upside)
+  const top = scored.slice(0, 6)
+
+  const question = UNDERVALUED_QUESTIONS[dayOfYear % UNDERVALUED_QUESTIONS.length]
+  const leader = top[0]
+  const leaderUpside = (leader.upside * 100).toFixed(0)
+
+  // Build the list — compact, scannable, no jargon
+  const stockLines = top.map((s, i) => {
+    const upsideStr = (s.upside * 100).toFixed(0)
+    const fwdStr = s.fwdPE != null ? ` · ${s.fwdPE.toFixed(0)}× fwd P/E` : ''
+    const growthStr = s.analyst1y != null ? ` · ${(s.analyst1y * 100).toFixed(0)}% rev growth` : ''
+    return `${i + 1}. $${s.ticker} — ${fmt(s.price)} · fair value ${fmt(s.fair)} (${upsideStr}% upside)${fwdStr}${growthStr}`
+  })
+
+  const lines = [
+    `${leaderUpside}%+ gap between price and model value on $${leader.ticker}.`,
+    ``,
+    `Here are ${top.length} stocks our DCF model flags as undervalued right now:`,
+    ``,
+    ...stockLines,
+    ``,
+    question,
+    ``,
+    `Full models → ${APP_URL}`,
+    `#ValueInvesting #DCF #Stocks #Investing`,
+  ]
+
+  await post(lines.join('\n'))
+}
+
+// ─── Mode: sector_undervalued ─────────────────────────────────────────────────
+// Weekday afternoon. StockWorthy's "10 undervalued X stocks" format adapted to
+// insic.app. Rotates through sectors daily. 5–7 stocks, hook + list + question.
+
+const SECTOR_UNDERVALUED_THEMES = [
+  { name: 'AI & cloud',           emoji: '🤖', tickers: ['NVDA','MSFT','GOOGL','META','AMZN','CRM','NOW','ORCL','IBM','ADBE'] },
+  { name: 'semiconductor',        emoji: '🔬', tickers: ['NVDA','AMD','INTC','QCOM','AVGO','TXN','MU','AMAT','LRCX','KLAC'] },
+  { name: 'healthcare',           emoji: '💊', tickers: ['UNH','LLY','ABBV','MRK','JNJ','PFE','AMGN','BMY','GILD','TMO'] },
+  { name: 'financial',            emoji: '🏦', tickers: ['JPM','BAC','GS','MS','V','MA','BLK','AXP','BX','SCHW'] },
+  { name: 'consumer',             emoji: '🛒', tickers: ['AAPL','AMZN','WMT','COST','HD','MCD','SBUX','NKE','TGT','CMG'] },
+  { name: 'energy',               emoji: '⛽', tickers: ['XOM','CVX','COP','EOG','SLB','MPC','PSX','OXY','DVN','PXD'] },
+  { name: 'dividend',             emoji: '💰', tickers: ['JNJ','PG','KO','PEP','MMM','VZ','T','MCD','MO','PM'] },
+]
+
+async function runSectorUndervalued() {
+  const dayOfYear  = Math.floor(Date.now() / 86400000)
+  const theme = SECTOR_UNDERVALUED_THEMES[dayOfYear % SECTOR_UNDERVALUED_THEMES.length]
+  const question = UNDERVALUED_QUESTIONS[(dayOfYear + 3) % UNDERVALUED_QUESTIONS.length]
+
+  const scored = []
+  await Promise.all(theme.tickers.map(async ticker => {
+    try {
+      const d = await fetchValuation(ticker)
+      const upside  = appUpside(d)
+      const fair    = appFairValue(d)
+      const price   = d?.quote?.price
+      const fwdPE   = d?.analystForwardPE ?? null
+      const analyst1y = d?.cagrAnalysis?.analystEstimate1y ?? null
+      const roicSpread = d?.scores?.roic?.spread ?? null
+      if (upside == null || !fair || !price) return
+      scored.push({ ticker, upside, fair, price, fwdPE, analyst1y, roicSpread, d })
+    } catch { /* skip */ }
+  }))
+
+  if (scored.length < 3) { console.warn(`sector_undervalued: not enough ${theme.name} data`); return }
+
+  // Show all — sorted by upside, top 6 max
+  scored.sort((a, b) => b.upside - a.upside)
+  const undervalued = scored.filter(s => s.upside > 0.05).slice(0, 6)
+  const overvalued  = scored.filter(s => s.upside < -0.05).sort((a, b) => a.upside - b.upside).slice(0, 2)
+
+  if (undervalued.length === 0) { console.warn('No undervalued names in sector'); return }
+
+  const leader = undervalued[0]
+  const leaderUpside = (leader.upside * 100).toFixed(0)
+
+  const uvLines = undervalued.map((s, i) => {
+    const upsideStr = (s.upside * 100).toFixed(0)
+    const fwdStr  = s.fwdPE     != null ? ` · ${s.fwdPE.toFixed(0)}× fwd P/E` : ''
+    const growStr = s.analyst1y != null ? ` · ${(s.analyst1y * 100).toFixed(0)}% est growth` : ''
+    return `${i + 1}. $${s.ticker} — ${fmt(s.price)} · fair value ${fmt(s.fair)} (${upsideStr}% upside)${fwdStr}${growStr}`
+  })
+
+  const ovLines = overvalued.length > 0
+    ? [``, `Also in the ${theme.name} space — trading above model:`,
+       ...overvalued.map(s => `▼ $${s.ticker} — ${fmt(s.price)} · model ${fmt(s.fair)} (${(s.upside * 100).toFixed(0)}%)`)]
+    : []
+
+  const lines = [
+    `${theme.emoji} ${leaderUpside}% upside on $${leader.ticker} — the best-valued name in the ${theme.name} space right now.`,
+    ``,
+    `Here's how the full sector stacks up on our DCF model:`,
+    ``,
+    ...uvLines,
+    ...ovLines,
+    ``,
+    question,
+    ``,
+    `Run any of these → ${APP_URL}`,
+    `#${theme.name.replace(/[^a-zA-Z]/g, '')} #ValueInvesting #DCF #Stocks`,
+  ]
+
+  await post(lines.join('\n'))
+}
+
 const MODES = {
   dcf:               runDcf,
   dcf2:              runDcf2,
@@ -6018,7 +6182,9 @@ const MODES = {
   li_divergence:     runLiDivergence,
   li_weekly_picks:   runLiWeeklyPicks,
   li_myth:           runLiMyth,
-  movers:            runMovers,
+  movers:             runMovers,
+  undervalued_list:   runUndervaluedList,
+  sector_undervalued: runSectorUndervalued,
   conviction_score:  runConvictionScore,
   li_conviction:     runLiConviction,
   etf_value_scan:    runEtfValueScan,

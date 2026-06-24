@@ -11,7 +11,7 @@ const VALID_MODES = [
   'li_valuation','li_market_wrap','li_deep_dive','li_sector_scan',
   'li_morning_brief','li_divergence','li_weekly_picks','li_myth',
   'conviction_score','li_conviction','etf_value_scan','li_etf_scan',
-  'movers',
+  'movers','undervalued_list','sector_undervalued',
 ]
 
 export async function GET(req: NextRequest) {

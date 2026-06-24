@@ -161,6 +161,14 @@
       "schedule": "15 18 * * 1-5"
     },
     {
+      "path": "/api/cron/x-post?mode=undervalued_list",
+      "schedule": "0 19 * * 1-5"
+    },
+    {
+      "path": "/api/cron/x-post?mode=sector_undervalued",
+      "schedule": "30 19 * * 1-5"
+    },
+    {
       "path": "/api/reddit-post?format=insight",
       "schedule": "0 11 * * 1-5"
     },
