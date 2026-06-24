@@ -4562,17 +4562,67 @@ async function runLiValuation() {
     closing = `Every model has limits. The right move: stress-test the WACC and growth rate. The sensitivity tells you which assumption carries the most risk.`
   }
 
+  // ── Build scannable list structure ──────────────────────────────────────
+  const bullets = []
+
+  // Valuation
+  if (price && fair && upside != null) {
+    bullets.push(`💰 Price: ${fmt(price)} · Fair value: ${fmt(fair)} · ${upside >= 0 ? '+' : ''}${(upside * 100).toFixed(0)}% gap`)
+  }
+  if (validScenarios(bear, bull, fair)) {
+    bullets.push(`📊 Range: ${fmt(bear)} bear → ${fmt(bull)} bull`)
+  }
+  if (fwdPE) bullets.push(`📈 Forward P/E: ${fwdPE}×${peRatio ? ` (trailing: ${peRatio.toFixed(0)}×)` : ''}`)
+  if (evEbitda) bullets.push(`📊 EV/EBITDA: ${evEbitda.toFixed(1)}×`)
+  if (analystTarget && recLabel) bullets.push(`🎯 Street: ${recLabel} · consensus target ${fmt(analystTarget)}`)
+
+  // Growth
+  if (hist3y != null && analyst1y != null && numAnalysts >= 3) {
+    const dir = analyst1y > hist3y * 1.1 ? 'accelerating' : analyst1y < hist3y * 0.85 ? 'decelerating' : 'steady'
+    bullets.push(`📉 Revenue growth: ${pct(hist3y, false)} historical · ${pct(analyst1y, false)} forecast (${dir})`)
+  } else if (hist3y != null) {
+    bullets.push(`📉 Revenue growth: ${pct(hist3y, false)} 3-year average`)
+  }
+  if (lastSurprise && surprises.length >= 3) {
+    const avgSurp = surprises.reduce((s, q) => s + (q.surprisePercent ?? 0), 0) / surprises.length
+    bullets.push(`✅ EPS beat rate: ${beatCount}/${surprises.length} quarters · avg surprise ${avgSurp >= 0 ? '+' : ''}${avgSurp.toFixed(1)}%`)
+  }
+
+  // Quality
+  if (grossM != null) {
+    bullets.push(`🏭 Margins: gross ${pct(grossM, false)}${netM != null ? ` · net ${pct(netM, false)}` : ''}${fcfM != null ? ` · free cash flow ${pct(fcfM, false)}` : ''}`)
+  }
+  if (roicPos) {
+    bullets.push(`⚡ Returns: ${pct(roic, false)} on invested capital · ${pct(roicSpread, false)} above cost of capital`)
+  } else if (roicNeg) {
+    bullets.push(`⚠️ Returns: ${pct(roic, false)} on invested capital — below cost of capital`)
+  }
+  if (roe != null) bullets.push(`📋 ROE: ${pct(roe, false)}`)
+
+  // Capital
+  if (hasDiv) bullets.push(`💸 Dividend: ${pct(divYield, false)} yield${payoutRatio != null ? ` · ${pct(payoutRatio, false)} payout` : ''}`)
+  if (buybacks && buybacks > 100) bullets.push(`🔄 Buybacks: ${fmt(buybacks * 1e6)} returned last year`)
+
+  // Risk (plain language only — no model names, altmanZone already declared above)
+  if (altmanZone && altmanZone !== 'Grey') {
+    bullets.push(altmanZone === 'Safe'
+      ? `🛡️ Financial health: low distress risk`
+      : `⚠️ Financial health: elevated distress signals`)
+  }
+  if (highShort) bullets.push(`🔻 Short interest: ${pct(shortPct, false)} of float`)
+  if (beta != null) bullets.push(`📊 Beta: ${beta.toFixed(2)}`)
+  if (insiderPct != null && insiderPct > 0.05) bullets.push(`👤 Insider ownership: ${pct(insiderPct, false)}`)
+
+  const question = LIST_QUESTIONS_MIXED[dayOfYear % LIST_QUESTIONS_MIXED.length]
+
   const lines = [
     hook,
     ``,
-    ...(valPara   ? [valPara,   ``] : []),
-    ...(growthPara ? [growthPara, ``] : []),
-    ...(qualPara  ? [qualPara,  ``] : []),
-    ...(capPara   ? [capPara,   ``] : []),
-    ...(riskPara  ? [riskPara,  ``] : []),
+    ...bullets,
+    ``,
     closing,
     ``,
-    `Full interactive model (adjust WACC, growth, terminal rate) → insic.app/stock/${ticker}`,
+    question,
     ``,
     `#${ticker} #DCF #Investing #Finance${sector ? ` #${sector.replace(/[^a-zA-Z]/g, '')}` : ''}`,
   ].filter(s => s !== undefined)
@@ -4628,29 +4678,29 @@ async function runLiMarketWrap() {
     return items.length > 0 ? items : ['Broad-based session without a clear dominant theme.']
   })()
 
+  const sp = sp500 ? `▲ S&P ${sp500.changePct >= 0 ? '+' : ''}${sp500.changePct.toFixed(2)}%` : null
+  const nq = nasdaq ? `Nasdaq ${nasdaq.changePct >= 0 ? '+' : ''}${nasdaq.changePct.toFixed(2)}%` : null
+  const dj = dow ? `Dow ${dow.changePct >= 0 ? '+' : ''}${dow.changePct.toFixed(2)}%` : null
+  const indexLine = [sp, nq, dj].filter(Boolean).join(' · ')
+
   const lines = [
-    `📊 ${dayName} close.`,
+    `${dayName} close.`,
     ``,
-    `🇺🇸 US Indices`,
-    sp500  ? `S&P 500:   ${sp500.changePct >= 0 ? '+' : ''}${sp500.changePct.toFixed(2)}% (${sp500.price.toFixed(0)})` : null,
-    nasdaq ? `Nasdaq:    ${nasdaq.changePct >= 0 ? '+' : ''}${nasdaq.changePct.toFixed(2)}% (${nasdaq.price.toFixed(0)})` : null,
-    dow    ? `Dow Jones: ${dow.changePct >= 0 ? '+' : ''}${dow.changePct.toFixed(2)}% (${dow.price.toFixed(0)})` : null,
+    indexLine,
     ``,
-    `🏭 Sectors`,
-    ...sectors.map(s => `${s.changePct >= 0.5 ? '▲' : s.changePct <= -0.5 ? '▼' : '→'} ${s.name}: ${s.changePct >= 0 ? '+' : ''}${s.changePct.toFixed(2)}%`),
+    ...sectors.map(s => `${s.changePct >= 0.5 ? '▲' : s.changePct <= -0.5 ? '▼' : '→'} ${s.name} ${s.changePct >= 0 ? '+' : ''}${s.changePct.toFixed(2)}%`),
     ``,
-    `📌 Rates & Commodities`,
-    tnx  ? `10Y Treasury: ${tnx.price.toFixed(3)}% (${tnx.changePct >= 0 ? '+' : ''}${tnx.changePct.toFixed(2)}%)` : null,
-    oil  ? `WTI Oil: $${oil.price.toFixed(2)} (${oil.changePct >= 0 ? '+' : ''}${oil.changePct.toFixed(2)}%)` : null,
-    gold ? `Gold: $${gold.price.toFixed(0)} (${gold.changePct >= 0 ? '+' : ''}${gold.changePct.toFixed(2)}%)` : null,
-    dxy  ? `US Dollar (DXY): ${dxy.price.toFixed(1)} (${dxy.changePct >= 0 ? '+' : ''}${dxy.changePct.toFixed(2)}%)` : null,
+    ...[
+      tnx  ? `📈 10Y ${tnx.price.toFixed(2)}% (${tnx.changePct >= 0 ? '+' : ''}${tnx.changePct.toFixed(2)}%)` : null,
+      oil  ? `🛢️ Oil $${oil.price.toFixed(0)} (${oil.changePct >= 0 ? '+' : ''}${oil.changePct.toFixed(1)}%)` : null,
+      gold ? `🥇 Gold $${gold.price.toFixed(0)} (${gold.changePct >= 0 ? '+' : ''}${gold.changePct.toFixed(1)}%)` : null,
+    ].filter(Boolean),
     ``,
-    `🔍 What drove it`,
     ...whatDrove,
     ``,
-    `Price moved. Whether value moved is a different question — and the one worth asking. Check your positions at insic.app`,
+    `The price moved. Did the value?`,
     ``,
-    `#MarketClose #Finance #Investing #StockMarket #DCF`,
+    `#MarketClose #Finance #Investing #StockMarket`,
   ].filter(Boolean)
 
   await postLinkedIn(lines.join('\n'))
@@ -4921,7 +4971,7 @@ async function runLiSectorScan() {
     ``,
     closing,
     ``,
-    `Full interactive DCF models (adjust any assumption) → insic.app`,
+    `Which one stands out to you?`,
     ``,
     `#${scan.name.replace(/[^a-zA-Z]/g, '')} #Valuation #SectorAnalysis #DCF #Finance`,
   ].filter(Boolean)
@@ -5014,11 +5064,11 @@ async function runLiMorningBrief() {
     const impliedG = focusData.valuationMethods?.models?.reverseDcf?.impliedCAGR
     if (impliedG != null && Math.abs(upside ?? 0) > 0.08) {
       return (upside ?? 0) > 0
-        ? `One to watch: $${focusTicker} at ${fmt(price)}. Market pricing in ~${pct(impliedG, false)}/yr growth — our model sees ${pct(upside)} upside. → insic.app/stock/${focusTicker}`
-        : `One to watch: $${focusTicker} at ${fmt(price)}. Market pricing in ~${pct(impliedG, false)}/yr growth to justify this price — that's a lot to deliver. → insic.app/stock/${focusTicker}`
+        ? `One to watch: $${focusTicker} at ${fmt(price)}. Market pricing in ~${pct(impliedG, false)}/yr growth — our model sees ${pct(upside)} upside. insic.app/stock/${focusTicker}`
+        : `One to watch: $${focusTicker} at ${fmt(price)}. Market pricing in ~${pct(impliedG, false)}/yr growth to justify this price — that's a lot to deliver. insic.app/stock/${focusTicker}`
     }
     return Math.abs(upside ?? 0) > 0.08
-      ? `One to watch today: $${focusTicker}. Our model puts fair value at ${fmt(fair)} — ${pct(upside)} ${(upside ?? 0) > 0 ? 'above' : 'below'} current price. → insic.app/stock/${focusTicker}`
+      ? `One to watch today: $${focusTicker}. Our model puts fair value at ${fmt(fair)} — ${pct(upside)} ${(upside ?? 0) > 0 ? 'above' : 'below'} current price. insic.app/stock/${focusTicker}`
       : null
   })() : null
 
@@ -5036,7 +5086,7 @@ async function runLiMorningBrief() {
     topItem ? `\n${topItem}` : null,
     valuationHook ? `\n${valuationHook}` : null,
     ``,
-    `Start with the numbers that matter → insic.app`,
+    `What are you watching today?`,
     ``,
     `#GoodMorning #Finance #Investing #Markets`,
   ].filter(Boolean)
@@ -5111,7 +5161,7 @@ async function runLiDivergence() {
     ? `If our assumptions are right, these are being left on the table. If the Street's right, they're not. Run the inputs and see which story holds up.`
     : ourBullishCount === 0
     ? `Analysts may be extrapolating recent momentum. Our model discounts cash flows over the full cycle. One of them is overpaying. Worth stress-testing.`
-    : `Same data, different assumptions, different answers. That gap is where investing happens. Adjust the inputs yourself → insic.app`
+    : `Same data, different assumptions, different answers. That gap is where investing actually happens.`
 
   const lines = [
     intro,
@@ -5119,7 +5169,7 @@ async function runLiDivergence() {
     ...stockLines,
     closing,
     ``,
-    ...(ourBullishCount !== 1 ? [`Adjust any assumption → insic.app`, ``] : []),
+    ...(ourBullishCount !== 1 ? [`Which side of this list are you on?`, ``] : []),
     `#DCF #Valuation #Investing #Finance #StockMarket`,
   ]
 
@@ -5197,7 +5247,7 @@ async function runLiWeeklyPicks() {
     ...stockLines,
     diverseNote,
     ``,
-    `Every model is interactive — change cost of capital, growth rate, or terminal value and see the fair value update in real time. Build your own thesis.`,
+    `Every model is interactive — change cost of capital, growth rate, or terminal value and see the fair value update in real time. Which one would you investigate first?`,
     ``,
     ``,
     `#ValueInvesting #DCF #StockPicks #Finance #Investing`,
@@ -5694,8 +5744,7 @@ async function runLiConviction() {
     ``,
     closing,
     ``,
-    `Conviction Score is available for every S&P 500 stock on insic.app — free, no account required.`,
-    `insic.app/stock/${ticker}`,
+    `What would change your view on this one?`,
     ``,
     `#${ticker} #ConvictionScore #ValueInvesting #DCF #Finance${sector ? ` #${sector.replace(/[^a-zA-Z]/g, '')}` : ''}`,
   ].filter(s => s !== undefined)
@@ -5849,7 +5898,7 @@ async function runLiEtfScan() {
     ``,
     scoreNote,
     ``,
-    `Full interactive ETF tracker → insic.app/etf`,
+    `Which category looks most interesting to you?`,
     ``,
     `#ETF #ValueInvesting #SectorRotation #AssetAllocation #Finance`,
   ].filter(s => s != null)
