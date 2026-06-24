@@ -26,6 +26,7 @@ type SortKey =
   | 'price'
   | 'priceChangePct'
   | 'return1M'
+  | 'return3M'
   | 'return1Y'
   | 'expenseRatio'
   | 'yield'
@@ -65,7 +66,7 @@ const DEFAULT_EXPENSE_AVG = 0.002 // 0.20%
 function SkeletonRow() {
   return (
     <tr>
-      {Array.from({ length: 12 }).map((_, i) => (
+      {Array.from({ length: 13 }).map((_, i) => (
         <td key={i} className="px-3 py-2.5">
           <div className="h-3 rounded bg-[#E3E1DA] animate-pulse" style={{ width: i === 1 ? 80 : i === 10 ? 60 : 40 }} />
         </td>
@@ -115,6 +116,7 @@ export function ETFWatchlistTable({
           case 'price':         return batch.price ?? -Infinity
           case 'priceChangePct':return batch.priceChangePct ?? -Infinity
           case 'return1M':      return batch.return1M ?? -Infinity
+          case 'return3M':      return batch.return3M ?? -Infinity
           case 'return1Y':      return batch.return1Y ?? -Infinity
           case 'expenseRatio':  return batch.expenseRatio ?? Infinity
           case 'yield':         return batch.yield ?? -Infinity
@@ -164,6 +166,7 @@ export function ETFWatchlistTable({
             <ThSort col="price"          label="Price"  className="min-w-[70px]" />
             <ThSort col="priceChangePct" label="1D%"    className="min-w-[60px]" />
             <ThSort col="return1M"       label="1M%"    className="min-w-[60px]" />
+            <ThSort col="return3M"       label="3M%"    className="min-w-[60px]" />
             <ThSort col="return1Y"       label="1Y%"    className="min-w-[60px]" />
             <ThSort col="expenseRatio"   label="Exp.%"  className="min-w-[62px]" />
             <ThSort col="yield"          label="Yield"  className="min-w-[60px]" />
@@ -261,6 +264,11 @@ export function ETFWatchlistTable({
                   {/* 1M% */}
                   <td className="px-3 py-2.5 text-right tabular-nums">
                     <ReturnCell value={batch?.return1M} />
+                  </td>
+
+                  {/* 3M% */}
+                  <td className="px-3 py-2.5 text-right tabular-nums">
+                    <ReturnCell value={batch?.return3M} />
                   </td>
 
                   {/* 1Y% */}

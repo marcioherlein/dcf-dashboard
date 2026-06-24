@@ -29,7 +29,7 @@ import { FREE_ETF_WATCHLIST_LIMIT } from '@/lib/constants'
 
 // ── Inline Rankings table ─────────────────────────────────────────────────────
 
-type SortKey = 'valueScore' | 'peRatio' | 'pbRatio' | 'expenseRatio' | 'yield' | 'aum'
+type SortKey = 'valueScore' | 'peRatio' | 'pbRatio' | 'expenseRatio' | 'yield' | 'aum' | 'return1Y' | 'sharpeRatio' | 'beta3Y'
 type SortDir = 'asc' | 'desc'
 type FilterGroup = 'all' | ETFGroup
 
@@ -92,12 +92,15 @@ function Rankings({
   ]
 
   const COLS: { key: SortKey; label: string }[] = [
-    { key: 'peRatio', label: 'P/E' },
-    { key: 'pbRatio', label: 'P/B' },
-    { key: 'expenseRatio', label: 'Exp.' },
-    { key: 'yield', label: 'Yield' },
-    { key: 'aum', label: 'AUM' },
-    { key: 'valueScore', label: 'Score' },
+    { key: 'peRatio',      label: 'P/E'    },
+    { key: 'pbRatio',      label: 'P/B'    },
+    { key: 'expenseRatio', label: 'Exp.'   },
+    { key: 'yield',        label: 'Yield'  },
+    { key: 'return1Y',     label: '1Y%'    },
+    { key: 'sharpeRatio',  label: 'Sharpe' },
+    { key: 'beta3Y',       label: 'Beta'   },
+    { key: 'aum',          label: 'AUM'    },
+    { key: 'valueScore',   label: 'Score'  },
   ]
 
   const allRows = (ALL_META as ETFMeta[])
@@ -208,6 +211,17 @@ function Rankings({
                     </td>
                     <td className="px-3 py-2.5 text-right tabular-nums text-[12px] text-[#111111]">
                       {item?.yield != null ? fmtPctAbs(item.yield) : <span className="text-[#8A95A6]">—</span>}
+                    </td>
+                    <td className="px-3 py-2.5 text-right tabular-nums text-[12px]">
+                      {item?.return1Y != null
+                        ? <span className={item.return1Y >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'}>{item.return1Y >= 0 ? '+' : ''}{(item.return1Y * 100).toFixed(1)}%</span>
+                        : <span className="text-[#8A95A6]">—</span>}
+                    </td>
+                    <td className="px-3 py-2.5 text-right tabular-nums text-[12px] text-[#111111]">
+                      {item?.sharpeRatio != null ? item.sharpeRatio.toFixed(2) : <span className="text-[#8A95A6]">—</span>}
+                    </td>
+                    <td className="px-3 py-2.5 text-right tabular-nums text-[12px] text-[#111111]">
+                      {item?.beta3Y != null ? item.beta3Y.toFixed(2) : <span className="text-[#8A95A6]">—</span>}
                     </td>
                     <td className="px-3 py-2.5 text-right tabular-nums text-[12px] text-[#111111]">
                       {item?.aum != null ? fmtLarge(item.aum) : <span className="text-[#8A95A6]">—</span>}
