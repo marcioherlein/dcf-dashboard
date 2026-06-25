@@ -19,6 +19,8 @@ import MarketsTabNav         from '@/components/markets/MarketsTabNav'
 import { useSetTopBarTabs }  from '@/contexts/TopBarTabsContext'
 import CalendarTab           from '@/components/markets/CalendarTab'
 import YieldCurveChart       from '@/components/markets/YieldCurveChart'
+import PriceTable            from '@/components/markets/PriceTable'
+import SectorStocksCard      from '@/components/markets/SectorStocksCard'
 import type { MarketTab }    from '@/components/markets/MarketsTabNav'
 
 import type { MarketsData }          from '@/app/api/markets/data/route'
@@ -277,6 +279,17 @@ export default function MarketsPage() {
                   </div>
                 </div>              </div>
 
+              {/* Stocks by Sector — peer groups with price, 1D, YTD, sparkline */}
+              <div>
+                <SectionHeader
+                  title="Stocks by Sector"
+                  subtitle="Key names in each sector — click any ticker to run a full valuation."
+                />
+                <div className="mt-3">
+                  <SectorStocksCard />
+                </div>
+              </div>
+
               {/* Market News */}
               {mkt && mkt.news.length > 0 && (
                 <div>
@@ -285,6 +298,27 @@ export default function MarketsPage() {
                     subtitle="Recent headlines — for context only, not a trading signal."
                   />
                   <MarketNewsSection news={mkt.news} />
+                </div>
+              )}
+
+              {/* Fixed income / currencies / commodities */}
+              {mkt && (mkt.fixedIncome.length > 0 || mkt.currencies.length > 0 || mkt.commodities.length > 0) && (
+                <div>
+                  <SectionHeader
+                    title="Rates, Currencies & Commodities"
+                    subtitle="Key macro instruments that feed into WACC and discount rate assumptions."
+                  />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
+                    {mkt.fixedIncome.length > 0 && (
+                      <PriceTable title="Fixed Income" items={mkt.fixedIncome} />
+                    )}
+                    {mkt.currencies.length > 0 && (
+                      <PriceTable title="Currencies" items={mkt.currencies} priceDecimals={4} />
+                    )}
+                    {mkt.commodities.length > 0 && (
+                      <PriceTable title="Commodities" items={mkt.commodities} />
+                    )}
+                  </div>
                 </div>
               )}
             </div>

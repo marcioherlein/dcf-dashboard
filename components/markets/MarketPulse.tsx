@@ -1,5 +1,6 @@
 'use client'
 import { cn } from '@/lib/utils'
+import { vixRegime } from '@/lib/market-context/scoring'
 import type { MarketContextPayload, SentimentLabel } from '@/lib/market-context/types'
 
 interface Props {
@@ -15,19 +16,11 @@ function sentimentColor(label: SentimentLabel): string {
 }
 
 function vixColor(vix: number): string {
-  if (vix < 15) return 'text-[#11875D]'
-  if (vix < 20) return 'text-[#111111]'
+  if (vix < 15) return 'text-[#B56A00]'
+  if (vix < 20) return 'text-[#11875D]'
   if (vix < 25) return 'text-[#B56A00]'
   if (vix < 35) return 'text-[#D83B3B]'
   return 'text-[#D83B3B]'
-}
-
-function vixLabel(vix: number): string {
-  if (vix < 15) return 'Calm'
-  if (vix < 20) return 'Normal'
-  if (vix < 25) return 'Elevated'
-  if (vix < 35) return 'Stressed'
-  return 'Panic'
 }
 
 function gaugeColor(score: number): string {
@@ -39,11 +32,11 @@ function gaugeColor(score: number): string {
 }
 
 function gaugeLabel(score: number): string {
-  if (score >= 80) return 'Risk-On'
-  if (score >= 65) return 'Constructive'
+  if (score >= 75) return 'Risk-On'
+  if (score >= 60) return 'Constructive'
   if (score >= 40) return 'Neutral'
   if (score >= 25) return 'Cautious'
-  return 'Stressed'
+  return 'Risk-Off'
 }
 
 function SentimentGauge({ score }: { score: number }) {
@@ -124,7 +117,7 @@ export default function MarketPulse({ pulse }: Props) {
             label="VIX"
             value={vix.toFixed(1)}
             valueClass={vixColor(vix)}
-            sub={vixLabel(vix)}
+            sub={vixRegime(vix).label}
           />
           <StatBadge
             label="10Y Yield"

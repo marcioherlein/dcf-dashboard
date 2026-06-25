@@ -5,13 +5,6 @@ import { cn } from '@/lib/utils'
 import { TrendingUp, TrendingDown, Activity } from 'lucide-react'
 import type { MoversData, Mover } from '@/app/api/markets/movers/route'
 
-function _fmtVol(v: number): string {
-  if (v >= 1e9) return (v / 1e9).toFixed(1) + 'B'
-  if (v >= 1e6) return (v / 1e6).toFixed(1) + 'M'
-  if (v >= 1e3) return (v / 1e3).toFixed(0) + 'K'
-  return String(v)
-}
-
 function pct(v: number) {
   return (v >= 0 ? '+' : '') + v.toFixed(2) + '%'
 }
@@ -133,10 +126,10 @@ export default function TopMoversCard() {
       <div className="px-4 py-2.5 border-t border-[#E5E5E5] flex items-center justify-between">
         <p className="text-[10px] text-[#6B6B6B]">Large-cap · click ticker to analyze</p>
         <Link
-          href="/markets/movers"
+          href="/screener"
           className="text-[11px] font-semibold text-[#2563EB] hover:text-[#111111] transition-colors"
         >
-          View all →
+          Open screener →
         </Link>
       </div>
     </div>

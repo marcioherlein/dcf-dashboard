@@ -25,6 +25,10 @@ const SECTOR_ETFS = [
   { ticker: 'XLI', sector: 'Industrials' },
   { ticker: 'XLP', sector: 'Cons. Staples' },
   { ticker: 'XLY', sector: 'Cons. Disc.' },
+  { ticker: 'XLRE', sector: 'Real Estate' },
+  { ticker: 'XLB',  sector: 'Materials' },
+  { ticker: 'XLC',  sector: 'Comm. Services' },
+  { ticker: 'XLU',  sector: 'Utilities' },
 ]
 
 // Compute 2-window relative strength momentum

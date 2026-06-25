@@ -233,7 +233,7 @@ export default function NormalizedPerfChart() {
                 tickFormatter={v => `${(v as number).toFixed(0)}%`}
                 width={36}
               />
-              <Tooltip content={<ChartTooltip allSeries={allSeries} />} />
+              <Tooltip content={(props) => <ChartTooltip {...props} allSeries={allSeries} />} />
               <ReferenceLine y={0} stroke="#cbd5e1" strokeWidth={1} strokeDasharray="3 2" />
               {allSeries.filter(s => active.has(s.symbol)).map(s => (
                 <Line

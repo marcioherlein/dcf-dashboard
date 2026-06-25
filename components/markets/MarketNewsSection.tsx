@@ -1,6 +1,6 @@
 'use client'
 import { ExternalLink } from 'lucide-react'
-import type { NewsItem } from '@/app/api/markets/data/route'
+import type { NewsItem } from '@/app/api/markets/news/route'
 
 // Extract the first $TICKER pattern from a headline
 function extractTicker(title: string): string | null {
@@ -63,11 +63,11 @@ export default function MarketNewsSection({ news }: { news: NewsItem[] }) {
           )
 
           return item.url ? (
-            <a key={i} href={item.url} target="_blank" rel="noopener noreferrer" className="block">
+            <a key={item.url || item.title || i} href={item.url} target="_blank" rel="noopener noreferrer" className="block">
               {inner}
             </a>
           ) : (
-            <div key={i}>{inner}</div>
+            <div key={item.title || i}>{inner}</div>
           )
         })}
       </div>

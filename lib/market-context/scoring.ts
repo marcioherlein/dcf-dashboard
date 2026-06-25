@@ -42,12 +42,14 @@ export function computeModelAlerts(
   const alerts: ModelAlert[] = []
   const currentRfRate = dgs2 ?? tnxYield
   for (const v of valuations) {
-    if (v.wacc != null && v.wacc < currentRfRate / 100 - 0.015) {
+    // Alert fires when WACC is below rf + 3% minimum equity premium.
+    // E.g. with 2Y at 4.4%, WACC below 7.4% is suspect for any equity model.
+    if (v.wacc != null && v.wacc < currentRfRate / 100 + 0.03) {
       alerts.push({
         ticker: v.ticker,
         company: v.company,
         alertType: 'ALERT_WACC_LOW',
-        message: `WACC ${(v.wacc * 100).toFixed(1)}% looks low vs current 2Y yield ${currentRfRate.toFixed(2)}%`,
+        message: `WACC ${(v.wacc * 100).toFixed(1)}% may be too low — 2Y yield is ${currentRfRate.toFixed(2)}%, leaving under 3% equity premium`,
         severity: 'high',
       })
     }
