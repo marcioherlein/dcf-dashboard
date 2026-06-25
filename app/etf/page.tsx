@@ -7,6 +7,8 @@ import { cn } from '@/lib/utils'
 import { useSession, signIn } from 'next-auth/react'
 import { ETFMarketPulse } from '@/components/etf/ETFMarketPulse'
 import { ETFHeatmapGrid as _ETFHeatmapGrid } from '@/components/etf/ETFHeatmapGrid'
+import { ETFMoversStrip } from '@/components/etf/ETFMoversStrip'
+import { ETFSectorRotation } from '@/components/etf/ETFSectorRotation'
 import ETFLoginToSaveModal from '@/components/etf/ETFLoginToSaveModal'
 import { Sparkline, SparklineSkeleton } from '@/components/ui/Sparkline'
 import { loadETFWatchlist, deleteETFEntry, saveETFEntry, readLocalWatchlist } from '@/lib/data/etfWatchlistStore'
@@ -682,6 +684,14 @@ export default function ETFTrackerPage() {
         {activeTab === 'overview' && (
           <>
             {!batchError && <ETFMarketPulse data={batchData} loading={batchLoading} sparklines={pulseSparklines} />}
+
+            {/* Winners & Losers + Sector Rotation — side by side on desktop */}
+            {!batchError && (
+              <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4">
+                <ETFMoversStrip data={batchData} loading={batchLoading} />
+                <ETFSectorRotation data={batchData} loading={batchLoading} />
+              </div>
+            )}
 
             {/* My Watchlist — show at top when user has saved ETFs */}
             {hasWatchlist && (
