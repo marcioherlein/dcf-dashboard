@@ -89,6 +89,30 @@ export default function DigestPage() {
   const [approving, setApproving] = useState(false)
   const [approveError, setApproveError] = useState<string | null>(null)
 
+  const [testEmail, setTestEmail] = useState('')
+  const [sendingTest, setSendingTest] = useState(false)
+  const [testResult, setTestResult] = useState<string | null>(null)
+
+  async function handleSendTest() {
+    if (!testEmail.trim()) return
+    setSendingTest(true)
+    setTestResult(null)
+    try {
+      const res = await fetch('/api/admin/digest-send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ testEmail: testEmail.trim(), subject, openingParagraph, marketSection, macroNote }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Send failed')
+      setTestResult(`✓ Sent to ${testEmail}`)
+    } catch (err) {
+      setTestResult(`✗ ${err instanceof Error ? err.message : 'Unknown error'}`)
+    } finally {
+      setSendingTest(false)
+    }
+  }
+
   const isAdmin = ADMIN_EMAILS.includes(session?.user?.email ?? '')
 
   useEffect(() => {
@@ -340,6 +364,31 @@ export default function DigestPage() {
             <div className="rounded-lg border border-[#F0B8B8] bg-[#FCEAEA] px-4 py-3 text-sm text-[#D83B3B]">
               Send error: {approveError}
             </div>
+          )}
+
+          {/* Test email */}
+          {!isSent && (
+            <div className="flex items-center gap-2 pt-1">
+              <input
+                type="email"
+                value={testEmail}
+                onChange={e => setTestEmail(e.target.value)}
+                placeholder="Send test to email…"
+                className="flex-1 px-3 py-2 text-sm border border-[#E5E5E5] rounded-lg focus:outline-none focus:border-[#5F790B] bg-white"
+              />
+              <button
+                onClick={handleSendTest}
+                disabled={sendingTest || !testEmail.trim()}
+                className="px-4 py-2 rounded-lg border border-[#E5E5E5] bg-white hover:border-[#5F790B] text-[#5F790B] text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+              >
+                {sendingTest ? 'Sending…' : 'Send test'}
+              </button>
+            </div>
+          )}
+          {testResult && (
+            <p className={`text-sm ${testResult.startsWith('✓') ? 'text-[#11875D]' : 'text-[#D83B3B]'}`}>
+              {testResult}
+            </p>
           )}
 
           {/* Action row */}

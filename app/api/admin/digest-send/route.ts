@@ -64,9 +64,16 @@ export async function POST(req: NextRequest) {
 
   // Parse optional body
   let digestId: string | undefined
+  let testEmail: string | undefined
+  let bodyOverrides: Partial<{ subject: string; openingParagraph: string; marketSection: string; macroNote: string }> = {}
   try {
-    const body = await req.json() as { digestId?: string }
+    const body = await req.json() as { digestId?: string; testEmail?: string; subject?: string; openingParagraph?: string; marketSection?: string; macroNote?: string }
     digestId = body.digestId
+    testEmail = body.testEmail
+    if (body.subject) bodyOverrides.subject = body.subject
+    if (body.openingParagraph) bodyOverrides.openingParagraph = body.openingParagraph
+    if (body.marketSection) bodyOverrides.marketSection = body.marketSection
+    if (body.macroNote) bodyOverrides.macroNote = body.macroNote
   } catch {
     // Body is optional — ignore parse errors
   }
@@ -97,12 +104,42 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'already sent' }, { status: 409 })
   }
 
-  const editorialContent = draft.content as DigestContent
+  // Apply any inline edits from the preview page
+  const editorialContent: DigestContent = {
+    ...(draft.content as DigestContent),
+    ...(bodyOverrides.subject && { subjectLine: bodyOverrides.subject }),
+    ...(bodyOverrides.openingParagraph && { opening: bodyOverrides.openingParagraph }),
+    ...(bodyOverrides.marketSection && { marketSection: bodyOverrides.marketSection }),
+    ...(bodyOverrides.macroNote && { macroNote: bodyOverrides.macroNote }),
+  }
   if (!editorialContent) {
     return NextResponse.json({ error: 'Draft has no content' }, { status: 422 })
   }
 
+  const resend = new Resend(process.env.RESEND_API_KEY)
   const baseUrl = process.env.NEXTAUTH_URL ?? 'https://insic.app'
+
+  // TEST MODE — send only to the specified email with sample watchlist
+  if (testEmail) {
+    try {
+      await resend.emails.send({
+        from: 'insic <team@insic.app>',
+        to: testEmail,
+        subject: `[TEST] ${editorialContent.subjectLine}`,
+        react: WeeklyDigestEmail({
+          name: 'Marcio',
+          watchlist: [
+            { ticker: 'MSFT', companyName: 'Microsoft', fairValue: 462, currentPrice: 379, priceAtSave: 360, upsidePct: 0.219, cagr: 0.12, currency: 'USD' },
+            { ticker: 'NVDA', companyName: 'NVIDIA', fairValue: 196, currentPrice: 211, priceAtSave: 180, upsidePct: -0.071, cagr: 0.22, currency: 'USD' },
+          ],
+          content: editorialContent,
+        }),
+      })
+      return NextResponse.json({ sent: 1, test: true, to: testEmail })
+    } catch (err) {
+      return NextResponse.json({ error: err instanceof Error ? err.message : 'Send failed' }, { status: 500 })
+    }
+  }
 
   // Load all users with saved valuations
   const { data: rows, error: rowsError } = await sb
@@ -176,7 +213,6 @@ export async function POST(req: NextRequest) {
   }
 
   // Send emails
-  const resend = new Resend(process.env.RESEND_API_KEY)
   let sent = 0
   let failed = 0
 
