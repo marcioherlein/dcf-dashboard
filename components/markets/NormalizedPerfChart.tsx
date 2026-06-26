@@ -183,7 +183,7 @@ export default function NormalizedPerfChart() {
           {showAddInput ? (
             <form
               onSubmit={e => { e.preventDefault(); addCustomSymbol() }}
-              className="flex items-center gap-1"
+              className="flex items-center gap-1 shrink-0"
             >
               <input
                 ref={addInputRef}

@@ -281,9 +281,10 @@ function EarningsList({ items, loading }: { items: EarningsItem[]; loading: bool
 
 // ── Economic List ─────────────────────────────────────────────────────────────
 
-function EconomicList({ events, loading, missingKey }: { events: EconomicEvent[]; loading: boolean; missingKey?: boolean }) {
+function EconomicList({ events, loading, missingKey, fetchError }: { events: EconomicEvent[]; loading: boolean; missingKey?: boolean; fetchError?: boolean }) {
   if (loading) return <LoadingRows />
   if (missingKey) return <EmptyState message="Economic calendar data unavailable — FMP_API_KEY not configured." />
+  if (fetchError) return <EmptyState message="Could not load economic events — check your connection and try again." />
   if (events.length === 0) return <EmptyState message="No U.S. high-impact economic events scheduled this week." />
 
   const byDate = events.reduce<Record<string, EconomicEvent[]>>((acc, e) => {
@@ -346,9 +347,10 @@ function EconomicList({ events, loading, missingKey }: { events: EconomicEvent[]
 
 // ── Splits List ───────────────────────────────────────────────────────────────
 
-function SplitsList({ splits, loading, missingKey }: { splits: SplitItem[]; loading: boolean; missingKey?: boolean }) {
+function SplitsList({ splits, loading, missingKey, fetchError }: { splits: SplitItem[]; loading: boolean; missingKey?: boolean; fetchError?: boolean }) {
   if (loading) return <LoadingRows />
   if (missingKey) return <EmptyState message="Splits calendar unavailable — FMP_API_KEY not configured." />
+  if (fetchError) return <EmptyState message="Could not load splits data — check your connection and try again." />
   if (splits.length === 0) return <EmptyState message="No stock splits scheduled this week." />
 
   const byDate = splits.reduce<Record<string, SplitItem[]>>((acc, e) => {
@@ -393,9 +395,10 @@ function SplitsList({ splits, loading, missingKey }: { splits: SplitItem[]; load
 
 // ── IPOs List ─────────────────────────────────────────────────────────────────
 
-function IposList({ ipos, loading, missingKey }: { ipos: IpoItem[]; loading: boolean; missingKey?: boolean }) {
+function IposList({ ipos, loading, missingKey, fetchError }: { ipos: IpoItem[]; loading: boolean; missingKey?: boolean; fetchError?: boolean }) {
   if (loading) return <LoadingRows />
   if (missingKey) return <EmptyState message="IPO calendar unavailable — FMP_API_KEY not configured." />
+  if (fetchError) return <EmptyState message="Could not load IPO data — check your connection and try again." />
   if (ipos.length === 0) return <EmptyState message="No IPO pricings found for this week." />
 
   const byDate = ipos.reduce<Record<string, IpoItem[]>>((acc, e) => {
@@ -464,6 +467,9 @@ export default function CalendarTab() {
   const [missingKeyEc, setMissingKeyEc] = useState(false)
   const [missingKeyS, setMissingKeyS]   = useState(false)
   const [missingKeyI, setMissingKeyI]   = useState(false)
+  const [fetchErrEc, setFetchErrEc] = useState(false)
+  const [fetchErrS, setFetchErrS]   = useState(false)
+  const [fetchErrI, setFetchErrI]   = useState(false)
 
   // Stable ISO strings — only change when weekOffset changes (integer dep, no Date objects)
   const week = useMemo(() => getWeekRange(weekOffset), [weekOffset])
@@ -479,33 +485,36 @@ export default function CalendarTab() {
       .finally(() => setLoadingE(false))
 
     setLoadingEc(true)
+    setFetchErrEc(false)
     fetch(`/api/markets/economic-calendar?from=${from}&to=${to}`)
       .then(r => r.json())
       .then(d => {
         setMissingKeyEc(!!d.missingKey)
         setEconomic((d.events ?? []).filter((e: EconomicEvent) => inRange(e.date, from, to)))
       })
-      .catch(() => setEconomic([]))
+      .catch(() => { setEconomic([]); setFetchErrEc(true) })
       .finally(() => setLoadingEc(false))
 
     setLoadingS(true)
+    setFetchErrS(false)
     fetch(`/api/markets/splits?from=${from}&to=${to}`)
       .then(r => r.json())
       .then(d => {
         setMissingKeyS(!!d.missingKey)
         setSplits(d.splits ?? [])
       })
-      .catch(() => setSplits([]))
+      .catch(() => { setSplits([]); setFetchErrS(true) })
       .finally(() => setLoadingS(false))
 
     setLoadingI(true)
+    setFetchErrI(false)
     fetch(`/api/markets/ipos?from=${from}&to=${to}`)
       .then(r => r.json())
       .then(d => {
         setMissingKeyI(!!d.missingKey)
         setIpos(d.ipos ?? [])
       })
-      .catch(() => setIpos([]))
+      .catch(() => { setIpos([]); setFetchErrI(true) })
       .finally(() => setLoadingI(false))
   }, [week]) // week is memoized — only re-runs when weekOffset changes
 
@@ -624,7 +633,7 @@ export default function CalendarTab() {
               <span className="w-12 text-right">EST</span>
               <span className="w-12 text-right">ACTUAL</span>
             </ListHeader>
-            <EconomicList events={economic} loading={loadingEc} missingKey={missingKeyEc} />
+            <EconomicList events={economic} loading={loadingEc} missingKey={missingKeyEc} fetchError={fetchErrEc} />
           </>
         )}
 
@@ -634,7 +643,7 @@ export default function CalendarTab() {
               <span className="flex-1">TICKER / COMPANY</span>
               <span className="w-24 text-right">RATIO</span>
             </ListHeader>
-            <SplitsList splits={splits} loading={loadingS} missingKey={missingKeyS} />
+            <SplitsList splits={splits} loading={loadingS} missingKey={missingKeyS} fetchError={fetchErrS} />
           </>
         )}
 
@@ -645,7 +654,7 @@ export default function CalendarTab() {
               <span className="w-20 text-right">EXCHANGE</span>
               <span className="w-24 text-right">PRICE RANGE</span>
             </ListHeader>
-            <IposList ipos={ipos} loading={loadingI} missingKey={missingKeyI} />
+            <IposList ipos={ipos} loading={loadingI} missingKey={missingKeyI} fetchError={fetchErrI} />
           </>
         )}
 

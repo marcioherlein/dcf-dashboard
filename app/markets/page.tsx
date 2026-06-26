@@ -348,11 +348,13 @@ export default function MarketsPage() {
                 {ctx ? <ValuationContext valuation={ctx.valuation} /> : <Sk h="h-56" />}
               </div>
               {/* Yield Curve — full width below valuation panel */}
-              {mkt && mkt.yieldCurve.length > 0 ? (
+              {!mkt ? (
+                <div className="mt-4"><Sk h="h-32" /></div>
+              ) : mkt.yieldCurve.length > 0 ? (
                 <div className="mt-4">
                   <YieldCurveChart points={mkt.yieldCurve} />
                 </div>
-              ) : mkt && (
+              ) : (
                 <div className="mt-4 rounded-xl border border-[#E3E1DA] bg-[#FAFAFA] px-5 py-4">
                   <p className="text-[13px] text-[#6B6B6B]">Yield curve data unavailable — Treasury rates could not be loaded.</p>
                 </div>

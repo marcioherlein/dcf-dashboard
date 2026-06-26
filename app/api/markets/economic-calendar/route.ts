@@ -30,7 +30,7 @@ async function fetchFMPCalendar(from: string, to: string): Promise<EconomicEvent
       .filter(e => e.country === 'US' && e.impact !== 'Low')
       .map(e => ({
         date: e.date?.split(' ')[0] ?? e.date,
-        time: e.date?.split(' ')[1] ? formatTime(e.date.split(' ')[1]) : '',
+        time: e.date ? formatTime(e.date) : '',
         event: e.event ?? '',
         country: e.country ?? 'US',
         impact: (e.impact === 'High' ? 'High' : e.impact === 'Medium' ? 'Medium' : 'Low') as 'High' | 'Medium' | 'Low',
@@ -44,16 +44,21 @@ async function fetchFMPCalendar(from: string, to: string): Promise<EconomicEvent
   }
 }
 
-function formatTime(t: string): string {
-  // FMP returns time like "12:30:00" in UTC — convert to ET (UTC-4 during DST)
+function formatTime(utcDateTimeStr: string): string {
+  // FMP returns combined datetime like "2024-01-15 08:30:00" in UTC
+  // Use Intl to correctly handle EST (UTC-5) vs EDT (UTC-4) by timezone name
   try {
-    const [h, m] = t.split(':').map(Number)
-    const etH = ((h - 4 + 24) % 24)
-    const suffix = etH >= 12 ? 'PM' : 'AM'
-    const h12 = etH % 12 || 12
-    return `${h12}:${String(m).padStart(2, '0')} ${suffix} ET`
+    const iso = utcDateTimeStr.replace(' ', 'T') + 'Z'
+    const dt = new Date(iso)
+    if (isNaN(dt.getTime())) return utcDateTimeStr
+    return dt.toLocaleTimeString('en-US', {
+      timeZone: 'America/New_York',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    }) + ' ET'
   } catch {
-    return t
+    return utcDateTimeStr
   }
 }
 
