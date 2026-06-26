@@ -1,7 +1,6 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { TrendingUp, Activity, Landmark, DollarSign, BarChart3 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { MarketInstrument } from '@/app/api/markets/data/route'
 
@@ -12,46 +11,7 @@ interface Props {
   vix:  MarketInstrument | null
   tnx:  MarketInstrument | null
   dxy:  MarketInstrument | null
-}
-
-// ── Sparkline ──────────────────────────────────────────────────────────────────
-function SparklineSkeleton() {
-  return <div className="h-8 w-full rounded-lg bg-[#F5F5F5] motion-safe:animate-pulse" />
-}
-
-function Sparkline({ values, positive, id }: { values: number[]; positive: boolean; id: string }) {
-  if (values.length < 2) return null
-  const min = Math.min(...values)
-  const max = Math.max(...values)
-  const range = max - min || 0.001
-  const W = 80, H = 32
-  const coords = values.map((v, i) => ({
-    x: (i / (values.length - 1)) * W,
-    y: H - ((v - min) / range) * (H - 6) - 3,
-  }))
-  const pts      = coords.map(p => `${p.x},${p.y}`).join(' ')
-  const fillPath = [
-    `M ${coords[0].x},${H}`,
-    ...coords.map(p => `L ${p.x},${p.y}`),
-    `L ${coords[coords.length - 1].x},${H}`,
-    'Z',
-  ].join(' ')
-  const color  = positive ? '#11875D' : '#D83B3B'
-  const fillId = `spark-fill-${id}`
-  const last   = coords[coords.length - 1]
-  return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="overflow-visible w-full" aria-hidden="true">
-      <defs>
-        <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%"   stopColor={color} stopOpacity="0.12" />
-          <stop offset="100%" stopColor={color} stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <path d={fillPath} fill={`url(#${fillId})`} />
-      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx={last.x} cy={last.y} r="2.5" fill={color} />
-    </svg>
-  )
+  marketStatus?: { label: string; cls: string } | null
 }
 
 // ── Interpretation chips ─────────────────────────────────────────────────────
@@ -64,7 +24,7 @@ function chip(label: string, tone: 'green' | 'red' | 'amber' | 'blue' | 'gray') 
     gray:  'bg-[#F5F5F5] text-[#6B6B6B] border-[#E5E5E5]',
   }[tone]
   return (
-    <span className={cn('text-[10px] font-bold px-1.5 py-0.5 rounded-full border whitespace-nowrap', cls)}>
+    <span className={cn('text-[10px] font-[700] px-1.5 py-px rounded-full border whitespace-nowrap leading-none', cls)}>
       {label}
     </span>
   )
@@ -98,83 +58,104 @@ function dxyChip(changePct: number | null) {
   return chip('Stable', 'gray')
 }
 
-function pct(v: number | null) {
-  if (v == null) return '—'
-  return (v >= 0 ? '+' : '') + v.toFixed(2) + '%'
-}
-function equityCls(v: number | null) {
-  if (v == null) return 'text-[#6B6B6B]'
-  return v > 0 ? 'text-[#11875D]' : v < 0 ? 'text-[#D83B3B]' : 'text-[#6B6B6B]'
-}
-function rateCls(v: number | null) {
-  if (v == null) return 'text-[#6B6B6B]'
-  if (v > 0) return 'text-[#B56A00]'
-  if (v < 0) return 'text-[#2563EB]'
-  return 'text-[#6B6B6B]'
-}
 function fmtPrice(v: number | null, decimals = 2) {
   if (v == null) return '—'
   return v.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
 }
-
-// ── Single Card ───────────────────────────────────────────────────────────────
-interface CardProps {
-  label:           string
-  value:           string
-  changePct:       number | null
-  sparklineValues: number[]
-  sparkLoading:    boolean
-  interpretation:  React.ReactNode
-  icon:            React.ReactNode
-  iconBg:          string
-  rateMode?:       boolean
-  href?:           string
-  note?:           string
+function pct(v: number | null) {
+  if (v == null) return '—'
+  return (v >= 0 ? '+' : '') + v.toFixed(2) + '%'
+}
+function changeCls(v: number | null, rateMode = false) {
+  if (v == null) return 'text-[#9B9B9B]'
+  const positive = rateMode ? v < 0 : v >= 0
+  return positive ? 'text-[#11875D]' : 'text-[#D83B3B]'
 }
 
-function IndexCard({ label, value, changePct, sparklineValues, sparkLoading, interpretation, icon, iconBg, rateMode, href, note }: CardProps) {
-  const positive  = rateMode ? (changePct ?? 0) < 0 : (changePct ?? 0) >= 0
-  const changeCls = rateMode ? rateCls(changePct) : equityCls(changePct)
-  const sparkId   = label.replace(/[^a-z0-9]/gi, '-').toLowerCase()
+// ── Micro sparkline (inline, 48×20) ──────────────────────────────────────────
+function MicroSparkline({ values, positive, id: _id }: { values: number[]; positive: boolean; id: string }) {
+  if (values.length < 2) return <div className="w-12 h-5 rounded bg-[#F5F5F5]" />
+  const min = Math.min(...values)
+  const max = Math.max(...values)
+  const range = max - min || 0.001
+  const W = 48, H = 20
+  const coords = values.map((v, i) => ({
+    x: (i / (values.length - 1)) * W,
+    y: H - ((v - min) / range) * (H - 4) - 2,
+  }))
+  const pts = coords.map(p => `${p.x},${p.y}`).join(' ')
+  const color = positive ? '#11875D' : '#D83B3B'
+  const last = coords[coords.length - 1]
+  return (
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} aria-hidden="true" className="shrink-0">
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.8" />
+      <circle cx={last.x} cy={last.y} r="2" fill={color} />
+    </svg>
+  )
+}
+
+// ── Single ticker row item ────────────────────────────────────────────────────
+interface TickerProps {
+  label: string
+  value: string
+  rawChangePct: number | null
+  sparkValues: number[]
+  sparkLoading: boolean
+  interpretation: React.ReactNode
+  rateMode?: boolean
+  href?: string
+  divider?: boolean
+}
+
+function TickerItem({ label, value, rawChangePct, sparkValues, sparkLoading, interpretation, rateMode, href, divider }: TickerProps) {
+  const positive = rateMode ? (rawChangePct ?? 0) < 0 : (rawChangePct ?? 0) >= 0
+  const pctCls = changeCls(rawChangePct, rateMode)
+  const sparkId = label.replace(/[^a-z0-9]/gi, '-').toLowerCase()
 
   const inner = (
-    <div className="bg-white rounded-xl border border-[#E5E5E5] px-3 pt-3 pb-2 flex flex-col h-full transition-all duration-150 hover:border-[#C8C8C8] hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] cursor-pointer">
-      {/* Icon + label */}
-      <div className="flex items-center gap-2">
-        <div className={cn('w-6 h-6 rounded-lg flex items-center justify-center shrink-0', iconBg)}>
-          {icon}
-        </div>
-        <p className="text-[11px] font-[600] text-[#566174] leading-tight truncate">{label}</p>
-      </div>
+    <div className="flex items-center gap-2.5 py-3 px-3 sm:px-4 group min-w-0">
+      {/* Label */}
+      <span className="text-[11px] font-[600] text-[#566174] whitespace-nowrap shrink-0 group-hover:text-[#111111] transition-colors">
+        {label}
+      </span>
       {/* Value */}
-      <p className="text-[20px] font-[700] tabular-nums text-[#111111] leading-none mt-2 tracking-tight">{value}</p>
-      {/* Change + chip */}
-      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-        <span className={cn('text-[11px] font-[600] tabular-nums', changeCls)}>
-          {pct(changePct)}
-        </span>
-        <span className="text-[10px] text-[#9B9B9B]">today</span>
-        <div className="ml-auto">{interpretation}</div>
-      </div>
-      {note && <p className="text-[10px] text-[#9B9B9B] mt-0.5">{note}</p>}
-      {/* Sparkline */}
-      <div className="mt-auto pt-2.5 h-9 flex items-end">
+      <span className="text-[13px] font-[700] tabular-nums text-[#111111] whitespace-nowrap shrink-0 tracking-tight">
+        {value}
+      </span>
+      {/* Change */}
+      <span className={cn('text-[11px] font-[600] tabular-nums whitespace-nowrap shrink-0', pctCls)}>
+        {pct(rawChangePct)}
+      </span>
+      {/* Chip */}
+      <div className="shrink-0">{interpretation}</div>
+      {/* Micro sparkline */}
+      <div className="shrink-0">
         {sparkLoading
-          ? <SparklineSkeleton />
-          : <Sparkline values={sparklineValues} positive={positive} id={sparkId} />
+          ? <div className="w-12 h-5 rounded bg-[#F5F5F5] animate-pulse" />
+          : <MicroSparkline values={sparkValues} positive={positive} id={sparkId} />
         }
       </div>
     </div>
   )
-  if (href) return <Link href={href} className="block h-full">{inner}</Link>
-  return inner
+
+  return (
+    <div className={cn('flex items-stretch', divider && 'border-r border-[#E5E5E5]')}>
+      {href ? (
+        <Link href={href} className="flex-1 rounded-lg hover:bg-[#F5F5F5] transition-colors">
+          {inner}
+        </Link>
+      ) : (
+        <div className="flex-1">{inner}</div>
+      )}
+    </div>
+  )
 }
 
-// ── Grid ──────────────────────────────────────────────────────────────────────
+// ── Main grid ────────────────────────────────────────────────────────────────
 type ChartPoint = Record<string, number | string>
 type SparklinesState = Record<string, number[]> | null
 
-export default function IndexSnapshotGrid({ spx, ndx, dji, vix, tnx, dxy }: Props) {
+export default function IndexSnapshotGrid({ spx, ndx, dji, vix, tnx, dxy, marketStatus }: Props) {
   const [sparklines, setSparklines] = useState<SparklinesState>(null)
   const sparkLoading = sparklines === null
 
@@ -199,79 +180,87 @@ export default function IndexSnapshotGrid({ spx, ndx, dji, vix, tnx, dxy }: Prop
 
   useEffect(() => { fetchSparklines() }, [fetchSparklines])
 
-  const CARDS: CardProps[] = [
+  const TICKERS: TickerProps[] = [
     {
       label: 'S&P 500',
       value: spx?.price != null ? fmtPrice(spx.price) : '—',
-      changePct: spx?.changePct ?? null,
-      sparklineValues: sparklines?.['^GSPC'] ?? [],
+      rawChangePct: spx?.changePct ?? null,
+      sparkValues: sparklines?.['^GSPC'] ?? [],
       sparkLoading,
       interpretation: spxChip(spx?.changePct ?? null),
-      icon: <TrendingUp size={14} className="text-[#2563EB]" />,
-      iconBg: 'bg-[#EAF1FF]',
       href: spx ? `/markets/${encodeURIComponent(spx.symbol)}` : undefined,
+      divider: true,
     },
     {
       label: 'Nasdaq 100',
       value: ndx?.price != null ? fmtPrice(ndx.price) : '—',
-      changePct: ndx?.changePct ?? null,
-      sparklineValues: sparklines?.['^NDX'] ?? [],
+      rawChangePct: ndx?.changePct ?? null,
+      sparkValues: sparklines?.['^NDX'] ?? [],
       sparkLoading,
       interpretation: spxChip(ndx?.changePct ?? null),
-      icon: <BarChart3 size={14} className="text-[#2563EB]" />,
-      iconBg: 'bg-[#EAF1FF]',
       href: ndx ? `/markets/${encodeURIComponent(ndx.symbol)}` : undefined,
+      divider: true,
     },
     {
       label: 'Dow Jones',
       value: dji?.price != null ? fmtPrice(dji.price) : '—',
-      changePct: dji?.changePct ?? null,
-      sparklineValues: sparklines?.['^DJI'] ?? [],
+      rawChangePct: dji?.changePct ?? null,
+      sparkValues: sparklines?.['^DJI'] ?? [],
       sparkLoading,
       interpretation: spxChip(dji?.changePct ?? null),
-      icon: <TrendingUp size={14} className="text-[#6B6B6B]" />,
-      iconBg: 'bg-[#F5F5F5]',
       href: dji ? `/markets/${encodeURIComponent(dji.symbol)}` : undefined,
+      divider: true,
     },
     {
       label: 'VIX',
       value: vix?.price != null ? fmtPrice(vix.price, 2) : '—',
-      changePct: vix?.changePct ?? null,
-      sparklineValues: sparklines?.['^VIX'] ?? [],
+      rawChangePct: vix?.changePct ?? null,
+      sparkValues: sparklines?.['^VIX'] ?? [],
       sparkLoading,
       interpretation: vixChip(vix?.price ?? null),
-      icon: <Activity size={14} className="text-[#D83B3B]" />,
-      iconBg: 'bg-[#FCEAEA]',
       rateMode: true,
-      note: 'Volatility',
+      divider: true,
     },
     {
       label: '10Y Treasury',
       value: tnx?.price != null ? fmtPrice(tnx.price, 2) + '%' : '—',
-      changePct: tnx?.changePct ?? null,
-      sparklineValues: sparklines?.['^TNX'] ?? [],
+      rawChangePct: tnx?.changePct ?? null,
+      sparkValues: sparklines?.['^TNX'] ?? [],
       sparkLoading,
       interpretation: tnxChip(tnx?.price ?? null),
-      icon: <Landmark size={14} className="text-[#B56A00]" />,
-      iconBg: 'bg-[#FFF4DA]',
       rateMode: true,
-      note: 'Discount rate',
+      divider: true,
     },
     {
       label: 'USD Index',
       value: dxy?.price != null ? fmtPrice(dxy.price, 2) : '—',
-      changePct: dxy?.changePct ?? null,
-      sparklineValues: sparklines?.['DX-Y.NYB'] ?? [],
+      rawChangePct: dxy?.changePct ?? null,
+      sparkValues: sparklines?.['DX-Y.NYB'] ?? [],
       sparkLoading,
       interpretation: dxyChip(dxy?.changePct ?? null),
-      icon: <DollarSign size={14} className="text-[#11875D]" />,
-      iconBg: 'bg-[#E8F7EF]',
+      divider: false,
     },
   ]
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-3">
-      {CARDS.map(c => <IndexCard key={c.label} {...c} />)}
+    <div className="bg-white border border-[#E5E5E5] rounded-xl overflow-hidden" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+      {/* Status bar */}
+      {marketStatus && (
+        <div className="flex items-center gap-2 px-3 sm:px-4 py-1.5 border-b border-[#F5F5F5] bg-[#FAFAFA]">
+          <span className={cn('text-[10px] font-[700] px-2 py-0.5 rounded-full', marketStatus.cls)}>
+            {marketStatus.label}
+          </span>
+          <span className="text-[10px] text-[#9B9B9B]">5-day chart</span>
+        </div>
+      )}
+      {/* Ticker strip — horizontal scroll on mobile */}
+      <div className="overflow-x-auto scrollbar-hide">
+        <div className="flex min-w-max">
+          {TICKERS.map((t, i) => (
+            <TickerItem key={t.label} {...t} divider={i < TICKERS.length - 1} />
+          ))}
+        </div>
+      </div>
     </div>
   )
 }

@@ -1,6 +1,5 @@
 'use client'
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
-import { RefreshCw } from 'lucide-react'
 import { useInView, useReducedMotion } from 'motion/react'
 
 import IndexSnapshotGrid     from '@/components/markets/IndexSnapshotGrid'
@@ -32,12 +31,6 @@ function Sk({ h = 'h-32', className = '' }: { h?: string; className?: string }) 
   return <div className={`motion-safe:animate-pulse rounded-xl bg-[#EBEBEB] border border-[#E0E0E0] ${h} ${className}`} />
 }
 
-function timeAgo(ts: number): string {
-  const s = Math.floor((Date.now() - ts) / 1000)
-  if (s < 10)  return 'just now'
-  if (s < 60)  return `${s}s ago`
-  return `${Math.floor(s / 60)}m ago`
-}
 function getMarketStatus(): { label: string; cls: string } {
   const now = new Date()
   const etParts = new Intl.DateTimeFormat('en-US', {
@@ -139,9 +132,6 @@ export default function MarketsPage() {
   const etTime = now.toLocaleTimeString('en-US', {
     timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit', hour12: true,
   })
-  const etDate = now.toLocaleDateString('en-US', {
-    timeZone: 'America/New_York', month: 'long', day: 'numeric', year: 'numeric',
-  })
 
   return (
     <div className="min-h-dvh bg-background">
@@ -165,37 +155,12 @@ export default function MarketsPage() {
           </div>
         )}
 
-        {/* ── Page Header — date/time only; title handled by TopBar ─────── */}
-        <div className="flex items-center justify-end gap-2 mb-4">
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="text-[11px] text-[#6B6B6B]">{etDate}, {etTime} ET</span>
-            {lastFetch > 0 && (
-              <button
-                onClick={() => fetchAll()}
-                className="flex items-center gap-1 text-[11px] text-[#9B9B9B] hover:text-[#6B6B6B] transition-colors min-h-[44px] px-1"
-                aria-label="Refresh market data"
-              >
-                <RefreshCw size={11} />
-                {timeAgo(lastFetch)}
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* ── Persistent: Index snapshot cards ────────────────────────────── */}
+        {/* ── Persistent: Index snapshot strip ────────────────────────────── */}
         <div className="mb-4">
-          {/* Market status + date row above the cards */}
-          <div className="flex items-center justify-between mb-2.5">
-            <span className={`text-[11px] font-[600] px-2.5 py-1 rounded-full ${status.cls}`}>
-              {status.label}
-            </span>
-          </div>
           {mkt ? (
-            <IndexSnapshotGrid spx={spx} ndx={ndx} dji={dji} vix={vix} tnx={tnx} dxy={dxy} />
+            <IndexSnapshotGrid spx={spx} ndx={ndx} dji={dji} vix={vix} tnx={tnx} dxy={dxy} marketStatus={status} />
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-              {[...Array(6)].map((_, i) => <Sk key={i} h="h-[132px]" />)}
-            </div>
+            <div className="bg-white border border-[#E5E5E5] rounded-xl h-[56px] animate-pulse" />
           )}
         </div>
 
