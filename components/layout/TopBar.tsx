@@ -488,7 +488,7 @@ function StockFloatingBar({
                     }
                   }}
                   placeholder="Ticker or company…"
-                  className="flex-1 min-w-0 bg-transparent text-[13px] text-white placeholder-[rgba(255,255,255,0.28)] focus:outline-none"
+                  className="flex-1 min-w-0 bg-transparent text-[16px] sm:text-[13px] text-white placeholder-[rgba(255,255,255,0.28)] focus:outline-none"
                   autoCorrect="off" autoCapitalize="characters" spellCheck={false}
                 />
                 <button

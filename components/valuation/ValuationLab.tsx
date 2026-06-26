@@ -913,7 +913,7 @@ function MethodAccordion({
   fairValue, upsidePct, currency, chips, guide, bestFor, children,
 }: MethodAccordionProps) {
   return (
-    <div ref={innerRef} className="glass-accordion-header rounded-xl overflow-hidden scroll-mt-4">
+    <div ref={innerRef} className="glass-accordion-header rounded-xl isolate scroll-mt-4">
       {/* Clickable header row */}
       <button
         onClick={onToggle}
@@ -1511,7 +1511,7 @@ export default function ValuationLab({ apiData, ticker, statementsData, onWeight
           )}
           <ModellingWorkspace apiData={apiData} ticker={ticker} statementsData={statementsData} onDerivedFVChange={setFullDcfLiveFV} />
         </MethodAccordion>        {/* ── Sanity Checks — Multiples ─────────────────────────────────────── */}
-        <div className="glass-accordion-header rounded-xl overflow-hidden">
+        <div className="glass-accordion-header rounded-xl isolate">
           <button
             onClick={() => setSanityChecksOpen(o => !o)}
             className="w-full flex items-center justify-between px-5 py-4 hover:bg-[#F0F1F6]/60 transition-colors text-left"

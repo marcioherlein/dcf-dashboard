@@ -77,7 +77,7 @@ export default function SectorPerformanceCard({ sectors }: Props) {
         <div className="px-4 pb-3 border-t border-[#E5E5E5] pt-2">
           <button
             onClick={() => setShowAll(v => !v)}
-            className="text-[11px] font-semibold text-[#2563EB] hover:text-[#2563EB] transition-colors h-auto py-1 flex items-center"
+            className="text-[11px] font-semibold text-[#2563EB] hover:text-[#2563EB] transition-colors h-auto py-1 flex items-center min-h-[44px]"
           >
             {showAll ? 'Show fewer sectors' : `Show all ${sorted.length} sectors`}
           </button>

@@ -211,7 +211,7 @@ export default function ShareCardModal({
             onClick={onClose}
             aria-label="Close"
             data-no-min-h
-            className="w-9 h-9 flex items-center justify-center rounded-full text-[#8A95A6] hover:text-[#06101F] hover:bg-[#E3E1DA] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B]"
+            className="w-11 h-11 flex items-center justify-center rounded-full text-[#8A95A6] hover:text-[#06101F] hover:bg-[#E3E1DA] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B]"
           >
             <X size={14} />
           </button>

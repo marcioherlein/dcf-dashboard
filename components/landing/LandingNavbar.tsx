@@ -170,7 +170,7 @@ export default function LandingNavbar() {
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className="fixed left-3 right-3 z-40 lg:hidden rounded-2xl overflow-hidden"
-            style={{ top: 'calc(var(--navbar-height) + 0.75rem + env(safe-area-inset-top, 0px))', background: 'rgba(255,255,255,0.98)', border: '1px solid #E5E5E5', boxShadow: '0 16px 48px rgba(0,0,0,0.14), 0 4px 12px rgba(0,0,0,0.07)' }}
+            style={{ top: 'calc(5.5rem + env(safe-area-inset-top, 0px))', background: 'rgba(255,255,255,0.98)', border: '1px solid #E5E5E5', boxShadow: '0 16px 48px rgba(0,0,0,0.14), 0 4px 12px rgba(0,0,0,0.07)' }}
           >
             <nav className="flex flex-col p-3 gap-0.5">
               {NAV_LINKS.map(link => (

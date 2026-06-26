@@ -200,14 +200,14 @@ export default function StockUpgradeWall({ ticker, companyName, price, currency,
           <div className="flex items-center gap-3 text-[12px] text-[#8A95A6]">
             <button
               onClick={() => router.push('/redeem')}
-              className="hover:text-[#566174] transition-colors min-h-[44px] flex items-center"
+              className="hover:text-[#566174] transition-colors min-h-[44px] px-3 inline-flex items-center"
             >
               Have a promo code?
             </button>
             <span aria-hidden="true">·</span>
             <button
               onClick={() => router.back()}
-              className="hover:text-[#566174] transition-colors min-h-[44px] flex items-center"
+              className="hover:text-[#566174] transition-colors min-h-[44px] px-3 inline-flex items-center"
             >
               Go back
             </button>
