@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { Resend } from 'resend'
 import Anthropic from '@anthropic-ai/sdk'
-import WeeklyDigestEmail, { type DigestContent, type WatchlistStock } from '@/emails/WeeklyDigestEmail'
+import { type DigestContent } from '@/emails/WeeklyDigestEmail'
 
-export const maxDuration = 300 // 5-minute timeout for AI generation + bulk send
+export const maxDuration = 300 // 5-minute timeout for AI generation
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -53,28 +52,6 @@ async function fetchStockIdeas(baseUrl: string): Promise<Record<string, unknown>
   } catch {
     return []
   }
-}
-
-// ── Fetch live prices for watchlist stocks ────────────────────────────────────
-
-async function fetchLivePrices(baseUrl: string, tickers: string[]): Promise<Map<string, { price: number; changePct: number }>> {
-  const map = new Map<string, { price: number; changePct: number }>()
-  if (tickers.length === 0) return map
-  try {
-    const q = tickers.join(',')
-    const res = await fetch(`${baseUrl}/api/quotes?tickers=${encodeURIComponent(q)}`, { next: { revalidate: 0 } })
-    if (!res.ok) return map
-    const data = await res.json() as Record<string, unknown>[]
-    for (const item of data) {
-      const ticker = item.symbol as string
-      const price = item.regularMarketPrice as number
-      const changePct = (item.regularMarketChangePercent as number) ?? 0
-      if (ticker && price) map.set(ticker, { price, changePct })
-    }
-  } catch {
-    // Silent — live prices are best-effort
-  }
-  return map
 }
 
 // ── Generate editorial content with Claude ────────────────────────────────────
@@ -198,7 +175,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  if (!process.env.RESEND_API_KEY) return NextResponse.json({ error: 'RESEND_API_KEY not set' }, { status: 500 })
   if (!process.env.ANTHROPIC_API_KEY) return NextResponse.json({ error: 'ANTHROPIC_API_KEY not set' }, { status: 500 })
 
   const sb = getServiceClient()
@@ -216,97 +192,37 @@ export async function GET(req: NextRequest) {
   // ── Step 2: Generate editorial content with Claude (one call for all users) ─
   const editorialContent = await generateEditorialContent(marketCtx, stockIdeas, weekOf)
 
-  // ── Step 3: Load all users with saved valuations ──────────────────────────
-  const { data: rows, error } = await sb
-    .from('valuations')
-    .select(`ticker, price_at_save, fair_value, upside_pct, cagr, inputs, user_id, users!inner ( id, email, name, newsletter_opt_in )`)
-    .order('saved_at', { ascending: false })
+  // ── Step 3: Upsert draft into digest_drafts (keyed by week_label) ─────────
+  const autoSendAt = new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString()
 
-  if (error) {
-    console.error('[weekly-digest] fetch error:', error.message)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  const { error: upsertError } = await sb
+    .from('digest_drafts')
+    .upsert(
+      {
+        week_label: weekOf,
+        status: 'draft',
+        auto_send_at: autoSendAt,
+        subject_line: editorialContent.subjectLine,
+        opening: editorialContent.opening,
+        market_section: editorialContent.marketSection,
+        stock_spotlight: editorialContent.stockSpotlight,
+        macro_note: editorialContent.macroNote,
+        week_of: editorialContent.weekOf,
+      },
+      { onConflict: 'week_label' },
+    )
+
+  if (upsertError) {
+    console.error('[weekly-digest] upsert error:', upsertError.message)
+    return NextResponse.json({ error: upsertError.message }, { status: 500 })
   }
 
-  // ── Step 4: Group valuations by user ──────────────────────────────────────
-  const byUser = new Map<string, { email: string; name: string | null; tickers: string[]; entries: WatchlistStock[] }>()
-
-  for (const row of rows ?? []) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const user = (row as any).users
-    if (!user?.email) continue
-    if (user.newsletter_opt_in === false) continue
-
-    if (!byUser.has(user.id)) {
-      byUser.set(user.id, { email: user.email, name: user.name ?? null, tickers: [], entries: [] })
-    }
-
-    const entry = byUser.get(user.id)!
-    if (!entry.tickers.includes((row as { ticker: string }).ticker)) {
-      entry.tickers.push((row as { ticker: string }).ticker)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const inputs = (row as any).inputs ?? {}
-      entry.entries.push({
-        ticker: (row as { ticker: string }).ticker,
-        companyName: inputs.companyName ?? inputs.company ?? (row as { ticker: string }).ticker,
-        fairValue: (row as { fair_value: number | null }).fair_value,
-        currentPrice: null, // will be filled with live price below
-        priceAtSave: (row as { price_at_save: number | null }).price_at_save,
-        upsidePct: (row as { upside_pct: number | null }).upside_pct,
-        cagr: (row as { cagr: number | null }).cagr,
-        currency: inputs.currency ?? 'USD',
-      })
-    }
-  }
-
-  if (byUser.size === 0) {
-    return NextResponse.json({ sent: 0, message: 'No users with saved valuations' })
-  }
-
-  // ── Step 5: Fetch live prices for all unique tickers ──────────────────────
-  const allTickers = Array.from(new Set([...Array.from(byUser.values())].flatMap(u => u.tickers)))
-  const livePrices = await fetchLivePrices(baseUrl, allTickers)
-
-  // Apply live prices to entries
-  for (const { entries } of Array.from(byUser.values())) {
-    for (const entry of entries) {
-      const live = livePrices.get(entry.ticker)
-      if (live) {
-        entry.currentPrice = live.price
-        // Recalculate upside with live price
-        if (entry.fairValue && live.price > 0) {
-          entry.upsidePct = (entry.fairValue - live.price) / live.price
-        }
-      }
-    }
-  }
-
-  // ── Step 6: Send emails ───────────────────────────────────────────────────
-  const resend = new Resend(process.env.RESEND_API_KEY)
-  let sent = 0
-  let failed = 0
-
-  for (const [, { email, name, entries }] of Array.from(byUser.entries())) {
-    // Sort watchlist: biggest upside first
-    const sortedEntries = [...entries].sort((a, b) => (b.upsidePct ?? -1) - (a.upsidePct ?? -1))
-
-    try {
-      await resend.emails.send({
-        from: 'insic <team@insic.app>',
-        to: email,
-        subject: editorialContent.subjectLine,
-        react: WeeklyDigestEmail({
-          name,
-          watchlist: sortedEntries.slice(0, 10),
-          content: editorialContent,
-        }),
-      })
-      sent++
-    } catch (err) {
-      console.error(`[weekly-digest] failed for ${email}:`, err instanceof Error ? err.message : err)
-      failed++
-    }
-  }
-
-  console.log(`[weekly-digest] done — sent: ${sent}, failed: ${failed}, week: ${weekOf}`)
-  return NextResponse.json({ sent, failed, week: weekOf, subject: editorialContent.subjectLine })
+  console.log(`[weekly-digest] draft saved — week: ${weekOf}, subject: ${editorialContent.subjectLine}`)
+  return NextResponse.json({
+    status: 'draft',
+    week: weekOf,
+    subject: editorialContent.subjectLine,
+    opening: editorialContent.opening,
+    auto_send_at: autoSendAt,
+  })
 }

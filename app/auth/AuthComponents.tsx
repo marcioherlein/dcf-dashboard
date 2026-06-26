@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { signIn } from 'next-auth/react'
@@ -41,7 +41,10 @@ function AuthShell({ children, title, sub }: { children: React.ReactNode; title:
 
 // ── Sign Up ───────────────────────────────────────────────────────────────────
 
+const RESEND_COOLDOWN = 60
+
 export function SignUpPage() {
+  const router = useRouter()
   const [name, setName]         = useState('')
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
@@ -49,7 +52,28 @@ export function SignUpPage() {
   const [showPwd, setShowPwd]   = useState(false)
   const [loading, setLoading]   = useState(false)
   const [error, setError]       = useState<string | null>(null)
-  const [done, setDone]         = useState(false)
+  const [step, setStep]         = useState<'form' | 'code'>('form')
+
+  // Code step state
+  const [code, setCode]           = useState('')
+  const [verifying, setVerifying] = useState(false)
+  const [codeError, setCodeError] = useState<string | null>(null)
+  const [cooldown, setCooldown]   = useState(0)
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const codeInputRef = useRef<HTMLInputElement>(null)
+
+  function startCooldown(seconds = RESEND_COOLDOWN) {
+    setCooldown(seconds)
+    if (timerRef.current) clearInterval(timerRef.current)
+    timerRef.current = setInterval(() => {
+      setCooldown(v => {
+        if (v <= 1) { clearInterval(timerRef.current!); return 0 }
+        return v - 1
+      })
+    }, 1000)
+  }
+
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current) }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -65,7 +89,9 @@ export function SignUpPage() {
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error ?? 'Something went wrong'); return }
-      setDone(true)
+      setStep('code')
+      startCooldown()
+      setTimeout(() => codeInputRef.current?.focus(), 100)
     } catch {
       setError('Network error — please try again')
     } finally {
@@ -73,22 +99,91 @@ export function SignUpPage() {
     }
   }
 
-  if (done) {
+  async function handleVerify(e: React.FormEvent) {
+    e.preventDefault()
+    setCodeError(null)
+    if (code.length !== 6) { setCodeError('Enter the 6-digit code'); return }
+    setVerifying(true)
+    try {
+      const res = await fetch('/api/auth/verify-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, code }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setCodeError(data.error ?? 'Invalid code'); return }
+      // Auto sign in after verification
+      const { signIn } = await import('next-auth/react')
+      await signIn('credentials', { email, password, callbackUrl: '/analyze', redirect: true })
+    } catch {
+      setCodeError('Network error — please try again')
+    } finally {
+      setVerifying(false)
+    }
+  }
+
+  async function handleResend() {
+    if (cooldown > 0) return
+    setCodeError(null)
+    try {
+      const res = await fetch('/api/auth/resend-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        if (data.cooldown) startCooldown(data.cooldown)
+        setCodeError(data.error ?? 'Could not resend code')
+        return
+      }
+      startCooldown()
+      setCode('')
+      setTimeout(() => codeInputRef.current?.focus(), 100)
+    } catch {
+      setCodeError('Network error — please try again')
+    }
+  }
+
+  if (step === 'code') {
     return (
-      <AuthShell title="Check your email" sub={`We sent a verification link to ${email}`}>
-        <div className="text-center py-4">
-          <div className="w-14 h-14 rounded-full bg-[#EEF4DD] flex items-center justify-center mx-auto mb-4">
-            <svg className="w-7 h-7 text-[#5F790B]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-          </div>
-          <p className="text-[14px] text-[#4B4B4B] leading-relaxed mb-6">
-            Click the link in the email to activate your account. Check your spam folder if you don&apos;t see it.
-          </p>
-          <Link href="/auth/sign-in" className="text-[13px] text-[#5F790B] font-semibold hover:underline">
-            Back to sign in →
-          </Link>
+      <AuthShell title="Enter your code" sub={`We sent a 6-digit code to ${email}`}>
+        <form onSubmit={handleVerify} className="space-y-4">
+          <input
+            ref={codeInputRef}
+            className={INPUT + ' text-center tracking-[0.3em] text-[22px] font-bold'}
+            type="text"
+            inputMode="numeric"
+            maxLength={6}
+            placeholder="000000"
+            value={code}
+            onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+            autoComplete="one-time-code"
+          />
+          {codeError && <p className="text-[12px] text-red-500">{codeError}</p>}
+          <button type="submit" disabled={verifying || code.length !== 6} className={BTN_PRIMARY}>
+            {verifying ? 'Verifying…' : 'Verify email'}
+          </button>
+        </form>
+
+        <div className="text-center mt-5">
+          {cooldown > 0 ? (
+            <p className="text-[13px] text-[#9B9B9B]">
+              Resend code in <span className="font-semibold tabular-nums text-[#111111]">{cooldown}s</span>
+            </p>
+          ) : (
+            <button onClick={handleResend} className="text-[13px] text-[#5F790B] font-semibold hover:underline">
+              Resend code
+            </button>
+          )}
         </div>
+
+        <p className="text-center text-[12px] text-[#9B9B9B] mt-4">
+          Wrong email?{' '}
+          <button onClick={() => { setStep('form'); setCode(''); setCodeError(null) }} className="text-[#5F790B] font-semibold hover:underline">
+            Go back
+          </button>
+        </p>
       </AuthShell>
     )
   }
