@@ -35,12 +35,20 @@ const CONVICTION_LABEL: Record<string, string> = {
 }
 function ScenarioSlider({
   bear, base, bull, currentPrice, currency,
+  bearWacc, baseWacc, bullWacc,
+  bearCagr, baseCagr, bullCagr,
 }: {
   bear: number | null
   base: number | null
   bull: number | null
   currentPrice: number
   currency: string
+  bearWacc?: number
+  baseWacc?: number
+  bullWacc?: number
+  bearCagr?: number
+  baseCagr?: number
+  bullCagr?: number
 }) {
   if (bear == null || base == null || bull == null) return (
     <p className="text-[11px] text-white/35">Scenario range unavailable — insufficient model data.</p>
@@ -97,6 +105,11 @@ function ScenarioSlider({
               {fmtPct(bearUpside)}
             </p>
           )}
+          {(bearWacc != null || bearCagr != null) && (
+            <p className="text-[9px] text-white/28 tabular-nums mt-0.5 leading-snug">
+              {[bearWacc != null && `WACC ${(bearWacc*100).toFixed(1)}%`, bearCagr != null && `CAGR ${(bearCagr*100).toFixed(0)}%`].filter(Boolean).join(' · ')}
+            </p>
+          )}
         </div>
         <div className="text-center">
           <p className="font-[700] text-[#60A5FA] tabular-nums">{fmtPrice(base, currency)}</p>
@@ -105,12 +118,22 @@ function ScenarioSlider({
               {fmtPct(baseUpside)}
             </p>
           )}
+          {(baseWacc != null || baseCagr != null) && (
+            <p className="text-[9px] text-white/28 tabular-nums mt-0.5 leading-snug">
+              {[baseWacc != null && `WACC ${(baseWacc*100).toFixed(1)}%`, baseCagr != null && `CAGR ${(baseCagr*100).toFixed(0)}%`].filter(Boolean).join(' · ')}
+            </p>
+          )}
         </div>
         <div className="text-right">
           <p className="font-[650] text-white/80 tabular-nums">{fmtPrice(bull, currency)}</p>
           {bullUpside != null && (
             <p className={`text-[10px] font-semibold tabular-nums ${bullUpside >= 0 ? 'text-[#4ADE80]' : 'text-[#F87171]'}`}>
               {fmtPct(bullUpside)}
+            </p>
+          )}
+          {(bullWacc != null || bullCagr != null) && (
+            <p className="text-[9px] text-white/28 tabular-nums mt-0.5 leading-snug">
+              {[bullWacc != null && `WACC ${(bullWacc*100).toFixed(1)}%`, bullCagr != null && `CAGR ${(bullCagr*100).toFixed(0)}%`].filter(Boolean).join(' · ')}
             </p>
           )}
         </div>
@@ -308,6 +331,12 @@ export default function VerdictHero({
             bull={output.scenarios.bull.fairValue}
             currentPrice={currentPrice}
             currency={currency}
+            bearWacc={output.scenarios.bear.wacc}
+            baseWacc={output.scenarios.base.wacc}
+            bullWacc={output.scenarios.bull.wacc}
+            bearCagr={output.scenarios.bear.cagr}
+            baseCagr={output.scenarios.base.cagr}
+            bullCagr={output.scenarios.bull.cagr}
           />
         </div>
 

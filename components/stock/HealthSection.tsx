@@ -3,10 +3,13 @@ import { useState, useMemo } from 'react'
 import { buildHealthInterpretation, buildRiskSummary } from '@/lib/simplifier/summaryBuilder'
 import type { StockRatings } from '@/lib/dcf/calculateRatings'
 import type { PiotroskiResult, AltmanResult, BeneishResult, ROICResult } from '@/lib/dcf/calculateScores'
+import { computeAccrualsRatio } from '@/lib/dcf/calculateScores'
 import RiskRadar, { computeRiskDimensions } from './RiskRadar'
 import { computeVerdict } from '@/lib/verdict/computeVerdict'
 import { computeConvictionScore } from '@/lib/stock/computeConvictionScore'
 import ConvictionScoreCard from './ConvictionScoreCard'
+import DrawdownCard from './DrawdownCard'
+import InsiderTransactionCard from './InsiderTransactionCard'
 
 interface ScoresData {
   piotroski: PiotroskiResult
@@ -115,6 +118,19 @@ export default function HealthSection({ ratings, scores, financialsData, collaps
   const healthInterp = buildHealthInterpretation({ piotroski, altmanZone, beneishFlag, overallGrade })
   const riskSummary  = financialsData ? buildRiskSummary('this company', financialsData) : null
 
+  // Compute accruals ratio for display
+  const accrualsResult = useMemo(() => {
+    const is = financialsData?.financialStatements?.incomeStatement
+    const cf = financialsData?.financialStatements?.cashFlow
+    const bs = financialsData?.financialStatements?.balanceSheet
+    if (!is?.length || !cf?.length || !bs?.length) return null
+    const actIS = is.filter((r: { isProjected?: boolean }) => !r.isProjected)
+    const actCF = cf.filter((r: { isProjected?: boolean }) => !r.isProjected)
+    const actBS = bs.filter((r: { isProjected?: boolean }) => !r.isProjected)
+    const r = computeAccrualsRatio(actIS, actCF, actBS)
+    return r.dataAvailable ? r : null
+  }, [financialsData])
+
   // Compute Conviction Score from all available signals
   const conviction = useMemo(() => {
     const riskDims = financialsData ? computeRiskDimensions(financialsData) : []
@@ -149,6 +165,7 @@ export default function HealthSection({ ratings, scores, financialsData, collaps
       analystForwardPE: financialsData?.analystForwardPE ?? null,
       priceToBook: financialsData?.businessProfile?.priceToBook ?? null,
       currentPrice: financialsData?.quote?.price ?? null,
+      revisionMomentum: financialsData?.revisionMomentum ?? null,
       // Gross profitability (Novy-Marx): grossProfit / totalAssets
       grossProfitability: (() => {
         const is = financialsData?.financialStatements?.incomeStatement
@@ -162,6 +179,18 @@ export default function HealthSection({ ratings, scores, financialsData, collaps
         if (gp == null || ta == null || ta <= 0) return null
         return gp / ta
       })(),
+      // Accruals ratio (Sloan 1996): (NI − OCF) / Avg Total Assets
+      accrualsRatio: (() => {
+        const is = financialsData?.financialStatements?.incomeStatement
+        const cf = financialsData?.financialStatements?.cashFlow
+        const bs = financialsData?.financialStatements?.balanceSheet
+        if (!is?.length || !cf?.length || !bs?.length) return null
+        const actIS = is.filter((r: { isProjected?: boolean }) => !r.isProjected)
+        const actCF = cf.filter((r: { isProjected?: boolean }) => !r.isProjected)
+        const actBS = bs.filter((r: { isProjected?: boolean }) => !r.isProjected)
+        const result = computeAccrualsRatio(actIS, actCF, actBS)
+        return result.dataAvailable ? result.ratio : null
+      })(),
     })
   }, [ratings, scores, financialsData, ticker])
 
@@ -170,6 +199,9 @@ export default function HealthSection({ ratings, scores, financialsData, collaps
 
       {/* ── Conviction Score — top of Risks tab ──────────────────────────────── */}
       <ConvictionScoreCard conviction={conviction} ticker={ticker} />
+
+      {/* ── Insider Transactions — positioned prominently after the score ───── */}
+      {ticker && <InsiderTransactionCard ticker={ticker} />}
 
       {/* ── Evidence — supporting signals ────────────────────────────────────── */}
     <div className="rounded-xl card overflow-hidden">
@@ -310,6 +342,28 @@ export default function HealthSection({ ratings, scores, financialsData, collaps
                   </div>
                 </div>
               )}
+
+              {/* Accruals Ratio — Sloan 1996 */}
+              {accrualsResult && (
+                <div className="flex items-start justify-between gap-2 flex-wrap rounded-lg bg-white border border-[#E3E1DA] px-4 py-3 min-h-[44px]">
+                  <span className="text-[13px] text-[#566174] min-w-0">
+                    Accruals Ratio
+                    <InfoTip text="Measures how much of reported earnings is backed by actual cash flow vs. non-cash accounting items. Low or negative = cash-backed earnings (stronger quality). Above 10% of assets = accrual-driven earnings (Sloan 1996 — higher revision risk)." />
+                  </span>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <span className={`text-[12px] font-semibold rounded-full px-2.5 py-1 shrink-0 ${
+                      accrualsResult.label === 'Cash-backed' ? 'bg-[#E8F7EF] text-[#11875D]'
+                      : accrualsResult.label === 'Moderate'  ? 'bg-[#FFF4DA] text-[#B56A00]'
+                      : 'bg-[#FCEAEA] text-[#D83B3B]'
+                    }`}>
+                      {accrualsResult.label}
+                    </span>
+                    <span className="text-[10px] text-[#8A95A6] tabular-nums">
+                      {accrualsResult.ratio != null ? `${(accrualsResult.ratio * 100).toFixed(1)}% of assets` : ''}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           )}
@@ -327,6 +381,13 @@ export default function HealthSection({ ratings, scores, financialsData, collaps
 
       {/* Risk Radar — 5-dimension risk breakdown */}
       {financialsData && <RiskRadar financialsData={financialsData} />}
+
+      {/* Drawdown — historical worst-case holding period */}
+      {ticker && (
+        <div className="px-4 sm:px-6 pb-5 border-t border-[#E3E1DA] pt-5">
+          <DrawdownCard ticker={ticker} />
+        </div>
+      )}
 
       </> )} {/* end collapsible content */}
     </div>

@@ -78,6 +78,11 @@ export interface ConvictionInputs {
   // Gross profitability (Novy-Marx 2013) — gross profit / total assets
   // Strongest academically validated quality signal beyond Piotroski/Altman/Beneish
   grossProfitability?: number | null  // decimal, e.g. 0.45 = 45%
+  // Accruals ratio (Sloan 1996) — (NI − OCF) / Avg Total Assets
+  // Low/negative = cash-backed earnings. High positive = accrual-driven.
+  accrualsRatio?: number | null  // decimal, e.g. 0.05 = 5%
+  // Analyst revision momentum: direction of consensus EPS revisions over 90 days
+  revisionMomentum?: { direction: 'up' | 'down' | 'flat'; magnitude: number; analystsCount?: number | null } | null
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -288,6 +293,7 @@ function growthSignals(ratings: StockRatings): ConvictionSignal[] {
 function integritySignals(
   beneish: BeneishResult | null,
   piotroski: PiotroskiResult | null,
+  accrualsRatio?: number | null,
 ): ConvictionSignal[] {
   const signals: ConvictionSignal[] = []
 
@@ -324,6 +330,23 @@ function integritySignals(
     value: accrualReadable,
     technicalName: 'Accrual Quality',
   })
+
+  // "Earnings backed by cash" — Accruals Ratio (Sloan 1996)
+  if (accrualsRatio != null) {
+    const pctStr = `${(accrualsRatio * 100).toFixed(1)}% of assets`
+    const arLabel = accrualsRatio <= 0.01 ? 'Cash-backed earnings'
+      : accrualsRatio <= 0.10 ? 'Moderate accruals'
+      : 'Accrual-driven earnings'
+    const arStatus: ConvictionSignal['status'] = accrualsRatio <= 0.01 ? 'pass'
+      : accrualsRatio <= 0.10 ? 'na'
+      : 'fail'
+    signals.push({
+      label: 'Earnings backed by cash',
+      status: arStatus,
+      value: `${arLabel} (${pctStr})`,
+      technicalName: 'Accruals Ratio (Sloan 1996)',
+    })
+  }
 
   return signals
 }
@@ -463,6 +486,24 @@ function sentimentSignals(inputs: ConvictionInputs): ConvictionSignal[] {
     value: insiderValue,
     technicalName: 'Insider Ownership',
   })
+
+  // e) Analyst revision momentum
+  const rev = inputs.revisionMomentum ?? null
+  if (rev != null) {
+    const magPct = `${(rev.magnitude * 100).toFixed(1)}%`
+    const revValue = rev.direction === 'up'   ? `Estimates raised ${magPct} in 90 days`
+      : rev.direction === 'down' ? `Estimates cut ${magPct} in 90 days`
+      : 'Estimates unchanged (90 days)'
+    const revStatus: ConvictionSignal['status'] = rev.direction === 'up' ? 'pass'
+      : rev.direction === 'down' ? 'fail'
+      : 'na'
+    signals.push({
+      label: 'Analyst estimate revisions',
+      status: revStatus,
+      value: revValue,
+      technicalName: 'EPS Revision Momentum (90d)',
+    })
+  }
 
   return signals
 }
@@ -647,7 +688,13 @@ export function computeConvictionScore(inputs: ConvictionInputs): ConvictionScor
   const accrualMod = accrualCriterion == null || accrualCriterion.pass === null
     ? 60
     : accrualCriterion.pass ? 100 : 0
-  let integrityDimScore = beneishMod * 0.50 + accrualMod * 0.50
+  // Accruals ratio modifier: cash-backed earnings boost integrity score
+  const accrualsRatio = inputs.accrualsRatio ?? null
+  const accrualRatioMod = accrualsRatio == null ? 60
+    : accrualsRatio <= 0.01 ? 100   // cash-backed
+    : accrualsRatio <= 0.10 ? 65    // moderate
+    : 20                            // accrual-driven
+  let integrityDimScore = beneishMod * 0.40 + accrualMod * 0.35 + accrualRatioMod * 0.25
 
   // Earnings surprise magnitude modifier
   const surprises = inputs.earningsSurprises ?? null
@@ -737,7 +784,7 @@ export function computeConvictionScore(inputs: ConvictionInputs): ConvictionScor
       question: 'Can I trust the reported numbers?',
       score: Math.round(clamp0100(integrityDimScore)),
       color: dimColor(clamp0100(integrityDimScore)),
-      signals: integritySignals(beneish, piotroski),
+      signals: integritySignals(beneish, piotroski, inputs.accrualsRatio ?? null),
     },
     {
       id: 'risk',

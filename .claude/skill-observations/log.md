@@ -106,3 +106,18 @@ DECLINED = user decided not to pursue
 **Suggested improvement:** Add an explicit example to the ios-mobile-audit animation rule: "Width transitions (`transition-all` or `transition-[width]` on elements whose `width` changes dynamically) trigger layout recalculation on every frame on iOS Safari. Replace with `transform: scaleX()` + `transform-origin: left` to achieve the same visual effect using GPU-composited transforms. Example fix: remove `style={{ width: \`${pct}%\` }}` and replace with `style={{ transform: \`scaleX(${pct / 100})\`, transformOrigin: 'left' }}` on a full-width div."
 
 **Principle:** `transition-all` is the most common source of layout-affecting animations in React components because it's the default reach-for class. Any element whose `width` or `height` changes dynamically and uses `transition-all` is animating a layout property. The fix is always `scaleX()`/`scaleY()` with `transform-origin`, not `transition: width`.
+
+### Observation 8: Group-hover opacity pattern makes DCF navigation link invisible on iOS touch
+
+**Date:** 2026-06-26
+**Session context:** iOS mobile audit of ETFHoldingsTable component
+**Skill:** ios-mobile-audit
+**Type:** open-source
+**Phase/Area:** Touch target / iOS Safari interaction quirk — hover-gated UI affordances
+**Status:** OPEN
+
+**Issue:** ETFHoldingsTable lines 74-79 render a Link with `opacity-0 group-hover:opacity-100` on the "DCF" label text. The ExternalLink icon (size=12, 12×12px) is always visible, but the navigation label is permanently hidden on iOS because `group-hover` requires a pointer hover event that iOS touch does not fire. The icon alone has no explicit padding on the Link element — the surrounding td provides py-2.5 visually but the Link's own click zone is limited to the 12px icon dimensions, far below the 44×44px iOS minimum. The combination of a sub-minimum touch target *and* a permanently hidden label means mobile users see a tiny icon with no visible purpose label and must tap with pixel-precision.
+
+**Suggested improvement:** Add a rule to ios-mobile-audit: "Patterns that combine `opacity-0` with `group-hover:opacity-*` to reveal UI affordances (labels, secondary actions) are permanently hidden on iOS touch. If the hidden element is a label for a navigation target, its concealment leaves the touch affordance without a visible description. Fix: replace `opacity-0 group-hover:opacity-100` with either (a) always-visible label text, or (b) `sm:opacity-0 sm:group-hover:opacity-100` so the label is always visible on mobile and hover-gated only on desktop. Separately, ensure the interactive element itself has min-h-[44px] min-w-[44px] regardless of label visibility."
+
+**Principle:** Hover-gated visibility patterns (group-hover, peer-hover, hover:opacity) are iOS accessibility anti-patterns whenever the hidden element communicates purpose or action intent. Combine this with a sub-minimum touch target and the element is both imperceptible and untappable on mobile. The fix has two parts: make the label mobile-visible, and size the interactive element to 44×44px.

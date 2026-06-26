@@ -1660,14 +1660,30 @@ export async function GET(req: NextRequest) {
     const earningsSurprises = ehHistory
       .filter((h: any) => h.epsActual != null && h.epsEstimate != null)
       .slice(-4)
-      .map((h: any) => ({
+
+    // Analyst revision momentum: compare current consensus vs 90 days ago
+    // earningsTrend contains earningsEstimate.avg (current) and 90daysAgo for each period
+    const revMomentumTrend = etTrends.find((t: any) => t.period === '+1y')
+    const revMomentum = (() => {
+      if (!revMomentumTrend) return null
+      const currentAvg: number | null = revMomentumTrend.earningsEstimate?.avg ?? null
+      const ninetyDaysAgo: number | null = revMomentumTrend.earningsEstimate?.['90daysAgo'] ?? null
+      const numAnalysts: number | null = revMomentumTrend.earningsEstimate?.numberOfAnalysts ?? null
+      if (currentAvg == null || ninetyDaysAgo == null || Math.abs(ninetyDaysAgo) < 0.001) return null
+      const magnitude = (currentAvg - ninetyDaysAgo) / Math.abs(ninetyDaysAgo)
+      const direction: 'up' | 'down' | 'flat' = Math.abs(magnitude) < 0.02 ? 'flat' : magnitude > 0 ? 'up' : 'down'
+      return { direction, magnitude: Math.round(magnitude * 1000) / 1000, analystsCount: numAnalysts }
+    })()
+
+    // EPS surprise details: map the filtered history to display fields
+    const _earningsSurpriseDetails = earningsSurprises.map((h: any) => ({
         quarter:         h.period as string | null,
         date:            h.earningsDate ? new Date(h.earningsDate).toISOString().split('T')[0] : null,
         epsActual:       (h.epsActual   ?? null) as number | null,
         epsEstimate:     (h.epsEstimate ?? null) as number | null,
         epsDifference:   (h.epsDifference ?? null) as number | null,
         surprisePercent: (h.surprisePercent ?? null) as number | null,
-      }))
+    }))
 
     // Analyst recommendation trend (last 4 months for stacked bar chart)
     const recTrend: any[] = (fin.recommendationTrend?.trend ?? []) as any[]
@@ -1851,6 +1867,7 @@ export async function GET(req: NextRequest) {
       historyYears,
       analystForwardEstimates,
       analystForwardPE,
+      revisionMomentum: revMomentum,
       assumptionAudit,
       peerComps: livePeers.map(p => ({
         ticker:       p.ticker,

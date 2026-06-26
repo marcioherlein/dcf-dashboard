@@ -359,3 +359,63 @@ export function calculateROIC(
     dataAvailable: opIncomeHasData && avgIC > 1,
   }
 }
+
+// ─── Accruals Ratio (Sloan 1996) ──────────────────────────────────────────────
+// Measures how much of reported earnings is backed by cash vs. non-cash accruals.
+// Formula: (Net Income − Operating Cash Flow) / Average Total Assets
+// Low/negative = cash-backed earnings (good). High positive = accrual-driven (risk).
+
+export interface AccrualsRatioResult {
+  ratio: number | null       // decimal e.g. 0.05 = 5%
+  label: 'Cash-backed' | 'Moderate' | 'Accrual-driven' | null
+  netIncome: number | null   // millions
+  operatingCF: number | null // millions
+  avgAssets: number | null   // millions
+  dataAvailable: boolean
+}
+
+export function computeAccrualsRatio(
+  incStmts: any[],
+  cfStmts: any[],
+  bsStmts: any[],
+): AccrualsRatioResult {
+  const absent: AccrualsRatioResult = { ratio: null, label: null, netIncome: null, operatingCF: null, avgAssets: null, dataAvailable: false }
+
+  const inc0 = incStmts[0] ?? {}
+  const cf0  = cfStmts[0]  ?? {}
+  const bs0  = bsStmts[0]  ?? {}
+  const bs1  = bsStmts[1]  ?? {}
+
+  const ni = ((inc0.netIncome ?? inc0.netIncomeApplicableToCommonShares ?? null) as number | null)
+  const ocf = ((cf0.totalCashFromOperatingActivities ?? cf0.operatingCashflow ?? cf0.cashFlowFromContinuingOperatingActivities ?? null) as number | null)
+  const ta0 = ((bs0.totalAssets ?? null) as number | null)
+  const ta1 = ((bs1.totalAssets ?? null) as number | null)
+
+  if (ni == null || ocf == null || ta0 == null) return absent
+
+  // Average total assets: use two periods if available, else use current only
+  const avgTA = ta1 != null ? (ta0 + ta1) / 2 : ta0
+  if (avgTA <= 0) return absent
+
+  const ratio = (ni - ocf) / avgTA
+
+  // Convert to millions for display
+  const niM  = Math.round(ni  / 1e6)
+  const ocfM = Math.round(ocf / 1e6)
+  const avgM = Math.round(avgTA / 1e6)
+
+  // Classification: Sloan threshold is commonly set at ±5% for material accruals
+  const label: AccrualsRatioResult['label'] =
+    ratio <= 0.01   ? 'Cash-backed'    // OCF ≥ NI — strongly cash-backed
+    : ratio <= 0.10 ? 'Moderate'       // 1–10% of assets in accruals
+    : 'Accrual-driven'                 // >10% — elevated earnings quality risk
+
+  return {
+    ratio: Math.round(ratio * 10000) / 10000,
+    label,
+    netIncome: niM,
+    operatingCF: ocfM,
+    avgAssets: avgM,
+    dataAvailable: true,
+  }
+}

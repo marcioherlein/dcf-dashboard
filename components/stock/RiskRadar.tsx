@@ -163,6 +163,33 @@ export function computeRiskDimensions(data: any): RiskDimension[] {
     dims.push({ label: 'Macro & Country Risk', level: level(score), score, detail })
   }
 
+  // ── 6. Short Interest ─────────────────────────────────────────────────────
+  // Only add this dimension when short data is available
+  if (shortPct != null) {
+    let score: number
+    let detail: string
+    const daysLabel = (() => {
+      const sr = ownership.shortRatio ?? null
+      const srNorm = sr != null ? (sr > 365 ? sr / 365 : sr) : null  // guard against raw-shares values
+      return srNorm != null && srNorm > 0 && srNorm < 100 ? ` · ${srNorm.toFixed(1)} days to cover` : ''
+    })()
+
+    if (shortPct < 5) {
+      score = 0
+      detail = `${shortPct.toFixed(1)}% of float is short — low crowding${daysLabel}.`
+    } else if (shortPct < 15) {
+      score = 1
+      detail = `${shortPct.toFixed(1)}% of float is short — moderate${daysLabel}. Not unusual for large-caps.`
+    } else if (shortPct < 25) {
+      score = 2
+      detail = `${shortPct.toFixed(1)}% of float is short — elevated${daysLabel}. Signals market skepticism, but also squeeze potential if sentiment flips.`
+    } else {
+      score = 3
+      detail = `${shortPct.toFixed(1)}% of float is short — high crowding${daysLabel}. Over 1-in-4 shares are borrowed and sold short.`
+    }
+    dims.push({ label: 'Short Interest', level: level(score), score, detail })
+  }
+
   return dims
 }
 

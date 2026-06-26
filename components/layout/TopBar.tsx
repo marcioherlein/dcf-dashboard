@@ -101,9 +101,9 @@ function UserAvatar({ image, name }: { image: string | null; name: string | null
 // the same spring animation. Uses StockNavContext for active tab + onChange.
 
 const STOCK_TABS: { id: TabId; label: string; Icon: React.ElementType }[] = [
-  { id: 'overview',   label: 'Overview',   Icon: BarChart2  },
-  { id: 'valuation',  label: 'Valuation',  Icon: DollarSign },
-  { id: 'conviction', label: 'Conviction', Icon: Award      },
+  { id: 'overview',   label: 'Overview',        Icon: BarChart2  },
+  { id: 'valuation',  label: 'Valuation',        Icon: DollarSign },
+  { id: 'conviction', label: 'Conviction & Risk', Icon: Award      },
   { id: 'financials', label: 'Financials', Icon: Table2     },
   { id: 'news',       label: 'News',       Icon: Newspaper  },
 ]
