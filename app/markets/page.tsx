@@ -75,6 +75,7 @@ export default function MarketsPage() {
   const [mkt,        setMkt]        = useState<MarketsData | null>(null)
   const [ctx,        setCtx]        = useState<MarketContextPayload | null>(null)
   const [err,        setErr]        = useState(false)
+  const [newsErr,    setNewsErr]    = useState(false)
   const [lastFetch,  setLastFetch]  = useState<number>(0)
   const [status]                    = useState(getMarketStatus)
   const [activeTab,  setActiveTab]  = useState<MarketTab>('overview')
@@ -112,7 +113,7 @@ export default function MarketsPage() {
       fetch('/api/markets/news')
         .then(r => r.json())
         .then(d => { if (d?.news) setMkt(prev => prev ? { ...prev, news: d.news } : prev) })
-        .catch(() => {/* news failure is silent */})
+        .catch(() => { setNewsErr(true) })
     } catch { /* ignore */ }
   }, [])
 
@@ -335,6 +336,10 @@ export default function MarketsPage() {
               <div className="mt-3">
                 {!mkt ? (
                   <Sk h="h-48" />
+                ) : newsErr ? (
+                  <div className="rounded-xl border border-[#E3E1DA] bg-[#FAFAFA] px-5 py-8 text-center">
+                    <p className="text-[13px] text-[#6B6B6B]">Market news could not be loaded. Try refreshing the page.</p>
+                  </div>
                 ) : mkt.news.length > 0 ? (
                   <MarketNewsSection news={mkt.news} />
                 ) : (
@@ -367,7 +372,7 @@ export default function MarketsPage() {
 
               {/* Credit Market — HY spread from ctx.signals */}
               {ctx && (() => {
-                const hySignal = ctx.signals.find((s: { id: string }) => s.id === 'hy')
+                const hySignal = ctx.signals.find(s => s.id === 'hy')
                 if (!hySignal) return null
                 const toneMap: Record<string, { bg: string; text: string; border: string }> = {
                   positive: { bg: 'bg-[#E8F7EF]', text: 'text-[#11875D]', border: 'border-[#A3D9BE]' },
@@ -400,7 +405,7 @@ export default function MarketsPage() {
                         </div>
                       </div>
                       <div className="mt-4 pt-3 border-t border-[#F5F5F5]">
-                        <p className="text-[11px] text-[#9B9B9B] leading-snug">
+                        <p className="text-[11px] text-[#6B6B6B] leading-snug">
                           HY spread = high-yield bond yield minus equivalent Treasury yield. Spreads below 4% = low credit stress (risk-on). 4–7% = elevated caution. Above 7% = crisis conditions historically associated with equity drawdowns. Source: FRED BAMLH0A0HYM2.
                         </p>
                       </div>
@@ -409,18 +414,12 @@ export default function MarketsPage() {
                 )
               })()}
 
-              {/* Yield Curve — full width */}
+              {/* Yield Curve */}
               {!mkt ? (
                 <div className="mt-4"><Sk h="h-32" /></div>
               ) : mkt.yieldCurve.length > 0 ? (
                 <div className="mt-4">
-                  <SectionHeader
-                    title="Yield Curve"
-                    subtitle="US Treasury yields across maturities — inversion signals recession risk and affects WACC."
-                  />
-                  <div className="mt-3">
-                    <YieldCurveChart points={mkt.yieldCurve} />
-                  </div>
+                  <YieldCurveChart points={mkt.yieldCurve} />
                 </div>
               ) : (
                 <div className="mt-4 rounded-xl border border-[#E3E1DA] bg-[#FAFAFA] px-5 py-4">
