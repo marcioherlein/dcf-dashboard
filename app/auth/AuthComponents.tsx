@@ -44,7 +44,7 @@ function AuthShell({ children, title, sub }: { children: React.ReactNode; title:
 const RESEND_COOLDOWN = 60
 
 export function SignUpPage() {
-  const router = useRouter()
+  const _router = useRouter()
   const [name, setName]         = useState('')
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
