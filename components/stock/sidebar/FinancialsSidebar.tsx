@@ -62,7 +62,7 @@ function Card({ children }: { children: React.ReactNode }) {
 function MarginBar({ label, value }: { label: string; value: number | null }) {
   const pct = value != null ? Math.min(100, Math.max(0, value * 100)) : null
   const color = pct == null ? 'bg-[#F0F1F6]'
-    : pct >= 30 ? 'bg-[#E8F7EF]0/70'
+    : pct >= 30 ? 'bg-[#E8F7EF]/70'
     : pct >= 15 ? 'bg-[#11875D]/60'
     : pct >= 5  ? 'bg-[#B56A00]/60'
     : 'bg-[#D83B3B]/60'

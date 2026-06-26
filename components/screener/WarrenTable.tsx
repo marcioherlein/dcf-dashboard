@@ -31,7 +31,7 @@ function getCriteria(inst: RankedInstrument) {
 function Dot({ on, label }: { on: boolean; label: string }) {
   return (
     <div className="flex flex-col items-center gap-0.5 w-10">
-      <div className={`w-2 h-2 rounded-full ${on ? 'bg-[#E8F7EF]0' : 'bg-[#E3E1DA]'}`} />
+      <div className={`w-2 h-2 rounded-full ${on ? 'bg-[#E8F7EF]' : 'bg-[#E3E1DA]'}`} />
       <span className="text-[8px] text-[#8A95A6] font-medium leading-none">{label}</span>
     </div>
   )
@@ -102,7 +102,7 @@ export default function WarrenTable({ instruments }: Props) {
 
   function marketBadgeColor(market: string) {
     switch (market) {
-      case 'MERVAL': return 'bg-[#EAF1FF]0/15 text-[#2563EB]'
+      case 'MERVAL': return 'bg-[#EAF1FF]/15 text-[#2563EB]'
       case 'NYSE':   return 'bg-[#E8F7EF] text-[#11875D]'
       case 'NASDAQ': return 'bg-violet-50 text-violet-700'
       case 'ROFEX':  return 'bg-[#FFF4DA] text-[#B56A00]'

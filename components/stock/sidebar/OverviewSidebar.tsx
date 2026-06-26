@@ -276,8 +276,8 @@ export default function OverviewSidebar({
         const insider = ownership.insiderPct ?? 0
         const retail  = Math.max(0, 100 - inst - insider)
         const legend = [
-          { label: 'Institutions', pct: inst,    color: 'bg-[#EAF1FF]0'   },
-          { label: 'Insiders',     pct: insider,  color: 'bg-[#FFF4DA]0'  },
+          { label: 'Institutions', pct: inst,    color: 'bg-[#EAF1FF]'   },
+          { label: 'Insiders',     pct: insider,  color: 'bg-[#FFF4DA]'  },
           { label: 'Retail',       pct: retail,   color: 'bg-[#CDD1C8]'  },
         ]
         return (

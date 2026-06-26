@@ -143,7 +143,7 @@ export default function FairValueChart({ methods, blendedFairValue, currentPrice
                     {/* Fair value dot */}
                     <motion.div
                       className={`absolute w-[13px] h-[13px] rounded-full ring-[2.5px] ring-white shadow ${
-                        isUnder ? 'bg-[#E8F7EF]0' : 'bg-[#FCEAEA]0'
+                        isUnder ? 'bg-[#E8F7EF]' : 'bg-[#FCEAEA]'
                       }`}
                       style={{ left: `${fvPct}%`, transform: 'translateX(-50%)' }}
                       initial={{ scale: 0, opacity: 0 }}
@@ -213,7 +213,7 @@ export default function FairValueChart({ methods, blendedFairValue, currentPrice
 
                   {/* Blue diamond */}
                   <motion.div
-                    className="absolute w-3.5 h-3.5 bg-[#EAF1FF]0 ring-[2.5px] ring-white shadow"
+                    className="absolute w-3.5 h-3.5 bg-[#EAF1FF] ring-[2.5px] ring-white shadow"
                     style={{
                       left: `${bPct}%`,
                       transform: 'translateX(-50%) rotate(45deg)',

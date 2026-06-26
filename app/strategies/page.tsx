@@ -616,7 +616,7 @@ export default function StrategiesPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveStrategy(tab.id)}
-                className="relative flex items-center gap-1 rounded-full px-3.5 py-1.5 text-[13px] min-h-[32px] whitespace-nowrap transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(95,121,11,0.6)]"
+                className="relative flex items-center gap-1 rounded-full px-3.5 py-1.5 text-[13px] min-h-[44px] whitespace-nowrap transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(95,121,11,0.6)]"
                 style={{ color: isActive ? '#111111' : '#566174', fontWeight: isActive ? 650 : 500 }}
               >
                 {isActive && (

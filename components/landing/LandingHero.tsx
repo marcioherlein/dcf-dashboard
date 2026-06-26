@@ -87,7 +87,7 @@ function HeroSearch() {
           : <Search size={16} className="text-[rgba(255,255,255,0.55)] shrink-0" />
         }
         <input
-          type="text"
+          type="search"
           value={query}
           onChange={e => setQuery(e.target.value)}
           onKeyDown={e => {
@@ -97,7 +97,7 @@ function HeroSearch() {
             else if (e.key === 'Enter') submit()
           }}
           placeholder="Try NVDA, AAPL, MELI…"
-          className="flex-1 bg-transparent text-[15px] text-white placeholder-[rgba(255,255,255,0.40)] focus:outline-none"
+          className="flex-1 bg-transparent text-[16px] text-white placeholder-[rgba(255,255,255,0.40)] focus:outline-none"
           style={{ fontWeight: 500 }}
           aria-label="Search for a stock to analyze"
         />

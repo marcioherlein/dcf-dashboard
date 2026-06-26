@@ -63,10 +63,10 @@ const CARDS = [
 
 function gradeColor(grade: string) {
   const g = grade.replace('+', '').replace('-', '')
-  if (g === 'A') return { bg: 'bg-[#E8F7EF]0/20 border border-emerald-500/30', text: 'text-[#A3D9BE]' }
-  if (g === 'B') return { bg: 'bg-[#EAF1FF]0/20 border border-blue-500/30',       text: 'text-[#93B4F5]' }
-  if (g === 'C') return { bg: 'bg-[#FFF4DA]0/20 border border-amber-500/30',     text: 'text-[#F3D391]' }
-  return { bg: 'bg-[#FCEAEA]0/20 border border-red-500/30',                        text: 'text-red-300' }
+  if (g === 'A') return { bg: 'bg-[#E8F7EF]/20 border border-emerald-500/30', text: 'text-[#A3D9BE]' }
+  if (g === 'B') return { bg: 'bg-[#EAF1FF]/20 border border-blue-500/30',       text: 'text-[#93B4F5]' }
+  if (g === 'C') return { bg: 'bg-[#FFF4DA]/20 border border-amber-500/30',     text: 'text-[#F3D391]' }
+  return { bg: 'bg-[#FCEAEA]/20 border border-red-500/30',                        text: 'text-red-300' }
 }
 
 function sparklinePath(data: number[], w: number, h: number): { line: string; area: string } {
@@ -139,7 +139,7 @@ function StockCard({ card, index, visible }: { card: typeof CARDS[0]; index: num
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="rounded-md bg-[#EAF1FF]0/10 border border-blue-500/20 px-1.5 py-0.5 text-[10px] font-bold text-[#2563EB] tracking-wide">
+              <span className="rounded-md bg-[#EAF1FF]/10 border border-blue-500/20 px-1.5 py-0.5 text-[10px] font-bold text-[#2563EB] tracking-wide">
                 {card.ticker}
               </span>
               <span className="text-[10px] text-[#566174] truncate">{card.sector}</span>
@@ -161,7 +161,7 @@ function StockCard({ card, index, visible }: { card: typeof CARDS[0]; index: num
         {/* Verdict pill */}
         <p className={cn(
           'mt-2.5 text-[11px] font-medium leading-snug rounded-lg px-2.5 py-1.5',
-          isUnder ? 'bg-[#E8F7EF]0/10 text-[#A3D9BE]' : 'bg-[#FFF4DA]0/10 text-[#F3D391]',
+          isUnder ? 'bg-[#E8F7EF]/10 text-[#A3D9BE]' : 'bg-[#FFF4DA]/10 text-[#F3D391]',
         )}>
           {card.verdict}
         </p>

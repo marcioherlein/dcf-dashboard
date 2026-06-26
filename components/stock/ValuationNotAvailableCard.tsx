@@ -231,7 +231,7 @@ export default function ValuationNotAvailableCard({
                     {/* High tick */}
                     <div className="absolute w-0.5 h-3 bg-[#93B4F5] top-1/2 -translate-y-1/2 rounded-full" style={{ left: `${highPct}%` }} />
                     {/* Mean dot */}
-                    <div className="absolute w-2.5 h-2.5 rounded-full bg-[#EAF1FF]0 border-2 border-white shadow-sm top-1/2 -translate-y-1/2 -translate-x-1/2" style={{ left: `${meanPct}%` }} />
+                    <div className="absolute w-2.5 h-2.5 rounded-full bg-[#EAF1FF] border-2 border-white shadow-sm top-1/2 -translate-y-1/2 -translate-x-1/2" style={{ left: `${meanPct}%` }} />
                     {/* Current price marker */}
                     <div className="absolute w-2.5 h-2.5 rounded-full bg-[#06101F] border-2 border-white shadow-sm top-1/2 -translate-y-1/2 -translate-x-1/2" style={{ left: `${pricePct}%` }} />
                   </div>
@@ -239,7 +239,7 @@ export default function ValuationNotAvailableCard({
                     <span>{fmtPrice(analystTargetLow, currency)}</span>
                     <span className="flex gap-3">
                       <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#06101F] inline-block" />Current</span>
-                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#EAF1FF]0 inline-block" />Mean target</span>
+                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#EAF1FF] inline-block" />Mean target</span>
                     </span>
                     <span>{fmtPrice(analystTargetHigh, currency)}</span>
                   </div>

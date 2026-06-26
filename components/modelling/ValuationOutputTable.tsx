@@ -25,7 +25,7 @@ interface ValuationOutputTableProps {
 
 function Row({ label, value, bold, highlight }: { label: string; value: React.ReactNode; bold?: boolean; highlight?: boolean }) {
   return (
-    <div className={`flex justify-between py-1.5 text-xs border-b border-white/8 last:border-0 ${highlight ? 'bg-[#EAF1FF]0/10 -mx-4 px-4' : ''}`}>
+    <div className={`flex justify-between py-1.5 text-xs border-b border-white/8 last:border-0 ${highlight ? 'bg-[#EAF1FF]/10 -mx-4 px-4' : ''}`}>
       <span className={bold ? 'font-semibold text-[#E3E1DA]' : 'text-[#8A95A6]'}>{label}</span>
       <span className={`font-mono ${bold ? 'font-semibold text-[#E3E1DA]' : 'text-[#CDD1C8]'}`}>{value}</span>
     </div>

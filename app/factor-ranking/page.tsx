@@ -185,7 +185,7 @@ export default function FactorRankingPage() {
 
         {/* Toggles */}
         <label className="flex items-center gap-1.5 cursor-pointer">
-          <div className={`relative w-7 h-4 rounded-full transition-colors ${onlyCedear ? 'bg-[#EAF1FF]0' : 'bg-[#E3E1DA]'}`}>
+          <div className={`relative w-7 h-4 rounded-full transition-colors ${onlyCedear ? 'bg-[#EAF1FF]' : 'bg-[#E3E1DA]'}`}>
             <div className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform ${onlyCedear ? 'translate-x-3' : ''}`} />
             <input type="checkbox" className="sr-only" checked={onlyCedear} onChange={(e) => setOnlyCedear(e.target.checked)} />
           </div>
@@ -193,7 +193,7 @@ export default function FactorRankingPage() {
         </label>
 
         <label className="flex items-center gap-1.5 cursor-pointer">
-          <div className={`relative w-7 h-4 rounded-full transition-colors ${noMaxFrom52w ? 'bg-[#EAF1FF]0' : 'bg-[#E3E1DA]'}`}>
+          <div className={`relative w-7 h-4 rounded-full transition-colors ${noMaxFrom52w ? 'bg-[#EAF1FF]' : 'bg-[#E3E1DA]'}`}>
             <div className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform ${noMaxFrom52w ? 'translate-x-3' : ''}`} />
             <input type="checkbox" className="sr-only" checked={noMaxFrom52w} onChange={(e) => setNoMaxFrom52w(e.target.checked)} />
           </div>

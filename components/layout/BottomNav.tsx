@@ -129,6 +129,7 @@ export default function BottomNav() {
         role="dialog"
         aria-modal="true"
         aria-label="More navigation options"
+        aria-hidden={!moreOpen}
         className={cn(
           'fixed left-0 right-0 z-50 lg:hidden rounded-t-2xl shadow-2xl border-t transition-transform duration-200',
           moreOpen ? 'translate-y-0' : 'translate-y-full',

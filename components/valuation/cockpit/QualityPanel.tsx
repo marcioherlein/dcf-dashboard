@@ -112,7 +112,7 @@ function MoatGauge({ roic, roicSpread, wacc }: { roic: number | null; roicSpread
         />
         {/* ROIC dot */}
         <div
-          className={`absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full border-2 border-white shadow-sm ${hasPositiveSpread ? 'bg-[#E8F7EF]0' : 'bg-[#D83B3B]'}`}
+          className={`absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full border-2 border-white shadow-sm ${hasPositiveSpread ? 'bg-[#E8F7EF]' : 'bg-[#D83B3B]'}`}
           style={{ left: `${roicPct}%`, transform: 'translate(-50%, -50%)' }}
         />
       </div>

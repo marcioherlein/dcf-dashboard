@@ -12,7 +12,7 @@ interface FairValueBarProps {
 
 // Fixed zones on a 0–2.5× ratio scale
 const ZONES = [
-  { label: 'Deep Value',  max: 0.70, color: 'bg-[#E8F7EF]0' },
+  { label: 'Deep Value',  max: 0.70, color: 'bg-[#E8F7EF]' },
   { label: 'Undervalued', max: 0.90, color: 'bg-[#11875D]' },
   { label: 'Fair Value',  max: 1.10, color: 'bg-blue-400'    },
   { label: 'Premium',     max: 1.40, color: 'bg-[#B56A00]'   },
@@ -81,7 +81,7 @@ export default function FairValueBar({ price, fairValue, currency, bearCase, bul
         {/* Zone segments */}
         <div className="relative h-3 rounded-full overflow-hidden flex">
           {/* Deep Value 0–0.7× = 28% */}
-          <div className="bg-[#E8F7EF]0 h-full" style={{ width: '28%' }} />
+          <div className="bg-[#E8F7EF] h-full" style={{ width: '28%' }} />
           {/* Undervalued 0.7–0.9× = 8% */}
           <div className="bg-[#11875D] h-full" style={{ width: '8%' }} />
           {/* Fair Value 0.9–1.1× = 8% */}

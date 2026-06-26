@@ -537,7 +537,7 @@ export default function CalendarTab() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setOffset(o => o - 1)}
-            className="p-1.5 rounded-md border border-[#E5E5E5] text-[#6B6B6B] hover:bg-[#F5F5F5] hover:text-[#111111] transition-colors"
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-md border border-[#E5E5E5] text-[#6B6B6B] hover:bg-[#F5F5F5] hover:text-[#111111] transition-colors"
             aria-label="Previous week"
           >
             <ChevronLeft size={14} />
@@ -547,7 +547,7 @@ export default function CalendarTab() {
           </span>
           <button
             onClick={() => setOffset(o => o + 1)}
-            className="p-1.5 rounded-md border border-[#E5E5E5] text-[#6B6B6B] hover:bg-[#F5F5F5] hover:text-[#111111] transition-colors"
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-md border border-[#E5E5E5] text-[#6B6B6B] hover:bg-[#F5F5F5] hover:text-[#111111] transition-colors"
             aria-label="Next week"
           >
             <ChevronRight size={14} />
@@ -556,7 +556,7 @@ export default function CalendarTab() {
             onClick={() => setOffset(0)}
             aria-pressed={weekOffset === 0}
             className={cn(
-              'text-[11px] font-semibold px-2.5 py-1 rounded-md border transition-colors',
+              'text-[11px] font-semibold px-2.5 py-2.5 min-h-[44px] rounded-md border transition-colors',
               weekOffset === 0
                 ? 'border-[#5F790B] bg-[#F6FAEA] text-[#5F790B]'
                 : 'border-[#E5E5E5] text-[#6B6B6B] hover:border-[#5F790B] hover:text-[#5F790B]',

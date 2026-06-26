@@ -60,7 +60,7 @@ function compactBadgeCls(grade: string): string {
   const g = grade.replace('+', '').replace('-', '')
   if (g === 'A') return 'bg-[#11875D] text-white'
   if (g === 'B') return 'bg-blue-600 text-white'
-  if (g === 'C') return 'bg-[#FFF4DA]0 text-white'
+  if (g === 'C') return 'bg-[#FFF4DA] text-white'
   return 'bg-red-600 text-white'
 }
 
@@ -356,7 +356,7 @@ export default function InvestorGradeCard({
             <div>
               <div className="h-2 rounded-full bg-[#E3E1DA] overflow-hidden">
                 <motion.div
-                  className={cn('h-full rounded-full', isUndervalued ? 'bg-[#E8F7EF]0' : 'bg-[#FCEAEA]0')}
+                  className={cn('h-full rounded-full', isUndervalued ? 'bg-[#E8F7EF]' : 'bg-[#FCEAEA]')}
                   initial={{ width: 0 }}
                   animate={{ width: `${Math.min(100, Math.max(4, (price / Math.max(price, fairValue)) * 100))}%` }}
                   transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}

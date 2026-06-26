@@ -205,7 +205,7 @@ export default function MarketInterpretationCard({
                     />
                     {/* Mean target marker */}
                     <div
-                      className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-[#E8F7EF]0 border-2 border-white shadow-sm z-10"
+                      className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-[#E8F7EF] border-2 border-white shadow-sm z-10"
                       style={{ left: `${Math.max(3, Math.min(97, meanPct))}%`, marginLeft: '-6px' }}
                       title={`Mean target: ${fmtPrice(analystTargetMean, currency)}`}
                     />
@@ -225,7 +225,7 @@ export default function MarketInterpretationCard({
                       Current
                     </span>
                     <span className="flex items-center gap-1 text-[10px] text-[#8A95A6]">
-                      <span className="w-2.5 h-2.5 rounded-full bg-[#E8F7EF]0 border border-white inline-block" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#E8F7EF] border border-white inline-block" />
                       Consensus target
                     </span>
                   </div>

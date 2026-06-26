@@ -7,7 +7,7 @@ import { signIn } from 'next-auth/react'
 import { Eye, EyeOff } from 'lucide-react'
 import { InsicLogoLockup } from '@/components/ui/InsicLogo'
 
-const INPUT = 'w-full px-4 py-3 rounded-xl border border-[#E5E5E5] text-[14px] text-[#111111] placeholder-[#C4C4C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#5F790B]/20 focus:border-[#5F790B] transition-colors'
+const INPUT = 'w-full px-4 py-3 rounded-xl border border-[#E5E5E5] text-[16px] text-[#111111] placeholder-[#C4C4C4] bg-white focus:outline-none focus:ring-2 focus:ring-[#5F790B]/20 focus:border-[#5F790B] transition-colors'
 const BTN_PRIMARY = 'w-full py-3 rounded-xl bg-[#5F790B] hover:bg-[#526A08] text-white text-[14px] font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[48px]'
 const BTN_GOOGLE = 'w-full flex items-center justify-center gap-3 py-3 rounded-xl border border-[#E5E5E5] bg-white hover:bg-[#F8F8F8] text-[14px] font-semibold text-[#111111] transition-colors min-h-[48px]'
 
@@ -97,14 +97,14 @@ export function SignUpPage() {
     <AuthShell title="Create your account" sub="Free during beta — no credit card required">
       <form onSubmit={handleSubmit} className="space-y-4">
         <input className={INPUT} type="text" placeholder="Full name" value={name} onChange={e => setName(e.target.value)} required autoFocus />
-        <input className={INPUT} type="email" placeholder="Email address" value={email} onChange={e => setEmail(e.target.value)} required />
+        <input className={INPUT} type="email" placeholder="Email address" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" />
         <div className="relative">
-          <input className={INPUT} type={showPwd ? 'text' : 'password'} placeholder="Password (min 8 characters)" value={password} onChange={e => setPassword(e.target.value)} required />
-          <button type="button" onClick={() => setShowPwd(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9B9B9B] hover:text-[#6B6B6B]">
+          <input className={INPUT} type={showPwd ? 'text' : 'password'} placeholder="Password (min 8 characters)" value={password} onChange={e => setPassword(e.target.value)} required autoComplete="new-password" />
+          <button type="button" onClick={() => setShowPwd(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9B9B9B] hover:text-[#6B6B6B] min-w-[44px] min-h-[44px] flex items-center justify-center">
             {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         </div>
-        <input className={INPUT} type={showPwd ? 'text' : 'password'} placeholder="Confirm password" value={confirm} onChange={e => setConfirm(e.target.value)} required />
+        <input className={INPUT} type={showPwd ? 'text' : 'password'} placeholder="Confirm password" value={confirm} onChange={e => setConfirm(e.target.value)} required autoComplete="new-password" />
         {error && <p className="text-[12px] text-red-500">{error}</p>}
         <button type="submit" disabled={loading} className={BTN_PRIMARY}>
           {loading ? 'Creating account…' : 'Create account'}
@@ -188,10 +188,10 @@ export function SignInPage() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <input className={INPUT} type="email" placeholder="Email address" value={email} onChange={e => setEmail(e.target.value)} required autoFocus />
+        <input className={INPUT} type="email" placeholder="Email address" value={email} onChange={e => setEmail(e.target.value)} required autoFocus autoComplete="email" />
         <div className="relative">
-          <input className={INPUT} type={showPwd ? 'text' : 'password'} placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required />
-          <button type="button" onClick={() => setShowPwd(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9B9B9B] hover:text-[#6B6B6B]">
+          <input className={INPUT} type={showPwd ? 'text' : 'password'} placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required autoComplete="current-password" />
+          <button type="button" onClick={() => setShowPwd(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9B9B9B] hover:text-[#6B6B6B] min-w-[44px] min-h-[44px] flex items-center justify-center">
             {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         </div>
@@ -262,7 +262,7 @@ export function ForgotPasswordPage() {
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input className={INPUT} type="email" placeholder="Email address" value={email} onChange={e => setEmail(e.target.value)} required autoFocus />
+          <input className={INPUT} type="email" placeholder="Email address" value={email} onChange={e => setEmail(e.target.value)} required autoFocus autoComplete="email" />
           <button type="submit" disabled={loading} className={BTN_PRIMARY}>
             {loading ? 'Sending…' : 'Send reset link'}
           </button>
@@ -325,12 +325,12 @@ export function ResetPasswordPage() {
     <AuthShell title="Choose a new password" sub="Must be at least 8 characters">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="relative">
-          <input className={INPUT} type={showPwd ? 'text' : 'password'} placeholder="New password" value={password} onChange={e => setPassword(e.target.value)} required autoFocus />
-          <button type="button" onClick={() => setShowPwd(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9B9B9B] hover:text-[#6B6B6B]">
+          <input className={INPUT} type={showPwd ? 'text' : 'password'} placeholder="New password" value={password} onChange={e => setPassword(e.target.value)} required autoFocus autoComplete="new-password" />
+          <button type="button" onClick={() => setShowPwd(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9B9B9B] hover:text-[#6B6B6B] min-w-[44px] min-h-[44px] flex items-center justify-center">
             {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         </div>
-        <input className={INPUT} type={showPwd ? 'text' : 'password'} placeholder="Confirm new password" value={confirm} onChange={e => setConfirm(e.target.value)} required />
+        <input className={INPUT} type={showPwd ? 'text' : 'password'} placeholder="Confirm new password" value={confirm} onChange={e => setConfirm(e.target.value)} required autoComplete="new-password" />
         {error && <p className="text-[12px] text-red-500">{error}</p>}
         <button type="submit" disabled={loading} className={BTN_PRIMARY}>
           {loading ? 'Saving…' : 'Set new password'}

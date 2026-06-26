@@ -258,6 +258,7 @@ function FilterSelect({
           id={id}
           value={value}
           onChange={e => onChange(e.target.value)}
+          style={{ fontSize: '16px' }}
           className={cn(
             'appearance-none pl-2.5 pr-6 py-1.5 text-[12px] rounded-lg border cursor-pointer min-h-[44px] transition-colors focus:outline-none focus:ring-2 focus:ring-[rgba(95,121,11,0.25)]',
             active
@@ -449,7 +450,7 @@ export default function ScreenerPage() {
       </div>
 
       {/* ── Sticky filter bar ──────────────────────────────────────────────── */}
-      <div className="bg-white border-b border-[#E5E5E5] sticky top-[52px] z-30">
+      <div className="bg-white border-b border-[#E5E5E5] sticky z-30" style={{ top: 'calc(52px + env(safe-area-inset-top, 0px))' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex items-center gap-2 flex-wrap">
 

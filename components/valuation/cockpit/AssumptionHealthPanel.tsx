@@ -17,10 +17,10 @@ interface Props {
 // ─── Visual config ────────────────────────────────────────────────────────────
 
 const GRADE_CFG = {
-  A: { bg: 'bg-[#E8F7EF]', border: 'border-[#A3D9BE]', text: 'text-[#11875D]', dot: 'bg-[#E8F7EF]0', label: 'Reliable' },
-  B: { bg: 'bg-[#EAF1FF]',    border: 'border-[#93B4F5]',    text: 'text-[#2563EB]',    dot: 'bg-[#EAF1FF]0',    label: 'Good'     },
-  C: { bg: 'bg-[#FFF4DA]',   border: 'border-[#F3D391]',   text: 'text-[#B56A00]',   dot: 'bg-[#FFF4DA]0',   label: 'Review'   },
-  D: { bg: 'bg-[#FCEAEA]',     border: 'border-[#F0B8B8]',     text: 'text-[#D83B3B]',     dot: 'bg-[#FCEAEA]0',     label: 'Caution'  },
+  A: { bg: 'bg-[#E8F7EF]', border: 'border-[#A3D9BE]', text: 'text-[#11875D]', dot: 'bg-[#E8F7EF]', label: 'Reliable' },
+  B: { bg: 'bg-[#EAF1FF]',    border: 'border-[#93B4F5]',    text: 'text-[#2563EB]',    dot: 'bg-[#EAF1FF]',    label: 'Good'     },
+  C: { bg: 'bg-[#FFF4DA]',   border: 'border-[#F3D391]',   text: 'text-[#B56A00]',   dot: 'bg-[#FFF4DA]',   label: 'Review'   },
+  D: { bg: 'bg-[#FCEAEA]',     border: 'border-[#F0B8B8]',     text: 'text-[#D83B3B]',     dot: 'bg-[#FCEAEA]',     label: 'Caution'  },
 }
 
 const SEVERITY_CFG = {

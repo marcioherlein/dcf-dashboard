@@ -29,20 +29,33 @@ interface Props {
 }
 
 function InfoTip({ text }: { text: string }) {
+  const [open, setOpen] = useState(false)
+
   return (
-    <span className="relative group/tip inline-flex items-center ml-1 align-middle">
+    <span className="relative inline-flex items-center ml-1 align-middle">
       <button
         type="button"
         aria-label="More information"
-        className="rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+        aria-expanded={open}
+        onClick={(e) => { e.stopPropagation(); setOpen((v) => !v) }}
+        className="inline-flex items-center justify-center min-h-[44px] min-w-[44px] rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
       >
         <svg className="w-3 h-3 text-[#8A95A6] cursor-help" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
           <path d="M8 0a8 8 0 100 16A8 8 0 008 0zm.93 6.588l-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 11-2 0 1 1 0 012 0z" />
         </svg>
       </button>
-      <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-52 max-w-[min(208px,calc(100vw-2rem))] rounded-lg bg-slate-800 px-2.5 py-2 text-[11px] text-white shadow-lg opacity-0 group-hover/tip:opacity-100 group-focus-within/tip:opacity-100 transition-opacity z-50 leading-snug text-left normal-case tracking-normal font-normal">
-        {text}
-      </span>
+      {open && (
+        <>
+          <span
+            className="fixed inset-0 z-40"
+            aria-hidden="true"
+            onClick={() => setOpen(false)}
+          />
+          <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-52 max-w-[min(208px,calc(100vw-2rem))] rounded-lg bg-slate-800 px-2.5 py-2 text-[11px] text-white shadow-lg z-50 leading-snug text-left normal-case tracking-normal font-normal">
+            {text}
+          </span>
+        </>
+      )}
     </span>
   )
 }
@@ -61,10 +74,10 @@ const CATEGORY_LABELS: Record<string, string> = {
 function ScoreBar({ score, color, label }: { score: number; color: string; label?: string }) {
   const filled = Math.round(Math.min(Math.max(score, 0), 5))
   const barColor =
-    color === 'emerald' || color === 'green' ? 'bg-[#E8F7EF]0' :
-    color === 'blue' ? 'bg-[#EAF1FF]0' :
-    color === 'amber' || color === 'orange' ? 'bg-[#FFF4DA]0' :
-    'bg-[#FCEAEA]0'
+    color === 'emerald' || color === 'green' ? 'bg-[#E8F7EF]' :
+    color === 'blue' ? 'bg-[#EAF1FF]' :
+    color === 'amber' || color === 'orange' ? 'bg-[#FFF4DA]' :
+    'bg-[#FCEAEA]'
 
   return (
     <div

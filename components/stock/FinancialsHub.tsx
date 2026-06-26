@@ -920,7 +920,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                             </span>
                           )}
                           <div className="relative w-full" style={{ height: `${hp}%` }}>
-                            <div className={`w-full h-full rounded-t-sm ${isPos ? 'bg-[#E8F7EF]0' : 'bg-[#D83B3B]'}`}
+                            <div className={`w-full h-full rounded-t-sm ${isPos ? 'bg-[#E8F7EF]' : 'bg-[#D83B3B]'}`}
                               title={`${p.year}: EPS ${isPos ? '+' : ''}$${val.toFixed(2)}`} />
                           </div>
                           <span className="text-[10px] text-[#8A95A6] truncate max-w-full">{p.year}</span>
@@ -1200,7 +1200,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                             />
                             {fcfH != null ? (
                               <div
-                                className={`flex-1 min-w-0 rounded-t-sm ${fcfPos ? 'bg-[#E8F7EF]0' : 'bg-[#D83B3B]'}`}
+                                className={`flex-1 min-w-0 rounded-t-sm ${fcfPos ? 'bg-[#E8F7EF]' : 'bg-[#D83B3B]'}`}
                                 style={{ height: `${fcfH}%` }}
                                 title={`${p.year} Free CF: ${currency}${p.fcf!.toFixed(0)}M`}
                               />
@@ -1213,7 +1213,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                   </div>
                   <div className="flex items-center gap-4 mt-1.5 flex-wrap">
                     <span className="flex items-center gap-1 text-[10px] text-[#8A95A6]"><span className="w-2 h-2 rounded-sm bg-[#059669] inline-block" />Operating CF</span>
-                    <span className="flex items-center gap-1 text-[10px] text-[#8A95A6]"><span className="w-2 h-2 rounded-sm bg-[#E8F7EF]0 inline-block" />Free CF</span>
+                    <span className="flex items-center gap-1 text-[10px] text-[#8A95A6]"><span className="w-2 h-2 rounded-sm bg-[#E8F7EF] inline-block" />Free CF</span>
                     <span className="text-[10px] text-[#8A95A6]">Both scaled to max OCF. FCF conversion = FCF/OCF</span>
                   </div>
                 </div>
@@ -1700,7 +1700,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                               )}
                               <div className="relative w-full flex items-end" style={{ height: `${heightPct}%` }}>
                                 <div
-                                  className={`w-full rounded-t-sm transition-all ${bar.isProjected ? 'bg-blue-200 border border-dashed border-blue-400' : 'bg-[#EAF1FF]0'}`}
+                                  className={`w-full rounded-t-sm transition-all ${bar.isProjected ? 'bg-blue-200 border border-dashed border-blue-400' : 'bg-[#EAF1FF]'}`}
                                   style={{ height: '100%' }}
                                   title={`${bar.year}: ${sym}${fmtRev(val)}`}
                                 />
@@ -1711,7 +1711,7 @@ export default function FinancialsHub({ statementsData, financialsData, currency
                         })}
                       </div>
                       <div className="flex items-center gap-3 mt-2">
-                        <span className="flex items-center gap-1 text-[10px] text-[#566174]"><span className="inline-block w-3 h-2 rounded-sm bg-[#EAF1FF]0" />Actual</span>
+                        <span className="flex items-center gap-1 text-[10px] text-[#566174]"><span className="inline-block w-3 h-2 rounded-sm bg-[#EAF1FF]" />Actual</span>
                         <span className="flex items-center gap-1 text-[10px] text-[#566174]"><span className="inline-block w-3 h-2 rounded-sm bg-blue-200 border border-dashed border-blue-400" />Estimate</span>
                       </div>
                     </div>
@@ -1971,8 +1971,8 @@ export default function FinancialsHub({ statementsData, financialsData, currency
         const shortPct   = toPercent(ownership.shortPct)
         const shortRatio = ownership.shortRatio ?? null
         const segments = [
-          { label: 'Institutions', pct: inst,    color: 'bg-[#EAF1FF]0',  bar: 'bg-[#EAF1FF]0',  text: 'text-[#2563EB]', bgLight: 'bg-[#EAF1FF]'   },
-          { label: 'Insiders',     pct: insider,  color: 'bg-[#FFF4DA]0', bar: 'bg-[#FFF4DA]0', text: 'text-[#B56A00]',bgLight: 'bg-[#FFF4DA]'  },
+          { label: 'Institutions', pct: inst,    color: 'bg-[#EAF1FF]',  bar: 'bg-[#EAF1FF]',  text: 'text-[#2563EB]', bgLight: 'bg-[#EAF1FF]'   },
+          { label: 'Insiders',     pct: insider,  color: 'bg-[#FFF4DA]', bar: 'bg-[#FFF4DA]', text: 'text-[#B56A00]',bgLight: 'bg-[#FFF4DA]'  },
           { label: 'Retail / Other', pct: retail, color: 'bg-[#CDD1C8]', bar: 'bg-[#CDD1C8]', text: 'text-[#566174]',bgLight: 'bg-[#F0F1F6]'  },
         ]
         return (

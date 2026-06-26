@@ -10,21 +10,21 @@ const colorMap: Record<string, {
     bg:     'bg-[#E8F7EF]',
     text:   'text-[#11875D]',
     border: 'border-[#A3D9BE]',
-    bar:    'bg-[#E8F7EF]0',
+    bar:    'bg-[#E8F7EF]',
     badge:  'bg-[#E8F7EF] text-[#11875D]',
   },
   green: {
     bg:     'bg-[#E8F7EF]',
     text:   'text-[#11875D]',
     border: 'border-green-200',
-    bar:    'bg-[#E8F7EF]0',
+    bar:    'bg-[#E8F7EF]',
     badge:  'bg-[#E8F7EF] text-[#11875D]',
   },
   blue: {
     bg:     'bg-[#EAF1FF]',
     text:   'text-[#2563EB]',
     border: 'border-[#93B4F5]',
-    bar:    'bg-[#EAF1FF]0',
+    bar:    'bg-[#EAF1FF]',
     badge:  'bg-[#EAF1FF] text-[#2563EB]',
   },
   amber: {
@@ -45,7 +45,7 @@ const colorMap: Record<string, {
     bg:     'bg-[#FCEAEA]',
     text:   'text-[#D83B3B]',
     border: 'border-[#F0B8B8]',
-    bar:    'bg-[#FCEAEA]0',
+    bar:    'bg-[#FCEAEA]',
     badge:  'bg-[#FCEAEA] text-[#D83B3B]',
   },
 }

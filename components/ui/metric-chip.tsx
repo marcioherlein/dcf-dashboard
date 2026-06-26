@@ -9,10 +9,10 @@ const chipVariants = cva(
     variants: {
       variant: {
         default:  'bg-white/5 border-[rgba(59,130,246,0.15)]',
-        positive: 'bg-[#E8F7EF]0/10 border-emerald-500/20',
-        negative: 'bg-[#FCEAEA]0/10 border-red-500/20',
-        warning:  'bg-[#FFF4DA]0/10 border-amber-500/20',
-        accent:   'bg-[#EAF1FF]0/10 border-blue-500/20',
+        positive: 'bg-[#E8F7EF]/10 border-emerald-500/20',
+        negative: 'bg-[#FCEAEA]/10 border-red-500/20',
+        warning:  'bg-[#FFF4DA]/10 border-amber-500/20',
+        accent:   'bg-[#EAF1FF]/10 border-blue-500/20',
       },
     },
     defaultVariants: { variant: 'default' },

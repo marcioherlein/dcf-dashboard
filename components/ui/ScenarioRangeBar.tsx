@@ -46,7 +46,7 @@ export default function ScenarioRangeBar({
         />
         {/* Base / blended */}
         <div
-          className="absolute w-3 h-3 rounded-full bg-[#EAF1FF]0 border-2 border-white shadow-sm top-1/2 -translate-y-1/2 -translate-x-1/2"
+          className="absolute w-3 h-3 rounded-full bg-[#EAF1FF] border-2 border-white shadow-sm top-1/2 -translate-y-1/2 -translate-x-1/2"
           style={{ left: `${baseP}%` }}
         />
         {/* Bull */}
@@ -56,7 +56,7 @@ export default function ScenarioRangeBar({
         />
         {/* Price tick */}
         <div
-          className="absolute w-0.5 h-4 bg-[#F0F1F6]0 top-1/2 -translate-y-1/2 -translate-x-1/2"
+          className="absolute w-0.5 h-4 bg-[#F0F1F6] top-1/2 -translate-y-1/2 -translate-x-1/2"
           style={{ left: `${priceP}%` }}
         />
       </div>
@@ -73,7 +73,7 @@ export default function ScenarioRangeBar({
           <span>Bear</span>
         </div>
         <div className="flex items-center gap-1">
-          <div className="w-2 h-2 rounded-full bg-[#EAF1FF]0" />
+          <div className="w-2 h-2 rounded-full bg-[#EAF1FF]" />
           <span>Base</span>
         </div>
         <div className="flex items-center gap-1">
@@ -81,7 +81,7 @@ export default function ScenarioRangeBar({
           <span>Bull</span>
         </div>
         <div className="flex items-center gap-1">
-          <div className="w-0.5 h-3 bg-[#F0F1F6]0" />
+          <div className="w-0.5 h-3 bg-[#F0F1F6]" />
           <span>Price</span>
         </div>
       </div>

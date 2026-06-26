@@ -158,7 +158,7 @@ function SegmentTabs({ active, counts, onSelect }: {
             role="tab"
             aria-selected={isActive}
             onClick={() => onSelect(id)}
-            className="relative flex flex-1 sm:flex-none items-center justify-center gap-1 rounded-full px-2.5 sm:px-3.5 py-1.5 text-[12px] sm:text-[13px] whitespace-nowrap min-h-[32px] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(95,121,11,0.6)]"
+            className="relative flex flex-1 sm:flex-none items-center justify-center gap-1 rounded-full px-2.5 sm:px-3.5 py-1.5 text-[12px] sm:text-[13px] whitespace-nowrap min-h-[44px] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(95,121,11,0.6)]"
             style={{ color: isActive ? '#111111' : '#6B6B6B', fontWeight: isActive ? 650 : 500 }}
           >
             {isActive && (
@@ -780,7 +780,7 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
                   <button
                     onClick={() => setSearch('')}
                     aria-label="Clear search"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full bg-[#E5E5E5] hover:bg-[#D0D0D0] text-[#6B6B6B] transition-colors"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full bg-[#E5E5E5] hover:bg-[#D0D0D0] text-[#6B6B6B] transition-colors"
                   >
                     <span className="text-[11px] font-bold leading-none">×</span>
                   </button>

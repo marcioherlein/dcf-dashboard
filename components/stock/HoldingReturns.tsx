@@ -59,7 +59,7 @@ function BarPair({
           <span className="text-[10px] font-mono text-[#566174] w-8 shrink-0">{ticker}</span>
           <div className="flex-1 h-2 bg-[#F0F1F6] rounded-full overflow-hidden">
             <div
-              className={`h-full rounded-full ${stock >= 0 ? 'bg-[#E8F7EF]0' : 'bg-[#D83B3B]'}`}
+              className={`h-full rounded-full ${stock >= 0 ? 'bg-[#E8F7EF]' : 'bg-[#D83B3B]'}`}
               style={{ width: `${stockPct}%` }}
             />
           </div>

@@ -14,7 +14,7 @@ const SENTIMENT_CONFIG: Array<{
   card: string
   dot: string
 }> = [
-  { pattern: /upgrad|outperform|buy rating|target raise|price target.*(raise|increas|hike|lift|up)/i, label: 'Upgrade',   badge: 'bg-[#E8F7EF] text-[#11875D] border-[#A3D9BE]', card: 'border-[#A3D9BE] bg-[#E8F7EF]/25', dot: 'bg-[#E8F7EF]0' },
+  { pattern: /upgrad|outperform|buy rating|target raise|price target.*(raise|increas|hike|lift|up)/i, label: 'Upgrade',   badge: 'bg-[#E8F7EF] text-[#11875D] border-[#A3D9BE]', card: 'border-[#A3D9BE] bg-[#E8F7EF]/25', dot: 'bg-[#E8F7EF]' },
   { pattern: /downgrad|underperform|sell rating|target (cut|lower|decreas|reduc)/i,                   label: 'Downgrade', badge: 'bg-orange-50 text-orange-700 border-orange-200',    card: 'border-orange-200 bg-orange-50/20',  dot: 'bg-orange-400' },
   { pattern: /earnings?|eps|quarter(ly)?|profit|revenue\s*(beat|miss|top|top|exceed|surpass)/i,       label: 'Earnings',  badge: 'bg-[#EAF1FF] text-[#2563EB] border-[#93B4F5]',      card: 'border-[#93B4F5] bg-[#EAF1FF]/20',  dot: 'bg-blue-400' },
   { pattern: /guidance|outlook|forecast|forward.*(revenue|eps|guidance)/i,                            label: 'Guidance',  badge: 'bg-violet-50 text-violet-700 border-violet-200',      card: 'border-violet-200 bg-violet-50/20', dot: 'bg-violet-400' },

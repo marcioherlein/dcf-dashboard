@@ -35,7 +35,7 @@ export function WizardSteps({ steps, current, className }: WizardStepsProps) {
             <div className="flex flex-col items-center gap-0.5">
               <div className={cn(
                 'flex items-center justify-center w-7 h-7 rounded-full border-2 text-xs font-bold transition-all',
-                done   && 'bg-[#E8F7EF]0 border-emerald-500 text-white',
+                done   && 'bg-[#E8F7EF] border-emerald-500 text-white',
                 active && 'bg-olive-700 border-olive-700 text-white ring-4 ring-olive-100',
                 future && 'bg-white border-[#CDD1C8] text-[#8A95A6]',
               )}>

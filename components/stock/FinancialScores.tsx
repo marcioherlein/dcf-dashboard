@@ -47,7 +47,7 @@ function CriterionRow({ pass, name, detail }: { pass: boolean | null; name: stri
   return (
     <div className="flex items-center gap-2.5 py-1.5">
       <div className={`shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white ${
-        pass === null ? 'bg-[#CDD1C8] text-[#566174]' : pass ? 'bg-[#E8F7EF]0' : 'bg-[#FCEAEA]0'
+        pass === null ? 'bg-[#CDD1C8] text-[#566174]' : pass ? 'bg-[#E8F7EF]' : 'bg-[#FCEAEA]'
       }`}>
         {pass === null ? '?' : pass ? '✓' : '✗'}
       </div>
@@ -347,7 +347,7 @@ export default function FinancialScores({ scores }: Props) {
                 </div>
                 <div className="h-2 rounded-full bg-[#E3E1DA] overflow-hidden">
                   <div
-                    className={`h-full rounded-full transition-all ${spreadGood ? 'bg-[#E8F7EF]0' : 'bg-[#FCEAEA]0'}`}
+                    className={`h-full rounded-full transition-all ${spreadGood ? 'bg-[#E8F7EF]' : 'bg-[#FCEAEA]'}`}
                     style={{ width: `${(roicPct / barScale) * 100}%` }}
                   />
                 </div>

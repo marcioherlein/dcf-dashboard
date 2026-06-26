@@ -49,9 +49,9 @@ function changeCls(v: number | null) {
 
 // ── Type badge ──────────────────────────────────────────────────────────────
 const TYPE_BADGE: Record<string, { label: string; cls: string }> = {
-  index:      { label: 'Index',       cls: 'bg-[#EAF1FF]0/15 text-[#93B4F5]' },
+  index:      { label: 'Index',       cls: 'bg-[#EAF1FF]/15 text-[#93B4F5]' },
   etf:        { label: 'ETF',         cls: 'bg-violet-500/15 text-violet-300' },
-  fx:         { label: 'FX',          cls: 'bg-[#FFF4DA]0/15 text-amber-300' },
+  fx:         { label: 'FX',          cls: 'bg-[#FFF4DA]/15 text-amber-300' },
   commodity:  { label: 'Commodity',   cls: 'bg-orange-500/15 text-orange-300' },
   volatility: { label: 'Volatility',  cls: 'bg-rose-500/15 text-rose-300' },
   crypto:     { label: 'Crypto',      cls: 'bg-cyan-500/15 text-cyan-300' },
@@ -174,7 +174,7 @@ export default function InstrumentDetailPage() {
           <Link href="/markets" className="inline-flex items-center gap-1.5 text-[13px] text-[#8A95A6] hover:text-[#E3E1DA] transition-colors mb-4 min-h-[44px]">
             <ArrowLeft className="w-4 h-4" /> Back to Markets
           </Link>
-          <div className="rounded-xl bg-[#FCEAEA]0/10 border border-red-500/30 px-6 py-5">
+          <div className="rounded-xl bg-[#FCEAEA]/10 border border-red-500/30 px-6 py-5">
             <p className="text-sm font-semibold text-[#D83B3B] mb-1">Unable to load instrument data</p>
             <p className="text-xs text-[#D83B3B]">{error ?? 'Unknown error'}</p>
           </div>
@@ -297,7 +297,7 @@ export default function InstrumentDetailPage() {
                 <Link
                   key={sym}
                   href={`/markets/${encodeURIComponent(sym)}`}
-                className="flex-shrink-0 rounded-xl bg-white/5 border border-white/10 px-4 py-3 hover:border-[#5F790B]/40 hover:bg-[#EAF1FF]0/10 transition-colors"
+                className="flex-shrink-0 rounded-xl bg-white/5 border border-white/10 px-4 py-3 hover:border-[#5F790B]/40 hover:bg-[#EAF1FF]/10 transition-colors"
                 >
                   <div className="text-[13px] font-semibold text-[#CDD1C8] tabular-nums">
                     {sym.replace(/=X$/, '').replace(/^[\^]/, '').replace(/-USD$/, 'USD').replace(/=F$/, '')}

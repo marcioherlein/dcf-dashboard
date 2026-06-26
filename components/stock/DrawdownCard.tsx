@@ -40,9 +40,9 @@ export default function DrawdownCard({ ticker }: Props) {
   if (loading) {
     return (
       <div className="rounded-xl border border-[#E5E5E5] bg-white p-4">
-        <div className="h-4 w-32 rounded bg-[#E5E5E5] animate-pulse mb-3" />
+        <div className="h-4 w-32 rounded bg-[#E5E5E5] motion-safe:animate-pulse mb-3" />
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {[1,2,3,4].map(i => <div key={i} className="h-12 rounded-lg bg-[#E5E5E5] animate-pulse" />)}
+          {[1,2,3,4].map(i => <div key={i} className="h-12 rounded-lg bg-[#E5E5E5] motion-safe:animate-pulse" />)}
         </div>
       </div>
     )

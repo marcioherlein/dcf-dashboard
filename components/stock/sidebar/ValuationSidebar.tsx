@@ -153,7 +153,7 @@ function TrendBars({ points, unit }: { points: TrendPoint[]; unit: 'percent' | '
               className={cn(
                 'w-full rounded-sm',
                 isPos
-                  ? isLast ? 'bg-[#EAF1FF]0 opacity-80' : 'bg-blue-400 opacity-50'
+                  ? isLast ? 'bg-[#EAF1FF] opacity-80' : 'bg-blue-400 opacity-50'
                   : isLast ? 'bg-[#D83B3B] opacity-80' : 'bg-[#F0B8B8] opacity-50',
               )}
               style={{ height: `${barPx}px` }}

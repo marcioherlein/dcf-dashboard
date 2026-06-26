@@ -21,7 +21,7 @@ export default function ETFLoginToSaveModal({ ticker, name, valueScore, onClose 
   const { text: scoreText, color: scoreColor } = scoreLabel(valueScore)
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/30 backdrop-blur-[2px]" />
       <div
         className="relative w-full max-w-sm rounded-2xl bg-white shadow-xl border border-[#E3E1DA] overflow-hidden"

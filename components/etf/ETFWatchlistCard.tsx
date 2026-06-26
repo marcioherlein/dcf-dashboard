@@ -55,7 +55,7 @@ export function ETFWatchlistCard({ entry, sparklineData, onDelete }: Props) {
       <button
         onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(entry.ticker) }}
         aria-label={`Remove ${entry.ticker} from watchlist`}
-        className="absolute top-1/2 -translate-y-1/2 right-2 z-10 w-8 h-8 flex items-center justify-center rounded-lg text-transparent group-hover:text-[#9B9B9B] hover:!text-[#D83B3B] hover:bg-[#FCEAEA] transition-all"
+        className="absolute top-1/2 -translate-y-1/2 right-2 z-10 w-8 h-8 flex items-center justify-center rounded-lg text-[#C0C0C0] lg:text-transparent lg:group-hover:text-[#9B9B9B] hover:!text-[#D83B3B] hover:bg-[#FCEAEA] transition-all"
       >
         <Trash2 size={13} />
       </button>

@@ -34,7 +34,7 @@ export default function TerminalValuePanel({
 
       <div className="grid grid-cols-2 divide-x divide-[#E3E1DA]">
         {/* Perpetuity Growth */}
-        <div className={`px-5 py-4 ${primaryMethod === 'perpetuity' ? 'bg-[#EAF1FF]0/10' : 'bg-white/5'}`}>
+        <div className={`px-5 py-4 ${primaryMethod === 'perpetuity' ? 'bg-[#EAF1FF]/10' : 'bg-white/5'}`}>
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-semibold text-[#CDD1C8]">Perpetuity Growth</span>
             {primaryMethod === 'perpetuity' && (
@@ -72,7 +72,7 @@ export default function TerminalValuePanel({
         </div>
 
         {/* Exit Multiple */}
-        <div className={`px-5 py-4 ${primaryMethod === 'exitMultiple' ? 'bg-[#EAF1FF]0/10' : 'bg-white/5'}`}>
+        <div className={`px-5 py-4 ${primaryMethod === 'exitMultiple' ? 'bg-[#EAF1FF]/10' : 'bg-white/5'}`}>
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-semibold text-[#CDD1C8]">Exit Multiple</span>
             {primaryMethod === 'exitMultiple' && (

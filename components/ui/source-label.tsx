@@ -7,7 +7,7 @@ const sourceLabelVariants = cva(
     variants: {
       source: {
         yahoo:    'bg-violet-50 text-violet-600 border-violet-200',
-        wacc:     'bg-[#EAF1FF]0/15 text-[#2563EB] border-blue-500/20',
+        wacc:     'bg-[#EAF1FF]/15 text-[#2563EB] border-blue-500/20',
         user:     'bg-[#FFF4DA] text-[#B56A00] border-[#F3D391]',
         calc:     'bg-white/8 text-[#8A95A6] border-white/12',
         default:  'bg-white/8 text-[#8A95A6] border-white/12',
