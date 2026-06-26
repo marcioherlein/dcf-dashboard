@@ -73,28 +73,42 @@ export async function POST(req: NextRequest) {
     const token = randomBytes(32).toString('hex')
     const expires_at = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // +24h
 
-    await sb.from('auth_tokens').insert({
+    const { error: tokenError } = await sb.from('auth_tokens').insert({
       email: normalizedEmail,
       token,
       type: 'verify_email',
       expires_at,
     })
 
-    // Send verification email
-    if (process.env.RESEND_API_KEY) {
-      const resend = new Resend(process.env.RESEND_API_KEY)
-      const verifyUrl = `${APP_URL}/api/auth/verify-email?token=${token}`
-      await resend.emails.send({
-        from: 'insic <team@insic.app>',
-        to: normalizedEmail,
-        subject: 'Confirm your insic email address',
-        react: VerificationEmail({ name: name.trim(), verifyUrl }),
-      })
+    if (tokenError) {
+      console.error('[register] token insert error:', tokenError.message)
+      // Non-fatal — account is created, user can request a new verification email
+    }
+
+    // Send verification email — non-fatal, account is already created
+    if (process.env.RESEND_API_KEY && !tokenError) {
+      try {
+        const resend = new Resend(process.env.RESEND_API_KEY)
+        const verifyUrl = `${APP_URL}/api/auth/verify-email?token=${token}`
+        const result = await resend.emails.send({
+          from: 'insic <team@insic.app>',
+          to: normalizedEmail,
+          subject: 'Confirm your insic email address',
+          react: VerificationEmail({ name: name.trim(), verifyUrl }),
+        })
+        if (result.error) {
+          console.error('[register] resend error:', result.error)
+        }
+      } catch (emailErr) {
+        console.error('[register] email send exception:', emailErr)
+        // Account created successfully — email failure is non-fatal
+      }
     }
 
     return NextResponse.json({ ok: true })
   } catch (err) {
-    console.error('[register] exception:', err)
-    return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error('[register] exception:', msg)
+    return NextResponse.json({ error: 'Something went wrong: ' + msg }, { status: 500 })
   }
 }
