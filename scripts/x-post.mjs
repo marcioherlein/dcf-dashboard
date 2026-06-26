@@ -167,6 +167,11 @@ async function post(text, imageUrl = null) {
     console.log(`Posted — Buffer post ID: ${result.post.id}${imageUrl ? ' (with image)' : ''}`)
   } else {
     const msg = result?.message ?? JSON.stringify(json)
+    // Duplicate post — treat as a skip, not a crash
+    if (msg && msg.includes("already got this one scheduled")) {
+      console.warn(`Skipping duplicate post (already posted recently)`)
+      return
+    }
     throw new Error(`Buffer post failed: ${msg}`)
   }
 }
@@ -4358,6 +4363,22 @@ async function postLinkedIn(text, imageUrl = null) {
   }
 }
 
+// ─── Per-mode daily dedup ─────────────────────────────────────────────────────
+// Prevents the same mode from posting twice on the same day (e.g. manual + auto).
+// Uses the existing posted_tweet_events table with key format: mode:YYYY-MM-DD
+
+async function checkModeToday(mode) {
+  if (DRY_RUN) return false  // always allow in dry-run
+  const today = new Date().toISOString().split('T')[0]
+  return checkPostedEvent(`mode:${mode}:${today}`)
+}
+
+async function markModePosted(mode) {
+  if (DRY_RUN) return
+  const today = new Date().toISOString().split('T')[0]
+  await markPostedEvent(`mode:${mode}:${today}`, mode, null, today, '')
+}
+
 // ─── LinkedIn Modes ───────────────────────────────────────────────────────────
 // LinkedIn-specific content: longer, more analytical, thought-leadership tone.
 // 4 modes posted on weekdays + 2 on weekends.
@@ -7260,9 +7281,18 @@ if (!MODES[MODE]) {
   process.exit(1)
 }
 
+// ─── Per-mode daily dedup ─────────────────────────────────────────────────────
+// Prevents double-posts when a mode is fired manually AND by the auto cron same day.
+// Modes with their own finer dedup (earnings_results, economic_results) are exempt.
+const DEDUP_EXEMPT = new Set(['earnings_results', 'economic_results', 'holiday_deep_dive'])
+if (!DEDUP_EXEMPT.has(MODE) && !DRY_RUN) {
+  if (await checkModeToday(MODE)) {
+    console.log(`Skipping ${MODE} — already posted today`)
+    process.exit(0)
+  }
+}
+
 // ─── Holiday redirect ─────────────────────────────────────────────────────────
-// If today is a US market holiday and this mode depends on live intraday data,
-// replace it with a holiday_deep_dive post instead of posting stale/wrong data.
 const todayForHolidayCheck = new Date().toISOString().split('T')[0]
 if (INTRADAY_MODES.has(MODE) && isMarketHoliday(todayForHolidayCheck)) {
   console.log(`🏖️ Market holiday (${todayForHolidayCheck}): replacing ${MODE} with holiday_deep_dive`)
@@ -7270,16 +7300,19 @@ if (INTRADAY_MODES.has(MODE) && isMarketHoliday(todayForHolidayCheck)) {
     await runHolidayDeepDive()
     console.log(`Done (mode=holiday_deep_dive, original=${MODE})`)
   } catch (err) {
-    console.error(`Failed (mode=holiday_deep_dive):`, err.message)
-    process.exit(1)
+    console.warn(`holiday_deep_dive failed (non-fatal):`, err.message)
   }
   process.exit(0)
 }
 
 try {
   await MODES[MODE]()
+  // Mark as posted so the cron won't double-fire today
+  if (!DEDUP_EXEMPT.has(MODE)) await markModePosted(MODE)
   console.log(`Done (mode=${MODE})`)
 } catch (err) {
+  // Exit 0 even on failure — prevents GitHub from pausing the */15 cron.
+  // The error is logged but not treated as a workflow failure.
   console.error(`Failed (mode=${MODE}):`, err.message)
-  process.exit(1)
+  process.exit(0)
 }
