@@ -33,6 +33,7 @@ export type MarketsData = {
   globalDeveloped: MarketInstrument[]
   globalEmerging: MarketInstrument[]
   commodities: MarketInstrument[]
+  snapshotEtfs: MarketInstrument[]
   yieldCurve: YieldCurvePoint[]
   news: NewsItem[]
   fetchedAt: string
@@ -90,6 +91,11 @@ const INSTRUMENTS: { symbol: string; name: string; group: string }[] = [
   { symbol: 'FXI',  name: 'China',        group: 'globalEmerging' },
   { symbol: 'INDA', name: 'India',        group: 'globalEmerging' },
   { symbol: 'EWY',  name: 'South Korea',  group: 'globalEmerging' },
+  // Snapshot ETFs (top strip)
+  { symbol: 'VWO',  name: 'Emerging Mkts', group: 'snapshotEtfs' },
+  { symbol: 'VGK',  name: 'Europe',        group: 'snapshotEtfs' },
+  { symbol: 'MCHI', name: 'China',         group: 'snapshotEtfs' },
+  { symbol: 'BOTZ', name: 'AI & Robotics', group: 'snapshotEtfs' },
   // Commodities
   { symbol: 'GC=F', name: 'Gold',        group: 'commodities' },
   { symbol: 'CL=F', name: 'Crude Oil',   group: 'commodities' },
@@ -142,6 +148,7 @@ export async function GET(req: NextRequest) {
       globalBroad:     group('globalBroad'),
       globalDeveloped: group('globalDeveloped'),
       globalEmerging:  group('globalEmerging'),
+      snapshotEtfs:    group('snapshotEtfs'),
       commodities:     group('commodities'),
       yieldCurve,
       news: [],

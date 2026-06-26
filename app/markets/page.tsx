@@ -123,12 +123,16 @@ export default function MarketsPage() {
     return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
   }, [fetchAll])
 
-  const spx = mkt?.indices.find(i => i.symbol === '^GSPC')       ?? null
-  const ndx = mkt?.indices.find(i => i.symbol === '^NDX')        ?? null
-  const dji = mkt?.indices.find(i => i.symbol === '^DJI')        ?? null
-  const vix = mkt?.indices.find(i => i.symbol === '^VIX')        ?? null
-  const tnx = mkt?.indices.find(i => i.symbol === '^TNX')        ?? null
-  const dxy = mkt?.currencies.find(i => i.symbol === 'DX-Y.NYB') ?? null
+  const spx  = mkt?.indices.find(i => i.symbol === '^GSPC')       ?? null
+  const ndx  = mkt?.indices.find(i => i.symbol === '^NDX')        ?? null
+  const dji  = mkt?.indices.find(i => i.symbol === '^DJI')        ?? null
+  const vix  = mkt?.indices.find(i => i.symbol === '^VIX')        ?? null
+  const tnx  = mkt?.indices.find(i => i.symbol === '^TNX')        ?? null
+  const dxy  = mkt?.currencies.find(i => i.symbol === 'DX-Y.NYB') ?? null
+  const vwo  = mkt?.snapshotEtfs?.find(i => i.symbol === 'VWO')   ?? null
+  const vgk  = mkt?.snapshotEtfs?.find(i => i.symbol === 'VGK')   ?? null
+  const mchi = mkt?.snapshotEtfs?.find(i => i.symbol === 'MCHI')  ?? null
+  const botz = mkt?.snapshotEtfs?.find(i => i.symbol === 'BOTZ')  ?? null
 
   const now = new Date()
   const etTime = now.toLocaleTimeString('en-US', {
@@ -160,7 +164,7 @@ export default function MarketsPage() {
         {/* ── Persistent: Index snapshot strip ────────────────────────────── */}
         <div className="mb-4">
           {mkt ? (
-            <IndexSnapshotGrid spx={spx} ndx={ndx} dji={dji} vix={vix} tnx={tnx} dxy={dxy} marketStatus={status} />
+            <IndexSnapshotGrid spx={spx} ndx={ndx} dji={dji} vix={vix} tnx={tnx} dxy={dxy} vwo={vwo} vgk={vgk} mchi={mchi} botz={botz} marketStatus={status} />
           ) : (
             <div className="bg-white border border-[#E5E5E5] rounded-xl h-[56px] animate-pulse" />
           )}
