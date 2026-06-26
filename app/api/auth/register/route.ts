@@ -61,8 +61,12 @@ export async function POST(req: NextRequest) {
     })
 
     if (insertError) {
-      console.error('[register] insert error:', insertError.message)
-      return NextResponse.json({ error: 'Failed to create account' }, { status: 500 })
+      console.error('[register] insert error:', insertError.message, insertError.code, insertError.details)
+      // Column doesn't exist = migration not run
+      if (insertError.message?.includes('column') || insertError.code === '42703') {
+        return NextResponse.json({ error: 'Database setup incomplete. Please contact support.' }, { status: 500 })
+      }
+      return NextResponse.json({ error: 'Failed to create account: ' + insertError.message }, { status: 500 })
     }
 
     // Generate verification token (32 hex bytes = 64 chars)
