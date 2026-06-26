@@ -64,7 +64,7 @@ function HeroSearch() {
   }
 
   return (
-    <div ref={containerRef} className="relative w-full" style={{ maxWidth: '440px' }}>
+    <div ref={containerRef} className="relative w-full">
       <div
         className="flex items-center gap-2 rounded-xl"
         style={{
@@ -226,8 +226,8 @@ export default function LandingHero() {
       <div className="relative mx-auto px-4 sm:px-6" style={{ maxWidth: '1200px', zIndex: 2 }}>
         <div className="grid items-start grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
 
-          {/* ── Left: Copy ── */}
-          <div className="text-left">
+          {/* ── Left: Copy — centered on mobile, left-aligned on desktop ── */}
+          <div className="text-center lg:text-left flex flex-col items-center lg:items-start">
 
             {/* Headline — line-by-line stagger */}
             <div className="mb-4 sm:mb-5" style={{ lineHeight: 1.05, letterSpacing: '-0.035em' }}>
@@ -258,7 +258,7 @@ export default function LandingHero() {
               initial={reduced ? {} : { opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, ease: EASE, delay: 0.32 }}
-              className="text-[14px] sm:text-[16px] leading-relaxed mb-6"
+              className="text-[14px] sm:text-[16px] leading-relaxed mb-6 w-full"
               style={{ maxWidth: '440px', color: 'rgba(255,255,255,0.82)' }}
             >
               See the fair value, the implied growth rate, and a conviction score for any NYSE or NASDAQ stock — in seconds, no spreadsheet needed.
@@ -269,10 +269,11 @@ export default function LandingHero() {
               initial={reduced ? {} : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, ease: EASE, delay: 0.40 }}
-              className="mb-4"
+              className="mb-4 w-full"
+              style={{ maxWidth: '440px' }}
             >
               <HeroSearch />
-              <p className="mt-2 text-[12px]" style={{ color: 'rgba(255,255,255,0.38)' }}>
+              <p className="mt-2 text-[12px] text-center lg:text-left" style={{ color: 'rgba(255,255,255,0.55)' }}>
                 Free · No sign-up required to analyze
               </p>
             </motion.div>
@@ -301,26 +302,26 @@ export default function LandingHero() {
               initial={reduced ? {} : { opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5, delay: 0.64 }}
-              className="flex items-center gap-3"
+              className="flex flex-wrap items-center justify-center lg:justify-start gap-3"
             >
-              <div className="flex -space-x-2">
+              <div className="flex -space-x-2 shrink-0">
                 {[
                   { initials: 'MH', bg: '#3b4a6b' },
                   { initials: 'AK', bg: '#4a5568' },
                   { initials: 'SR', bg: '#2d3748' },
                 ].map(({ initials, bg }) => (
-                  <div key={initials} className="w-8 h-8 rounded-full border-2 border-white flex items-center justify-center text-[10px] font-bold text-white" style={{ background: bg }}>
+                  <div key={initials} className="w-8 h-8 rounded-full border-2 border-white flex items-center justify-center text-[10px] font-bold text-white shrink-0" style={{ background: bg }}>
                     {initials}
                   </div>
                 ))}
               </div>
-              <div className="flex items-center gap-1.5">
-                <div className="flex">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <div className="flex shrink-0">
                   {[1,2,3,4,5].map(s => (
                     <svg key={s} className="w-3.5 h-3.5" fill="#5F790B" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
                   ))}
                 </div>
-                <span className="text-[12px] text-[rgba(255,255,255,0.72)]">Trusted by investors who do their own research</span>
+                <span className="text-[12px] leading-snug" style={{ color: 'rgba(255,255,255,0.72)' }}>Trusted by investors who do their own research</span>
               </div>
             </motion.div>
           </div>
@@ -332,7 +333,7 @@ export default function LandingHero() {
             initial={reduced ? {} : { opacity: 0, x: 28, y: 6 }}
             animate={{ opacity: 1, x: 0, y: 0 }}
             transition={{ type: 'spring', stiffness: 55, damping: 20, delay: 0.2 }}
-            className="w-full max-w-[360px] sm:max-w-[420px] mx-auto lg:mx-0 lg:max-w-[500px] lg:ml-auto"
+            className="w-full max-w-[360px] sm:max-w-[420px] mx-auto lg:mx-0 lg:max-w-[500px] lg:ml-auto overflow-hidden rounded-2xl"
           >
             <ProductAnimation inView={cardInView} reduced={reduced} />
           </motion.div>
