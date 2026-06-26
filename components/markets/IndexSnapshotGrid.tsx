@@ -11,7 +11,15 @@ interface Props {
   vix:  MarketInstrument | null
   tnx:  MarketInstrument | null
   dxy:  MarketInstrument | null
-  marketStatus?: { label: string; cls: string } | null
+  marketStatus?: { label: string; tone: 'green' | 'amber' | 'blue' | 'gray' } | null
+}
+
+// ── Chip tone → Tailwind classes (mirrors DESIGN.md semantic tokens) ──────────
+const STATUS_CLS: Record<'green' | 'amber' | 'blue' | 'gray', string> = {
+  green: 'bg-[#E8F7EF] text-[#11875D] border-[#A3D9BE]',
+  amber: 'bg-[#FFF4DA] text-[#B56A00] border-[#F3D391]',
+  blue:  'bg-[#EAF1FF] text-[#2563EB] border-[#93B4F5]',
+  gray:  'bg-[#F5F5F5] text-[#6B6B6B] border-[#E5E5E5]',
 }
 
 // ── Interpretation chips ─────────────────────────────────────────────────────
@@ -105,14 +113,26 @@ interface TickerProps {
   rateMode?: boolean
   href?: string
   divider?: boolean
+  compact?: boolean
 }
 
-function TickerItem({ label, value, rawChangePct, sparkValues, sparkLoading, interpretation, rateMode, href, divider }: TickerProps) {
+function TickerItem({ label, value, rawChangePct, sparkValues, sparkLoading, interpretation, rateMode, href, divider, compact }: TickerProps) {
   const positive = rateMode ? (rawChangePct ?? 0) < 0 : (rawChangePct ?? 0) >= 0
   const pctCls = changeCls(rawChangePct, rateMode)
   const sparkId = label.replace(/[^a-z0-9]/gi, '-').toLowerCase()
 
-  const inner = (
+  const inner = compact ? (
+    /* Compact layout for 3-col mobile grid */
+    <div className="flex flex-col gap-0.5 py-2.5 px-2.5 group min-w-0 min-h-[56px] justify-center">
+      <span className="text-[10px] font-[600] text-[#566174] leading-tight">{label}</span>
+      <span className="text-[13px] font-[700] tabular-nums text-[#111111] leading-tight tracking-tight">{value}</span>
+      <div className="flex items-center gap-1 flex-wrap">
+        <span className={cn('text-[10px] font-[600] tabular-nums', pctCls)}>{pct(rawChangePct)}</span>
+        <div className="shrink-0">{interpretation}</div>
+      </div>
+    </div>
+  ) : (
+    /* Full layout for desktop strip */
     <div className="flex items-center gap-2.5 py-3 px-3 sm:px-4 group min-w-0">
       {/* Label */}
       <span className="text-[11px] font-[600] text-[#566174] whitespace-nowrap shrink-0 group-hover:text-[#111111] transition-colors">
@@ -247,19 +267,29 @@ export default function IndexSnapshotGrid({ spx, ndx, dji, vix, tnx, dxy, market
       {/* Status bar */}
       {marketStatus && (
         <div className="flex items-center gap-2 px-3 sm:px-4 py-1.5 border-b border-[#F5F5F5] bg-[#FAFAFA]">
-          <span className={cn('text-[10px] font-[700] px-2 py-0.5 rounded-full', marketStatus.cls)}>
+          <span className={cn('text-[10px] font-[700] px-2 py-0.5 rounded-full border', STATUS_CLS[marketStatus.tone])}>
             {marketStatus.label}
           </span>
           <span className="text-[10px] text-[#9B9B9B]">5-day chart</span>
         </div>
       )}
-      {/* Ticker strip — horizontal scroll on mobile */}
-      <div className="overflow-x-auto scrollbar-hide">
-        <div className="flex min-w-max">
-          {TICKERS.map((t, i) => (
-            <TickerItem key={t.label} {...t} divider={i < TICKERS.length - 1} />
-          ))}
-        </div>
+      {/* Ticker grid — 3×2 on mobile, single row on md+ */}
+      <div className="grid grid-cols-3 md:hidden">
+        {TICKERS.map((t, i) => (
+          <div key={t.label} className={cn(
+            'border-[#F0F0F0]',
+            i < 3 ? 'border-b' : '',
+            i % 3 !== 2 ? 'border-r' : '',
+          )}>
+            <TickerItem {...t} divider={false} compact />
+          </div>
+        ))}
+      </div>
+      {/* Ticker strip — single row on md+ */}
+      <div className="hidden md:flex">
+        {TICKERS.map((t, i) => (
+          <TickerItem key={t.label} {...t} divider={i < TICKERS.length - 1} />
+        ))}
       </div>
     </div>
   )

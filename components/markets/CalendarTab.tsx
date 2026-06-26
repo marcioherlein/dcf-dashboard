@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState, useMemo } from 'react'
-import { ChevronLeft, ChevronRight, Calendar, TrendingUp, Landmark, Scissors, Rocket } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Calendar, TrendingUp, Landmark, Scissors, Rocket, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import type { EconomicEvent } from '@/app/api/markets/economic-calendar/route'
@@ -102,11 +102,11 @@ function LoadingRows() {
   )
 }
 
-function EmptyState({ message }: { message: string }) {
+function EmptyState({ message, icon }: { message: string; icon?: React.ReactNode }) {
   return (
-    <div className="flex flex-col items-center justify-center py-12 gap-2">
-      <Calendar size={28} className="text-[#C4C4C4]" />
-      <p className="text-[13px] text-[#9B9B9B]">{message}</p>
+    <div role="status" className="flex flex-col items-center justify-center py-12 gap-2">
+      <span className="text-[#C4C4C4]">{icon ?? <Calendar size={28} />}</span>
+      <p className="text-[13px] text-[#6B6B6B] text-center max-w-[280px] leading-snug">{message}</p>
     </div>
   )
 }
@@ -283,8 +283,8 @@ function EarningsList({ items, loading }: { items: EarningsItem[]; loading: bool
 
 function EconomicList({ events, loading, missingKey, fetchError }: { events: EconomicEvent[]; loading: boolean; missingKey?: boolean; fetchError?: boolean }) {
   if (loading) return <LoadingRows />
-  if (missingKey) return <EmptyState message="Economic calendar data unavailable — FMP_API_KEY not configured." />
-  if (fetchError) return <EmptyState message="Could not load economic events — check your connection and try again." />
+  if (missingKey) return <EmptyState icon={<AlertCircle size={28} />} message="Economic calendar data unavailable — FMP_API_KEY not configured." />
+  if (fetchError) return <EmptyState icon={<AlertCircle size={28} />} message="Could not load economic events — check your connection and try again." />
   if (events.length === 0) return <EmptyState message="No U.S. high-impact economic events scheduled this week." />
 
   const byDate = events.reduce<Record<string, EconomicEvent[]>>((acc, e) => {
@@ -319,15 +319,15 @@ function EconomicList({ events, loading, missingKey, fetchError }: { events: Eco
                 {/* Previous / Estimate / Actual */}
                 <div className="shrink-0 flex gap-3 text-[11px] tabular-nums text-right">
                   <div className="w-12">
-                    <div className="text-[9px] text-[#9B9B9B]">PREV</div>
+                    <div className="text-[10px] text-[#9B9B9B]">PREV</div>
                     <div className="text-[#6B6B6B]">{ev.previous ?? '—'}</div>
                   </div>
                   <div className="w-12">
-                    <div className="text-[9px] text-[#9B9B9B]">EST</div>
+                    <div className="text-[10px] text-[#9B9B9B]">EST</div>
                     <div className="text-[#6B6B6B]">{ev.estimate ?? '—'}</div>
                   </div>
                   <div className="w-12">
-                    <div className="text-[9px] text-[#9B9B9B]">ACT</div>
+                    <div className="text-[10px] text-[#9B9B9B]">ACT</div>
                     <div className={cn(
                       'font-semibold',
                       ev.actual != null && ev.estimate != null
@@ -349,9 +349,9 @@ function EconomicList({ events, loading, missingKey, fetchError }: { events: Eco
 
 function SplitsList({ splits, loading, missingKey, fetchError }: { splits: SplitItem[]; loading: boolean; missingKey?: boolean; fetchError?: boolean }) {
   if (loading) return <LoadingRows />
-  if (missingKey) return <EmptyState message="Splits calendar unavailable — FMP_API_KEY not configured." />
-  if (fetchError) return <EmptyState message="Could not load splits data — check your connection and try again." />
-  if (splits.length === 0) return <EmptyState message="No stock splits scheduled this week." />
+  if (missingKey) return <EmptyState icon={<AlertCircle size={28} />} message="Splits calendar unavailable — FMP_API_KEY not configured." />
+  if (fetchError) return <EmptyState icon={<AlertCircle size={28} />} message="Could not load splits data — check your connection and try again." />
+  if (splits.length === 0) return <EmptyState icon={<Scissors size={28} />} message="No stock splits scheduled this week." />
 
   const byDate = splits.reduce<Record<string, SplitItem[]>>((acc, e) => {
     acc[e.date] ??= []
@@ -397,9 +397,9 @@ function SplitsList({ splits, loading, missingKey, fetchError }: { splits: Split
 
 function IposList({ ipos, loading, missingKey, fetchError }: { ipos: IpoItem[]; loading: boolean; missingKey?: boolean; fetchError?: boolean }) {
   if (loading) return <LoadingRows />
-  if (missingKey) return <EmptyState message="IPO calendar unavailable — FMP_API_KEY not configured." />
-  if (fetchError) return <EmptyState message="Could not load IPO data — check your connection and try again." />
-  if (ipos.length === 0) return <EmptyState message="No IPO pricings found for this week." />
+  if (missingKey) return <EmptyState icon={<AlertCircle size={28} />} message="IPO calendar unavailable — FMP_API_KEY not configured." />
+  if (fetchError) return <EmptyState icon={<AlertCircle size={28} />} message="Could not load IPO data — check your connection and try again." />
+  if (ipos.length === 0) return <EmptyState icon={<Rocket size={28} />} message="No IPO pricings found for this week." />
 
   const byDate = ipos.reduce<Record<string, IpoItem[]>>((acc, e) => {
     acc[e.date] ??= []

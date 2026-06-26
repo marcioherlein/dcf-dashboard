@@ -29,7 +29,9 @@ function Sk({ h = 'h-32', className = '' }: { h?: string; className?: string }) 
   return <div className={`motion-safe:animate-pulse rounded-xl bg-[#EBEBEB] border border-[#E0E0E0] ${h} ${className}`} />
 }
 
-function getMarketStatus(): { label: string; cls: string } {
+type MarketStatusTone = 'green' | 'amber' | 'blue' | 'gray'
+
+function getMarketStatus(): { label: string; tone: MarketStatusTone } {
   const now = new Date()
   const etParts = new Intl.DateTimeFormat('en-US', {
     timeZone: 'America/New_York',
@@ -40,11 +42,11 @@ function getMarketStatus(): { label: string; cls: string } {
   const m = parseInt(etParts.find(p => p.type === 'minute')?.value ?? '0', 10)
   const et = h * 60 + m
   const isWeekend = weekday === 'Sat' || weekday === 'Sun'
-  if (isWeekend) return { label: 'Market Closed', cls: 'bg-[#F5F5F5] text-[#6B6B6B]' }
-  if (et >= 240  && et < 570)  return { label: 'Pre-Market',    cls: 'bg-[#FFF4DA] text-[#B56A00]' }
-  if (et >= 570  && et < 960)  return { label: '● Market Open', cls: 'bg-[#E8F7EF] text-[#11875D] font-bold' }
-  if (et >= 960  && et < 1200) return { label: 'After Hours',   cls: 'bg-[#EAF1FF] text-[#2563EB]' }
-  return { label: 'Market Closed', cls: 'bg-[#F5F5F5] text-[#6B6B6B]' }
+  if (isWeekend) return { label: 'Market Closed', tone: 'gray' }
+  if (et >= 240  && et < 570)  return { label: 'Pre-Market',    tone: 'amber' }
+  if (et >= 570  && et < 960)  return { label: '● Market Open', tone: 'green' }
+  if (et >= 960  && et < 1200) return { label: 'After Hours',   tone: 'blue'  }
+  return { label: 'Market Closed', tone: 'gray' }
 }
 
 function SectionHeader({ title, subtitle, right }: { title: string; subtitle?: string; right?: React.ReactNode }) {
