@@ -51,7 +51,10 @@ export default function DrawdownCard({ ticker }: Props) {
   if (error || !data) return null
 
   const ddPct = `${(data.maxDrawdown * 100).toFixed(1)}%`
-  const ddColor = data.maxDrawdown > -0.20 ? '#B56A00' : data.maxDrawdown > -0.40 ? '#D83B3B' : '#D83B3B'
+  // Color tiers: negligible (<5%) = green context, moderate (5-20%) = amber, severe (>20%) = red
+  const ddColor = data.maxDrawdown > -0.05 ? '#11875D'
+    : data.maxDrawdown > -0.20 ? '#B56A00'
+    : '#D83B3B'
 
   const fmtMonth = (m: number | null) => {
     if (m == null) return '—'
@@ -63,6 +66,14 @@ export default function DrawdownCard({ ticker }: Props) {
     ? fmtMonth(data.recoveryTime)
     : 'Not yet'
   const recoveryColor = data.recoveryTime != null ? '#11875D' : '#B56A00'
+
+  // Total downtime: only show when recovery happened; otherwise "still recovering"
+  const totalDowntime = data.recoveryTime != null
+    ? fmtMonth(data.drawdownDuration + data.recoveryTime)
+    : '—'
+  const totalSub = data.recoveryTime != null
+    ? 'Peak to full recovery'
+    : 'Recovery ongoing'
 
   return (
     <div className="rounded-xl border border-[#E5E5E5] bg-white px-4 py-4 shadow-[0_4px_16px_rgba(0,0,0,0.04)]">
@@ -98,16 +109,15 @@ export default function DrawdownCard({ ticker }: Props) {
         />
         <Stat
           label="Total downtime"
-          value={fmtMonth(data.drawdownDuration + (data.recoveryTime ?? 0))}
-          sub="Peak to full recovery"
+          value={totalDowntime}
+          sub={totalSub}
           color="#566174"
         />
       </div>
 
       {/* Context note */}
       <p className="text-[10px] text-[#9B9B9B] mt-3 leading-snug">
-        This shows the worst sustained decline in {data.dataYears} years — useful for sizing positions and
-        setting realistic holding-period expectations. Past drawdowns don&apos;t predict future ones.
+        Worst sustained decline in {data.dataYears}Y of history. Useful for sizing positions and setting realistic holding-period expectations. Past drawdowns do not predict future ones.
       </p>
     </div>
   )

@@ -11,10 +11,10 @@ interface RiskDimension {
 }
 
 const LEVEL_CONFIG = {
-  Low:      { bar: 'bg-[#E8F7EF]0', text: 'text-[#11875D]', bg: 'bg-[#E8F7EF]',  border: 'border-[#A3D9BE]', dot: 'bg-[#E8F7EF]0' },
-  Moderate: { bar: 'bg-[#B56A00]',   text: 'text-[#B56A00]',   bg: 'bg-[#FFF4DA]',    border: 'border-[#F3D391]',   dot: 'bg-[#B56A00]'   },
-  Elevated: { bar: 'bg-orange-500',  text: 'text-orange-700',  bg: 'bg-orange-50',   border: 'border-orange-200',  dot: 'bg-orange-500'  },
-  High:     { bar: 'bg-[#FCEAEA]0',     text: 'text-[#D83B3B]',     bg: 'bg-[#FCEAEA]',      border: 'border-[#F0B8B8]',     dot: 'bg-[#FCEAEA]0'     },
+  Low:      { bar: 'bg-[#11875D]',   text: 'text-[#11875D]',   bg: 'bg-[#E8F7EF]',  border: 'border-[#A3D9BE]' },
+  Moderate: { bar: 'bg-[#B56A00]',   text: 'text-[#B56A00]',   bg: 'bg-[#FFF4DA]',  border: 'border-[#F3D391]' },
+  Elevated: { bar: 'bg-orange-500',  text: 'text-orange-700',  bg: 'bg-orange-50',  border: 'border-orange-200' },
+  High:     { bar: 'bg-[#D83B3B]',   text: 'text-[#D83B3B]',   bg: 'bg-[#FCEAEA]',  border: 'border-[#F0B8B8]' },
 }
 
 function level(score: number): 'Low' | 'Moderate' | 'Elevated' | 'High' {

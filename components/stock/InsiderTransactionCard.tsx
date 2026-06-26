@@ -116,8 +116,8 @@ export default function InsiderTransactionCard({ ticker }: Props) {
       <div className="px-4 py-2.5 bg-[#EAF1FF]/40 border-b border-[#E5E5E5]">
         <p className="text-[11px] text-[#2563EB] leading-snug">
           Cluster buying by multiple insiders within 30 days is historically one of the most reliable
-          non-quantitative signals. Insider selling is less informative — executives sell for many
-          reasons (diversification, taxes, options). Watch for buys, not sells.
+          non-quantitative signals. Insider selling is less informative: executives sell for many
+          reasons (diversification, taxes, options expiring). Focus on purchases.
         </p>
       </div>
 
@@ -125,8 +125,10 @@ export default function InsiderTransactionCard({ ticker }: Props) {
       <div className="divide-y divide-[#F0F0F0]">
         {visible.map((txn, i) => {
           const tc = typeConfig(txn.transactionType)
+          // Use stable key: combine insiderName + date + type to avoid reconciliation issues
+          const rowKey = `${txn.insiderName}-${txn.date}-${txn.transactionType}-${i}`
           return (
-            <div key={i} className="px-4 py-3 flex items-center gap-3 min-h-[52px]">
+            <div key={rowKey} className="px-4 py-3 flex items-center gap-3 min-h-[52px]">
               {/* Type badge */}
               <span className={`text-[10px] font-[700] px-2 py-0.5 rounded-full shrink-0 ${tc.bg} ${tc.color}`}>
                 {tc.label}
@@ -147,8 +149,8 @@ export default function InsiderTransactionCard({ ticker }: Props) {
                   href={txn.secUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[#2563EB] hover:text-[#1D4ED8] transition-colors shrink-0 min-w-[32px] min-h-[32px] flex items-center justify-center"
-                  aria-label="View SEC filing"
+                  className="text-[#2563EB] hover:text-[#1D4ED8] transition-colors shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
+                  aria-label={`View SEC Form 4 filing for ${txn.insiderName}`}
                 >
                   <ExternalLink size={13} strokeWidth={1.8} />
                 </a>
