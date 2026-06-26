@@ -1675,16 +1675,6 @@ export async function GET(req: NextRequest) {
       return { direction, magnitude: Math.round(magnitude * 1000) / 1000, analystsCount: numAnalysts }
     })()
 
-    // EPS surprise details: map the filtered history to display fields
-    const _earningsSurpriseDetails = earningsSurprises.map((h: any) => ({
-        quarter:         h.period as string | null,
-        date:            h.earningsDate ? new Date(h.earningsDate).toISOString().split('T')[0] : null,
-        epsActual:       (h.epsActual   ?? null) as number | null,
-        epsEstimate:     (h.epsEstimate ?? null) as number | null,
-        epsDifference:   (h.epsDifference ?? null) as number | null,
-        surprisePercent: (h.surprisePercent ?? null) as number | null,
-    }))
-
     // Analyst recommendation trend (last 4 months for stacked bar chart)
     const recTrend: any[] = (fin.recommendationTrend?.trend ?? []) as any[]
     const analystRatingTrend = recTrend.slice(0, 4).map((r: any) => ({

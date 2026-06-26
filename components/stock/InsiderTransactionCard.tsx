@@ -41,9 +41,14 @@ function fmtMoney(v: number | null): string {
 }
 
 export default function InsiderTransactionCard({ ticker }: Props) {
-  const [data, setData]       = useState<InsidersResponse | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [data, setData]         = useState<InsidersResponse | null>(null)
+  const [loading, setLoading]   = useState(true)
   const [expanded, setExpanded] = useState(false)
+
+  useEffect(() => {
+    // Reset expanded when ticker changes so previous stock's state doesn't bleed through
+    setExpanded(false)
+  }, [ticker])
 
   useEffect(() => {
     if (!ticker) return

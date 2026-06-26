@@ -170,8 +170,9 @@ export function computeRiskDimensions(data: any): RiskDimension[] {
     let detail: string
     const daysLabel = (() => {
       const sr = ownership.shortRatio ?? null
-      const srNorm = sr != null ? (sr > 365 ? sr / 365 : sr) : null  // guard against raw-shares values
-      return srNorm != null && srNorm > 0 && srNorm < 100 ? ` · ${srNorm.toFixed(1)} days to cover` : ''
+      // shortRatio from Yahoo is already in days. Values >100 indicate bad data (raw share count,
+      // not days-to-cover) — treat as unavailable rather than silently misrepresent.
+      return sr != null && sr > 0 && sr <= 100 ? ` · ${sr.toFixed(1)} days to cover` : ''
     })()
 
     if (shortPct < 5) {
