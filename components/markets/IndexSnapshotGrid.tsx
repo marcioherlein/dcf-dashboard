@@ -15,22 +15,18 @@ interface Props {
 }
 
 // ── Chip tone → Tailwind classes (mirrors DESIGN.md semantic tokens) ──────────
-const STATUS_CLS: Record<'green' | 'amber' | 'blue' | 'gray', string> = {
+const TONE_CLS: Record<'green' | 'red' | 'amber' | 'blue' | 'gray', string> = {
   green: 'bg-[#E8F7EF] text-[#11875D] border-[#A3D9BE]',
+  red:   'bg-[#FCEAEA] text-[#D83B3B] border-[#F0B8B8]',
   amber: 'bg-[#FFF4DA] text-[#B56A00] border-[#F3D391]',
   blue:  'bg-[#EAF1FF] text-[#2563EB] border-[#93B4F5]',
   gray:  'bg-[#F5F5F5] text-[#6B6B6B] border-[#E5E5E5]',
 }
+const STATUS_CLS = TONE_CLS
 
 // ── Interpretation chips ─────────────────────────────────────────────────────
 function chip(label: string, tone: 'green' | 'red' | 'amber' | 'blue' | 'gray') {
-  const cls = {
-    green: 'bg-[#E8F7EF] text-[#11875D] border-[#A3D9BE]',
-    red:   'bg-[#FCEAEA] text-[#D83B3B] border-[#F0B8B8]',
-    amber: 'bg-[#FFF4DA] text-[#B56A00] border-[#F3D391]',
-    blue:  'bg-[#EAF1FF] text-[#2563EB] border-[#93B4F5]',
-    gray:  'bg-[#F5F5F5] text-[#6B6B6B] border-[#E5E5E5]',
-  }[tone]
+  const cls = TONE_CLS[tone]
   return (
     <span className={cn('text-[10px] font-[700] px-1.5 py-px rounded-full border whitespace-nowrap leading-none', cls)}>
       {label}
@@ -75,7 +71,7 @@ function pct(v: number | null) {
   return (v >= 0 ? '+' : '') + v.toFixed(2) + '%'
 }
 function changeCls(v: number | null, rateMode = false) {
-  if (v == null) return 'text-[#9B9B9B]'
+  if (v == null) return 'text-[#6B6B6B]'
   const positive = rateMode ? v < 0 : v >= 0
   return positive ? 'text-[#11875D]' : 'text-[#D83B3B]'
 }
@@ -270,7 +266,7 @@ export default function IndexSnapshotGrid({ spx, ndx, dji, vix, tnx, dxy, market
           <span className={cn('text-[10px] font-[700] px-2 py-0.5 rounded-full border', STATUS_CLS[marketStatus.tone])}>
             {marketStatus.label}
           </span>
-          <span className="text-[10px] text-[#9B9B9B]">5-day chart</span>
+          <span className="text-[10px] text-[#6B6B6B]">5-day chart</span>
         </div>
       )}
       {/* Ticker grid — 3×2 on mobile, single row on md+ */}
