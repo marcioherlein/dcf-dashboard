@@ -83,6 +83,7 @@ export default function MarketsPage() {
   const marketTabs = useMemo(() => [
     { id: 'overview',  label: 'Overview'  },
     { id: 'sectors',   label: 'Sectors'   },
+    { id: 'news',      label: 'News'      },
     { id: 'calendar',  label: 'Calendar'  },
     { id: 'valuation', label: 'Valuation' },
   ], [])
@@ -242,7 +243,19 @@ export default function MarketsPage() {
                   <div className="lg:col-span-3 flex flex-col">
                     <TopMoversCard />
                   </div>
-                </div>              </div>
+                </div>
+              </div>
+
+              {/* Macro Signals — moved from Sectors tab: directly relevant to DCF inputs */}
+              <div>
+                <SectionHeader
+                  title="Macro Signals"
+                  subtitle="Key indicators that drive discount rates, risk appetite, and valuation assumptions."
+                />
+                <div className="mt-3">
+                  {ctx ? <MacroSignals signals={ctx.signals} /> : <Sk h="h-48" />}
+                </div>
+              </div>
 
               {/* Stocks by Sector — peer groups with price, 1D, YTD, sparkline */}
               <div>
@@ -254,17 +267,6 @@ export default function MarketsPage() {
                   <SectorStocksCard />
                 </div>
               </div>
-
-              {/* Market News */}
-              {mkt && mkt.news.length > 0 && (
-                <div>
-                  <SectionHeader
-                    title="Market News"
-                    subtitle="Recent headlines — for context only, not a trading signal."
-                  />
-                  <MarketNewsSection news={mkt.news} />
-                </div>
-              )}
 
               {/* Fixed income / currencies / commodities */}
               {mkt && (mkt.fixedIncome.length > 0 || mkt.currencies.length > 0 || mkt.commodities.length > 0) && (
@@ -300,13 +302,9 @@ export default function MarketsPage() {
                 />
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-3">
                   <div className="lg:col-span-7 overflow-x-auto">
-                    {mkt ? (
-                      <div className="overflow-x-auto">
-                        <MarketHeatmapCard sectors={mkt.sectors} />
-                      </div>
-                    ) : (
-                      <Sk h="h-[320px]" />
-                    )}
+                    <div className="overflow-x-auto">
+                      {mkt ? <MarketHeatmapCard sectors={mkt.sectors} /> : <Sk h="h-[320px]" />}
+                    </div>
                   </div>
                   <div className="lg:col-span-5">
                     {ctx ? <SectorRotation sectors={ctx.sectors} /> : <Sk h="h-[320px]" />}
@@ -314,20 +312,36 @@ export default function MarketsPage() {
                 </div>
               </div>
 
-              {/* Macro + Breadth + Sector Perf */}
+              {/* Sector Performance */}
               <div>
                 <SectionHeader
-                  title="Macro Environment"
-                  subtitle="Indicators that affect discount rates, risk appetite, and valuation assumptions."
+                  title="Sector Performance"
+                  subtitle="Daily ranked performance across all 11 S&P 500 sectors."
                 />
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-3">
-                  <div>
-                    {ctx ? <MacroSignals signals={ctx.signals} /> : <Sk h="h-64" />}
-                  </div>
-                  <div>
-                    {mkt ? <SectorPerformanceCard sectors={mkt.sectors} /> : <Sk h="h-64" />}
-                  </div>
+                <div className="mt-3">
+                  {mkt ? <SectorPerformanceCard sectors={mkt.sectors} /> : <Sk h="h-64" />}
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── NEWS TAB ─────────────────────────────────────────────────── */}
+          {activeTab === 'news' && (
+            <div id="markets-panel-news" role="tabpanel" aria-labelledby="markets-tab-news">
+              <SectionHeader
+                title="Market News"
+                subtitle="Recent headlines — for context only, not a trading signal."
+              />
+              <div className="mt-3">
+                {!mkt ? (
+                  <Sk h="h-48" />
+                ) : mkt.news.length > 0 ? (
+                  <MarketNewsSection news={mkt.news} />
+                ) : (
+                  <div className="rounded-xl border border-[#E3E1DA] bg-[#FAFAFA] px-5 py-8 text-center">
+                    <p className="text-[13px] text-[#6B6B6B]">No market news available right now. Check back shortly.</p>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -342,6 +356,7 @@ export default function MarketsPage() {
           {/* ── VALUATION CONTEXT TAB ────────────────────────────────────── */}
           {activeTab === 'valuation' && (
             <div id="markets-panel-valuation" role="tabpanel" aria-labelledby="markets-tab-valuation">
+              {/* Fwd P/E + ERP */}
               <SectionHeader
                 title="Valuation Context"
                 subtitle="How current market prices compare to historical ranges — and what it means for your DCF."
@@ -349,12 +364,63 @@ export default function MarketsPage() {
               <div className="mt-3">
                 {ctx ? <ValuationContext valuation={ctx.valuation} /> : <Sk h="h-56" />}
               </div>
-              {/* Yield Curve — full width below valuation panel */}
+
+              {/* Credit Market — HY spread from ctx.signals */}
+              {ctx && (() => {
+                const hySignal = ctx.signals.find((s: { id: string }) => s.id === 'hy')
+                if (!hySignal) return null
+                const toneMap: Record<string, { bg: string; text: string; border: string }> = {
+                  positive: { bg: 'bg-[#E8F7EF]', text: 'text-[#11875D]', border: 'border-[#A3D9BE]' },
+                  warning:  { bg: 'bg-[#FFF4DA]', text: 'text-[#B56A00]', border: 'border-[#F3D391]' },
+                  negative: { bg: 'bg-[#FCEAEA]', text: 'text-[#D83B3B]', border: 'border-[#F0B8B8]' },
+                  neutral:  { bg: 'bg-[#F5F5F5]', text: 'text-[#6B6B6B]', border: 'border-[#E5E5E5]' },
+                }
+                const t = toneMap[(hySignal as { tone: string }).tone] ?? toneMap.neutral
+                return (
+                  <div className="mt-4">
+                    <SectionHeader
+                      title="Credit Market"
+                      subtitle="High-yield spreads signal credit stress before it appears in equity prices."
+                    />
+                    <div className="mt-3 rounded-xl border border-[#E3E1DA] bg-white p-5" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <p className="text-[11px] font-[600] text-[#566174] uppercase tracking-wider mb-1">HY Spread (OAS)</p>
+                          <p className="text-[24px] font-[750] tabular-nums text-[#111111] leading-none">
+                            {(hySignal as { value: string }).value}
+                          </p>
+                          <p className="text-[12px] text-[#566174] mt-1 leading-snug max-w-[380px]">
+                            {(hySignal as { equityImplication: string }).equityImplication}
+                          </p>
+                        </div>
+                        <div className="shrink-0">
+                          <span className={`inline-flex text-[11px] font-[700] px-3 py-1.5 rounded-full border ${t.bg} ${t.text} ${t.border}`}>
+                            {(hySignal as { regimeLabel: string }).regimeLabel}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="mt-4 pt-3 border-t border-[#F5F5F5]">
+                        <p className="text-[11px] text-[#9B9B9B] leading-snug">
+                          HY spread = high-yield bond yield minus equivalent Treasury yield. Spreads below 4% = low credit stress (risk-on). 4–7% = elevated caution. Above 7% = crisis conditions historically associated with equity drawdowns. Source: FRED BAMLH0A0HYM2.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })()}
+
+              {/* Yield Curve — full width */}
               {!mkt ? (
                 <div className="mt-4"><Sk h="h-32" /></div>
               ) : mkt.yieldCurve.length > 0 ? (
                 <div className="mt-4">
-                  <YieldCurveChart points={mkt.yieldCurve} />
+                  <SectionHeader
+                    title="Yield Curve"
+                    subtitle="US Treasury yields across maturities — inversion signals recession risk and affects WACC."
+                  />
+                  <div className="mt-3">
+                    <YieldCurveChart points={mkt.yieldCurve} />
+                  </div>
                 </div>
               ) : (
                 <div className="mt-4 rounded-xl border border-[#E3E1DA] bg-[#FAFAFA] px-5 py-4">

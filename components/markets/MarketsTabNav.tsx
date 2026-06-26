@@ -2,11 +2,12 @@
 import { useId } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 
-export type MarketTab = 'overview' | 'sectors' | 'calendar' | 'valuation'
+export type MarketTab = 'overview' | 'sectors' | 'news' | 'calendar' | 'valuation'
 
 const TABS: { id: MarketTab; label: string }[] = [
   { id: 'overview',  label: 'Overview'  },
   { id: 'sectors',   label: 'Sectors'   },
+  { id: 'news',      label: 'News'      },
   { id: 'calendar',  label: 'Calendar'  },
   { id: 'valuation', label: 'Valuation' },
 ]
