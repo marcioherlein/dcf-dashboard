@@ -281,8 +281,9 @@ function EarningsList({ items, loading }: { items: EarningsItem[]; loading: bool
 
 // ── Economic List ─────────────────────────────────────────────────────────────
 
-function EconomicList({ events, loading }: { events: EconomicEvent[]; loading: boolean }) {
+function EconomicList({ events, loading, missingKey }: { events: EconomicEvent[]; loading: boolean; missingKey?: boolean }) {
   if (loading) return <LoadingRows />
+  if (missingKey) return <EmptyState message="Economic calendar data unavailable — FMP_API_KEY not configured." />
   if (events.length === 0) return <EmptyState message="No U.S. high-impact economic events scheduled this week." />
 
   const byDate = events.reduce<Record<string, EconomicEvent[]>>((acc, e) => {
@@ -345,8 +346,9 @@ function EconomicList({ events, loading }: { events: EconomicEvent[]; loading: b
 
 // ── Splits List ───────────────────────────────────────────────────────────────
 
-function SplitsList({ splits, loading }: { splits: SplitItem[]; loading: boolean }) {
+function SplitsList({ splits, loading, missingKey }: { splits: SplitItem[]; loading: boolean; missingKey?: boolean }) {
   if (loading) return <LoadingRows />
+  if (missingKey) return <EmptyState message="Splits calendar unavailable — FMP_API_KEY not configured." />
   if (splits.length === 0) return <EmptyState message="No stock splits scheduled this week." />
 
   const byDate = splits.reduce<Record<string, SplitItem[]>>((acc, e) => {
@@ -391,8 +393,9 @@ function SplitsList({ splits, loading }: { splits: SplitItem[]; loading: boolean
 
 // ── IPOs List ─────────────────────────────────────────────────────────────────
 
-function IposList({ ipos, loading }: { ipos: IpoItem[]; loading: boolean }) {
+function IposList({ ipos, loading, missingKey }: { ipos: IpoItem[]; loading: boolean; missingKey?: boolean }) {
   if (loading) return <LoadingRows />
+  if (missingKey) return <EmptyState message="IPO calendar unavailable — FMP_API_KEY not configured." />
   if (ipos.length === 0) return <EmptyState message="No IPO pricings found for this week." />
 
   const byDate = ipos.reduce<Record<string, IpoItem[]>>((acc, e) => {
@@ -458,6 +461,9 @@ export default function CalendarTab() {
   const [loadingEc, setLoadingEc] = useState(true)
   const [loadingS, setLoadingS]   = useState(true)
   const [loadingI, setLoadingI]   = useState(true)
+  const [missingKeyEc, setMissingKeyEc] = useState(false)
+  const [missingKeyS, setMissingKeyS]   = useState(false)
+  const [missingKeyI, setMissingKeyI]   = useState(false)
 
   // Stable ISO strings — only change when weekOffset changes (integer dep, no Date objects)
   const week = useMemo(() => getWeekRange(weekOffset), [weekOffset])
@@ -475,21 +481,30 @@ export default function CalendarTab() {
     setLoadingEc(true)
     fetch(`/api/markets/economic-calendar?from=${from}&to=${to}`)
       .then(r => r.json())
-      .then(d => setEconomic((d.events ?? []).filter((e: EconomicEvent) => inRange(e.date, from, to))))
+      .then(d => {
+        setMissingKeyEc(!!d.missingKey)
+        setEconomic((d.events ?? []).filter((e: EconomicEvent) => inRange(e.date, from, to)))
+      })
       .catch(() => setEconomic([]))
       .finally(() => setLoadingEc(false))
 
     setLoadingS(true)
     fetch(`/api/markets/splits?from=${from}&to=${to}`)
       .then(r => r.json())
-      .then(d => setSplits(d.splits ?? []))
+      .then(d => {
+        setMissingKeyS(!!d.missingKey)
+        setSplits(d.splits ?? [])
+      })
       .catch(() => setSplits([]))
       .finally(() => setLoadingS(false))
 
     setLoadingI(true)
     fetch(`/api/markets/ipos?from=${from}&to=${to}`)
       .then(r => r.json())
-      .then(d => setIpos(d.ipos ?? []))
+      .then(d => {
+        setMissingKeyI(!!d.missingKey)
+        setIpos(d.ipos ?? [])
+      })
       .catch(() => setIpos([]))
       .finally(() => setLoadingI(false))
   }, [week]) // week is memoized — only re-runs when weekOffset changes
@@ -609,7 +624,7 @@ export default function CalendarTab() {
               <span className="w-12 text-right">EST</span>
               <span className="w-12 text-right">ACTUAL</span>
             </ListHeader>
-            <EconomicList events={economic} loading={loadingEc} />
+            <EconomicList events={economic} loading={loadingEc} missingKey={missingKeyEc} />
           </>
         )}
 
@@ -619,7 +634,7 @@ export default function CalendarTab() {
               <span className="flex-1">TICKER / COMPANY</span>
               <span className="w-24 text-right">RATIO</span>
             </ListHeader>
-            <SplitsList splits={splits} loading={loadingS} />
+            <SplitsList splits={splits} loading={loadingS} missingKey={missingKeyS} />
           </>
         )}
 
@@ -630,7 +645,7 @@ export default function CalendarTab() {
               <span className="w-20 text-right">EXCHANGE</span>
               <span className="w-24 text-right">PRICE RANGE</span>
             </ListHeader>
-            <IposList ipos={ipos} loading={loadingI} />
+            <IposList ipos={ipos} loading={loadingI} missingKey={missingKeyI} />
           </>
         )}
 

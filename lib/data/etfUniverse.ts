@@ -37,8 +37,11 @@ export const SECTOR_META: ETFMeta[] = [
 export const GEO_META: ETFMeta[] = [
   { ticker: 'EFA',  group: 'geo', label: 'Developed World',  assetClass: 'equity' },
   { ticker: 'EEM',  group: 'geo', label: 'Emerging Markets', assetClass: 'equity' },
+  { ticker: 'VWO',  group: 'geo', label: 'Vanguard EM',      assetClass: 'equity' },
+  { ticker: 'VGK',  group: 'geo', label: 'Europe',           assetClass: 'equity' },
   { ticker: 'EWJ',  group: 'geo', label: 'Japan',            assetClass: 'equity' },
   { ticker: 'FXI',  group: 'geo', label: 'China',            assetClass: 'equity' },
+  { ticker: 'MCHI', group: 'geo', label: 'MSCI China',       assetClass: 'equity' },
   { ticker: 'EWZ',  group: 'geo', label: 'Brazil',           assetClass: 'equity' },
   { ticker: 'EWU',  group: 'geo', label: 'UK',               assetClass: 'equity' },
   { ticker: 'EWG',  group: 'geo', label: 'Germany',          assetClass: 'equity' },
@@ -84,6 +87,7 @@ export const DIVIDEND_META: ETFMeta[] = [
 export const THEMATIC_META: ETFMeta[] = [
   { ticker: 'SMH',  group: 'thematic', label: 'Semiconductors',  assetClass: 'equity' },
   { ticker: 'SOXX', group: 'thematic', label: 'Semi Industry',   assetClass: 'equity' },
+  { ticker: 'BOTZ', group: 'thematic', label: 'AI & Robotics',   assetClass: 'equity' },
   { ticker: 'XBI',  group: 'thematic', label: 'Biotech',         assetClass: 'equity' },
   { ticker: 'ICLN', group: 'thematic', label: 'Clean Energy',    assetClass: 'equity' },
   { ticker: 'SCHG', group: 'thematic', label: 'US Large Growth', assetClass: 'equity' },

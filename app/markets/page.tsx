@@ -9,10 +9,8 @@ import TopMoversCard         from '@/components/markets/TopMoversCard'
 import MarketHeatmapCard     from '@/components/markets/MarketHeatmapCard'
 import SectorRotation        from '@/components/markets/SectorRotation'
 import MacroSignals          from '@/components/markets/MacroSignals'
-import MarketBreadthCard     from '@/components/markets/MarketBreadthCard'
 import SectorPerformanceCard from '@/components/markets/SectorPerformanceCard'
 import ValuationContext      from '@/components/markets/ValuationContext'
-import PortfolioExposure     from '@/components/markets/PortfolioExposure'
 import MarketNewsSection     from '@/components/markets/MarketNewsSection'
 import MarketsTabNav         from '@/components/markets/MarketsTabNav'
 import { useSetTopBarTabs }  from '@/contexts/TopBarTabsContext'
@@ -320,14 +318,11 @@ export default function MarketsPage() {
                   title="Macro Environment"
                   subtitle="Indicators that affect discount rates, risk appetite, and valuation assumptions."
                 />
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-3">
-                  <div className="lg:col-span-5">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-3">
+                  <div>
                     {ctx ? <MacroSignals signals={ctx.signals} /> : <Sk h="h-64" />}
                   </div>
-                  <div className="lg:col-span-4">
-                    {mkt ? <MarketBreadthCard sectors={mkt.sectors} /> : <Sk h="h-64" />}
-                  </div>
-                  <div className="lg:col-span-3">
+                  <div>
                     {mkt ? <SectorPerformanceCard sectors={mkt.sectors} /> : <Sk h="h-64" />}
                   </div>
                 </div>
@@ -349,21 +344,17 @@ export default function MarketsPage() {
                 title="Valuation Context"
                 subtitle="How current market prices compare to historical ranges — and what it means for your DCF."
               />
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-3">
+              <div className="mt-3">
                 {ctx ? <ValuationContext valuation={ctx.valuation} /> : <Sk h="h-56" />}
-                {ctx ? (
-                  <PortfolioExposure
-                    portfolioExposure={ctx.portfolioExposure}
-                    modelAlerts={ctx.modelAlerts}
-                  />
-                ) : (
-                  <Sk h="h-56" />
-                )}
               </div>
-              {/* Yield Curve — full width below valuation panels */}
-              {mkt && mkt.yieldCurve.length > 0 && (
+              {/* Yield Curve — full width below valuation panel */}
+              {mkt && mkt.yieldCurve.length > 0 ? (
                 <div className="mt-4">
                   <YieldCurveChart points={mkt.yieldCurve} />
+                </div>
+              ) : mkt && (
+                <div className="mt-4 rounded-xl border border-[#E3E1DA] bg-[#FAFAFA] px-5 py-4">
+                  <p className="text-[13px] text-[#6B6B6B]">Yield curve data unavailable — Treasury rates could not be loaded.</p>
                 </div>
               )}
             </div>

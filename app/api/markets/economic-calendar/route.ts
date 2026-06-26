@@ -66,8 +66,9 @@ export async function GET(req: NextRequest) {
   const from = p.get('from') ?? now.toISOString().split('T')[0]
   const to   = p.get('to')   ?? new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
 
+  const missingKey = !process.env.FMP_API_KEY
   const events = await fetchFMPCalendar(from, to)
-  return NextResponse.json({ events, fetchedAt: now.toISOString() }, {
+  return NextResponse.json({ events, missingKey, fetchedAt: now.toISOString() }, {
     headers: { 'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200' },
   })
 }

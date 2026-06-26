@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
   const to   = p.get('to')   ?? new Date(Date.now() + 14 * 864e5).toISOString().split('T')[0]
   const key  = process.env.FMP_API_KEY
 
-  if (!key) return NextResponse.json({ splits: [] })
+  if (!key) return NextResponse.json({ splits: [], missingKey: true })
 
   try {
     const url = `https://financialmodelingprep.com/stable/splits-calendar?from=${from}&to=${to}&apikey=${key}`

@@ -141,17 +141,20 @@ export default function NormalizedPerfChart() {
           </div>
         </div>
         {/* Series toggle chips */}
-        <div className="flex flex-wrap gap-1.5 items-center">
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-0.5">
           {allSeries.map(s => {
             const val = lastPoint?.[s.symbol] as number | undefined
             const isOn = active.has(s.symbol)
             const isCustom = customSeries.find(c => c.symbol === s.symbol)
+            const tooltipLabel = val != null ? `${s.label}: ${val >= 0 ? '+' : ''}${val.toFixed(2)}%` : s.label
             return (
-              <div key={s.symbol} className="relative group">
+              <div key={s.symbol} className="relative group shrink-0">
                 <button
                   onClick={() => toggleSeries(s.symbol)}
+                  title={tooltipLabel}
+                  aria-label={tooltipLabel}
                   className={cn(
-                    'flex items-center gap-1.5 px-2 py-1 h-7 rounded-full text-[11px] font-semibold border transition-all',
+                    'flex items-center gap-1 px-2 py-1 h-7 rounded-full text-[11px] font-semibold border transition-all whitespace-nowrap',
                     isOn
                       ? 'border-transparent text-white'
                       : 'border-[#E5E5E5] bg-transparent text-[#6B6B6B] opacity-50'
@@ -160,8 +163,8 @@ export default function NormalizedPerfChart() {
                 >
                   <span>{s.label}</span>
                   {val != null && isOn && (
-                    <span className="opacity-90">
-                      {val >= 0 ? '+' : ''}{val.toFixed(2)}%
+                    <span className="opacity-80 font-normal hidden sm:inline">
+                      {val >= 0 ? '+' : ''}{val.toFixed(1)}%
                     </span>
                   )}
                 </button>
