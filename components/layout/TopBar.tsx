@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils'
 import { slideDown } from '@/lib/motion'
 import { useStockNav } from '@/contexts/StockNavContext'
 import { useTopBarTabs } from '@/contexts/TopBarTabsContext'
-import { InsicLogoLockup, InsicAppIcon } from '@/components/ui/InsicLogo'
+import { InsicLogoLockup } from '@/components/ui/InsicLogo'
 import type { TabId } from '@/components/stock/TabNav'
 
 // ── Page title map — shown in TopBar when not on a stock page ─────────────────
@@ -717,13 +717,10 @@ export default function TopBar() {
             className="relative px-3 sm:px-4 grid"
             style={{ height: '52px', gridTemplateColumns: 'auto 1fr auto', alignItems: 'center', gap: '8px' }}
           >
-            {/* Col 1: Logo */}
+            {/* Col 1: Logo — always show lockup, no dual-image switching */}
             <div className="flex items-center lg:hidden">
               <Link href={session ? '/analyze' : '/'} className="flex items-center leading-none shrink-0" aria-label="insic home">
-                <InsicAppIcon size={32} className="sm:hidden" />
-                <span className="hidden sm:block" style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.12))' }}>
-                  <InsicLogoLockup size="md" />
-                </span>
+                <InsicLogoLockup size="md" />
               </Link>
             </div>
 
