@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
   // Parse optional body
   let digestId: string | undefined
   let testEmail: string | undefined
-  let bodyOverrides: Partial<{ subject: string; openingParagraph: string; marketSection: string; macroNote: string }> = {}
+  const bodyOverrides: Partial<{ subject: string; openingParagraph: string; marketSection: string; macroNote: string }> = {}
   try {
     const body = await req.json() as { digestId?: string; testEmail?: string; subject?: string; openingParagraph?: string; marketSection?: string; macroNote?: string }
     digestId = body.digestId
