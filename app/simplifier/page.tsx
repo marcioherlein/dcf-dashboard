@@ -1,3 +1,4 @@
+import { useRouter } from 'next/navigation'
 'use client'
 
 import { useState, useEffect, useId } from 'react'
@@ -18,6 +19,7 @@ const FILTER_CONFIG: { id: FilterTab; label: string; dot: string }[] = [
 ]
 
 export default function SimplifierPage() {
+  const router = useRouter()
   const { data: session } = useSession()
   const [entries,    setEntries]    = useState<WatchlistEntry[]>([])
   const [loading,    setLoading]    = useState(true)
@@ -135,7 +137,7 @@ export default function SimplifierPage() {
             <div className="flex items-center gap-2 ml-auto">
                 {!session && (
                   <button
-                    onClick={() => signIn('google')}
+                    onClick={() => router.push('/auth/sign-in')}
                     className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold text-[#6B6A72] border border-[#E8E6E0] rounded-lg hover:border-[#1f6feb] hover:text-[#1f6feb] transition-colors whitespace-nowrap min-h-[36px]"
                   >
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
@@ -201,7 +203,7 @@ export default function SimplifierPage() {
             </svg>
             <p className="text-[12px] text-[#1f6feb]">
               Your data is saved locally.{' '}
-              <button onClick={() => signIn('google')} className="font-semibold underline hover:no-underline">
+              <button onClick={() => router.push('/auth/sign-in')} className="font-semibold underline hover:no-underline">
                 Sign in with Google
               </button>{' '}
               to sync across devices.

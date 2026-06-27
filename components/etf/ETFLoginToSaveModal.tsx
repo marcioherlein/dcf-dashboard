@@ -1,5 +1,6 @@
 'use client'
 import { signIn } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import { X, Check } from 'lucide-react'
 
 interface Props {
@@ -18,6 +19,7 @@ function scoreLabel(score: number | null): { text: string; color: string } {
 }
 
 export default function ETFLoginToSaveModal({ ticker, name, valueScore, onClose }: Props) {
+  const router = useRouter()
   const { text: scoreText, color: scoreColor } = scoreLabel(valueScore)
 
   return (
@@ -74,7 +76,7 @@ export default function ETFLoginToSaveModal({ ticker, name, valueScore, onClose 
               try {
                 localStorage.setItem('etf_pre_login', JSON.stringify({ intent: 'watchlist', ticker }))
               } catch {}
-              signIn('google', { callbackUrl: window.location.href })
+              router.push('/auth/sign-in?callbackUrl=' + encodeURIComponent(window.location.href))
             }}
             className="w-full flex items-center justify-center gap-2.5 rounded-xl bg-[#5F790B] hover:bg-[#6F8F12] active:bg-[#5F790B] text-white font-semibold text-[14px] py-3 transition-colors shadow-sm"
           >

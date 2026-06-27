@@ -112,7 +112,7 @@ export default function Header() {
             </div>
           ) : (
             <button
-              onClick={() => signIn('google')}
+              onClick={() => router.push('/auth/sign-in')}
               className="flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-on-primary hover:bg-primary-container transition-all shadow-card"
             >
               <svg className="h-3.5 w-3.5" viewBox="0 0 24 24">

@@ -40,18 +40,17 @@ function iconForSignal(label: string): { icon: React.ReactNode; bg: string } {
 
 export default function MacroSignals({ signals }: Props) {
   return (
-    <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm overflow-hidden h-full flex flex-col">
-      <div className="p-3 flex-1">
-        {signals.length === 0 ? (
-          <div className="flex items-center justify-center h-full min-h-[120px]">
-            <p className="text-[12px] text-[#6B6B6B]">No macro signals available</p>
-          </div>
-        ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+    <div>
+      {signals.length === 0 ? (
+        <div className="flex items-center justify-center min-h-[80px]">
+          <p className="text-[12px] text-[#6B6B6B]">No macro signals available</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {signals.map(sig => {
             const { icon, bg } = iconForSignal(sig.label)
             return (
-              <div key={sig.id} className="rounded-xl bg-[#F5F5F5] border border-[#E5E5E5] px-2.5 py-2 flex flex-col">
+              <div key={sig.id} className="rounded-xl bg-white border border-[#E5E5E5] px-3 py-2.5 flex flex-col shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                 <div className="flex items-center gap-2 mb-1.5">
                   <div className={cn('w-6 h-6 rounded-lg flex items-center justify-center shrink-0', bg)}>
                     {icon}
@@ -75,8 +74,7 @@ export default function MacroSignals({ signals }: Props) {
             )
           })}
         </div>
-        )}
-      </div>
+      )}
     </div>
   )
 }

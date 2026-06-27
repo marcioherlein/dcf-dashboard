@@ -1,3 +1,4 @@
+import { useRouter } from 'next/navigation'
 'use client'
 
 import { useState, useEffect, useCallback, useMemo, useRef, useId } from 'react'
@@ -558,8 +559,8 @@ function _LoginWall() {
         <p className="mt-2 text-[14px] text-[#6B6B6B] leading-relaxed max-w-xs mx-auto">
           Your saved stocks are private. Sign in to access your personal workspace.
         </p>
-        <button
-          onClick={() => signIn('google', { callbackUrl: '/valuations' })}
+        <Link
+          href="/auth/sign-in?callbackUrl=/valuations"
           className="mt-6 w-full flex items-center justify-center gap-3 rounded-xl bg-olive-700 hover:bg-olive-600 text-white py-3 px-4 text-[14px] font-semibold transition-colors"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -569,8 +570,8 @@ function _LoginWall() {
             <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#fff" fillOpacity=".85"/>
           </svg>
           Continue with Google
-        </button>
-        <p className="mt-4 text-[12px] text-[#9B9B9B]">Free during beta · No credit card required</p>
+        </Link>
+        <p className="mt-4 text-[12px] text-[#9B9B9B]">Free forever · No credit card required</p>
       </div>
     </div>
   )
@@ -871,6 +872,7 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
 // ── Auth-gating wrapper ────────────────────────────────────────────────────────
 
 export default function ValuationsPage() {
+  const router = useRouter()
   const { data: session, status } = useSession()
 
   if (status === 'loading') {

@@ -1,3 +1,4 @@
+import { useRouter } from 'next/navigation'
 'use client'
 
 import { useState } from 'react'
@@ -101,6 +102,7 @@ const FAQS = [
 // ─── Page ─────────────────────────────────────────────────────────────────
 
 export default function PricingPage() {
+  const router = useRouter()
   const { data: session } = useSession()
   const isPro = (session?.user as { plan?: string } | undefined)?.plan === 'pro'
 
@@ -204,7 +206,7 @@ export default function PricingPage() {
             </div>
 
             <button
-              onClick={() => !session && signIn('google')}
+              onClick={() => !session && router.push('/auth/sign-in')}
               className={cn(
                 'w-full rounded-xl border-2 py-3.5 text-[13.5px] font-semibold transition-colors mb-8 min-h-[48px]',
                 session
@@ -254,7 +256,7 @@ export default function PricingPage() {
               <div className="mb-8">
                 <PayPalSubscribeButton
                   userEmail={session?.user?.email}
-                  onSignInRequired={() => signIn('google', { callbackUrl: '/pricing' })}
+                  onSignInRequired={() => router.push('/auth/sign-in?callbackUrl=/pricing')}
                 />
                 <p className="text-center text-[11px] text-gray-500 mt-2">Cancel anytime · No contracts</p>
                 <p className="text-center text-[11px] text-gray-500 mt-1.5">
@@ -403,7 +405,7 @@ export default function PricingPage() {
             </Link>
             {!session && (
               <button
-                onClick={() => signIn('google')}
+                onClick={() => router.push('/auth/sign-in')}
                 className="w-full sm:w-auto rounded-xl border border-white/15 text-white px-8 py-3.5 text-[13.5px] font-medium hover:bg-white/10 transition-colors min-h-[48px]"
               >
                 Sign in with Google

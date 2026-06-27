@@ -1,3 +1,4 @@
+import { useRouter } from 'next/navigation'
 'use client'
 import { signIn } from 'next-auth/react'
 import Link from 'next/link'
@@ -25,7 +26,7 @@ const FREE_FEATURES = [
   'Financial health scores (Piotroski, Altman, Beneish)',
   'Risk signals and insider data',
   'News and analyst sentiment',
-  'Save up to 10 analyses',
+  'Save up to 5 analyses',
 ]
 
 const PRO_FEATURES = [
@@ -60,6 +61,7 @@ function ScenarioCell({ label, value, variant }: { label: string; value: string;
 }
 
 export default function StockLoginWall({ ticker, companyName, price, currency, fairValue, upsidePct, scenarios }: Props) {
+  const router = useRouter()
   const upside = upsidePct ?? 0
   const isUndervalued = upside > 0
 
@@ -143,7 +145,7 @@ export default function StockLoginWall({ ticker, companyName, price, currency, f
           </p>
 
           <button
-            onClick={() => signIn('google', { callbackUrl: typeof window !== 'undefined' ? window.location.href : '/' })}
+            onClick={() => router.push('/auth/sign-in?callbackUrl=' + encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '/'))}
             className="w-full flex items-center justify-center gap-2.5 rounded-xl bg-[#5F790B] hover:bg-[#526A08] active:scale-[0.99] text-white font-semibold text-[14px] py-3.5 transition-all min-h-[48px]"
             style={{ boxShadow: '0 4px 12px rgba(95,121,11,0.25)' }}
           >

@@ -853,8 +853,8 @@ export default function TopBar() {
                 </div>
               ) : (
                 <div className="flex items-center gap-2 shrink-0">
-                  <button onClick={() => signIn('google')} className="text-[12.5px] text-white px-3.5 py-2.5 min-h-[44px] rounded-[10px] transition-colors font-semibold bg-[#5F790B] hover:bg-[#526A08] shadow-sm whitespace-nowrap">Get started free</button>
-                  <button onClick={() => signIn('google')} className="text-[12.5px] text-[#6B6B6B] hover:text-[#111111] transition-colors whitespace-nowrap hidden md:block">Sign in</button>
+                  <button onClick={() => router.push('/auth/sign-in')} className="text-[12.5px] text-white px-3.5 py-2.5 min-h-[44px] rounded-[10px] transition-colors font-semibold bg-[#5F790B] hover:bg-[#526A08] shadow-sm whitespace-nowrap">Get started free</button>
+                  <button onClick={() => router.push('/auth/sign-in')} className="text-[12.5px] text-[#6B6B6B] hover:text-[#111111] transition-colors whitespace-nowrap hidden md:block">Sign in</button>
                 </div>
               )}
             </div>

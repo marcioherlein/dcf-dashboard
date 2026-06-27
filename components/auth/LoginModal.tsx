@@ -1,5 +1,6 @@
 'use client'
 import { signIn } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import { X } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 import { track } from '@/lib/analytics/events'
@@ -21,6 +22,7 @@ interface Props {
 }
 
 export default function LoginModal({ onClose, intent, headline }: Props) {
+  const router = useRouter()
   const copy = intent ? INTENT_COPY[intent] : null
   const displayHeadline = headline ?? copy?.headline ?? 'Sign in to save your work'
   const displaySub      = copy?.sub ?? 'Free during beta. No credit card required.'
@@ -43,7 +45,7 @@ export default function LoginModal({ onClose, intent, headline }: Props) {
 
   const handleSignIn = () => {
     track('login_started', { intent: intent ?? 'unknown', method: 'google' })
-    signIn('google', { callbackUrl })
+    router.push('/auth/sign-in?callbackUrl=' + encodeURIComponent(callbackUrl))
   }
 
   return (

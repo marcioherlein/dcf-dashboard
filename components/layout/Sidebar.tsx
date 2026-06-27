@@ -1,7 +1,7 @@
 'use client'
 import { useRef } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useSession, signIn, signOut } from 'next-auth/react'
 import Image from 'next/image'
 import { motion, useReducedMotion } from 'motion/react'
@@ -124,6 +124,7 @@ function SectionLabel({ children, delay, reduced }: { children: React.ReactNode;
 }
 
 export default function Sidebar() {
+  const router = useRouter()
   const pathname = usePathname()
   const { data: session } = useSession()
   const reduced = useReducedMotion()
@@ -312,7 +313,7 @@ export default function Sidebar() {
           </div>
         ) : (
           <button
-            onClick={() => signIn('google')}
+            onClick={() => router.push('/auth/sign-in')}
             className="flex w-full items-center justify-center gap-2 rounded-[10px] px-3 py-2.5 text-[12.5px] font-semibold text-white transition-all min-h-[44px]"
             style={{
               background: 'linear-gradient(135deg, rgba(124,154,25,0.35) 0%, rgba(95,121,11,0.25) 100%)',

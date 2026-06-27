@@ -50,7 +50,7 @@ export default function RedeemPage() {
             <h1 className="text-[18px] font-bold text-[#06101F]">Redeem your Pro code</h1>
             <p className="text-[14px] text-[#566174]">Sign in first to activate your Pro access.</p>
             <button
-              onClick={() => signIn('google', { callbackUrl: '/redeem' })}
+              onClick={() => router.push('/auth/sign-in?callbackUrl=/redeem')}
               className="w-full flex items-center justify-center gap-2.5 rounded-xl bg-olive-700 hover:bg-olive-600 text-white font-semibold text-[14px] py-3 transition-colors"
             >
               <svg viewBox="0 0 24 24" className="w-4 h-4" aria-hidden="true">

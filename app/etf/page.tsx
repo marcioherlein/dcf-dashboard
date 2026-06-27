@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import { RefreshCw, ChevronDown, ChevronRight, Plus, ArrowUpRight, Trash2, Info } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
@@ -445,6 +446,7 @@ interface UndoToast { ticker: string; entry: ETFEntry; timer: ReturnType<typeof 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function ETFTrackerPage() {
+  const router = useRouter()
   const { data: session } = useSession()
   const userEmail = session?.user?.email ?? null
 
@@ -747,7 +749,7 @@ export default function ETFTrackerPage() {
             {!userEmail && watchlist.length > 0 && (
               <div className="rounded-xl border border-[#DCE6F5] bg-[#EEF4FF] px-4 py-3 flex items-center gap-3">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="#1f6feb"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"/></svg>
-                <p className="text-[12px] text-[#1f6feb]">Your data is saved locally. <button onClick={() => signIn('google')} className="font-semibold underline hover:no-underline">Sign in</button> to sync across devices.</p>
+                <p className="text-[12px] text-[#1f6feb]">Your data is saved locally. <button onClick={() => router.push('/auth/sign-in')} className="font-semibold underline hover:no-underline">Sign in</button> to sync across devices.</p>
               </div>
             )}
 

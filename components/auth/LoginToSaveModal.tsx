@@ -1,5 +1,6 @@
 'use client'
 import { signIn } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import { X, Check } from 'lucide-react'
 
 interface Props {
@@ -16,6 +17,7 @@ function fmt(n: number, currency: string) {
 }
 
 export default function LoginToSaveModal({ ticker, companyName, fairValue, upsidePct, currency, onClose }: Props) {
+  const router = useRouter()
   const isUndervalued = (upsidePct ?? 0) > 0
 
   return (
@@ -70,7 +72,7 @@ export default function LoginToSaveModal({ ticker, companyName, fairValue, upsid
               try {
                 localStorage.setItem('intrinsico_pre_login', JSON.stringify({ intent: 'save', ticker }))
               } catch {}
-              signIn('google', { callbackUrl: window.location.href })
+              router.push('/auth/sign-in?callbackUrl=' + encodeURIComponent(window.location.href))
             }}
             className="w-full flex items-center justify-center gap-2.5 rounded-xl bg-olive-700 hover:bg-olive-600 active:bg-olive-700 text-white font-semibold text-[14px] py-3 transition-colors shadow-sm"
           >

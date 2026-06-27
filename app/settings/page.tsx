@@ -178,7 +178,7 @@ export default function SettingsPage() {
             <p className="text-xs text-[#8A95A6] mt-0.5">
               {(session.user as { plan?: string }).plan === 'pro'
                 ? 'Unlimited analyses and saves.'
-                : '10 analyses and 10 saves per month.'}
+                : '5 stock analyses and 5 saved valuations per month.'}
             </p>
           </div>
           {(session.user as { plan?: string }).plan === 'pro' ? (

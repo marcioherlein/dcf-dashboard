@@ -188,7 +188,7 @@ export function SignUpPage() {
   }
 
   return (
-    <AuthShell title="Create your account" sub="Free during beta — no credit card required">
+    <AuthShell title="Create your account" sub="Free forever — no credit card required">
       <form onSubmit={handleSubmit} className="space-y-4">
         <input className={INPUT} type="text" placeholder="Full name" value={name} onChange={e => setName(e.target.value)} required autoFocus />
         <input className={INPUT} type="email" placeholder="Email address" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" />
@@ -232,6 +232,7 @@ export function SignInPage() {
   const verified  = searchParams.get('verified') === 'true'
   const reset     = searchParams.get('reset')    === 'true'
   const errorParam = searchParams.get('error')
+  const callbackUrl = searchParams.get('callbackUrl') ?? '/analyze'
 
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
@@ -260,7 +261,7 @@ export function SignInPage() {
       setError('Invalid email or password')
       return
     }
-    router.push('/analyze')
+    router.push(callbackUrl)
   }
 
   return (
@@ -311,7 +312,7 @@ export function SignInPage() {
         <hr className="flex-1 border-[#E5E5E5]" />
       </div>
 
-      <button onClick={() => signIn('google', { callbackUrl: '/analyze' })} className={BTN_GOOGLE}>
+      <button onClick={() => signIn('google', { callbackUrl })} className={BTN_GOOGLE}>
         <GoogleIcon />
         Continue with Google
       </button>

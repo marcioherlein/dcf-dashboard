@@ -1,5 +1,6 @@
 'use client'
 import { signIn, useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Check } from 'lucide-react'
 import dynamic from 'next/dynamic'
@@ -39,6 +40,7 @@ const PRO_FEATURES = [
 ]
 
 export default function PricingSection() {
+  const router = useRouter()
   const { data: session } = useSession()
   const isPro = (session?.user as { plan?: string } | undefined)?.plan === 'pro'
   const monthlyPrice = 19
@@ -91,7 +93,7 @@ export default function PricingSection() {
             </div>
             <p className="text-[12px] text-[#6B6B6B] mb-5">Free plan, no card required, never expires.</p>
             <button
-              onClick={() => signIn('google')}
+              onClick={() => router.push('/auth/sign-in')}
               className="w-full rounded-md border border-[#C8C8C8] py-3 text-[13.5px] font-semibold text-[#111111] hover:bg-[#F6FAEA] hover:border-[#5F790B] transition-colors mb-5 min-h-[48px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F790B] focus-visible:ring-offset-2"
             >
               Analyze for free
@@ -127,7 +129,7 @@ export default function PricingSection() {
               <div className="mb-5">
                 <PayPalSubscribeButton
                   userEmail={session?.user?.email}
-                  onSignInRequired={() => signIn('google', { callbackUrl: '/pricing' })}
+                  onSignInRequired={() => router.push('/auth/sign-in?callbackUrl=/pricing')}
                 />
               </div>
             )}

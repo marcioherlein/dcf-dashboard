@@ -1,5 +1,6 @@
 'use client'
 import { signIn } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import { Bookmark } from 'lucide-react'
 
 interface Props {
@@ -7,6 +8,7 @@ interface Props {
 }
 
 export default function GatedTabOverlay({ tabName: _tabName }: Props) {
+  const router = useRouter()
   return (
     <div className="mt-6 flex items-center justify-between gap-3 rounded-xl border border-[#BFD2A1] bg-[#F6FAEA] px-4 py-3.5">
       <div className="flex items-center gap-2.5 min-w-0">
@@ -16,7 +18,7 @@ export default function GatedTabOverlay({ tabName: _tabName }: Props) {
         </p>
       </div>
       <button
-        onClick={() => signIn('google', { callbackUrl: typeof window !== 'undefined' ? window.location.href : '/' })}
+        onClick={() => router.push('/auth/sign-in?callbackUrl=' + encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '/'))}
         className="shrink-0 rounded-lg bg-[#4A6109] hover:bg-[#3E5206] text-white px-3.5 py-1.5 text-[12px] font-semibold transition-colors"
       >
         Sign in free

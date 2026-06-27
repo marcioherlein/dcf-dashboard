@@ -1,7 +1,8 @@
 'use client'
 import { useState, useEffect, useMemo, useCallback, Suspense } from 'react'
+import Link from 'next/link'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { useParams, useSearchParams } from 'next/navigation'
+import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import NewsPanel from '@/components/stock/NewsPanel'
 import HealthSection from '@/components/stock/HealthSection'
 import { type TabId } from '@/components/stock/TabNav'
@@ -181,6 +182,7 @@ interface FinancialsData {
 }
 
 export default function StockPage() {
+  const router = useRouter()
   return (
     // eslint-disable-next-line react/jsx-no-undef
     <LoginGateProvider>
@@ -567,12 +569,12 @@ function StockPageBody() {
                 <p className="text-[13px] text-[#5F790B] leading-snug">
                   <span className="font-[700]">Demo mode</span> — full access to {DEMO_TICKER}. Sign in to analyze any stock.
                 </p>
-                <button
-                  onClick={() => signIn('google', { callbackUrl: typeof window !== 'undefined' ? window.location.href : '/' })}
-                  className="shrink-0 rounded-lg bg-[#5F790B] hover:bg-[#526A08] text-white text-[12px] font-[700] px-3 py-1.5 transition-colors min-h-[36px]"
+                <Link
+                  href={`/auth/sign-in?callbackUrl=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '/')}`}
+                  className="shrink-0 rounded-lg bg-[#5F790B] hover:bg-[#526A08] text-white text-[12px] font-[700] px-3 py-1.5 transition-colors min-h-[36px] flex items-center"
                 >
                   Sign in free →
-                </button>
+                </Link>
               </div>
             )}
             <AnimatePresence mode="wait">
