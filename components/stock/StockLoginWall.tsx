@@ -1,6 +1,5 @@
-import { useRouter } from 'next/navigation'
 'use client'
-import { signIn } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Check, Lock } from 'lucide-react'
 import { DEMO_TICKER } from '@/lib/constants'

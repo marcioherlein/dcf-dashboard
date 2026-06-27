@@ -18,7 +18,7 @@ import StockUpgradeWall from '@/components/stock/StockUpgradeWall'
 import { calculatePiotroski, calculateAltman, calculateBeneish } from '@/lib/dcf/calculateScores'
 import { track } from '@/lib/analytics/events'
 import { loadPreLoginState, clearPreLoginState } from '@/lib/auth/preLoginState'
-import { useSession, signIn } from 'next-auth/react'
+import { useSession } from 'next-auth/react'
 import SaveToWatchlistDialog, { type WatchlistSavePayload } from '@/components/watchlist/SaveToWatchlistDialog'
 import ShareCardModal from '@/components/valuation/ShareCardModal'
 import ValuationNotAvailableCard from '@/components/stock/ValuationNotAvailableCard'
@@ -182,7 +182,7 @@ interface FinancialsData {
 }
 
 export default function StockPage() {
-  const router = useRouter()
+  const _router = useRouter()
   return (
     // eslint-disable-next-line react/jsx-no-undef
     <LoginGateProvider>

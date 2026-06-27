@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useId } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
-import { useSession, signIn, signOut } from 'next-auth/react'
+import { useSession, signOut } from 'next-auth/react'
 import Image from 'next/image'
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react'
 import { Bookmark, FileText, Search, Share2, X, BarChart2, DollarSign, Table2, Award, Newspaper } from 'lucide-react'

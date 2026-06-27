@@ -1,9 +1,9 @@
-import { useRouter } from 'next/navigation'
 'use client'
+import { useRouter } from 'next/navigation'
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { signIn, useSession } from 'next-auth/react'
+import { useSession } from 'next-auth/react'
 import dynamic from 'next/dynamic'
 
 const PayPalSubscribeButton = dynamic(

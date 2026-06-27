@@ -1,9 +1,9 @@
-import { useRouter } from 'next/navigation'
 'use client'
+import { useRouter } from 'next/navigation'
 
 import { useState, useEffect, useId } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
-import { useSession, signIn } from 'next-auth/react'
+import { useSession } from 'next-auth/react'
 import type { WatchlistEntry, ListTag } from '@/lib/simplifier/types'
 import { loadWatchlist, deleteWatchlistEntry, updateListTag } from '@/lib/simplifier/watchlistStore'
 import WatchlistTable from '@/components/simplifier/WatchlistTable'

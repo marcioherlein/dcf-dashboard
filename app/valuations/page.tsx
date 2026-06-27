@@ -1,11 +1,11 @@
-import { useRouter } from 'next/navigation'
 'use client'
+import { useRouter } from 'next/navigation'
 
 import { useState, useEffect, useCallback, useMemo, useRef, useId } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import { useSetTopBarTabs } from '@/contexts/TopBarTabsContext'
 import Link from 'next/link'
-import { useSession, signIn } from 'next-auth/react'
+import { useSession } from 'next-auth/react'
 import {
   Bookmark, TrendingUp, CheckCircle, Clock,
   List, LayoutGrid, Search, ChevronDown, SlidersHorizontal,
@@ -872,7 +872,7 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
 // ── Auth-gating wrapper ────────────────────────────────────────────────────────
 
 export default function ValuationsPage() {
-  const router = useRouter()
+  const _router = useRouter()
   const { data: session, status } = useSession()
 
   if (status === 'loading') {
