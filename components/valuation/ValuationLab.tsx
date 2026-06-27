@@ -606,7 +606,7 @@ function MethodInlinePanel({ config, overrides, currency, onAssumptionChange, on
     : {}
 
   return (
-    <div className="card rounded-xl overflow-hidden">
+    <div className="card rounded-xl isolate">
       {/* Header */}
       <div className="px-5 py-4 border-b border-[#E3E1DA] flex flex-col sm:flex-row sm:items-start justify-between gap-3">
         <div>

@@ -493,7 +493,7 @@ function StockFloatingBar({
                 />
                 <button
                   onClick={closeSearch}
-                  className="text-[rgba(255,255,255,0.35)] hover:text-white transition-colors shrink-0"
+                  className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-[rgba(255,255,255,0.35)] hover:text-white transition-colors shrink-0"
                   aria-label="Close search"
                 >
                   <X size={14} strokeWidth={1.8} />
