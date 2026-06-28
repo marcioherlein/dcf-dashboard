@@ -104,10 +104,15 @@ export async function POST(req: NextRequest) {
     })
 
     if (tokenError) {
-      console.error('[register] token error:', tokenError.message)
-    } else {
-      await sendCodeEmail(normalizedEmail, name.trim(), code)
+      console.error('[register] token insert error:', tokenError.message, tokenError.code, tokenError.details)
+      // Return a user-facing error so they know to contact support
+      return NextResponse.json({
+        error: `Failed to create verification code: ${tokenError.message}. Please contact support.`,
+      }, { status: 500 })
     }
+
+    // Token saved — send the email
+    await sendCodeEmail(normalizedEmail, name.trim(), code)
 
     return NextResponse.json({ ok: true })
   } catch (err) {
