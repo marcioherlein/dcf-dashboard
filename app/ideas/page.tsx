@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'motion/react'
 import {
   TrendingUp, TrendingDown, Zap, BarChart2, Star,
-  RefreshCw, ExternalLink, Cpu, ArrowUpRight, Layers,
+  RefreshCw, ExternalLink, Cpu, ArrowUpRight, Layers, UserCheck,
 } from 'lucide-react'
 import type { IdeaStock, SignalId, IdeasResponse } from '@/app/api/ideas/route'
 import { fmtPrice } from '@/lib/formatters'
@@ -43,6 +43,17 @@ const SIGNALS: {
     cardBg: 'linear-gradient(145deg, #0d1f14 0%, #1a3d25 100%)',
     accentColor: '#4ade80',
     emptyMsg: 'No estimate-upgrade candidates found today.',
+    isPrimary: true,
+  },
+  {
+    id: 'insider_buying',
+    label: 'Insider Buying',
+    shortLabel: 'Insiders',
+    description: 'Stocks where company insiders (executives, directors) made net purchases in the last 90 days and the stock still trades below insic\'s DCF fair value or analyst consensus target. Insider buying is one of the most direct signals of management conviction — insiders only buy when they believe the price is wrong.',
+    icon: UserCheck,
+    cardBg: 'linear-gradient(145deg, #1a1030 0%, #2d1a50 100%)',
+    accentColor: '#a78bfa',
+    emptyMsg: 'No net insider buying detected today.',
     isPrimary: true,
   },
   {
@@ -219,6 +230,12 @@ function IdeaCard({ stock, signalId, index }: { stock: IdeaStock; signalId: Sign
               </span>
             )}
             <RevisionBadge revision={stock.epsRevision} />
+            {stock.insiderSentiment?.sentiment === 'net_buyer' && (
+              <span className="inline-flex items-center gap-0.5 text-[10px] font-[700] px-1.5 py-0.5 rounded-full"
+                style={{ background: 'rgba(167,139,250,0.15)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.25)' }}>
+                insider ↑
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-1 shrink-0">
             <ConvictionBadge band={stock.convictionBand} />
@@ -296,6 +313,14 @@ function IdeaCard({ stock, signalId, index }: { stock: IdeaStock; signalId: Sign
               <span className="text-[11px] font-[700] tabular-nums text-[rgba(255,255,255,0.65)]">{fmtPrice(stock.analystTarget, 'USD')}</span>
             </div>
           )}
+          {signalId === 'insider_buying' && stock.insiderSentiment && (
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-[rgba(255,255,255,0.40)]">90-day transactions</span>
+              <span className="text-[11px] font-[700] tabular-nums text-[#a78bfa]">
+                {stock.insiderSentiment.buyCount}B · {stock.insiderSentiment.sellCount}S
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Narrative hook */}
@@ -303,6 +328,21 @@ function IdeaCard({ stock, signalId, index }: { stock: IdeaStock; signalId: Sign
           <p className="text-[10px] text-[rgba(255,255,255,0.38)] mt-2 leading-snug">
             {stock.narrativeHook}
           </p>
+        )}
+
+        {/* Sector context */}
+        {stock.sectorContext?.pctVsMedianFwdPE != null && Math.abs(stock.sectorContext.pctVsMedianFwdPE) >= 0.10 && (
+          <div className="mt-2 flex items-center gap-1">
+            <span className="text-[9px] font-[600] px-1.5 py-0.5 rounded-full"
+              style={{
+                background: stock.sectorContext.pctVsMedianFwdPE < 0 ? 'rgba(74,222,128,0.12)' : 'rgba(248,113,113,0.12)',
+                color: stock.sectorContext.pctVsMedianFwdPE < 0 ? '#4ade80' : '#f87171',
+                border: `1px solid ${stock.sectorContext.pctVsMedianFwdPE < 0 ? 'rgba(74,222,128,0.25)' : 'rgba(248,113,113,0.25)'}`,
+              }}>
+              {Math.abs(stock.sectorContext.pctVsMedianFwdPE * 100).toFixed(0)}%{' '}
+              {stock.sectorContext.pctVsMedianFwdPE < 0 ? 'cheaper' : 'pricier'} than {stock.sector ?? 'sector'} P/E median
+            </span>
+          </div>
         )}
       </Link>
     </motion.div>
