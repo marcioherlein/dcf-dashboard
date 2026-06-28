@@ -59,8 +59,9 @@ jobs:
             DOW=$(date -u +%u)  # 1=Mon…5=Fri, 6=Sat, 7=Sun
             echo "Cron fired at UTC ${HOUR}:${MIN} DOW=${DOW}"
 
-            # Weekdays 1-5
-            if [ "$DOW" -ge "1" ] && [ "$DOW" -le "5" ]; then
+            # Route by day of week using string equality (avoids -ge/-le issues with DOW=7)
+            if [ "$DOW" = "1" ] || [ "$DOW" = "2" ] || [ "$DOW" = "3" ] || [ "$DOW" = "4" ] || [ "$DOW" = "5" ]; then
+              # Weekdays Mon-Fri
               if   [ "$HOUR" = "11" ]; then MODE="morning_brief"
               elif [ "$HOUR" = "12" ]; then MODE="earnings"
               elif [ "$HOUR" = "13" ] && [ "$MIN" -lt "20" ]; then MODE="feature"
@@ -90,8 +91,8 @@ jobs:
               elif [ "$HOUR" = "1" ]; then MODE="theory_overnight"
               else MODE="SKIP"
               fi
-            # Saturday
             elif [ "$DOW" = "6" ]; then
+              # Saturday
               if   [ "$HOUR" = "13" ]; then MODE="etf_pulse"
               elif [ "$HOUR" = "14" ]; then MODE="feature"
               elif [ "$HOUR" = "15" ]; then MODE="weekly_wrap"
@@ -102,8 +103,8 @@ jobs:
               elif [ "$HOUR" = "2"  ]; then MODE="theory_overnight"
               else MODE="SKIP"
               fi
-            # Sunday
             elif [ "$DOW" = "7" ]; then
+              # Sunday
               if   [ "$HOUR" = "13" ]; then MODE="sentiment"
               elif [ "$HOUR" = "14" ] && [ "$MIN" -lt "20" ]; then MODE="top_undervalued"
               elif [ "$HOUR" = "14" ] && [ "$MIN" -ge "29" ]; then MODE="question"
