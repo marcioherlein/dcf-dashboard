@@ -4,16 +4,23 @@ import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { PieChart, X, Globe, Bookmark, SlidersHorizontal, Settings } from 'lucide-react'
+import {
+  PieChart, X, Globe, Bookmark, SlidersHorizontal,
+  Settings, TrendingUp, Search,
+} from 'lucide-react'
 
-const LEFT_NAV = [
+// ── Nav items ─────────────────────────────────────────────────────────────────
+// 5 primary items: Markets · Valuations · Analyze (center FAB) · Screener · ETFs
+// Settings accessible via a swipe-up drawer (no "More" button taking a slot)
+
+const NAV_ITEMS = [
   {
     href: '/markets',
     label: 'Markets',
     match: (p: string) => p.startsWith('/markets'),
     icon: (active: boolean) => (
       <Globe
-        className={cn('w-5 h-5', active ? 'text-[#7C9A19]' : 'text-[rgba(255,255,255,0.45)]')}
+        className={cn('w-[22px] h-[22px]', active ? 'text-[#7C9A19]' : 'text-[rgba(255,255,255,0.50)]')}
         strokeWidth={active ? 2.2 : 1.6}
       />
     ),
@@ -24,21 +31,21 @@ const LEFT_NAV = [
     match: (p: string) => p.startsWith('/valuations'),
     icon: (active: boolean) => (
       <Bookmark
-        className={cn('w-5 h-5', active ? 'text-[#7C9A19]' : 'text-[rgba(255,255,255,0.45)]')}
+        className={cn('w-[22px] h-[22px]', active ? 'text-[#7C9A19]' : 'text-[rgba(255,255,255,0.50)]')}
         strokeWidth={active ? 2.2 : 1.6}
       />
     ),
   },
 ]
 
-const RIGHT_NAV = [
+const NAV_ITEMS_RIGHT = [
   {
     href: '/screener',
     label: 'Screener',
     match: (p: string) => p.startsWith('/screener'),
     icon: (active: boolean) => (
       <SlidersHorizontal
-        className={cn('w-5 h-5', active ? 'text-[#7C9A19]' : 'text-[rgba(255,255,255,0.45)]')}
+        className={cn('w-[22px] h-[22px]', active ? 'text-[#7C9A19]' : 'text-[rgba(255,255,255,0.50)]')}
         strokeWidth={active ? 2.2 : 1.6}
       />
     ),
@@ -49,35 +56,35 @@ const RIGHT_NAV = [
     match: (p: string) => p.startsWith('/etf'),
     icon: (active: boolean) => (
       <PieChart
-        className={cn('w-5 h-5', active ? 'text-[#7C9A19]' : 'text-[rgba(255,255,255,0.45)]')}
+        className={cn('w-[22px] h-[22px]', active ? 'text-[#7C9A19]' : 'text-[rgba(255,255,255,0.50)]')}
         strokeWidth={active ? 2.2 : 1.6}
       />
     ),
   },
 ]
 
-const MORE_ITEMS = [
+const DRAWER_ITEMS = [
   { href: '/markets',    label: 'Markets',     icon: Globe           },
-  { href: '/valuations', label: 'Watchlist',   icon: Bookmark        },
+  { href: '/valuations', label: 'My Valuations', icon: TrendingUp    },
   { href: '/screener',   label: 'Screener',    icon: SlidersHorizontal },
   { href: '/etf',        label: 'ETF Tracker', icon: PieChart        },
+  { href: '/analyze',    label: 'Analyze',     icon: Search          },
   { href: '/settings',   label: 'Settings',    icon: Settings        },
 ]
 
 export default function BottomNav() {
   const pathname = usePathname()
-  const [moreOpen, setMoreOpen] = useState(false)
+  const [drawerOpen, setDrawerOpen] = useState(false)
   const drawerRef = useRef<HTMLDivElement>(null)
 
-  const isMoreActive = MORE_ITEMS.some((item) => pathname.startsWith(item.href.split('?')[0]))
   const isCenterActive = pathname === '/' || pathname.startsWith('/stock') || pathname.startsWith('/analyze')
 
-  useEffect(() => { setMoreOpen(false) }, [pathname])
+  useEffect(() => { setDrawerOpen(false) }, [pathname])
 
   useEffect(() => {
-    if (!moreOpen) return
+    if (!drawerOpen) return
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { setMoreOpen(false); return }
+      if (e.key === 'Escape') { setDrawerOpen(false); return }
       if (e.key === 'Tab' && drawerRef.current) {
         const focusable = drawerRef.current.querySelectorAll<HTMLElement>('a, button, [tabindex]:not([tabindex="-1"])')
         const first = focusable[0]
@@ -87,22 +94,25 @@ export default function BottomNav() {
       }
     }
     document.addEventListener('keydown', handleKeyDown)
-    const firstFocusable = drawerRef.current?.querySelector<HTMLElement>('a, button')
-    firstFocusable?.focus()
+    drawerRef.current?.querySelector<HTMLElement>('a, button')?.focus()
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [moreOpen])
+  }, [drawerOpen])
 
-  function NavItem({ href, label, match, icon }: { href: string; label: string; match: (p: string) => boolean; icon: (a: boolean) => ReactNode }) {
+  function NavItem({ href, label, match, icon }: {
+    href: string; label: string
+    match: (p: string) => boolean
+    icon: (a: boolean) => ReactNode
+  }) {
     const active = match(pathname)
     return (
       <Link
         href={href}
-        className="flex flex-col items-center justify-center gap-0.5 flex-1 py-2 active:scale-95 transition-transform min-w-[60px]"
-        style={{ minHeight: '56px' }}
+        className="flex flex-col items-center justify-center gap-1 flex-1 active:scale-95 transition-transform"
+        style={{ minHeight: '56px', paddingTop: 8, paddingBottom: 6 }}
       >
         {icon(active)}
         <span className={cn(
-          'text-[10px] font-medium',
+          'text-[10px] font-[600] leading-none',
           active ? 'text-[#7C9A19]' : 'text-[rgba(255,255,255,0.45)]',
         )}>
           {label}
@@ -113,58 +123,59 @@ export default function BottomNav() {
 
   return (
     <>
-      {/* More drawer backdrop */}
-      {moreOpen && (
+      {/* Drawer backdrop */}
+      {drawerOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/40 lg:hidden"
-          onClick={() => setMoreOpen(false)}
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          onClick={() => setDrawerOpen(false)}
           role="presentation"
           aria-hidden="true"
         />
       )}
 
-      {/* More drawer panel — dark glass to match sidebar */}
+      {/* Drawer panel */}
       <div
         ref={drawerRef}
         role="dialog"
         aria-modal="true"
-        aria-label="More navigation options"
-        aria-hidden={!moreOpen}
+        aria-label="Navigation menu"
+        aria-hidden={!drawerOpen}
         className={cn(
-          'fixed left-0 right-0 z-50 lg:hidden rounded-t-2xl shadow-2xl border-t transition-transform duration-200',
-          moreOpen ? 'translate-y-0' : 'translate-y-full',
+          'fixed left-0 right-0 z-[9998] lg:hidden rounded-t-2xl shadow-2xl border-t transition-transform duration-200 ease-out',
+          drawerOpen ? 'translate-y-0' : 'translate-y-full',
         )}
         style={{
-          bottom: 'calc(56px + env(safe-area-inset-bottom))',
-          background: 'rgba(13,17,23,0.92)',
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)',
+          /* sits just above the nav bar */
+          bottom: 'calc(56px + env(safe-area-inset-bottom, 0px))',
+          background: 'rgba(10,14,20,0.96)',
+          backdropFilter: 'blur(28px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(28px) saturate(180%)',
           borderColor: 'rgba(255,255,255,0.10)',
         }}
       >
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[rgba(255,255,255,0.08)]">
-          <span className="text-[13px] font-semibold text-white">More</span>
+        <div className="flex items-center justify-between px-5 py-3 border-b border-[rgba(255,255,255,0.08)]">
+          <span className="text-[13px] font-[650] text-white">Navigation</span>
           <button
-            onClick={() => setMoreOpen(false)}
-            className="text-[rgba(255,255,255,0.45)] hover:text-white p-2 -mr-1 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-[rgba(255,255,255,0.08)] transition-colors"
+            onClick={() => setDrawerOpen(false)}
+            className="text-[rgba(255,255,255,0.50)] hover:text-white p-2 -mr-1 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl hover:bg-[rgba(255,255,255,0.08)] transition-colors"
             aria-label="Close menu"
           >
             <X size={16} />
           </button>
         </div>
-        <div className="px-3 py-2 space-y-0.5">
-          {MORE_ITEMS.map(({ href, label, icon: Icon }) => {
+        <div className="px-3 py-2 grid grid-cols-2 gap-1">
+          {DRAWER_ITEMS.map(({ href, label, icon: Icon }) => {
             const active = pathname.startsWith(href.split('?')[0])
             return (
               <Link
                 key={href}
                 href={href}
-                onClick={() => setMoreOpen(false)}
+                onClick={() => setDrawerOpen(false)}
                 className={cn(
-                  'flex items-center gap-3 px-3 py-3 min-h-[44px] rounded-xl text-[14px] font-medium transition-colors',
+                  'flex items-center gap-3 px-4 py-3.5 min-h-[52px] rounded-xl text-[14px] font-[500] transition-colors',
                   active
                     ? 'bg-[rgba(124,154,25,0.18)] text-white'
-                    : 'text-[rgba(255,255,255,0.65)] hover:bg-[rgba(255,255,255,0.06)] hover:text-white',
+                    : 'text-[rgba(255,255,255,0.65)] hover:bg-[rgba(255,255,255,0.07)] hover:text-white',
                 )}
               >
                 <Icon
@@ -177,78 +188,76 @@ export default function BottomNav() {
             )
           })}
         </div>
-        <div className="h-2" />
+        <div style={{ height: 8 }} />
       </div>
 
-      {/* Bottom nav bar — dark glass matching TopBar/Sidebar */}
+      {/* ── Bottom nav bar ─────────────────────────────────────────────────────
+          Fixed to the real bottom of the visible viewport.
+          - position: fixed; bottom: 0 → anchored to layout viewport (stable)
+          - transform: translateZ(0) + will-change: transform → GPU layer,
+            prevents iOS Safari from painting the bar at the wrong position
+            during rubber-band scroll
+          - paddingBottom: env(safe-area-inset-bottom) → clears iPhone home bar
+          - No 100vh anywhere — height is intrinsic (content + padding)
+      ──────────────────────────────────────────────────────────────────────── */}
       <nav
-        className="fixed bottom-0 left-0 right-0 z-50 lg:hidden"
+        className="fixed left-0 right-0 z-[9999] lg:hidden"
         style={{
+          bottom: 0,
           paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-          background: 'rgba(10,16,28,0.88)',
+          background: 'rgba(10,16,28,0.92)',
           backdropFilter: 'blur(28px) saturate(180%)',
           WebkitBackdropFilter: 'blur(28px) saturate(180%)',
-          borderTop: '1px solid rgba(255,255,255,0.08)',
-          boxShadow: '0 -1px 0 rgba(255,255,255,0.04)',
+          borderTop: '1px solid rgba(255,255,255,0.09)',
+          boxShadow: '0 -1px 0 rgba(255,255,255,0.04), 0 -8px 32px rgba(0,0,0,0.18)',
+          /* GPU-composite the layer so iOS doesn't repaint during momentum scroll */
+          transform: 'translateZ(0)',
+          WebkitTransform: 'translateZ(0)',
+          willChange: 'transform',
+          /* Prevent backface flicker on some Android Chrome builds */
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden',
         }}
       >
-        <div className="flex items-center justify-around min-h-[56px]">
+        <div className="flex items-stretch justify-around" style={{ minHeight: 56 }}>
 
-          {LEFT_NAV.map((item) => (
+          {NAV_ITEMS.map((item) => (
             <NavItem key={item.href} {...item} />
           ))}
 
-          {/* Center: Analyze — olive accent FAB */}
+          {/* Center: Analyze — olive FAB */}
           <Link
             href="/analyze"
-            className="flex flex-col items-center justify-center gap-0.5 flex-1 min-w-[60px] relative"
-            style={{ minHeight: '56px' }}
+            className="flex flex-col items-center justify-center gap-1 flex-1 active:scale-95 transition-transform"
+            style={{ minHeight: 56, paddingTop: 4, paddingBottom: 6 }}
           >
-            <div className={cn(
-              'w-11 h-11 rounded-full flex items-center justify-center ring-2 ring-[rgba(255,255,255,0.12)] shadow-lg -mt-4',
-              isCenterActive
-                ? 'bg-[#5F790B]'
-                : 'bg-[#4a6009]',
-            )}
-              style={{ boxShadow: '0 4px 16px rgba(95,121,11,0.40)' }}
+            <div
+              className={cn(
+                'w-11 h-11 rounded-full flex items-center justify-center shadow-lg -mt-3',
+                isCenterActive ? 'bg-[#5F790B]' : 'bg-[#4a6009]',
+              )}
+              style={{
+                boxShadow: '0 4px 20px rgba(95,121,11,0.45)',
+                border: '2px solid rgba(255,255,255,0.13)',
+              }}
             >
-              <svg className="w-[18px] h-[18px] text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M16.65 16.65A7.5 7.5 0 114.5 4.5a7.5 7.5 0 0112.15 12.15z" />
-              </svg>
+              <Search
+                className={cn('w-[18px] h-[18px]', isCenterActive ? 'text-white' : 'text-[rgba(255,255,255,0.85)]')}
+                strokeWidth={2.5}
+              />
             </div>
             <span className={cn(
-              'text-[10px] font-medium',
+              'text-[10px] font-[600] leading-none',
               isCenterActive ? 'text-[#7C9A19]' : 'text-[rgba(255,255,255,0.45)]',
             )}>
               Analyze
             </span>
           </Link>
 
-          {RIGHT_NAV.map((item) => (
+          {NAV_ITEMS_RIGHT.map((item) => (
             <NavItem key={item.href} {...item} />
           ))}
 
-          {/* More button */}
-          <button
-            onClick={() => setMoreOpen((v) => !v)}
-            className="flex flex-col items-center justify-center gap-0.5 flex-1 py-2 active:scale-95 transition-transform min-w-[60px]"
-            style={{ minHeight: '56px' }}
-          >
-            <svg
-              className={cn('w-5 h-5', isMoreActive || moreOpen ? 'text-[#7C9A19]' : 'text-[rgba(255,255,255,0.45)]')}
-              fill="none" viewBox="0 0 24 24"
-            >
-              <circle cx="5" cy="12" r="1.5" fill="currentColor" />
-              <circle cx="12" cy="12" r="1.5" fill="currentColor" />
-              <circle cx="19" cy="12" r="1.5" fill="currentColor" />
-            </svg>
-            <span className={cn(
-              'text-[10px] font-medium',
-              isMoreActive || moreOpen ? 'text-[#7C9A19]' : 'text-[rgba(255,255,255,0.45)]',
-            )}>
-              More
-            </span>
-          </button>
         </div>
       </nav>
     </>

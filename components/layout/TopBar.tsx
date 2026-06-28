@@ -100,12 +100,12 @@ function UserAvatar({ image, name }: { image: string | null; name: string | null
 // These mirror the TABS in TabNav but render as compact pill buttons with
 // the same spring animation. Uses StockNavContext for active tab + onChange.
 
-const STOCK_TABS: { id: TabId; label: string; Icon: React.ElementType }[] = [
-  { id: 'overview',   label: 'Overview',        Icon: BarChart2  },
-  { id: 'valuation',  label: 'Valuation',        Icon: DollarSign },
-  { id: 'conviction', label: 'Conviction & Risk', Icon: Award      },
-  { id: 'financials', label: 'Financials', Icon: Table2     },
-  { id: 'news',       label: 'News',       Icon: Newspaper  },
+const STOCK_TABS: { id: TabId; label: string; labelShort: string; Icon: React.ElementType }[] = [
+  { id: 'overview',   label: 'Overview',   labelShort: 'Summary',  Icon: BarChart2  },
+  { id: 'valuation',  label: 'Valuation',  labelShort: 'Value',    Icon: DollarSign },
+  { id: 'conviction', label: 'Conviction', labelShort: 'Lens',     Icon: Award      },
+  { id: 'financials', label: 'Financials', labelShort: 'Finance',  Icon: Table2     },
+  { id: 'news',       label: 'News',       labelShort: 'News',     Icon: Newspaper  },
 ]
 
 function StockTabPills() {
@@ -118,7 +118,7 @@ function StockTabPills() {
 
   return (
     <>
-      {STOCK_TABS.map(({ id, label, Icon }) => {
+      {STOCK_TABS.map(({ id, label, labelShort, Icon }) => {
         const active = activeTab === id
         return (
           <button
@@ -151,7 +151,8 @@ function StockTabPills() {
               className={cn('relative z-10 shrink-0', active ? 'text-[#7CB518]' : 'text-[rgba(255,255,255,0.30)]')}
               aria-hidden="true"
             />
-            {/* sm+: show full label. mobile: icon only — saves ~100px in the tab row */}
+            {/* mobile: short label always visible. sm+: full label */}
+            <span className="relative z-10 sm:hidden">{labelShort}</span>
             <span className="relative z-10 hidden sm:inline">{label}</span>
           </button>
         )

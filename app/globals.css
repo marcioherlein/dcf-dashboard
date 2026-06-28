@@ -48,15 +48,22 @@
     font-family: var(--font-sans, 'Inter'), system-ui, -apple-system, sans-serif;
     scroll-padding-top: 100px;
     scroll-behavior: smooth;
+    min-height: 100%;
+    margin: 0;
+    padding: 0;
   }
   /* Move overflow-x:hidden to body — on html it creates a scroll container on iOS
      that breaks all nested overflow-x:auto tables (fixed position also breaks) */
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
-    overscroll-behavior-y: contain;
+    /* overscroll-behavior-y: none prevents rubber-band bounce exposing gaps behind fixed nav */
+    overscroll-behavior-y: none;
     overflow-x: hidden;
     max-width: 100vw;
+    min-height: 100%;
+    margin: 0;
+    padding: 0;
   }
   /* Anchor scroll offset: compensates for 72px fixed navbar + 16px breathing room */
   #how-it-works,
@@ -672,7 +679,9 @@ h3 {
   .pr-safe         { padding-right: env(safe-area-inset-right, 0px); }
   .h-safe-bottom   { height: env(safe-area-inset-bottom, 0px); }
   .pb-safe-nav {
-    padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+    /* nav bar is 56px content + safe-area-inset-bottom padding inside it.
+       Content must clear: 56px (min-height) + safe-area. */
+    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px) + 8px);
   }
   /* Olive focus ring — WCAG AA compliant */
   .focus-olive:focus-visible {

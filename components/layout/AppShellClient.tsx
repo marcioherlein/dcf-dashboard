@@ -29,7 +29,8 @@ export default function AppShellClient({ children }: { children: React.ReactNode
   return (
     <StockNavProvider>
       <TopBarTabsProvider>
-      <div className="min-h-dvh insic-bg">
+      {/* min-h-dvh uses dynamic viewport height — avoids 100vh gap on iOS Safari */}
+      <div className="min-h-dvh insic-bg" style={{ overflowX: 'hidden' }}>
         <Suspense fallback={<header className="fixed top-0 left-0 right-0 min-h-[52px] pt-safe glass-toolbar border-b z-40" />}>
           <TopBar />
         </Suspense>
