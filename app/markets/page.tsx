@@ -114,7 +114,11 @@ export default function MarketsPage() {
   })
 
   return (
-    <div className="overflow-hidden bg-background" style={{ height: '100dvh' }}>
+    /* h-content-shell = 100dvh minus TopBar (52px + safe-area-top)
+       minus bottom nav on mobile (56px + safe-area-bottom).
+       This div sits inside <main> which already has the top padding applied,
+       so we must NOT add 100dvh here — we use exactly the remaining space. */
+    <div className="h-content-shell overflow-hidden bg-background flex flex-col">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-olive-700 focus:text-white focus:rounded-lg focus:text-sm focus:font-semibold focus:outline-none focus:shadow-lg"
@@ -124,8 +128,7 @@ export default function MarketsPage() {
 
       <div
         id="main-content"
-        className="max-w-[1440px] mx-auto px-4 sm:px-6 pt-3 flex flex-col overflow-hidden"
-        style={{ height: '100dvh', paddingTop: 'calc(12px + env(safe-area-inset-top, 0px))' }}
+        className="flex-1 min-h-0 max-w-[1440px] w-full mx-auto px-4 sm:px-6 pt-2 pb-1 flex flex-col overflow-hidden"
         tabIndex={-1}
       >
 

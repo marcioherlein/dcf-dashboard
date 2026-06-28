@@ -683,6 +683,19 @@ h3 {
        Content must clear: 56px (min-height) + safe-area. */
     padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px) + 8px);
   }
+  /* Fixed-height shell for pages that use viewport-fill no-scroll layout.
+     AppShellInner already applies paddingTop = 52px + safe-area-top, so
+     the content area height = 100dvh - 52px - safe-area-top.
+     On mobile subtract the bottom nav too. */
+  .h-content-shell {
+    height: calc(100dvh - 52px - env(safe-area-inset-top, 0px));
+  }
+  @media (max-width: 1023px) {
+    /* lg breakpoint = 1024px. Below it the bottom nav is visible. */
+    .h-content-shell {
+      height: calc(100dvh - 52px - env(safe-area-inset-top, 0px) - 56px - env(safe-area-inset-bottom, 0px));
+    }
+  }
   /* Olive focus ring — WCAG AA compliant */
   .focus-olive:focus-visible {
     outline: 2px solid rgba(74, 97, 9, 0.55);
