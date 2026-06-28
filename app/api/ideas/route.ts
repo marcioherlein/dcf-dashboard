@@ -18,11 +18,13 @@ export interface IdeaStock {
   sector: string | null
   price: number | null
   analystTarget: number | null
-  upsidePct: number | null          // upside vs analyst target (kept for fallback display)
-  insicFairValue: number | null     // insic DCF intrinsic value per share
-  insicUpsidePct: number | null     // upside vs insic DCF fair value
+  upsidePct: number | null
+  insicFairValue: number | null
+  insicUpsidePct: number | null
   convictionBand: 'A' | 'B' | 'C' | 'D' | null
   epsRevision: { direction: 'up' | 'flat' | 'down'; magnitude: number } | null
+  insiderSentiment: { sentiment: 'net_buyer' | 'net_seller' | 'neutral'; buyCount: number; sellCount: number } | null
+  sectorContext: { medianFwdPE: number | null; stockFwdPE: number | null; pctVsMedianFwdPE: number | null } | null
   narrativeHook: string | null
   impliedCAGR: number | null
   historicalCagr3y: number | null
@@ -35,6 +37,7 @@ export interface IdeaStock {
 export type SignalId =
   | 'insic_dcf'
   | 'estimate_upgrades'
+  | 'insider_buying'
   | 'undervalued'
   | 'priced_for_perfection'
   | 'contrarian'
@@ -59,16 +62,31 @@ const IDEAS_UNIVERSE = [
   'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'NVDA', 'TSLA', 'BRK-B', 'JPM', 'V',
   'UNH', 'JNJ', 'WMT', 'MA', 'HD', 'PG', 'MRK', 'KO', 'PEP', 'CVX',
   'LLY', 'ABBV', 'ORCL', 'BAC', 'XOM', 'COST', 'NFLX', 'CRM', 'ADBE', 'AMD',
-  // Large cap
+  // Large cap tech
   'INTC', 'QCOM', 'TXN', 'IBM', 'NOW', 'UBER', 'SPOT', 'SQ', 'PYPL', 'SNAP',
-  'LYFT', 'ZM', 'DOCU', 'SHOP', 'MDB', 'SNOW', 'PLTR', 'HOOD', 'COIN', 'RBLX',
-  'ABNB', 'DASH', 'RIVN', 'LCID', 'NIO', 'BIDU', 'BABA', 'JD', 'PDD', 'TSM',
-  'ASML', 'SAP', 'TM', 'SONY', 'BHP', 'RIO', 'VALE', 'FCX', 'NEM', 'GS',
-  'MS', 'C', 'WFC', 'AXP', 'BLK', 'SCHW', 'MCD', 'SBUX', 'YUM', 'CMG',
-  'DIS', 'CMCSA', 'T', 'VZ', 'TMUS', 'CHTR', 'ATVI', 'EA', 'TTWO', 'RKLB',
-  // Dividend / value
-  'PFE', 'MO', 'PM', 'BTI', 'ENB', 'EPD', 'ET', 'WPC', 'O', 'VICI',
-  'SPG', 'PLD', 'AMT', 'CCI', 'SBAC', 'DLR', 'EQIX', 'PSA', 'EXR', 'AVB',
+  'ZM', 'DOCU', 'SHOP', 'MDB', 'SNOW', 'PLTR', 'COIN', 'RBLX',
+  'ABNB', 'DASH', 'TSM', 'ASML', 'SAP',
+  // Tech additions
+  'AMAT', 'MU', 'DELL', 'ACN', 'INTU', 'PANW', 'CRWD', 'NET', 'WDAY', 'DDOG',
+  // International
+  'TM', 'SONY', 'BHP', 'RIO', 'VALE', 'FCX', 'NEM', 'BIDU', 'BABA', 'JD', 'PDD',
+  // Financial
+  'GS', 'MS', 'C', 'WFC', 'AXP', 'BLK', 'SCHW', 'CB', 'SPGI', 'ICE', 'COF', 'PNC', 'MMC',
+  // Consumer
+  'MCD', 'SBUX', 'YUM', 'CMG', 'NKE', 'TGT', 'LOW', 'TJX', 'BKNG', 'MAR', 'HLT', 'LULU', 'F', 'GM',
+  // Healthcare
+  'ABT', 'BSX', 'SYK', 'MDT', 'ISRG', 'REGN', 'VRTX', 'GILD', 'CVS', 'PFE', 'AMGN', 'CI',
+  // Industrials
+  'CAT', 'DE', 'HON', 'UPS', 'FDX', 'CSX', 'UNP', 'GE', 'RTX', 'LMT', 'MMM',
+  // Media / Telecom
+  'DIS', 'CMCSA', 'T', 'VZ', 'TMUS', 'CHTR', 'EA', 'TTWO',
+  // Energy
+  'SLB', 'EOG', 'MPC', 'ENB', 'EPD', 'ET',
+  // Materials
+  'LIN', 'APD', 'DOW',
+  // Dividend / REIT
+  'MO', 'PM', 'BTI', 'WPC', 'O', 'VICI',
+  'SPG', 'PLD', 'AMT', 'CCI', 'DLR', 'EQIX', 'PSA', 'EXR',
 ]
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -101,9 +119,7 @@ function getAnalystTarget(targetMeanPrice: number | null, price: number): number
   return null
 }
 
-// ─── Lightweight DCF per stock ────────────────────────────────────────────────
-// Skips FMP enrichment and 5Y regression — uses Yahoo's beta as fallback.
-// Result is directionally correct (±15% vs full model). Null on failure.
+// ─── Lightweight DCF ─────────────────────────────────────────────────────────
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function computeLightweightDCF(s: any, q: any, rfRate: number): number | null {
@@ -113,41 +129,28 @@ function computeLightweightDCF(s: any, q: any, rfRate: number): number | null {
     const price: number = q?.regularMarketPrice ?? 0
     if (!price || price <= 0) return null
 
-    // Country risk
     const country: string | null = (fd.summaryProfile?.country ?? s?.summaryProfile?.country ?? null) as string | null
     const crp = getCRPByCountry(country, 'USD')
-
-    // Beta — Yahoo's value, fallback to 1.0
     const beta: number = (ks.beta as number | null) ?? 1.0
 
-    // WACC
     const waccInputs = extractWACCInputs(s, rfRate, beta, 1, crp)
     const waccResult = calculateWACC(waccInputs)
 
-    // FCF + CAGR
     const { baseFCF, cagr, isNegativeFCF } = extractFCFInputs(s, false)
-
-    // Terminal growth
     const terminalGBase = cagr > 0.15 ? 0.025 : cagr > 0.05 ? 0.020 : 0.015
     const terminalG = crp > 0.02
       ? Math.min(Math.max(terminalGBase, rfRate + 0.02), 0.07)
       : terminalGBase
-
     const growthModel = (cagr > 0.15 || isNegativeFCF) ? 'three-stage' as const : 'two-stage' as const
     const dcfResult = projectCashFlows({ baseFCF, cagr, wacc: waccResult.wacc, terminalG, growthModel })
 
-    // Balance sheet — mirrors financials/route.ts extraction
     const bs = s?.balanceSheetHistory?.balanceSheetStatements?.[0] ?? {}
     const marketCapM = (q.marketCap ?? 0) / 1e6
 
     const cashRaw: number = (
-      bs.cash
-      ?? bs.cashAndCashEquivalents
-      ?? bs.cashAndShortTermInvestments
-      ?? bs.cashCashEquivalentsAndShortTermInvestments
-      ?? bs.cashAndCashEquivalentsAtCarryingValue
-      ?? fd.totalCash
-      ?? 0
+      bs.cash ?? bs.cashAndCashEquivalents ?? bs.cashAndShortTermInvestments
+      ?? bs.cashCashEquivalentsAndShortTermInvestments ?? bs.cashAndCashEquivalentsAtCarryingValue
+      ?? fd.totalCash ?? 0
     ) as number
     const cashM = cashRaw / 1e6
 
@@ -163,15 +166,12 @@ function computeLightweightDCF(s: any, q: any, rfRate: number): number | null {
       : ((bs.totalDebt ?? bs.longTermDebt ?? bs.longTermDebtAndCapitalLeaseObligation ?? fd.totalDebt ?? 0) as number) / 1e6
     const debtM = marketCapM > 0 ? Math.min(rawDebtM, marketCapM * 3) : rawDebtM
 
-    // Shares: derive from market cap / price (handles ADR share count discrepancies)
     const sharesM = (q.marketCap as number) > 0 && price > 0
       ? (q.marketCap as number) / price / 1e6
       : ((ks.sharesOutstanding ?? 0) as number) / 1e6
 
     const fvResult = calculateFairValue(dcfResult, cashM, debtM, sharesM, price)
     const fv = fvResult.fairValuePerShare
-
-    // Sanity guards: reject implausible outputs
     if (fv == null || fv <= 0 || fv > price * 15 || isNaN(fv)) return null
     return Math.round(fv * 100) / 100
   } catch {
@@ -179,18 +179,17 @@ function computeLightweightDCF(s: any, q: any, rfRate: number): number | null {
   }
 }
 
-// ─── EPS revision momentum ────────────────────────────────────────────────────
-// Mirrors logic in app/api/financials/route.ts lines 1665–1677
+// ─── EPS revision ─────────────────────────────────────────────────────────────
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function extractEpsRevision(s: any): IdeaStock['epsRevision'] {
   try {
-    const etTrends: unknown[] = (s?.earningsTrend?.trend ?? []) as unknown[]
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const trend1y = (etTrends as any[]).find((t: any) => t?.period === '+1y')
+    const etTrends: any[] = s?.earningsTrend?.trend ?? []
+    const trend1y = etTrends.find((t: any) => t?.period === '+1y')
     if (!trend1y) return null
-    const currentAvg: number | null = (trend1y.earningsEstimate?.avg ?? null) as number | null
-    const ninetyDaysAgo: number | null = (trend1y.earningsEstimate?.['90daysAgo'] ?? null) as number | null
+    const currentAvg: number | null = trend1y.earningsEstimate?.avg ?? null
+    const ninetyDaysAgo: number | null = trend1y.earningsEstimate?.['90daysAgo'] ?? null
     if (currentAvg == null || ninetyDaysAgo == null || Math.abs(ninetyDaysAgo) < 0.001) return null
     const magnitude = (currentAvg - ninetyDaysAgo) / Math.abs(ninetyDaysAgo)
     const direction: 'up' | 'flat' | 'down' = Math.abs(magnitude) < 0.02 ? 'flat' : magnitude > 0 ? 'up' : 'down'
@@ -200,14 +199,67 @@ function extractEpsRevision(s: any): IdeaStock['epsRevision'] {
   }
 }
 
+// ─── Insider sentiment ────────────────────────────────────────────────────────
+// Uses Yahoo's insiderTransactions module — same source as /api/stock/insiders.
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function extractInsiderSentiment(s: any): IdeaStock['insiderSentiment'] {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const txns: any[] = s?.insiderTransactions?.transactions ?? []
+    if (!Array.isArray(txns) || txns.length === 0) return null
+
+    const cutoff = new Date()
+    cutoff.setDate(cutoff.getDate() - 90)
+
+    let buyCount = 0, sellCount = 0
+    for (const t of txns) {
+      const dateStr: string = t.startDate?.fmt ?? t.startDate ?? ''
+      if (!dateStr || new Date(dateStr) < cutoff) continue
+      const desc = (t.transactionDescription ?? '').toLowerCase()
+      if (desc.includes('purchase') || desc.includes(' buy')) buyCount++
+      else if (desc.includes('sale') || desc.includes('sell')) sellCount++
+    }
+
+    if (buyCount === 0 && sellCount === 0) return null
+    const sentiment: 'net_buyer' | 'net_seller' | 'neutral' =
+      buyCount > sellCount * 1.5 ? 'net_buyer'
+      : sellCount > buyCount * 1.5 ? 'net_seller'
+      : 'neutral'
+    return { sentiment, buyCount, sellCount }
+  } catch {
+    return null
+  }
+}
+
+// ─── Sector median forward P/E ────────────────────────────────────────────────
+
+function computeSectorMedians(stocks: Array<{ sector: string | null; fwdPE: number | null }>): Map<string, number> {
+  const byS = new Map<string, number[]>()
+  for (const s of stocks) {
+    if (!s.sector || s.fwdPE == null || s.fwdPE <= 0 || s.fwdPE > 200) continue
+    if (!byS.has(s.sector)) byS.set(s.sector, [])
+    byS.get(s.sector)!.push(s.fwdPE)
+  }
+  const medians = new Map<string, number>()
+  Array.from(byS.entries()).forEach(([sector, pes]) => {
+    if (pes.length < 3) return
+    const sorted = [...pes].sort((a, b) => a - b)
+    const mid = Math.floor(sorted.length / 2)
+    const median = sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid]
+    medians.set(sector, Math.round(median * 10) / 10)
+  })
+  return medians
+}
+
 // ─── Quick conviction band ────────────────────────────────────────────────────
-// Lightweight proxy — no Piotroski/Altman/Beneish needed.
 
 function quickConvictionBand(
   insicUpsidePct: number | null,
   analystRating: number | null,
   epsDir: 'up' | 'flat' | 'down' | null,
   pctFrom52WHigh: number | null,
+  insiderSentiment: IdeaStock['insiderSentiment'],
 ): IdeaStock['convictionBand'] {
   let score = 0
   if (insicUpsidePct != null) {
@@ -224,6 +276,8 @@ function quickConvictionBand(
   if (epsDir === 'up') score += 1
   else if (epsDir === 'down') score -= 1
   if (pctFrom52WHigh != null && pctFrom52WHigh < -30) score += 1
+  if (insiderSentiment?.sentiment === 'net_buyer') score += 1
+  else if (insiderSentiment?.sentiment === 'net_seller') score -= 1
 
   if (score >= 5) return 'A'
   if (score >= 3) return 'B'
@@ -232,11 +286,19 @@ function quickConvictionBand(
 }
 
 // ─── Narrative hooks ──────────────────────────────────────────────────────────
-// Template-based — no LLM, no network calls. Numbers substituted from IdeaStock.
 
 function buildNarrativeHook(stock: IdeaStock, signalId: SignalId): string | null {
-  const fmt = (v: number) => v >= 0 ? `+${v.toFixed(1)}%` : `${v.toFixed(1)}%`
   const fmtAbs = (v: number) => `${Math.abs(v).toFixed(0)}%`
+  const fmt = (v: number) => v >= 0 ? `+${v.toFixed(1)}%` : `${v.toFixed(1)}%`
+
+  // Sector context snippet reused by multiple signals
+  const sectorSnippet = (() => {
+    const sc = stock.sectorContext
+    if (sc?.pctVsMedianFwdPE == null || Math.abs(sc.pctVsMedianFwdPE) < 0.10) return ''
+    const dir = sc.pctVsMedianFwdPE < 0 ? 'cheaper' : 'pricier'
+    const pct = fmtAbs(sc.pctVsMedianFwdPE * 100)
+    return ` ${pct} ${dir} than ${stock.sector ?? 'sector'} median P/E.`
+  })()
 
   switch (signalId) {
     case 'insic_dcf': {
@@ -248,7 +310,7 @@ function buildNarrativeHook(stock: IdeaStock, signalId: SignalId): string | null
         : rev?.direction === 'down'
         ? ` Analysts cut EPS estimates ${fmtAbs(rev.magnitude * 100)} recently.`
         : ''
-      return `Trading ${up} below insic's intrinsic value estimate.${revPart}`
+      return `Trading ${up} below insic's intrinsic value estimate.${revPart}${sectorSnippet}`
     }
     case 'estimate_upgrades': {
       if (stock.epsRevision == null) return null
@@ -256,17 +318,26 @@ function buildNarrativeHook(stock: IdeaStock, signalId: SignalId): string | null
       const dcfPart = stock.insicUpsidePct != null
         ? ` Stock still ${fmtAbs(stock.insicUpsidePct * 100)} below insic fair value.`
         : ''
-      return `EPS estimates revised up ${revUp} over 90 days.${dcfPart}`
+      return `EPS estimates revised up ${revUp} over 90 days.${dcfPart}${sectorSnippet}`
+    }
+    case 'insider_buying': {
+      const ins = stock.insiderSentiment
+      if (ins == null) return null
+      const buys = ins.buyCount === 1 ? '1 insider purchase' : `${ins.buyCount} insider purchases`
+      const dcfPart = stock.insicUpsidePct != null
+        ? ` Stock trades ${fmtAbs(stock.insicUpsidePct * 100)} below insic fair value.`
+        : ''
+      return `${buys} in the last 90 days.${dcfPart}${sectorSnippet}`
     }
     case 'undervalued': {
       const primary = stock.insicUpsidePct ?? stock.upsidePct
       if (primary == null) return null
       const source = stock.insicUpsidePct != null ? 'insic DCF' : 'analyst consensus'
-      return `${fmtAbs(primary * 100)} upside vs ${source} target price.`
+      return `${fmtAbs(primary * 100)} upside vs ${source}.${sectorSnippet}`
     }
     case 'contrarian': {
       if (stock.impliedCAGR == null || stock.historicalCagr3y == null) return null
-      return `Market pricing in ${stock.impliedCAGR.toFixed(0)}% EPS growth — revenue grew ${stock.historicalCagr3y.toFixed(0)}% last year.`
+      return `Market pricing in ${stock.impliedCAGR.toFixed(0)}% EPS growth — revenue grew ${stock.historicalCagr3y.toFixed(0)}% last year.${sectorSnippet}`
     }
     case 'priced_for_perfection': {
       if (stock.impliedCAGR == null) return null
@@ -280,7 +351,7 @@ function buildNarrativeHook(stock: IdeaStock, signalId: SignalId): string | null
         : stock.analystTarget != null
         ? ` Analyst target: $${stock.analystTarget.toFixed(2)}.`
         : ''
-      return `${downStr} from 52-week high.${targetPart}`
+      return `${downStr} from 52-week high.${targetPart}${sectorSnippet}`
     }
     case 'high_conviction': {
       if (stock.analystRating == null) return null
@@ -288,7 +359,7 @@ function buildNarrativeHook(stock: IdeaStock, signalId: SignalId): string | null
       const dcfPart = stock.insicFairValue != null
         ? ` insic fair value: $${stock.insicFairValue.toFixed(2)}.`
         : ''
-      return `Analyst consensus: ${ratingLabel}.${dcfPart}`
+      return `Analyst consensus: ${ratingLabel}.${dcfPart}${sectorSnippet}`
     }
     default:
       return null
@@ -302,8 +373,6 @@ async function buildIdeas(): Promise<IdeasResponse> {
   if (_cache && now - _cache.ts < CACHE_TTL) return _cache.data
 
   const metaMap = new Map(SCREENER_UNIVERSE.map(t => [t.ticker, t]))
-
-  // Fetch rfRate once — shared across all DCF computations
   const rfRate = await getRfRate()
 
   // Batch quote fetch
@@ -326,7 +395,7 @@ async function buildIdeas(): Promise<IdeasResponse> {
     } catch { /* skip batch */ }
   }
 
-  // Enriched fundamentals — includes DCF-required modules
+  // Enriched fundamentals — DCF modules + insider transactions
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const summaryMap = new Map<string, any>()
   for (let i = 0; i < IDEAS_UNIVERSE.length; i += 10) {
@@ -341,6 +410,7 @@ async function buildIdeas(): Promise<IdeasResponse> {
             'balanceSheetHistory',
             'incomeStatementHistory',
             'earningsTrend',
+            'insiderTransactions',
           ],
         }, { validateResult: false })
         summaryMap.set(ticker, s)
@@ -348,19 +418,20 @@ async function buildIdeas(): Promise<IdeasResponse> {
     }))
   }
 
-  // Assemble IdeaStock records
-  const stocks: IdeaStock[] = []
+  // ─── Pass 1: assemble stocks (sectorContext added in pass 2) ─────────────
+
+  // Temp storage for sector median computation
+  const stocksWithFwdPE: Array<IdeaStock & { _fwdPE: number | null }> = []
+
   for (const ticker of IDEAS_UNIVERSE) {
     const q = quoteMap.get(ticker)
     if (!q) continue
-
     const price = q.regularMarketPrice ?? null
     if (!price || price <= 0) continue
 
     const meta = metaMap.get(ticker)
     const s = summaryMap.get(ticker)
     const fd = s?.financialData ?? null
-    const ks = s?.defaultKeyStatistics ?? null
 
     const high52 = q.fiftyTwoWeekHigh ?? null
     const pctFrom52WHigh = (high52 != null && high52 > 0) ? ((price / high52) - 1) * 100 : null
@@ -373,28 +444,27 @@ async function buildIdeas(): Promise<IdeasResponse> {
     const analystRating = fd?.recommendationMean ?? null
     const revenueGrowthPct = revenueGrowth != null ? revenueGrowth * 100 : null
 
-    const impliedCAGR = estimateImpliedCAGR(epsForward, epsTTM, revenueGrowth, epsGrowth)
+    const impliedCAGR  = estimateImpliedCAGR(epsForward, epsTTM, revenueGrowth, epsGrowth)
     const analystTarget = getAnalystTarget(targetPrice, price)
-    const upsidePct = (analystTarget != null && price > 0) ? (analystTarget / price) - 1 : null
-    const expectation = impliedCAGR != null ? classifyExpectation(impliedCAGR, revenueGrowthPct) : null
+    const upsidePct    = (analystTarget != null && price > 0) ? (analystTarget / price) - 1 : null
+    const expectation  = impliedCAGR != null ? classifyExpectation(impliedCAGR, revenueGrowthPct) : null
 
-    // Lightweight DCF
-    const insicFairValue = s ? computeLightweightDCF(s, q, rfRate) : null
-    const insicUpsidePct = (insicFairValue != null && price > 0) ? (insicFairValue / price) - 1 : null
+    const insicFairValue   = s ? computeLightweightDCF(s, q, rfRate) : null
+    const insicUpsidePct   = (insicFairValue != null && price > 0) ? (insicFairValue / price) - 1 : null
+    const epsRevision      = s ? extractEpsRevision(s) : null
+    const insiderSentiment = s ? extractInsiderSentiment(s) : null
+    const fwdPE: number | null = (q.forwardPE != null && q.forwardPE > 0 && q.forwardPE < 200) ? q.forwardPE : null
 
-    // EPS revision momentum
-    const epsRevision = s ? extractEpsRevision(s) : null
+    const convictionBand = quickConvictionBand(
+      insicUpsidePct, analystRating, epsRevision?.direction ?? null, pctFrom52WHigh, insiderSentiment
+    )
 
-    // Quick conviction band
-    const convictionBand = quickConvictionBand(insicUpsidePct, analystRating, epsRevision?.direction ?? null, pctFrom52WHigh)
+    const sector = meta?.sector ?? null
 
-    // Beta for informational note only — not used here (used inside computeLightweightDCF)
-    void ks
-
-    stocks.push({
+    stocksWithFwdPE.push({
       ticker,
       name: q.longName ?? q.shortName ?? meta?.name ?? ticker,
-      sector: meta?.sector ?? null,
+      sector,
       price,
       analystTarget,
       upsidePct,
@@ -402,104 +472,104 @@ async function buildIdeas(): Promise<IdeasResponse> {
       insicUpsidePct,
       convictionBand,
       epsRevision,
-      narrativeHook: null, // assigned per-signal below
+      insiderSentiment,
+      sectorContext: null, // filled in pass 2
+      narrativeHook: null,
       impliedCAGR,
       historicalCagr3y: revenueGrowthPct,
       expectation,
       marketCap: q.marketCap ?? null,
       pctFrom52WHigh,
       analystRating,
+      _fwdPE: fwdPE,
     })
   }
 
+  // ─── Pass 2: add sector context ───────────────────────────────────────────
+
+  const sectorMedians = computeSectorMedians(
+    stocksWithFwdPE.map(s => ({ sector: s.sector, fwdPE: s._fwdPE }))
+  )
+
+  const stocks: IdeaStock[] = stocksWithFwdPE.map(s => {
+    const medianFwdPE   = s.sector ? sectorMedians.get(s.sector) ?? null : null
+    const stockFwdPE    = s._fwdPE
+    const pctVsMedianFwdPE = (stockFwdPE != null && medianFwdPE != null)
+      ? (stockFwdPE - medianFwdPE) / medianFwdPE
+      : null
+    const { _fwdPE: _unused, ...rest } = s
+    void _unused
+    return { ...rest, sectorContext: { medianFwdPE, stockFwdPE, pctVsMedianFwdPE } }
+  })
+
   // ─── Build signals ────────────────────────────────────────────────────────
 
-  // Sort helpers
   const byInsicUpside = (arr: IdeaStock[]) =>
     arr.sort((a, b) => (b.insicUpsidePct ?? b.upsidePct ?? -99) - (a.insicUpsidePct ?? a.upsidePct ?? -99))
   const byAnalystUpside = (arr: IdeaStock[]) =>
     arr.sort((a, b) => (b.upsidePct ?? -99) - (a.upsidePct ?? -99))
 
-  // Helper: assign narrative hooks to a bucket
   const withHooks = (arr: IdeaStock[], signalId: SignalId): IdeaStock[] =>
     arr.map(s => ({ ...s, narrativeHook: buildNarrativeHook(s, signalId) }))
 
-  // 1. insic DCF Discount — stocks most undervalued by insic's own model
   const insic_dcf = withHooks(
-    byInsicUpside(
-      stocks.filter(s => s.insicUpsidePct != null && s.insicUpsidePct > 0.20)
-    ).slice(0, 9),
+    byInsicUpside(stocks.filter(s => s.insicUpsidePct != null && s.insicUpsidePct > 0.20)).slice(0, 9),
     'insic_dcf'
   )
 
-  // 2. Estimate Upgrades — EPS revised up AND DCF discount
   const estimate_upgrades = withHooks(
-    byInsicUpside(
-      stocks.filter(s =>
-        s.epsRevision?.direction === 'up' &&
-        s.insicUpsidePct != null && s.insicUpsidePct > 0.10
-      )
-    ).slice(0, 9),
+    byInsicUpside(stocks.filter(s =>
+      s.epsRevision?.direction === 'up' && s.insicUpsidePct != null && s.insicUpsidePct > 0.10
+    )).slice(0, 9),
     'estimate_upgrades'
   )
 
-  // 3. Most Undervalued (now using insic DCF upside primarily, analyst target fallback)
+  // Insider buying: net buyer in 90 days AND DCF discount exists
+  const insider_buying = withHooks(
+    byInsicUpside(stocks.filter(s =>
+      s.insiderSentiment?.sentiment === 'net_buyer' &&
+      (s.insicUpsidePct != null ? s.insicUpsidePct > 0 : s.upsidePct != null && s.upsidePct > 0)
+    )).slice(0, 9),
+    'insider_buying'
+  )
+
   const undervalued = withHooks(
-    byInsicUpside(
-      stocks.filter(s => {
-        const upside = s.insicUpsidePct ?? s.upsidePct
-        return upside != null && upside > 0.20 &&
-          (s.analystRating == null || s.analystRating <= 3.5)
-      })
-    ).slice(0, 9),
+    byInsicUpside(stocks.filter(s => {
+      const upside = s.insicUpsidePct ?? s.upsidePct
+      return upside != null && upside > 0.20 && (s.analystRating == null || s.analystRating <= 3.5)
+    })).slice(0, 9),
     'undervalued'
   )
 
-  // 4. Priced for Perfection
   const priced_for_perfection = withHooks(
-    stocks
-      .filter(s => s.impliedCAGR != null && s.impliedCAGR >= 25)
-      .sort((a, b) => (b.impliedCAGR ?? 0) - (a.impliedCAGR ?? 0))
-      .slice(0, 9),
+    stocks.filter(s => s.impliedCAGR != null && s.impliedCAGR >= 25)
+      .sort((a, b) => (b.impliedCAGR ?? 0) - (a.impliedCAGR ?? 0)).slice(0, 9),
     'priced_for_perfection'
   )
 
-  // 5. Contrarian
   const contrarian = withHooks(
-    stocks
-      .filter(s =>
-        s.impliedCAGR != null && s.historicalCagr3y != null &&
-        s.impliedCAGR < s.historicalCagr3y * 0.60 &&
-        s.historicalCagr3y > 5
-      )
-      .sort((a, b) => {
-        const diffA = (a.historicalCagr3y ?? 0) - (a.impliedCAGR ?? 0)
-        const diffB = (b.historicalCagr3y ?? 0) - (b.impliedCAGR ?? 0)
-        return diffB - diffA
-      })
-      .slice(0, 9),
+    stocks.filter(s =>
+      s.impliedCAGR != null && s.historicalCagr3y != null &&
+      s.impliedCAGR < s.historicalCagr3y * 0.60 && s.historicalCagr3y > 5
+    ).sort((a, b) =>
+      ((b.historicalCagr3y ?? 0) - (b.impliedCAGR ?? 0)) - ((a.historicalCagr3y ?? 0) - (a.impliedCAGR ?? 0))
+    ).slice(0, 9),
     'contrarian'
   )
 
-  // 6. Near 52-Week Low
   const near_52w_low = withHooks(
-    byAnalystUpside(
-      stocks.filter(s =>
-        s.pctFrom52WHigh != null && s.pctFrom52WHigh < -25 &&
-        (s.insicUpsidePct != null ? s.insicUpsidePct > 0 : s.upsidePct != null && s.upsidePct > 0)
-      )
-    ).slice(0, 9),
+    byAnalystUpside(stocks.filter(s =>
+      s.pctFrom52WHigh != null && s.pctFrom52WHigh < -25 &&
+      (s.insicUpsidePct != null ? s.insicUpsidePct > 0 : s.upsidePct != null && s.upsidePct > 0)
+    )).slice(0, 9),
     'near_52w_low'
   )
 
-  // 7. High Conviction
   const high_conviction = withHooks(
-    byInsicUpside(
-      stocks.filter(s =>
-        s.analystRating != null && s.analystRating <= 2.2 &&
-        (s.insicUpsidePct != null ? s.insicUpsidePct > 0.10 : s.upsidePct != null && s.upsidePct > 0.10)
-      )
-    ).slice(0, 9),
+    byInsicUpside(stocks.filter(s =>
+      s.analystRating != null && s.analystRating <= 2.2 &&
+      (s.insicUpsidePct != null ? s.insicUpsidePct > 0.10 : s.upsidePct != null && s.upsidePct > 0.10)
+    )).slice(0, 9),
     'high_conviction'
   )
 
@@ -507,6 +577,7 @@ async function buildIdeas(): Promise<IdeasResponse> {
     signals: {
       insic_dcf,
       estimate_upgrades,
+      insider_buying,
       undervalued,
       priced_for_perfection,
       contrarian,
