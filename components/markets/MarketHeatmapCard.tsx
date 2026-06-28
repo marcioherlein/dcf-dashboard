@@ -68,7 +68,7 @@ export default function MarketHeatmapCard({ sectors }: Props) {
   const range = TF_RANGE[tf]
 
   return (
-    <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm [overflow:clip] h-full">
+    <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm [overflow:clip] h-full flex flex-col">
       <div className="px-4 py-2.5 border-b border-[#E5E5E5] flex items-center justify-between gap-2">
         <div>
           <span className="text-[10px] font-bold text-[#6B6B6B]">Sector Heatmap</span>
@@ -92,7 +92,7 @@ export default function MarketHeatmapCard({ sectors }: Props) {
         </div>
       </div>
 
-      <div className={cn('p-3 transition-opacity', loading ? 'opacity-50' : '')}>
+      <div className={cn('p-3 transition-opacity flex-1 min-h-0 overflow-y-auto', loading ? 'opacity-50' : '')}>
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
           {sorted.map(s => {
             const changePct = tf === '1D' ? s.changePct : (histData[s.symbol] ?? null)

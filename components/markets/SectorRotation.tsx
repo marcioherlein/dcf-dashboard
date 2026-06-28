@@ -34,14 +34,14 @@ export default function SectorRotation({ sectors }: Props) {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm overflow-hidden h-full">
-      <div className="px-4 py-2.5 border-b border-[#E5E5E5]">
+    <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm overflow-hidden h-full flex flex-col">
+      <div className="px-4 py-2.5 border-b border-[#E5E5E5] shrink-0">
         <span className="text-[11px] font-bold text-[#6B6B6B]">Sector Rotation</span>
         <p className="text-[11px] text-[#6B6B6B] mt-0.5">Relative strength score vs S&P 500 — last 40 trading days</p>
       </div>
-      <div className="px-4 py-3 grid grid-cols-1 xl:grid-cols-[1fr_auto] gap-4">
+      <div className="px-4 py-3 grid grid-cols-1 xl:grid-cols-[1fr_auto] gap-4 flex-1 min-h-0">
         {/* Chart */}
-        <div style={{ height: 'clamp(180px, 28vw, 220px)' }}>
+        <div className="flex-1 min-h-0">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data} layout="vertical" margin={{ top: 0, right: 36, left: 4, bottom: 0 }}>
               <XAxis type="number" tick={{ fontSize: 9, fill: '#6B6B6B' }} tickFormatter={v => `${v}`} axisLine={false} tickLine={false} />
@@ -100,7 +100,7 @@ export default function SectorRotation({ sectors }: Props) {
           </div>
         </div>
       </div>
-      <div className="px-4 pb-3 border-t border-[#E5E5E5] pt-2">
+      <div className="px-4 pb-3 border-t border-[#E5E5E5] pt-2 shrink-0">
         <p className="text-[11px] text-[#6B6B6B]">RS score = relative outperformance ratio vs S&P 500. Not a % return.</p>
       </div>
     </div>

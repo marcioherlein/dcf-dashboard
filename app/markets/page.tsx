@@ -1,6 +1,5 @@
 'use client'
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
-import { useReducedMotion } from 'motion/react'
 
 import IndexSnapshotGrid     from '@/components/markets/IndexSnapshotGrid'
 import MarketPulse           from '@/components/markets/MarketPulse'
@@ -47,19 +46,6 @@ function getMarketStatus(): { label: string; tone: MarketStatusTone } {
   if (et >= 570  && et < 960)  return { label: '● Market Open', tone: 'green' }
   if (et >= 960  && et < 1200) return { label: 'After Hours',   tone: 'blue'  }
   return { label: 'Market Closed', tone: 'gray' }
-}
-
-// Lightweight section label — replaces the heavy SectionHeader with subtitle
-function SectionLabel({ children }: { children: string }) {
-  const reduced = useReducedMotion()
-  return (
-    <p
-      className="text-[11px] font-[700] uppercase tracking-[0.06em] text-[#9B9B9B] mb-2"
-      style={reduced ? {} : undefined}
-    >
-      {children}
-    </p>
-  )
 }
 
 export default function MarketsPage() {
@@ -128,17 +114,24 @@ export default function MarketsPage() {
   })
 
   return (
-    <div className="min-h-dvh bg-background">
+    <div className="overflow-hidden bg-background" style={{ height: '100dvh' }}>
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-olive-700 focus:text-white focus:rounded-lg focus:text-sm focus:font-semibold focus:outline-none focus:shadow-lg"
       >
         Skip to content
       </a>
-      <div id="main-content" className="max-w-[1440px] mx-auto px-4 sm:px-6 pt-3 pb-8 sm:pt-4" tabIndex={-1}>
 
+      <div
+        id="main-content"
+        className="max-w-[1440px] mx-auto px-4 sm:px-6 pt-3 flex flex-col overflow-hidden"
+        style={{ height: '100dvh', paddingTop: 'calc(12px + env(safe-area-inset-top, 0px))' }}
+        tabIndex={-1}
+      >
+
+        {/* ── Error banner ── */}
         {err && (
-          <div className="rounded-xl border border-[#F0B8B8] bg-[#FCEAEA] px-4 py-3 text-[12px] text-[#D83B3B] flex items-center justify-between mb-3">
+          <div className="shrink-0 rounded-xl border border-[#F0B8B8] bg-[#FCEAEA] px-4 py-3 text-[12px] text-[#D83B3B] flex items-center justify-between mb-2">
             <span>Market data could not be loaded.</span>
             <button onClick={() => fetchAll()} className="font-semibold text-[11px] hover:underline ml-4 min-h-[44px]">
               Retry
@@ -147,7 +140,7 @@ export default function MarketsPage() {
         )}
 
         {/* ── Persistent: Index snapshot strip ── */}
-        <div className="mb-3">
+        <div className="shrink-0 mb-2">
           {mkt ? (
             <IndexSnapshotGrid spx={spx} ndx={ndx} dji={dji} vix={vix} tnx={tnx} dxy={dxy} vwo={vwo} vgk={vgk} mchi={mchi} botz={botz} marketStatus={status} />
           ) : (
@@ -156,116 +149,123 @@ export default function MarketsPage() {
         </div>
 
         {/* ── Tab navigation — mobile only (desktop tabs in TopBar) ── */}
-        <div className="flex items-center w-full lg:hidden mb-3">
+        <div className="shrink-0 flex items-center w-full lg:hidden mb-2">
           <MarketsTabNav active={activeTab} onChange={setActiveTab} />
         </div>
 
-        {/* ── Tab panels ── */}
-        <div className="space-y-4">
+        {/* ── Tab panels container — fixed height, all tabs always mounted ── */}
+        <div className="flex-1 min-h-0 overflow-hidden">
 
           {/* ── OVERVIEW ── */}
-          {activeTab === 'overview' && (
-            <div id="markets-panel-overview" role="tabpanel" aria-labelledby="markets-tab-overview" className="space-y-4">
-
-              {/* Row 1: Pulse + Performance Chart + Top Movers — tight 3-col */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch">
-                <div className="lg:col-span-3 flex flex-col">
-                  {ctx ? <MarketPulse pulse={ctx.pulse} /> : <Sk h="h-[240px]" />}
-                </div>
-                <div className="lg:col-span-6 flex flex-col">
-                  <NormalizedPerfChart />
-                </div>
-                <div className="lg:col-span-3 flex flex-col">
-                  <TopMoversCard />
-                </div>
+          <div
+            id="markets-panel-overview"
+            role="tabpanel"
+            aria-labelledby="markets-tab-overview"
+            className={`h-full overflow-hidden flex flex-col${activeTab !== 'overview' ? ' hidden' : ''}`}
+          >
+            {/* Row 1 (flex-1): 3-col grid — MarketPulse | NormalizedPerfChart | TopMoversCard */}
+            <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-3 overflow-hidden">
+              <div className="lg:col-span-3 h-full min-h-0 overflow-hidden">
+                {ctx ? <MarketPulse pulse={ctx.pulse} /> : <Sk h="h-full" />}
               </div>
-
-              {/* Row 2: Rates, Currencies & Commodities */}
-              {mkt && (mkt.fixedIncome.length > 0 || mkt.currencies.length > 0 || mkt.commodities.length > 0) && (
-                <div>
-                  <SectionLabel>Rates, Currencies &amp; Commodities</SectionLabel>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    {mkt.fixedIncome.length > 0 && (
-                      <PriceTable title="Fixed Income" items={mkt.fixedIncome} />
-                    )}
-                    {mkt.currencies.length > 0 && (
-                      <PriceTable title="Currencies" items={mkt.currencies} priceDecimals={4} />
-                    )}
-                    {mkt.commodities.length > 0 && (
-                      <PriceTable title="Commodities" items={mkt.commodities} />
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Row 3: Stocks by Sector */}
-              <div>
-                <SectionLabel>Stocks by Sector</SectionLabel>
-                <SectorStocksCard />
+              <div className="lg:col-span-6 h-full min-h-0 overflow-hidden">
+                <NormalizedPerfChart />
               </div>
-
+              <div className="lg:col-span-3 h-full min-h-0 overflow-hidden">
+                <TopMoversCard />
+              </div>
             </div>
-          )}
+
+            {/* Row 2 (shrink-0): MacroSignals compact strip */}
+            <div className="shrink-0 mt-2">
+              {ctx ? <MacroSignals signals={ctx.signals} /> : <Sk h="h-[72px]" />}
+            </div>
+          </div>
 
           {/* ── SECTORS ── */}
-          {activeTab === 'sectors' && (
-            <div id="markets-panel-sectors" role="tabpanel" aria-labelledby="markets-tab-sectors" className="space-y-4">
-
-              {/* Heatmap + Rotation — primary view */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
-                <div className="lg:col-span-7">
-                  {mkt ? <MarketHeatmapCard sectors={mkt.sectors} /> : <Sk h="h-[300px]" />}
+          <div
+            id="markets-panel-sectors"
+            role="tabpanel"
+            aria-labelledby="markets-tab-sectors"
+            className={`h-full overflow-hidden flex flex-col${activeTab !== 'sectors' ? ' hidden' : ''}`}
+          >
+            {/* Main 2-col grid */}
+            <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-3 overflow-hidden">
+              {/* Left: Heatmap */}
+              <div className="lg:col-span-7 h-full min-h-0 overflow-hidden">
+                {mkt ? <MarketHeatmapCard sectors={mkt.sectors} /> : <Sk h="h-full" />}
+              </div>
+              {/* Right: Rotation (top) + Sector Stocks (bottom) + Performance (bottom) stacked */}
+              <div className="lg:col-span-5 h-full min-h-0 flex flex-col gap-3 overflow-hidden">
+                <div className="flex-1 min-h-0 overflow-hidden">
+                  {ctx ? <SectorRotation sectors={ctx.sectors} /> : <Sk h="h-full" />}
                 </div>
-                <div className="lg:col-span-5">
-                  {ctx ? <SectorRotation sectors={ctx.sectors} /> : <Sk h="h-[300px]" />}
+                <div className="flex-1 min-h-0 overflow-hidden">
+                  {mkt ? <SectorPerformanceCard sectors={mkt.sectors} /> : <Sk h="h-full" />}
+                </div>
+                <div className="flex-1 min-h-0 overflow-hidden">
+                  <SectorStocksCard />
                 </div>
               </div>
-
-              {/* Daily ranked bar chart */}
-              <div>
-                <SectionLabel>Daily Performance</SectionLabel>
-                {mkt ? <SectorPerformanceCard sectors={mkt.sectors} /> : <Sk h="h-48" />}
-              </div>
-
-              {/* Macro Signals — moved here from overview, not on every tab */}
-              <div>
-                <SectionLabel>Macro Signals</SectionLabel>
-                {ctx ? <MacroSignals signals={ctx.signals} /> : <Sk h="h-48" />}
-              </div>
-
             </div>
-          )}
+          </div>
 
           {/* ── NEWS ── */}
-          {activeTab === 'news' && (
-            <div id="markets-panel-news" role="tabpanel" aria-labelledby="markets-tab-news">
-              {!mkt ? (
-                <Sk h="h-48" />
-              ) : newsErr ? (
-                <div className="rounded-xl border border-[#E3E1DA] bg-[#FAFAFA] px-5 py-8 text-center">
-                  <p className="text-[13px] text-[#6B6B6B]">Market news could not be loaded. Try refreshing.</p>
-                </div>
-              ) : mkt.news.length > 0 ? (
+          <div
+            id="markets-panel-news"
+            role="tabpanel"
+            aria-labelledby="markets-tab-news"
+            className={`h-full overflow-hidden flex flex-col${activeTab !== 'news' ? ' hidden' : ''}`}
+          >
+            {!mkt ? (
+              <Sk h="h-48" />
+            ) : newsErr ? (
+              <div className="rounded-xl border border-[#E3E1DA] bg-[#FAFAFA] px-5 py-8 text-center">
+                <p className="text-[13px] text-[#6B6B6B]">Market news could not be loaded. Try refreshing.</p>
+              </div>
+            ) : mkt.news.length > 0 ? (
+              <div className="flex-1 min-h-0 overflow-y-auto">
                 <MarketNewsSection news={mkt.news} />
+              </div>
+            ) : (
+              <div className="rounded-xl border border-[#E3E1DA] bg-[#FAFAFA] px-5 py-8 text-center">
+                <p className="text-[13px] text-[#6B6B6B]">No market news available right now.</p>
+              </div>
+            )}
+          </div>
+
+          {/* ── CALENDAR ── */}
+          <div
+            id="markets-panel-calendar"
+            role="tabpanel"
+            aria-labelledby="markets-tab-calendar"
+            className={`h-full overflow-hidden${activeTab !== 'calendar' ? ' hidden' : ''}`}
+          >
+            <CalendarTab />
+          </div>
+
+          {/* ── VALUATION ── */}
+          <div
+            id="markets-panel-valuation"
+            role="tabpanel"
+            aria-labelledby="markets-tab-valuation"
+            className={`h-full overflow-hidden flex flex-col lg:flex-row gap-3${activeTab !== 'valuation' ? ' hidden' : ''}`}
+          >
+            {/* Left col: YieldCurveChart fills height */}
+            <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+              {!mkt ? (
+                <Sk h="h-full" />
+              ) : mkt.yieldCurve.length > 0 ? (
+                <YieldCurveChart points={mkt.yieldCurve} />
               ) : (
-                <div className="rounded-xl border border-[#E3E1DA] bg-[#FAFAFA] px-5 py-8 text-center">
-                  <p className="text-[13px] text-[#6B6B6B]">No market news available right now.</p>
+                <div className="rounded-xl border border-[#E3E1DA] bg-[#FAFAFA] px-5 py-4">
+                  <p className="text-[13px] text-[#6B6B6B]">Yield curve data unavailable.</p>
                 </div>
               )}
             </div>
-          )}
 
-          {/* ── CALENDAR ── */}
-          {activeTab === 'calendar' && (
-            <div id="markets-panel-calendar" role="tabpanel" aria-labelledby="markets-tab-calendar">
-              <CalendarTab />
-            </div>
-          )}
-
-          {/* ── VALUATION CONTEXT ── */}
-          {activeTab === 'valuation' && (
-            <div id="markets-panel-valuation" role="tabpanel" aria-labelledby="markets-tab-valuation" className="space-y-4">
-
+            {/* Right col: ValuationContext + HY Spread + PriceTables — scrollable */}
+            <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-3">
               {ctx ? <ValuationContext valuation={ctx.valuation} /> : <Sk h="h-56" />}
 
               {/* HY Credit Spread */}
@@ -302,32 +302,34 @@ export default function MarketsPage() {
                 )
               })()}
 
-              {/* Yield Curve */}
-              {!mkt ? (
-                <Sk h="h-32" />
-              ) : mkt.yieldCurve.length > 0 ? (
-                <YieldCurveChart points={mkt.yieldCurve} />
-              ) : (
-                <div className="rounded-xl border border-[#E3E1DA] bg-[#FAFAFA] px-5 py-4">
-                  <p className="text-[13px] text-[#6B6B6B]">Yield curve data unavailable.</p>
+              {/* Rates, Currencies & Commodities PriceTables */}
+              {mkt && (mkt.fixedIncome.length > 0 || mkt.currencies.length > 0 || mkt.commodities.length > 0) && (
+                <div className="flex flex-col gap-3">
+                  {mkt.fixedIncome.length > 0 && (
+                    <PriceTable title="Fixed Income" items={mkt.fixedIncome} />
+                  )}
+                  {mkt.currencies.length > 0 && (
+                    <PriceTable title="Currencies" items={mkt.currencies} priceDecimals={4} />
+                  )}
+                  {mkt.commodities.length > 0 && (
+                    <PriceTable title="Commodities" items={mkt.commodities} />
+                  )}
                 </div>
               )}
 
+              {/* Footer — inside scrollable right col */}
+              <div className="mt-auto pt-4 flex items-center justify-between flex-wrap gap-2 shrink-0">
+                <p className="text-[11px] text-[#9B9B9B] leading-snug">
+                  Past performance is not indicative of future results. For informational purposes only.
+                </p>
+                {lastFetch > 0 && (
+                  <p className="text-[11px] text-[#9B9B9B] shrink-0 tabular-nums">{etTime} ET</p>
+                )}
+              </div>
             </div>
-          )}
+          </div>
 
         </div>
-
-        {/* ── Footer ── */}
-        <div className="mt-6 flex items-center justify-between flex-wrap gap-2">
-          <p className="text-[11px] text-[#9B9B9B] leading-snug">
-            Past performance is not indicative of future results. For informational purposes only.
-          </p>
-          {lastFetch > 0 && (
-            <p className="text-[11px] text-[#9B9B9B] shrink-0 tabular-nums">{etTime} ET</p>
-          )}
-        </div>
-
       </div>
     </div>
   )

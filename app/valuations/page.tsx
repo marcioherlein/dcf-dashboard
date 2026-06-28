@@ -1,6 +1,4 @@
 'use client'
-import { useRouter } from 'next/navigation'
-
 import { useState, useEffect, useCallback, useMemo, useRef, useId } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import { useSetTopBarTabs } from '@/contexts/TopBarTabsContext'
@@ -9,7 +7,7 @@ import { useSession } from 'next-auth/react'
 import {
   Bookmark, TrendingUp, CheckCircle, Clock,
   List, LayoutGrid, Search, ChevronDown, SlidersHorizontal,
-  ChevronLeft, ChevronRight,
+  ChevronLeft, ChevronRight, Download,
 } from 'lucide-react'
 import { loadWatchlist, saveWatchlistEntry, deleteWatchlistEntry } from '@/lib/simplifier/watchlistStore'
 import type { WatchlistEntry, ListTag } from '@/lib/simplifier/types'
@@ -191,31 +189,8 @@ function SegmentTabs({ active, counts, onSelect }: {
   )
 }
 
-// ── Filter Select ──────────────────────────────────────────────────────────────
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function FilterSelect({ label, value, options, onChange }: {
-  label:    string
-  value:    string
-  options:  Array<{ value: string; label: string }>
-  onChange: (v: string) => void
-}) {
-  return (
-    <div className="relative">
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="appearance-none pl-3 pr-7 py-2 text-[12px] font-semibold text-[#6B6B6B] bg-white border border-[#DDE6F2] rounded-xl cursor-pointer hover:border-[#93B4F5] focus:outline-none focus:border-[#5F790B] transition-colors min-h-[44px]"
-        style={{ fontSize: '16px' }}
-      >
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>{label}: {o.label}</option>
-        ))}
-      </select>
-      <ChevronDown size={11} className="absolute right-2 top-1/2 -translate-y-1/2 text-[#9B9B9B] pointer-events-none" />
-    </div>
-  )
-}
+// ── Filter Select (replaced by chips) ─────────────────────────────────────────
+// (removed — replaced by visible filter chip buttons in toolbar)
 
 // ── Sort Dropdown ──────────────────────────────────────────────────────────────
 
@@ -546,36 +521,7 @@ function Pagination({ total, page, pageSize, onPage, onPageSize }: {
 }
 
 // ── Login Wall ─────────────────────────────────────────────────────────────────
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function _LoginWall() {
-  return (
-    <div className="min-h-dvh bg-background flex items-center justify-center px-4">
-      <div className="w-full max-w-md bg-white border border-[#E5E5E5] rounded-xl shadow-sm p-8 text-center">
-        <div className="mx-auto mb-5 w-14 h-14 rounded-xl bg-olive-100 border border-olive-100 flex items-center justify-center">
-          <Bookmark size={24} className="text-olive-700" />
-        </div>
-        <h1 className="text-[22px] font-bold text-[#111111] tracking-tight">Watchlist</h1>
-        <p className="mt-2 text-[14px] text-[#6B6B6B] leading-relaxed max-w-xs mx-auto">
-          Your saved stocks are private. Sign in to access your personal workspace.
-        </p>
-        <Link
-          href="/auth/sign-in?callbackUrl=/valuations"
-          className="mt-6 w-full flex items-center justify-center gap-3 rounded-xl bg-olive-700 hover:bg-olive-600 text-white py-3 px-4 text-[14px] font-semibold transition-colors"
-        >
-          <svg className="h-5 w-5" viewBox="0 0 24 24">
-            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#fff" fillOpacity=".9"/>
-            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#fff" fillOpacity=".8"/>
-            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#fff" fillOpacity=".7"/>
-            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#fff" fillOpacity=".85"/>
-          </svg>
-          Continue with Google
-        </Link>
-        <p className="mt-4 text-[12px] text-[#9B9B9B]">Free forever · No credit card required</p>
-      </div>
-    </div>
-  )
-}
+// (removed dead code — login redirect handled inline in page wrapper)
 
 // ── Page content (authenticated only) ─────────────────────────────────────────
 
@@ -602,6 +548,9 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
   const [pageSize,          setPageSize]          = useState(10)
   const [pendingGroups,     setPendingGroups]     = useState<string[]>([])
   const [selectedCols,      setSelectedCols]      = useState<SortKey[]>(() => loadSavedCols())
+  const [refreshing,        setRefreshing]        = useState<Set<string>>(new Set())
+  const [selectedTickers,   setSelectedTickers]   = useState<Set<string>>(new Set())
+  const [viewPreset,        setViewPreset]        = useState<'valuation'|'quality'|'risk'|'market'>('valuation')
   // Load data
   useEffect(() => {
     setLoading(true)
@@ -653,15 +602,15 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
   }, [userEmail])
 
   // KPI calculations
-  const _kpi = useMemo(() => {
+  const kpi = useMemo(() => {
     const tracked    = entries.length
     const withUpside = entries.filter((e) => e.snapshot.upsidePct != null)
     const avgUpside  = withUpside.length > 0
       ? withUpside.reduce((s, e) => s + (e.snapshot.upsidePct ?? 0), 0) / withUpside.length
       : null
     const undervalued = entries.filter((e) => (e.snapshot.upsidePct ?? 0) >= 0.20).length
-    const needsReview = entries.filter((e) => e.snapshot.fairValue == null || e.snapshot.upsidePct == null).length
-    return { tracked, avgUpside, undervalued, needsReview }
+    const stale       = entries.filter((e) => daysSince(e.updatedAt) > 30).length
+    return { tracked, avgUpside, undervalued, stale }
   }, [entries])
 
   // Tab counts
@@ -729,6 +678,57 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
     await saveWatchlistEntry(updated, userEmail)
   }, [entries, userEmail])
 
+  const handleRefresh = useCallback(async (ticker: string) => {
+    setRefreshing(prev => new Set(prev).add(ticker))
+    try {
+      const [priceRes] = await Promise.all([
+        fetch(`/api/quotes?tickers=${encodeURIComponent(ticker)}`).then(r => r.json()).catch(() => null),
+      ])
+      const livePrice = priceRes?.quotes?.[ticker]?.price ?? null
+      setEntries(prev => prev.map(e => {
+        if (e.ticker !== ticker) return e
+        const fv = e.snapshot.fairValue
+        const price = livePrice ?? e.snapshot.price
+        const upsidePct = fv != null && price != null && price > 0 ? (fv - price) / price : e.snapshot.upsidePct
+        const updated = {
+          ...e,
+          updatedAt: new Date().toISOString(),
+          snapshot: { ...e.snapshot, price: livePrice ?? e.snapshot.price, upsidePct, metricsUpdatedAt: new Date().toISOString() }
+        }
+        saveWatchlistEntry(updated, userEmail).catch(() => {})
+        return updated
+      }))
+      if (livePrice != null) setLivePrices(prev => ({ ...prev, [ticker]: livePrice }))
+    } catch { /* ignore */ } finally {
+      setRefreshing(prev => { const s = new Set(prev); s.delete(ticker); return s })
+    }
+  }, [userEmail])
+
+  const handleExport = useCallback(() => {
+    const rows = [
+      ['Ticker','Company','Fair Value','Price (saved)','Upside %','Verdict','Confidence','Bear','Base','Bull','Updated','Note'],
+      ...displayEntries.map(e => {
+        const upside = e.snapshot.upsidePct
+        const verdict = upside == null ? 'Needs Review' : upside >= 0.2 ? 'Undervalued' : upside >= 0 ? 'Fairly Valued' : 'Overvalued'
+        return [
+          e.ticker, e.companyName,
+          e.snapshot.fairValue ?? '', e.snapshot.price ?? '',
+          upside != null ? ((upside*100).toFixed(1)+'%') : '',
+          verdict,
+          e.overallScore != null ? (e.overallScore*100).toFixed(0)+'%' : '',
+          e.snapshot.bearScenario ?? '', e.snapshot.baseScenario ?? '', e.snapshot.bullScenario ?? '',
+          e.updatedAt.slice(0,10),
+          (e.notes?.['__thesis__'] ?? '').replace(/,/g,'').replace(/\n/g,' '),
+        ]
+      })
+    ]
+    const csv = rows.map(r => r.join(',')).join('\n')
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }))
+    a.download = 'insic-valuations.csv'
+    a.click()
+  }, [displayEntries])
+
   const handleSort = (key: SortKey, dir?: 'asc' | 'desc') => {
     if (dir) { setSortKey(key); setSortDir(dir) }
     else {
@@ -754,7 +754,15 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
 
       {/* Content */}
       {!loading && entries.length > 0 && (
-        <div className="space-y-5">
+        <div className="space-y-4">
+
+          {/* KPI bar */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <KpiCard icon={Bookmark}    iconCls="bg-[#EAF1FF] text-[#2563EB]" label="Tracked"      value={kpi.tracked}    sub="companies" />
+            <KpiCard icon={TrendingUp}  iconCls="bg-[#E8F7EF] text-[#11875D]" label="Avg Upside"   value={kpi.avgUpside != null ? (kpi.avgUpside >= 0 ? '+' : '') + (kpi.avgUpside * 100).toFixed(1) + '%' : '—'} sub="across all" />
+            <KpiCard icon={CheckCircle} iconCls="bg-[#E8F7EF] text-[#11875D]" label="Undervalued"  value={kpi.undervalued} sub="companies" />
+            <KpiCard icon={Clock}       iconCls="bg-[#FFF4DA] text-[#B56A00]" label="Stale (30d+)" value={kpi.stale}      sub="need refresh" />
+          </div>
 
           {/* Toolbar */}
           <div className="bg-white border border-[#E5E5E5] rounded-xl overflow-hidden shadow-sm">
@@ -766,7 +774,7 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
               </div>
             </div>
 
-            {/* Search + Sort + View toggle + Clear */}
+            {/* Search + Sort + View toggle + Export + Clear */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-4 py-3 border-t border-[#EDF2F7]">
               <div className="relative flex-1 min-w-0 sm:min-w-[180px] sm:max-w-xs">
                 <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9B9B9B] pointer-events-none" />
@@ -787,12 +795,30 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
                   </button>
                 )}
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <SortDropdown current={sortKey} dir={sortDir} onSort={handleSort} />
-                {view === 'table' && (
+                {/* View presets — desktop only */}
+                <div className="hidden lg:flex items-center gap-0.5 bg-[#F5F5F5] rounded-lg p-0.5">
+                  {(['valuation','quality','risk','market'] as const).map(p => (
+                    <button key={p} onClick={() => setViewPreset(p)}
+                      className={cn('px-2.5 py-1 rounded-md text-[11px] font-[650] capitalize transition-colors min-h-[32px]',
+                        viewPreset === p ? 'bg-white text-[#111111] shadow-sm' : 'text-[#9B9B9B] hover:text-[#6B6B6B]'
+                      )}>{p}</button>
+                  ))}
+                </div>
+                {view === 'table' && viewPreset === 'valuation' && (
                   <ColumnPicker selected={selectedCols} onChange={setSelectedCols} />
                 )}
-                {/* View toggle — co-located with other content controls */}
+                {/* Export CSV */}
+                <button
+                  onClick={handleExport}
+                  title="Export to CSV"
+                  aria-label="Export to CSV"
+                  className="p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center border border-[#DDE6F2] text-[#6B6B6B] hover:border-[#5F790B] hover:text-[#5F790B] bg-white"
+                >
+                  <Download size={15} />
+                </button>
+                {/* View toggle */}
                 <div className="flex items-center gap-0.5 p-0.5 bg-[#F5F5F5] rounded-xl shrink-0">
                   <button
                     onClick={() => setView('table')}
@@ -824,7 +850,63 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
                 )}
               </div>
             </div>
+
+            {/* Filter chips */}
+            <div className="flex items-center gap-1.5 px-4 pb-3 flex-wrap">
+              {([
+                { value: 'all',         label: 'All' },
+                { value: 'undervalued', label: 'Undervalued' },
+                { value: 'fair',        label: 'Fairly Valued' },
+                { value: 'overvalued',  label: 'Overvalued' },
+              ] as const).map(opt => {
+                const cnt = opt.value === 'all' ? entries.length
+                  : opt.value === 'undervalued' ? entries.filter(e => (e.snapshot.upsidePct ?? 0) >= 0.20).length
+                  : opt.value === 'fair' ? entries.filter(e => { const u = e.snapshot.upsidePct ?? null; return u != null && u >= 0 && u < 0.20 }).length
+                  : entries.filter(e => (e.snapshot.upsidePct ?? 0) < 0).length
+                return (
+                  <button
+                    key={opt.value}
+                    onClick={() => setFilterUpside(opt.value)}
+                    className={cn(
+                      'inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-[11px] font-[650] transition-colors min-h-[32px]',
+                      filterUpside === opt.value
+                        ? 'bg-[#5F790B] border-[#5F790B] text-white'
+                        : 'bg-white border-[#E5E5E5] text-[#6B6B6B] hover:border-[#5F790B] hover:text-[#5F790B]'
+                    )}
+                  >
+                    {opt.label}
+                    {cnt > 0 && <span className={cn('text-[10px] font-[700] tabular-nums', filterUpside === opt.value ? 'opacity-75' : 'opacity-50')}>{cnt}</span>}
+                  </button>
+                )
+              })}
+            </div>
           </div>
+
+          {/* Bulk action bar */}
+          {selectedTickers.size > 0 && (
+            <div className="flex items-center gap-3 px-4 py-3 bg-[#EAF1FF] border border-[#93B4F5] rounded-xl">
+              <span className="text-[12px] font-semibold text-[#2563EB]">{selectedTickers.size} selected</span>
+              <div className="flex items-center gap-2 ml-auto flex-wrap">
+                {(['buy','watch','pass'] as const).map(tag => (
+                  <button key={tag} onClick={async () => {
+                    for (const ticker of Array.from(selectedTickers)) await handleTagUpdate(ticker, tag)
+                    setSelectedTickers(new Set())
+                  }} className="px-2.5 py-1 rounded-lg border border-[#93B4F5] text-[11px] font-semibold text-[#2563EB] hover:bg-[#2563EB] hover:text-white transition-colors min-h-[32px]">
+                    {tag === 'buy' ? 'High Conviction' : tag === 'watch' ? 'Watch' : 'Avoid'}
+                  </button>
+                ))}
+                <button onClick={() => {
+                  if (confirm(`Delete ${selectedTickers.size} entries?`)) {
+                    Array.from(selectedTickers).forEach(t => handleDelete(t))
+                    setSelectedTickers(new Set())
+                  }
+                }} className="px-2.5 py-1 rounded-lg border border-[#F0B8B8] text-[11px] font-semibold text-[#D83B3B] hover:bg-[#D83B3B] hover:text-white transition-colors min-h-[32px]">
+                  Delete
+                </button>
+                <button onClick={() => setSelectedTickers(new Set())} className="text-[11px] text-[#6B6B6B] hover:text-[#111111] min-h-[32px] px-1">Cancel</button>
+              </div>
+            </div>
+          )}
 
           {/* Table or Grid */}
           {view === 'table' ? (
@@ -841,6 +923,11 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
               onGroupUpdate={handleGroupUpdate}
               onNoteSave={handleNoteSave}
               selectedCols={selectedCols}
+              onRefresh={handleRefresh}
+              refreshing={refreshing}
+              selectedTickers={selectedTickers}
+              onSelectionChange={setSelectedTickers}
+              viewPreset={viewPreset}
             />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -872,7 +959,6 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
 // ── Auth-gating wrapper ────────────────────────────────────────────────────────
 
 export default function ValuationsPage() {
-  const _router = useRouter()
   const { data: session, status } = useSession()
 
   if (status === 'loading') {

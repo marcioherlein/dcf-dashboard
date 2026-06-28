@@ -76,12 +76,13 @@ export default function ValuationContext({ valuation }: Props) {
   const takeaway  = computeTakeaway(spyForwardPE, erp)
 
   return (
-    <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm overflow-hidden">
-      <div className="px-4 py-2.5 border-b border-[#E5E5E5]">
+    <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm overflow-hidden h-full flex flex-col">
+      <div className="px-4 py-2.5 border-b border-[#E5E5E5] shrink-0">
         <span className="text-[10px] font-bold text-[#6B6B6B]">Valuation Context</span>
         <p className="text-[10px] text-[#6B6B6B] mt-0.5">How current market prices compare to historical ranges — and what it means for your DCF.</p>
       </div>
 
+      <div className="flex-1 min-h-0 overflow-y-auto">
       {/* Two panels side by side */}
       <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-[#E3E1DA]">
 
@@ -184,6 +185,7 @@ export default function ValuationContext({ valuation }: Props) {
           </p>
         </div>
       )}
+      </div>
     </div>
   )
 }

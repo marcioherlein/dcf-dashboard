@@ -41,7 +41,7 @@ export default function YieldCurveChart({ points }: Props) {
   const fillColor = inverted ? 'rgba(216,59,59,0.08)' : 'rgba(37,99,235,0.06)'
 
   return (
-    <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm overflow-hidden">
+    <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm overflow-hidden h-full flex flex-col">
       <div className="px-4 py-2.5 border-b border-[#E5E5E5] flex items-center justify-between gap-2">
         <div>
           <span className="text-[10px] font-bold text-[#6B6B6B]">US Treasury Yield Curve</span>
@@ -58,7 +58,7 @@ export default function YieldCurveChart({ points }: Props) {
         )}
       </div>
 
-      <div className="px-4 pt-3 pb-2">
+      <div className="px-4 pt-3 pb-2 flex-1 min-h-0 flex flex-col justify-center">
         {/* SVG chart */}
         <svg
           viewBox={`0 0 ${W} ${H}`}

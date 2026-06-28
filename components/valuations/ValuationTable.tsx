@@ -176,18 +176,23 @@ export function ColumnPicker({
 
 
 export interface ValuationTableProps {
-  entries:        WatchlistEntry[]
-  sparklines:     Record<string, number[] | null>
-  livePrices?:    Record<string, number | null>
-  groups:         string[]
-  sortKey:        SortKey
-  sortDir:        'asc' | 'desc'
-  onSort:         (key: SortKey) => void
-  onDelete:       (ticker: string) => void
-  onTagUpdate:    (ticker: string, tag: ListTag) => void
-  onGroupUpdate:  (ticker: string, groupName: string | null) => void
-  onNoteSave:     (ticker: string, note: string) => Promise<void>
-  selectedCols?:  SortKey[]
+  entries:           WatchlistEntry[]
+  sparklines:        Record<string, number[] | null>
+  livePrices?:       Record<string, number | null>
+  groups:            string[]
+  sortKey:           SortKey
+  sortDir:           'asc' | 'desc'
+  onSort:            (key: SortKey) => void
+  onDelete:          (ticker: string) => void
+  onTagUpdate:       (ticker: string, tag: ListTag) => void
+  onGroupUpdate:     (ticker: string, groupName: string | null) => void
+  onNoteSave:        (ticker: string, note: string) => Promise<void>
+  selectedCols?:     SortKey[]
+  onRefresh?:        (ticker: string) => Promise<void>
+  refreshing?:       Set<string>
+  selectedTickers?:  Set<string>
+  onSelectionChange?: (tickers: Set<string>) => void
+  viewPreset?:       'valuation' | 'quality' | 'risk' | 'market'
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -557,7 +562,7 @@ function CompanyLogo({ ticker }: { ticker: string }) {
 
 // ── Mobile Row (Koyfin-style compact row with tap-to-expand) ──────────────────
 
-function MobileValuationRow({ entry, sparklines, onDelete, onTagUpdate, onGroupUpdate, onNoteSave, groups, selectedCols }: {
+function MobileValuationRow({ entry, sparklines, onDelete, onTagUpdate, onGroupUpdate, onNoteSave, groups, selectedCols, onRefresh, refreshing }: {
   entry:         WatchlistEntry
   sparklines:    Record<string, number[] | null>
   groups:        string[]
@@ -566,6 +571,8 @@ function MobileValuationRow({ entry, sparklines, onDelete, onTagUpdate, onGroupU
   onTagUpdate:   (tag: ListTag) => void
   onGroupUpdate: (groupName: string | null) => void
   onNoteSave:    (ticker: string, note: string) => Promise<void>
+  onRefresh?:    (ticker: string) => Promise<void>
+  refreshing?:   Set<string>
 }) {
   const [expanded, setExpanded] = useState(false)
   const prices     = sparklines[entry.ticker]
@@ -706,6 +713,20 @@ function MobileValuationRow({ entry, sparklines, onDelete, onTagUpdate, onGroupU
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
             </Link>
+            {onRefresh && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onRefresh(entry.ticker) }}
+                disabled={refreshing?.has(entry.ticker)}
+                aria-label="Refresh analysis"
+                title="Refresh live data"
+                className="p-1.5 rounded-lg text-[#9B9B9B] hover:text-[#5F790B] hover:bg-[#F0F4E8] transition-colors disabled:opacity-40"
+              >
+                {refreshing?.has(entry.ticker)
+                  ? <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                  : <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                }
+              </button>
+            )}
             <ActionsMenu
               entry={entry}
               groups={groups}
@@ -722,31 +743,6 @@ function MobileValuationRow({ entry, sparklines, onDelete, onTagUpdate, onGroupU
         </div>
       </div>
     </div>
-  )
-}
-
-// ── Mobile Valuation Card (legacy — kept for reference, replaced by Row) ───────
-
-function _MobileValuationCard({ entry, sparklines, onDelete, onTagUpdate, onGroupUpdate, onNoteSave, groups }: {
-  entry:         WatchlistEntry
-  sparklines:    Record<string, number[] | null>
-  groups:        string[]
-  onDelete:      () => void
-  onTagUpdate:   (tag: ListTag) => void
-  onGroupUpdate: (groupName: string | null) => void
-  onNoteSave:    (ticker: string, note: string) => Promise<void>
-}) {
-  return (
-    <MobileValuationRow
-      entry={entry}
-      sparklines={sparklines}
-      groups={groups}
-      onDelete={onDelete}
-      onTagUpdate={onTagUpdate}
-      onGroupUpdate={onGroupUpdate}
-      onNoteSave={onNoteSave}
-      selectedCols={[]}
-    />
   )
 }
 
@@ -795,11 +791,32 @@ function NoteEditorMobile({ entry, onNoteSave }: {
   )
 }
 
+// ── MoS heatmap helper ─────────────────────────────────────────────────────────
+
+function mosCls(upside: number | null): string {
+  if (upside == null) return 'bg-transparent text-[#C0C0C0]'
+  if (upside >= 0.30)  return 'bg-[#C6F0D9] text-[#0A6640]'
+  if (upside >= 0.15)  return 'bg-[#E8F7EF] text-[#11875D]'
+  if (upside >= 0)     return 'bg-[#F5FFF8] text-[#198754]'
+  if (upside >= -0.15) return 'bg-[#FFF4DA] text-[#B56A00]'
+  if (upside >= -0.30) return 'bg-[#FCEAEA] text-[#D83B3B]'
+  return 'bg-[#F5C2C2] text-[#991B1B]'
+}
+
+// ── Preset column map ─────────────────────────────────────────────────────────
+
+const PRESET_COLS: Record<string, SortKey[]> = {
+  valuation: [],
+  quality:   ['peRatio','pegRatio','evToEbitda','piotroski'],
+  risk:      ['bearScenario','baseScenario','bullScenario'],
+  market:    ['return1y','return3y','dividendYield'],
+}
+
 // ── Main Table ─────────────────────────────────────────────────────────────────
 
-export function ValuationTable({ entries, sparklines, livePrices = {}, groups, sortKey, sortDir, onSort, onDelete, onTagUpdate, onGroupUpdate, onNoteSave, selectedCols = [] }: ValuationTableProps) {
+export function ValuationTable({ entries, sparklines, livePrices = {}, groups, sortKey, sortDir, onSort, onDelete, onTagUpdate, onGroupUpdate, onNoteSave, selectedCols = [], onRefresh, refreshing, selectedTickers, onSelectionChange, viewPreset }: ValuationTableProps) {
   const [expandedTicker, setExpandedTicker] = useState<string | null>(null)
-  const activeCols = OPTIONAL_COLUMNS.filter(c => selectedCols.includes(c.id))
+  const activeCols = OPTIONAL_COLUMNS.filter(c => (viewPreset ? PRESET_COLS[viewPreset] : selectedCols ?? []).includes(c.id))
 
   const handleSort = (key: SortKey) => { onSort(key) }
 
@@ -839,6 +856,8 @@ export function ValuationTable({ entries, sparklines, livePrices = {}, groups, s
     setExpandedTicker((prev) => (prev === ticker ? null : ticker))
   }
 
+  const paginatedTickers = sorted.map(e => e.ticker)
+
   if (entries.length === 0) {
     return (
       <div className="bg-white border border-[#E5E5E5] rounded-xl p-8 text-center">
@@ -858,7 +877,14 @@ export function ValuationTable({ entries, sparklines, livePrices = {}, groups, s
               <tr className="bg-[#F8F8F8] border-b border-[#E5E5E5]">
                 {/* Checkbox column */}
                 <th className="w-8 px-2 py-2">
-                  <input type="checkbox" className="w-3 h-3 rounded accent-[#5F790B]" />
+                  <input type="checkbox"
+                    className="w-3 h-3 rounded accent-[#5F790B]"
+                    checked={selectedTickers != null && paginatedTickers.length > 0 && paginatedTickers.every(t => selectedTickers.has(t))}
+                    onChange={(e) => {
+                      if (!onSelectionChange) return
+                      onSelectionChange(e.target.checked ? new Set(paginatedTickers) : new Set())
+                    }}
+                  />
                 </th>
                 {/* Expand column */}
                 <th className="w-8 px-2 py-2" />
@@ -867,6 +893,7 @@ export function ValuationTable({ entries, sparklines, livePrices = {}, groups, s
                 <th className="px-3 py-2 text-[10px] font-semibold text-[#6B6B6B] text-center whitespace-nowrap">1M</th>
                 <Th label="Price"      sortKey="price"        current={sortKey} dir={sortDir} onSort={handleSort} />
                 <Th label="Fair Value" sortKey="fairValue"    current={sortKey} dir={sortDir} onSort={handleSort} />
+                <th className="px-3 py-2 text-[10px] font-semibold text-[#6B6B6B] text-right whitespace-nowrap">MoS</th>
                 <Th label="Upside"     sortKey="upsidePct"    current={sortKey} dir={sortDir} onSort={handleSort} />
                 <th className="px-3 py-2 text-[10px] font-semibold text-[#6B6B6B] text-right whitespace-nowrap">Verdict</th>
                 <Th label="Confidence" sortKey="overallScore" current={sortKey} dir={sortDir} onSort={handleSort} />
@@ -920,23 +947,37 @@ export function ValuationTable({ entries, sparklines, livePrices = {}, groups, s
                     >
                       {/* Checkbox */}
                       <td className="w-8 px-2 py-2">
-                        <input type="checkbox" className="w-3 h-3 rounded accent-[#5F790B]" />
+                        <input type="checkbox"
+                          className="w-3 h-3 rounded accent-[#5F790B]"
+                          checked={selectedTickers?.has(entry.ticker) ?? false}
+                          onChange={(e) => {
+                            if (!onSelectionChange || !selectedTickers) return
+                            const next = new Set(selectedTickers)
+                            e.target.checked ? next.add(entry.ticker) : next.delete(entry.ticker)
+                            onSelectionChange(next)
+                          }}
+                        />
                       </td>
 
                       {/* Expand chevron */}
                       <td className="px-2 py-2 w-8">
-                        <button
-                          onClick={() => toggleExpand(entry.ticker)}
-                          aria-label={isExpanded ? 'Collapse row' : 'Expand row'}
-                          className="text-[#9B9B9B] hover:text-[#2563EB] transition-colors"
-                        >
-                          <svg
-                            className={cn('w-3.5 h-3.5 transition-transform', isExpanded && 'rotate-90')}
-                            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
+                        <div className="relative">
+                          <button
+                            onClick={() => toggleExpand(entry.ticker)}
+                            aria-label={isExpanded ? 'Collapse row' : 'Expand row'}
+                            className="text-[#9B9B9B] hover:text-[#2563EB] transition-colors"
                           >
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                          </svg>
-                        </button>
+                            <svg
+                              className={cn('w-3.5 h-3.5 transition-transform', isExpanded && 'rotate-90')}
+                              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                            </svg>
+                          </button>
+                          {entry.notes?.['__thesis__'] && (
+                            <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-[#2563EB]" aria-hidden="true" />
+                          )}
+                        </div>
                       </td>
 
                       {/* Ticker & Company — single compact line */}
@@ -1008,6 +1049,13 @@ export function ValuationTable({ entries, sparklines, livePrices = {}, groups, s
                       <td className="px-3 py-2 text-right whitespace-nowrap">
                         <span className="text-[12px] font-semibold text-[#111111] tabular-nums">
                           {fmtPrice(entry.snapshot.fairValue, 'USD')}
+                        </span>
+                      </td>
+
+                      {/* Margin of Safety */}
+                      <td className="px-3 py-2 text-right whitespace-nowrap">
+                        <span className={cn('inline-block px-2 py-0.5 rounded-md text-[11px] font-[700] tabular-nums', mosCls(upside))}>
+                          {upside != null ? (upside >= 0 ? '+' : '') + (upside*100).toFixed(1) + '%' : '—'}
                         </span>
                       </td>
 
@@ -1087,13 +1135,29 @@ export function ValuationTable({ entries, sparklines, livePrices = {}, groups, s
 
                       {/* Actions */}
                       <td className="px-2 py-2">
-                        <ActionsMenu
-                          entry={entry}
-                          groups={groups}
-                          onDelete={() => onDelete(entry.ticker)}
-                          onTagUpdate={(tag) => onTagUpdate(entry.ticker, tag)}
-                          onGroupUpdate={(g) => onGroupUpdate(entry.ticker, g)}
-                        />
+                        <div className="flex items-center gap-0.5">
+                          {onRefresh && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); onRefresh(entry.ticker) }}
+                              disabled={refreshing?.has(entry.ticker)}
+                              aria-label="Refresh analysis"
+                              title="Refresh live data"
+                              className="p-1.5 rounded-lg text-[#9B9B9B] hover:text-[#5F790B] hover:bg-[#F0F4E8] transition-colors disabled:opacity-40"
+                            >
+                              {refreshing?.has(entry.ticker)
+                                ? <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                                : <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                              }
+                            </button>
+                          )}
+                          <ActionsMenu
+                            entry={entry}
+                            groups={groups}
+                            onDelete={() => onDelete(entry.ticker)}
+                            onTagUpdate={(tag) => onTagUpdate(entry.ticker, tag)}
+                            onGroupUpdate={(g) => onGroupUpdate(entry.ticker, g)}
+                          />
+                        </div>
                       </td>
                     </tr>
 
@@ -1127,6 +1191,8 @@ export function ValuationTable({ entries, sparklines, livePrices = {}, groups, s
             onTagUpdate={(tag) => onTagUpdate(entry.ticker, tag)}
             onGroupUpdate={(g) => onGroupUpdate(entry.ticker, g)}
             onNoteSave={onNoteSave}
+            onRefresh={onRefresh}
+            refreshing={refreshing}
           />
         ))}
       </div>

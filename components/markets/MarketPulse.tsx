@@ -96,8 +96,8 @@ export default function MarketPulse({ pulse }: Props) {
   })()
 
   return (
-    <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm overflow-hidden h-full">
-      <div className="px-4 pt-3 pb-3 flex flex-col items-center gap-3">
+    <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm overflow-hidden h-full flex flex-col">
+      <div className="px-4 pt-3 pb-3 flex flex-col items-center gap-3 flex-1 min-h-0 overflow-y-auto">
         <div className="flex items-center justify-between w-full">
           <span className="text-[11px] font-[700] text-[#6B6B6B]">Sentiment</span>
           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${sentimentColor(sentimentLabel)}`}>

@@ -120,7 +120,7 @@ export default function NormalizedPerfChart() {
   const lastPoint = displayData[displayData.length - 1]
 
   return (
-    <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm overflow-hidden flex flex-col flex-1">
+    <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm overflow-hidden flex flex-col h-full">
       {/* Header */}
       <div className="px-4 py-2.5 border-b border-[#E5E5E5]">
         <div className="flex items-center justify-between mb-2">
@@ -207,7 +207,7 @@ export default function NormalizedPerfChart() {
       </div>
 
       {/* Chart */}
-      <div className="px-4 py-3 flex-1" style={{ minHeight: 'clamp(200px, 28vw, 260px)' }}>
+      <div className="px-4 py-3 flex-1 min-h-0">
         {loading ? (
           <div className="h-full flex items-center justify-center">
             <div className="flex gap-1">
