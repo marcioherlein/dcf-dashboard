@@ -7215,6 +7215,380 @@ async function runLiMovers() {
   await postLinkedIn(lines.join('\n'))
 }
 
+// ─── Mode: etf_vs_etf ────────────────────────────────────────────────────────
+// Head-to-head ETF comparison using our value scores.
+// Picks two contrasting ETFs from scored universe: highest vs lowest,
+// or value vs growth. Ends with a "which would you pick?" question.
+// Fires Tue/Thu afternoon — drives replies/engagement.
+
+const ETF_VS_PAIRS = [
+  // Value vs Growth style
+  { a: 'VTV', b: 'VUG',  angle: 'Value vs Growth' },
+  // US vs Emerging
+  { a: 'SPY', b: 'EEM',  angle: 'US vs Emerging Markets' },
+  // Tech vs Energy
+  { a: 'XLK', b: 'XLE',  angle: 'Technology vs Energy' },
+  // Healthcare vs Financials
+  { a: 'XLV', b: 'XLF',  angle: 'Healthcare vs Financials' },
+  // US vs Developed World
+  { a: 'SPY', b: 'EFA',  angle: 'US vs Developed World' },
+  // High Dividend vs Low Vol
+  { a: 'VYM', b: 'USMV', angle: 'High Dividend vs Low Volatility' },
+  // Nasdaq vs S&P 500
+  { a: 'QQQ', b: 'SPY',  angle: 'Nasdaq vs S&P 500' },
+  // Industrials vs Consumer
+  { a: 'XLI', b: 'XLY',  angle: 'Industrials vs Consumer Cyclical' },
+]
+
+const ETF_VS_QUESTIONS = [
+  `Which would you pick right now?`,
+  `Which side are you on?`,
+  `Where's the better entry?`,
+  `Which one do you own?`,
+  `Make your case.`,
+  `Which has more room to run?`,
+  `Where would you put $10K today?`,
+]
+
+async function runEtfVsEtf() {
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+  const pair = ETF_VS_PAIRS[dayOfYear % ETF_VS_PAIRS.length]
+  const question = ETF_VS_QUESTIONS[dayOfYear % ETF_VS_QUESTIONS.length]
+
+  const etfs = await fetchLatestEtfScores()
+  if (etfs.length < 4) { console.warn('etf_vs_etf: insufficient ETF data — skipping'); return }
+
+  const byTicker = Object.fromEntries(etfs.map(e => [e.ticker, e]))
+  const a = byTicker[pair.a]
+  const b = byTicker[pair.b]
+  if (!a || !b) { console.warn(`etf_vs_etf: missing data for ${pair.a} or ${pair.b}`); return }
+
+  const nameA = ETF_META_MAP[pair.a] ?? pair.a
+  const nameB = ETF_META_MAP[pair.b] ?? pair.b
+
+  const fmtStat = (label, val, suffix = '') => val != null ? `${label}: ${val}${suffix}` : null
+
+  const statsA = [
+    fmtStat('Score', a.score, '/100'),
+    fmtStat('P/E', a.pe_ratio != null ? a.pe_ratio.toFixed(0) + '×' : null),
+    fmtStat('Yield', a.yield_val != null && a.yield_val > 0 ? (a.yield_val * 100).toFixed(1) + '%' : null),
+    fmtStat('Expense', a.expense_ratio != null ? (a.expense_ratio * 100).toFixed(2) + '%' : null),
+  ].filter(Boolean).join(' · ')
+
+  const statsB = [
+    fmtStat('Score', b.score, '/100'),
+    fmtStat('P/E', b.pe_ratio != null ? b.pe_ratio.toFixed(0) + '×' : null),
+    fmtStat('Yield', b.yield_val != null && b.yield_val > 0 ? (b.yield_val * 100).toFixed(1) + '%' : null),
+    fmtStat('Expense', b.expense_ratio != null ? (b.expense_ratio * 100).toFixed(2) + '%' : null),
+  ].filter(Boolean).join(' · ')
+
+  const winner = a.score > b.score ? pair.a : b.score > a.score ? pair.b : null
+  const scoreDiff = Math.abs(a.score - b.score)
+  const verdict = winner
+    ? `Our value score favors $${winner} by ${scoreDiff} points — cheaper on P/E, P/B, and yield combined.`
+    : `Our model scores them equal — the call comes down to what you're optimizing for.`
+
+  const lines = [
+    `$${pair.a} or $${pair.b}? — ${pair.angle}`,
+    ``,
+    `${etfScoreEmoji(a.score)} $${pair.a} (${nameA})`,
+    statsA,
+    ``,
+    `${etfScoreEmoji(b.score)} $${pair.b} (${nameB})`,
+    statsB,
+    ``,
+    verdict,
+    ``,
+    question,
+    ``,
+    `#ETF #${pair.a} #${pair.b} #Investing`,
+  ].filter(Boolean)
+
+  await post(lines.join('\n'))
+}
+
+// ─── Mode: profit_forecast_list ───────────────────────────────────────────────
+// "Most profitable companies in X" using analyst forward EPS × shares.
+// Sorted by projected net income. Drives bookmarks.
+
+async function runProfitForecastList() {
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+  const year = new Date().getFullYear() + 1
+
+  const FORECAST_POOL = [
+    'AAPL','MSFT','GOOGL','META','NVDA','AMZN','JPMC','V','MA',
+    'UNH','LLY','AVGO','XOM','CVX','JNJ','PG','KO','MCD','COST','BRK-B',
+  ]
+  // Use a rotating subset of 12 each time
+  const sliceStart = (dayOfYear * 7) % (FORECAST_POOL.length - 12)
+  const pool = FORECAST_POOL.slice(sliceStart, sliceStart + 12)
+
+  const scored = []
+  await Promise.all(pool.map(async ticker => {
+    try {
+      const d = await fetchValuation(ticker)
+      // Get forward EPS estimate for next year
+      const fwdEps = d?.analystForwardEstimates?.find(e => e?.period === '+1y')?.eps?.avg ?? null
+      const shares = d?.quote?.sharesOutstanding ?? null  // in millions (from API)
+      const price  = d?.quote?.price ?? null
+      const name   = d?.quote?.name ?? ticker
+      const sector = d?.quote?.sector ?? ''
+      if (!fwdEps || !shares || fwdEps <= 0) return
+      // sharesOutstanding is absolute (e.g. 24.2B for NVDA), fwdEps is per share
+      // Net income (B) = fwdEps × sharesOutstanding / 1e9
+      const projNetIncomeB = (fwdEps * shares) / 1e9  // in billions
+      if (projNetIncomeB <= 0) return
+      scored.push({ ticker, name, projNetIncomeB, fwdEps, price, sector })
+    } catch { /* skip */ }
+  }))
+
+  if (scored.length < 3) { console.warn('profit_forecast_list: not enough data'); return }
+  scored.sort((a, b) => b.projNetIncomeB - a.projNetIncomeB)
+  const top = scored.slice(0, 5)
+
+  const question = LIST_QUESTIONS_BULLISH[dayOfYear % LIST_QUESTIONS_BULLISH.length]
+
+  const lines = [
+    `The most profitable companies on earth by ${year}.`,
+    ``,
+    `Profit estimates (analyst consensus):`,
+    ...top.map((s, i) =>
+      `${i + 1}. $${s.ticker} ~$${s.projNetIncomeB >= 100 ? s.projNetIncomeB.toFixed(0) : s.projNetIncomeB.toFixed(1)}B`
+    ),
+    ``,
+    `These aren't just big companies. They're businesses generating more cash than most countries collect in taxes.`,
+    ``,
+    question,
+    ``,
+    `#Stocks #Investing #Earnings`,
+  ]
+
+  await post(lines.join('\n'))
+}
+
+// ─── Mode: etf_ratio_breakdown ────────────────────────────────────────────────
+// Deep-dive one ETF per day — all key metrics in one post.
+// Rotates through a curated list. Educational + data-rich.
+
+const ETF_BREAKDOWN_TICKERS = [
+  'SPY','QQQ','VTI','XLK','XLE','XLF','XLV','EEM','EFA','VTV','VUG','VYM','USMV','IWM','GLD',
+]
+
+async function runEtfRatioBreakdown() {
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+  const ticker = ETF_BREAKDOWN_TICKERS[dayOfYear % ETF_BREAKDOWN_TICKERS.length]
+  const name = ETF_META_MAP[ticker] ?? ticker
+
+  const etfs = await fetchLatestEtfScores()
+  const etf = etfs.find(e => e.ticker === ticker)
+
+  // Also fetch 1Y performance from Yahoo
+  let ytdChange = null
+  try {
+    const res = await fetch(
+      `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=ytd`,
+      { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(8000) }
+    ).catch(() => null)
+    if (res?.ok) {
+      const d = await res.json().catch(() => null)
+      const closes = d?.chart?.result?.[0]?.indicators?.quote?.[0]?.close?.filter(v => v != null) ?? []
+      const meta   = d?.chart?.result?.[0]?.meta
+      if (closes.length > 5 && meta?.regularMarketPrice) {
+        ytdChange = (meta.regularMarketPrice - closes[0]) / closes[0] * 100
+      }
+    }
+  } catch { /* proceed without */ }
+
+  if (!etf) { console.warn(`etf_ratio_breakdown: no data for ${ticker}`); return }
+
+  const score = etf.score
+  const pe    = etf.pe_ratio
+  const pb    = etf.pb_ratio
+  const yld   = etf.yield_val
+  const exp   = etf.expense_ratio
+
+  // Benchmark context
+  const peCtx  = pe != null ? (pe < 15 ? 'cheap vs historical norms' : pe < 22 ? 'within normal range' : 'elevated — pricing in growth') : null
+  const yldCtx = yld != null && yld > 0 ? (yld > 0.03 ? 'strong yield' : yld > 0.015 ? 'moderate yield' : 'low yield') : null
+  const expCtx = exp != null ? (exp < 0.002 ? 'ultra-low cost' : exp < 0.005 ? 'competitive' : 'worth noting') : null
+
+  const statLines = [
+    pe   != null ? `▸ P/E: ${pe.toFixed(0)}× — ${peCtx}` : null,
+    pb   != null ? `▸ P/B: ${pb.toFixed(1)}×` : null,
+    yld  != null && yld > 0 ? `▸ Yield: ${(yld * 100).toFixed(2)}% — ${yldCtx}` : null,
+    exp  != null ? `▸ Expense ratio: ${(exp * 100).toFixed(2)}% — ${expCtx}` : null,
+    ytdChange != null ? `▸ YTD return: ${ytdChange >= 0 ? '+' : ''}${ytdChange.toFixed(1)}%` : null,
+    `▸ Value score: ${score}/100 (${etfScoreLabel(score)})`,
+  ].filter(Boolean)
+
+  const lines = [
+    `Everything you need to know about $${ticker} (${name}):`,
+    ``,
+    ...statLines,
+    ``,
+    `The expense ratio is what you pay every year just to hold it — compounded over 20 years, even 0.1% is real money.`,
+    ``,
+    `#ETF #${ticker} #Investing #PassiveInvesting`,
+  ]
+
+  await post(lines.join('\n'))
+}
+
+// ─── Mode: sector_momentum_rank ───────────────────────────────────────────────
+// Weekly sector ranking: YTD performance + current P/E vs history + our score.
+// The "which sectors are cheap AND performing?" question.
+
+async function runSectorMomentumRank() {
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+
+  const SECTOR_ETFS = ['XLK','XLE','XLF','XLV','XLU','XLI','XLP','XLY','XLC','XLB','XLRE']
+  const SECTOR_NAMES = {
+    XLK:'Technology', XLE:'Energy', XLF:'Financials', XLV:'Healthcare',
+    XLU:'Utilities', XLI:'Industrials', XLP:'Cons. Defensive',
+    XLY:'Cons. Cyclical', XLC:'Comm. Services', XLB:'Materials', XLRE:'Real Estate',
+  }
+
+  // Fetch YTD performance for each sector ETF
+  const results = []
+  for (let i = 0; i < SECTOR_ETFS.length; i += 4) {
+    const batch = SECTOR_ETFS.slice(i, i + 4)
+    const settled = await Promise.allSettled(batch.map(async sym => {
+      const res = await fetch(
+        `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=ytd`,
+        { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(8000) }
+      ).catch(() => null)
+      if (!res?.ok) return null
+      const d = await res.json().catch(() => null)
+      const closes = d?.chart?.result?.[0]?.indicators?.quote?.[0]?.close?.filter(v => v != null) ?? []
+      const meta   = d?.chart?.result?.[0]?.meta
+      if (closes.length < 5 || !meta?.regularMarketPrice) return null
+      const ytdChg = (meta.regularMarketPrice - closes[0]) / closes[0] * 100
+      return { sym, ytdChg }
+    }))
+    for (const r of settled) if (r.status === 'fulfilled' && r.value) results.push(r.value)
+    await new Promise(r => setTimeout(r, 400))
+  }
+
+  if (results.length < 5) { console.warn('sector_momentum_rank: not enough data'); return }
+
+  // Get ETF scores
+  const etfs = await fetchLatestEtfScores()
+  const byTicker = Object.fromEntries(etfs.map(e => [e.ticker, e]))
+
+  // Combine: YTD performance + value score
+  const ranked = results
+    .map(r => ({
+      sym: r.sym,
+      name: SECTOR_NAMES[r.sym] ?? r.sym,
+      ytdChg: r.ytdChg,
+      score: byTicker[r.sym]?.score ?? null,
+      pe: byTicker[r.sym]?.pe_ratio ?? null,
+    }))
+    .sort((a, b) => b.ytdChg - a.ytdChg)
+
+  const best  = ranked[0]
+  const worst = ranked[ranked.length - 1]
+  // "Sweet spot" — top half performer + high value score
+  const sweetSpot = [...ranked]
+    .filter(r => r.score != null)
+    .sort((a, b) => {
+      const aRank = ranked.indexOf(a)
+      const bRank = ranked.indexOf(b)
+      // Score that rewards both strong momentum AND cheap valuation
+      const aScore = (ranked.length - aRank) + (a.score / 10)
+      const bScore = (ranked.length - bRank) + (b.score / 10)
+      return bScore - aScore
+    })[0]
+
+  const lines = [
+    `Sector performance YTD — ranked:`,
+    ``,
+    ...ranked.map((r, i) => {
+      const arrow = r.ytdChg >= 2 ? '▲' : r.ytdChg <= -2 ? '▼' : '→'
+      const scoreStr = r.score != null ? ` · Score ${r.score}` : ''
+      const peStr    = r.pe   != null ? ` · P/E ${r.pe.toFixed(0)}×` : ''
+      return `${i + 1}. $${r.sym} (${r.name}) ${arrow} ${r.ytdChg >= 0 ? '+' : ''}${r.ytdChg.toFixed(1)}%${peStr}${scoreStr}`
+    }),
+    ``,
+    sweetSpot
+      ? `${SECTOR_NAMES[sweetSpot.sym]} ($${sweetSpot.sym}) stands out — strong performance AND a high value score. The rarest combination.`
+      : `${best.name} leads on momentum. ${worst.name} is lagging but may be worth a closer look on valuation.`,
+    ``,
+    `Which sector are you rotating into?`,
+    ``,
+    `#Stocks #SectorRotation #ETF #Investing`,
+  ].filter(Boolean)
+
+  await post(lines.join('\n'))
+}
+
+// ─── Mode: dcf_vs_analyst_framed ─────────────────────────────────────────────
+// "Analysts say $X is worth $Y. Our model says $Z."
+// Framed as a comparison post rather than just divergence.
+// More engaging than market_vs_model — leads with the tension directly.
+
+async function runDcfVsAnalystFramed() {
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+  const day = new Date().getDay()
+  const pool = ROTATION[day] ?? ROTATION[1]
+
+  const candidates = []
+  for (const ticker of pool.slice(0, 15)) {
+    try {
+      const d = await fetchValuation(ticker)
+      const ourFair      = appFairValue(d)
+      const analystTarget = d?.quote?.analystTargetMean
+      const targetLow    = d?.quote?.analystTargetLow
+      const targetHigh   = d?.quote?.analystTargetHigh
+      const price        = d?.quote?.price
+      const numAnalysts  = d?.cagrAnalysis?.numAnalysts ?? 0
+      if (!ourFair || !analystTarget || !price || numAnalysts < 5) continue
+      const ourUpside     = (ourFair - price) / price
+      const streetUpside  = (analystTarget - price) / price
+      const divergence    = Math.abs(ourUpside - streetUpside)
+      if (divergence < 0.12) continue
+      const impliedG   = d?.valuationMethods?.models?.reverseDcf?.impliedCAGR
+      const hist3y     = d?.cagrAnalysis?.historicalCagr3y
+      candidates.push({ ticker, price, ourFair, analystTarget, targetLow, targetHigh,
+                         ourUpside, streetUpside, divergence, numAnalysts, impliedG, hist3y, d })
+    } catch { /* skip */ }
+  }
+
+  if (candidates.length === 0) { console.warn('dcf_vs_analyst_framed: no divergent picks'); return }
+  candidates.sort((a, b) => b.divergence - a.divergence)
+  const c = candidates[0]
+  const ourIsHigher = c.ourFair > c.analystTarget
+  const gapPct = ((c.ourFair - c.analystTarget) / c.analystTarget * 100).toFixed(0)
+
+  const impliedLine = c.impliedG != null && c.hist3y != null
+    ? `At ${fmt(c.price)}, the market prices in ${pct(c.impliedG, false)}/yr growth. Historical pace: ${pct(c.hist3y, false)}.`
+    : null
+
+  const rangeStr = c.targetLow && c.targetHigh
+    ? ` (range: ${fmt(c.targetLow)}–${fmt(c.targetHigh)})`
+    : ''
+
+  const lines = [
+    ourIsHigher
+      ? `${c.numAnalysts} analysts say $${c.ticker} is worth ${fmt(c.analystTarget)}${rangeStr}.`
+      : `${c.numAnalysts} analysts say $${c.ticker} is worth ${fmt(c.analystTarget)}${rangeStr}.`,
+    ``,
+    `Our DCF says ${fmt(c.ourFair)}.`,
+    ``,
+    `That's a ${Math.abs(Number(gapPct))}% gap. ${ourIsHigher
+      ? `We're more bullish. Analysts may be anchored to near-term numbers.`
+      : `Analysts are more bullish. Our model doesn't support the target at current assumptions.`}`,
+    ``,
+    impliedLine,
+    ``,
+    `Who's right?`,
+    ``,
+    `$${c.ticker} #DCF #StockMarket #Investing`,
+  ].filter(Boolean)
+
+  await post(lines.join('\n'))
+}
+
 const MODES = {
   dcf:               runDcf,
   dcf2:              runDcf2,
@@ -7260,7 +7634,12 @@ const MODES = {
   ytd_losers:         runYtdLosers,
   ytd_winners:        runYtdWinners,
   near_52w_high:      runNear52wHigh,
-  most_shorted:       runMostShorted,
+  most_shorted:         runMostShorted,
+  etf_vs_etf:           runEtfVsEtf,
+  profit_forecast_list: runProfitForecastList,
+  etf_ratio_breakdown:  runEtfRatioBreakdown,
+  sector_momentum_rank: runSectorMomentumRank,
+  dcf_vs_analyst_framed: runDcfVsAnalystFramed,
   conviction_score:  runConvictionScore,
   li_conviction:     runLiConviction,
   etf_value_scan:    runEtfValueScan,

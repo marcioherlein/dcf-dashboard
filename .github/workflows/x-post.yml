@@ -18,7 +18,9 @@ on:
                   economic_results, holiday_deep_dive, sector_scan, insider_buy, low_52w,
                   top_undervalued, market_vs_model, ratio_explained, movers, undervalued_list,
                   sector_undervalued, biggest_losers_day, biggest_winners_day, ytd_losers,
-                  ytd_winners, near_52w_high, most_shorted, conviction_score]
+                  ytd_winners, near_52w_high, most_shorted, conviction_score,
+                  etf_vs_etf, profit_forecast_list, etf_ratio_breakdown,
+                  sector_momentum_rank, dcf_vs_analyst_framed]
       ticker:
         description: 'Ticker override (dcf/dcf2/dcf_bear only)'
         required: false
@@ -87,6 +89,10 @@ jobs:
               elif [ "$HOUR" = "20" ] && [ "$MIN" -ge "29" ] && ([ "$DOW" = "1" ] || [ "$DOW" = "3" ] || [ "$DOW" = "5" ]); then MODE="biggest_losers_day"
               elif [ "$HOUR" = "21" ] && [ "$MIN" -lt "20" ]; then MODE="after_hours"
               elif [ "$HOUR" = "21" ] && [ "$MIN" -ge "29" ]; then MODE="near_52w_high"
+              elif [ "$HOUR" = "22" ] && [ "$MIN" -lt "10" ] && ([ "$DOW" = "2" ] || [ "$DOW" = "4" ]); then MODE="etf_vs_etf"
+              elif [ "$HOUR" = "22" ] && [ "$MIN" -lt "10" ] && ([ "$DOW" = "3" ] || [ "$DOW" = "5" ]); then MODE="profit_forecast_list"
+              elif [ "$HOUR" = "22" ] && [ "$MIN" -lt "10" ] && [ "$DOW" = "1" ]; then MODE="dcf_vs_analyst_framed"
+              elif [ "$HOUR" = "22" ] && [ "$MIN" -ge "14" ] && [ "$MIN" -lt "25" ]; then MODE="etf_ratio_breakdown"
               elif [ "$HOUR" = "23" ]; then MODE="earnings_results"
               elif [ "$HOUR" = "1" ]; then MODE="theory_overnight"
               else MODE="SKIP"
@@ -100,6 +106,7 @@ jobs:
               elif [ "$HOUR" = "17" ]; then MODE="dcf"
               elif [ "$HOUR" = "18" ]; then MODE="sentiment"
               elif [ "$HOUR" = "19" ]; then MODE="ratio_explained"
+              elif [ "$HOUR" = "20" ]; then MODE="sector_momentum_rank"
               elif [ "$HOUR" = "2"  ]; then MODE="theory_overnight"
               else MODE="SKIP"
               fi
@@ -110,6 +117,7 @@ jobs:
               elif [ "$HOUR" = "14" ] && [ "$MIN" -ge "29" ]; then MODE="question"
               elif [ "$HOUR" = "15" ]; then MODE="sector_scan"
               elif [ "$HOUR" = "16" ]; then MODE="etf_pulse"
+              elif [ "$HOUR" = "17" ]; then MODE="dcf_vs_analyst_framed"
               elif [ "$HOUR" = "2"  ]; then MODE="theory_overnight"
               else MODE="SKIP"
               fi

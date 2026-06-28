@@ -17,6 +17,8 @@ const VALID_MODES = [
   'li_undervalued_list','li_sector_undervalued','li_biggest_losers_day',
   'li_biggest_winners_day','li_ytd_losers','li_ytd_winners',
   'li_near_52w_high','li_most_shorted','li_movers',
+  'etf_vs_etf','profit_forecast_list','etf_ratio_breakdown',
+  'sector_momentum_rank','dcf_vs_analyst_framed',
 ]
 
 export async function GET(req: NextRequest) {
