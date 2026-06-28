@@ -87,7 +87,10 @@ export function SignUpPage() {
         body: JSON.stringify({ name, email, password }),
       })
       const data = await res.json()
-      if (!res.ok) { setError(data.error ?? 'Something went wrong'); return }
+      if (!res.ok) {
+        setError(data.code === 'USE_GOOGLE' ? '__USE_GOOGLE__' : (data.error ?? 'Something went wrong'))
+        return
+      }
       setStep('code')
       startCooldown()
       setTimeout(() => codeInputRef.current?.focus(), 100)
@@ -199,7 +202,16 @@ export function SignUpPage() {
           </button>
         </div>
         <input className={INPUT} type={showPwd ? 'text' : 'password'} placeholder="Confirm password" value={confirm} onChange={e => setConfirm(e.target.value)} required autoComplete="new-password" />
-        {error && <p className="text-[12px] text-red-500">{error}</p>}
+        {error && error !== '__USE_GOOGLE__' && <p className="text-[12px] text-red-500">{error}</p>}
+        {error === '__USE_GOOGLE__' && (
+          <div className="rounded-xl bg-[#FFF4DA] border border-[#F3D391] px-4 py-3 space-y-2.5">
+            <p className="text-[13px] text-[#B56A00] font-medium">This email is linked to a Google account.</p>
+            <button onClick={() => signIn('google', { callbackUrl: '/analyze' })} className={BTN_GOOGLE}>
+              <GoogleIcon />
+              Continue with Google
+            </button>
+          </div>
+        )}
         <button type="submit" disabled={loading} className={BTN_PRIMARY}>
           {loading ? 'Creating account…' : 'Create account'}
         </button>
@@ -279,6 +291,11 @@ export function SignInPage() {
       {errorParam === 'token_expired' && (
         <div className="mb-5 rounded-xl bg-[#FCEAEA] border border-[#F0B8B8] px-4 py-3 text-[13px] text-[#D83B3B]">
           Verification link expired. Sign up again to get a new one.
+        </div>
+      )}
+      {errorParam === 'use_email' && (
+        <div className="mb-5 rounded-xl bg-[#FFF4DA] border border-[#F3D391] px-4 py-3 text-[13px] text-[#B56A00]">
+          This email is registered with a password. Sign in with your email and password below.
         </div>
       )}
 

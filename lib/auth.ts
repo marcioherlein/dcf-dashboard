@@ -87,9 +87,16 @@ export const authOptions: NextAuthOptions = {
 
           const { data: existing } = await sb
             .from('users')
-            .select('id')
+            .select('id, auth_method')
             .eq('email', user.email)
             .maybeSingle()
+
+          // Block Google sign-in if this email was registered with email+password
+          // Returning false cancels the sign-in and redirects to the error page
+          if (existing && existing.auth_method === 'email') {
+            console.warn('[auth] Google sign-in blocked — email is registered with password auth:', user.email)
+            return '/auth/sign-in?error=use_email'
+          }
 
           const isNew = !existing
 

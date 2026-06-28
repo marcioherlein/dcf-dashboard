@@ -55,12 +55,22 @@ export async function POST(req: NextRequest) {
     // Check email not already taken
     const { data: existing } = await sb
       .from('users')
-      .select('id, email_verified_at')
+      .select('id, email_verified_at, auth_method')
       .eq('email', normalizedEmail)
       .maybeSingle()
 
     if (existing?.email_verified_at) {
-      return NextResponse.json({ error: 'An account with this email already exists' }, { status: 409 })
+      // Give a specific message depending on how they signed up
+      if (existing.auth_method === 'google') {
+        return NextResponse.json({
+          error: 'This email is linked to a Google account. Please sign in with Google instead.',
+          code: 'USE_GOOGLE',
+        }, { status: 409 })
+      }
+      return NextResponse.json({
+        error: 'An account with this email already exists. Try signing in instead.',
+        code: 'ALREADY_EXISTS',
+      }, { status: 409 })
     }
 
     // Hash password
