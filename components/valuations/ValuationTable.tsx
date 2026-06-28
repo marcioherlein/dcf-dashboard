@@ -953,7 +953,7 @@ export function ValuationTable({ entries, sparklines, livePrices = {}, groups, s
                           onChange={(e) => {
                             if (!onSelectionChange || !selectedTickers) return
                             const next = new Set(selectedTickers)
-                            e.target.checked ? next.add(entry.ticker) : next.delete(entry.ticker)
+                            if (e.target.checked) { next.add(entry.ticker) } else { next.delete(entry.ticker) }
                             onSelectionChange(next)
                           }}
                         />
