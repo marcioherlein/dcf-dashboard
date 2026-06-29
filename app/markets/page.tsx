@@ -67,17 +67,16 @@ export default function MarketsPage() {
   useSetTopBarTabs(marketTabs, activeTab, (id: string) => setActiveTab(id as MarketTab))
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  const [tick, setTick] = useState(0)
+  const [liveStatus, setLiveStatus] = useState(getMarketStatus)
   useEffect(() => {
-    const t = setInterval(() => setTick(n => n + 1), 10_000)
+    const t = setInterval(() => setLiveStatus(getMarketStatus()), 10_000)
     return () => clearInterval(t)
   }, [])
 
-  // Lazy-mount tabs after first visit + keep market status fresh
+  // Lazy-mount tabs on first visit so heavy components aren't pre-rendered
   useEffect(() => {
     setMountedTabs(prev => new Set(Array.from(prev).concat(activeTab)))
   }, [activeTab])
-  const liveStatus = useMemo(() => getMarketStatus(), [tick])
 
   const fetchAll = useCallback(async () => {
     try {
