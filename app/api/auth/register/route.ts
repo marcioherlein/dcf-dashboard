@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         ok: false, emailSent: false, code: 'VERIFICATION_EMAIL_FAILED',
         error: 'Could not send verification code. Please try again or contact support.',
-      }, { status: 502 })
+      })
     }
 
     return NextResponse.json({ ok: true, emailSent: true })
