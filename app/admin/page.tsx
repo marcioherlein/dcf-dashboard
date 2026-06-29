@@ -111,6 +111,22 @@ export default function AdminPage() {
   const [sending, setSending]                 = useState(false)
   const [broadcastResult, setBroadcastResult] = useState<{ ok?: boolean; sent?: number; error?: string } | null>(null)
   const [confirmOpen, setConfirmOpen]         = useState(false)
+  const [syncing,    setSyncing]    = useState(false)
+  const [syncResult, setSyncResult] = useState<{ ok?: boolean; added?: number; total?: number; error?: string } | null>(null)
+
+  async function syncResendContacts() {
+    setSyncing(true)
+    setSyncResult(null)
+    try {
+      const res  = await fetch('/api/admin/sync-resend', { method: 'POST' })
+      const data = await res.json()
+      setSyncResult(data)
+    } catch {
+      setSyncResult({ error: 'Network error' })
+    } finally {
+      setSyncing(false)
+    }
+  }
 
   // ── Reddit tab state ────────────────────────────────────────────────────
   type RedditFormat = 'insight' | 'lesson' | 'observation'
@@ -580,6 +596,28 @@ export default function AdminPage() {
               <ChevronRight size={14} />
             </button>
           )}
+
+          {/* ── Sync to Resend ── */}
+          <div className="mt-8 pt-6 border-t border-[#E5E5E5]">
+            <p className="text-sm font-semibold text-[#111111] mb-1">Sync contacts to Resend</p>
+            <p className="text-xs text-[#9B9B9B] mb-3">Push all Supabase users into your Resend audience so you can send campaigns from the Resend dashboard.</p>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={syncResendContacts}
+                disabled={syncing}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[#E5E5E5] bg-white text-sm font-semibold text-[#334155] hover:border-[#5F790B] hover:text-[#5F790B] disabled:opacity-40 transition-colors"
+              >
+                {syncing ? 'Syncing…' : 'Sync now'}
+              </button>
+              {syncResult && (
+                <span className={`text-xs font-medium ${syncResult.ok ? 'text-[#5F790B]' : 'text-[#D83B3B]'}`}>
+                  {syncResult.ok
+                    ? `Done — ${syncResult.added} of ${syncResult.total} contacts synced`
+                    : `Error: ${syncResult.error}`}
+                </span>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
