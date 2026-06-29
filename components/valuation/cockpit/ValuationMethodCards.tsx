@@ -970,11 +970,6 @@ export default function ValuationMethodCards({
           />
         </div>
         <div className="flex flex-col gap-1.5 shrink-0 pt-0.5">
-          {!canUndo && (
-            <p className="text-[10px] text-[#9B9B9B] leading-tight max-w-[72px] text-center">
-              Tap any value to adjust
-            </p>
-          )}
           {canUndo && (
             <button
               onClick={onUndo}
