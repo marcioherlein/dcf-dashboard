@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { randomInt } from 'crypto'  // BUG-02 FIX: use crypto.randomInt, not Math.random
+import { randomInt } from 'crypto'
 import bcrypt from 'bcryptjs'
-import { Resend } from 'resend'
+import { sendEmail } from '@/lib/email/sendEmail'
 import VerificationEmail from '@/emails/VerificationEmail'
 
 function getClient() {
@@ -16,30 +16,8 @@ function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 }
 
-// BUG-02 FIX: cryptographically secure 6-digit code
 function generateCode(): string {
   return String(randomInt(100000, 1000000))
-}
-
-async function sendCodeEmail(email: string, name: string, code: string) {
-  if (!process.env.RESEND_API_KEY) {
-    console.warn('[register] RESEND_API_KEY not set — skipping verification email')
-    return
-  }
-  try {
-    const resend = new Resend(process.env.RESEND_API_KEY)
-    const result = await resend.emails.send({
-      from: 'insic <team@insic.app>',
-      to: email,
-      subject: `${code} is your insic verification code`,
-      react: VerificationEmail({ name, verifyUrl: '', code }),
-    })
-    if (result.error) {
-      console.error('[register] resend error:', result.error.message)
-    }
-  } catch (err) {
-    console.error('[register] email send error:', err)
-  }
 }
 
 export async function POST(req: NextRequest) {
@@ -57,6 +35,8 @@ export async function POST(req: NextRequest) {
     const normalizedEmail = email.toLowerCase().trim()
     const sb = getClient()
 
+    console.log('[auth.register.started]', { email: normalizedEmail })
+
     // Check email not already taken
     const { data: existing } = await sb
       .from('users')
@@ -64,7 +44,6 @@ export async function POST(req: NextRequest) {
       .eq('email', normalizedEmail)
       .maybeSingle()
 
-    // BUG-06 FIX: check auth_method independently of email_verified_at
     if (existing?.auth_method === 'google') {
       return NextResponse.json({
         error: 'This email is linked to a Google account. Please sign in with Google instead.',
@@ -91,7 +70,6 @@ export async function POST(req: NextRequest) {
       }).eq('email', normalizedEmail)
     } else {
       // Create new unverified user
-      // BUG-12 FIX: include terms_accepted_at
       const { error: insertError } = await sb.from('users').insert({
         email:             normalizedEmail,
         name:              name.trim(),
@@ -101,10 +79,8 @@ export async function POST(req: NextRequest) {
         terms_accepted_at: new Date().toISOString(),
       })
       if (insertError) {
-        console.error('[register] insert error:', insertError.message, insertError.code)
-        // Don't leak internal error details to client
+        console.error('[auth.register.user_created] insert error:', insertError.message, insertError.code)
         if (insertError.code === '23505') {
-          // Unique constraint — concurrent registration race
           return NextResponse.json({
             error: 'An account with this email already exists. Try signing in instead.',
             code: 'ALREADY_EXISTS',
@@ -113,6 +89,8 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Failed to create account. Please try again.' }, { status: 500 })
       }
     }
+
+    console.log('[auth.register.user_created]', { email: normalizedEmail, isRetry: !!existing })
 
     // Invalidate any existing unused codes for this email
     await sb
@@ -127,24 +105,48 @@ export async function POST(req: NextRequest) {
     const expires_at = new Date(Date.now() + 15 * 60 * 1000).toISOString()
 
     const { error: tokenError } = await sb.from('auth_tokens').insert({
-      email: normalizedEmail,
-      token: code,
-      type: 'verify_email',
+      email:           normalizedEmail,
+      token:           code,
+      type:            'verify_email',
       expires_at,
-      failed_attempts: 0,  // BUG-11 FIX: track failed attempts for brute-force protection
+      failed_attempts: 0,
     })
 
     if (tokenError) {
-      console.error('[register] token insert error:', tokenError.message, tokenError.code)
+      console.error('[auth.register.token_created] token insert error:', tokenError.message, tokenError.code)
       return NextResponse.json({ error: 'Failed to create verification code. Please try again.' }, { status: 500 })
     }
 
-    await sendCodeEmail(normalizedEmail, name.trim(), code)
+    console.log('[auth.register.token_created]', { email: normalizedEmail, expires_at })
 
-    return NextResponse.json({ ok: true })
+    // Send verification email — failure blocks the response (caller must know)
+    const emailResult = await sendEmail({
+      to:       normalizedEmail,
+      subject:  `${code} is your insic verification code`,
+      react:    VerificationEmail({ name: name.trim(), verifyUrl: '', code }),
+      logEvent: 'auth.register.email_sent',
+    })
+
+    if (!emailResult.ok) {
+      console.error('[auth.register.email_failed]', {
+        email:   normalizedEmail,
+        code:    emailResult.code,
+        message: emailResult.message,
+      })
+      return NextResponse.json({
+        ok:        false,
+        emailSent: false,
+        code:      'VERIFICATION_EMAIL_FAILED',
+        error:     'Could not send verification code. Please try again or contact support.',
+      }, { status: 502 })
+    }
+
+    console.log('[auth.register.email_sent]', { email: normalizedEmail, providerId: emailResult.providerId })
+
+    return NextResponse.json({ ok: true, emailSent: true })
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
-    console.error('[register] exception:', msg)
+    console.error('[auth.register.exception]', msg)
     return NextResponse.json({ error: 'Something went wrong. Please try again.' }, { status: 500 })
   }
 }

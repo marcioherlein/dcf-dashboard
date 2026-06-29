@@ -91,6 +91,10 @@ export function SignUpPage() {
         setError(data.code === 'USE_GOOGLE' ? '__USE_GOOGLE__' : (data.error ?? 'Something went wrong'))
         return
       }
+      if (!data.emailSent) {
+        setError(data.error ?? 'Account created, but we could not send the verification email. Please try resending in a moment.')
+        return
+      }
       setStep('code')
       startCooldown()
       setTimeout(() => codeInputRef.current?.focus(), 100)
@@ -139,7 +143,11 @@ export function SignUpPage() {
         setCodeError(data.error ?? 'Could not resend code')
         return
       }
-      startCooldown()
+      if (data.emailSent) {
+        startCooldown()
+      } else {
+        setCodeError(data.error ?? 'Could not resend the verification email. Please try again.')
+      }
       setCode('')
       setTimeout(() => codeInputRef.current?.focus(), 100)
     } catch {
@@ -252,6 +260,19 @@ export function SignInPage() {
   const [loading, setLoading]   = useState(false)
   const [error, setError]       = useState<string | null>(null)
   const [unverified, setUnverified] = useState(false)
+  const [resending, setResending]   = useState(false)
+  const [resendSent, setResendSent] = useState(false)
+
+  async function handleResendFromSignIn() {
+    setResending(true)
+    try {
+      const res = await fetch('/api/auth/resend-code', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) })
+      const data = await res.json()
+      if (res.ok && data.emailSent) { setResendSent(true) }
+      else { setError(data.error ?? 'Could not resend. Try again.') }
+    } catch { setError('Network error') }
+    finally { setResending(false) }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -314,13 +335,15 @@ export function SignInPage() {
         </div>
         {error && <p className="text-[12px] text-red-500">{error}</p>}
         {unverified && (
-          <div className="rounded-xl bg-[#FFF4DA] border border-[#F3D391] px-4 py-3 text-[13px] text-[#B56A00]">
-            <p className="font-medium mb-1.5">Email not verified yet.</p>
-            <p className="mb-2">Check your inbox for the 6-digit code, or{' '}
-              <Link href={`/auth/sign-up?email=${encodeURIComponent(email)}`} className="font-semibold underline underline-offset-2 hover:text-[#9A5800]">
-                go back to verify
-              </Link>.
-            </p>
+          <div className="rounded-xl bg-[#FFF4DA] border border-[#F3D391] px-4 py-3 space-y-2">
+            <p className="text-[13px] text-[#B56A00] font-medium">Email not verified yet.</p>
+            {resendSent ? (
+              <p className="text-[12px] text-[#5F790B]">Code sent! Check your inbox.</p>
+            ) : (
+              <button onClick={handleResendFromSignIn} disabled={resending} className="text-[12px] text-[#5F790B] font-semibold underline underline-offset-2 disabled:opacity-50">
+                {resending ? 'Sending…' : 'Resend verification code'}
+              </button>
+            )}
           </div>
         )}
         <button type="submit" disabled={loading} className={BTN_PRIMARY}>

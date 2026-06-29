@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { randomInt } from 'crypto'  // BUG-02 FIX
-import { Resend } from 'resend'
+import { randomInt } from 'crypto'
 import VerificationEmail from '@/emails/VerificationEmail'
+import { sendEmail } from '@/lib/email/sendEmail'
 
 const RESEND_COOLDOWN_SECONDS = 60
 
@@ -13,7 +13,6 @@ function getClient() {
   )
 }
 
-// BUG-02 FIX: cryptographically secure
 function generateCode(): string {
   return String(randomInt(100000, 1000000))
 }
@@ -24,6 +23,8 @@ export async function POST(req: NextRequest) {
 
   const normalizedEmail = email.toLowerCase().trim()
   const sb = getClient()
+
+  console.log('[auth.resend.started] email=<redacted>')
 
   // Check user exists and is not already verified
   const { data: user } = await sb
@@ -71,22 +72,25 @@ export async function POST(req: NextRequest) {
     token:           code,
     type:            'verify_email',
     expires_at,
-    failed_attempts: 0,  // BUG-11 FIX: reset attempt counter on new code
+    failed_attempts: 0,
   })
 
-  if (process.env.RESEND_API_KEY) {
-    try {
-      const resend = new Resend(process.env.RESEND_API_KEY)
-      await resend.emails.send({
-        from: 'insic <team@insic.app>',
-        to: normalizedEmail,
-        subject: `${code} is your insic verification code`,
-        react: VerificationEmail({ name: user.name ?? null, verifyUrl: '', code }),
-      })
-    } catch (err) {
-      console.error('[resend-code] email error:', err)
-    }
+  // Send verification email — cooldown is NOT started if this fails
+  const sendResult = await sendEmail({
+    to:       normalizedEmail,
+    subject:  `Your insic verification code`,
+    react:    VerificationEmail({ name: user.name ?? null, verifyUrl: '', code }),
+    logEvent: 'auth.resend',
+  })
+
+  if (!sendResult.ok) {
+    console.error('[auth.resend.email_failed] code=' + sendResult.code)
+    return NextResponse.json(
+      { ok: false, emailSent: false, code: sendResult.code, error: sendResult.message },
+      { status: 502 },
+    )
   }
 
-  return NextResponse.json({ ok: true })
+  console.log('[auth.resend.email_sent]')
+  return NextResponse.json({ ok: true, emailSent: true })
 }
