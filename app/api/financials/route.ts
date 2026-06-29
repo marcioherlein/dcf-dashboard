@@ -233,7 +233,14 @@ export async function GET(req: NextRequest) {
     // Cap raised from 5.5% to 7%: Argentina CRP=15.4% → floor=rfRate+2%=6.3% which exceeded
     // the old 5.5% cap. The new cap (7%) allows the floor to be respected for high-CRP markets
     // while still preventing runaway terminal growth for speculative EM assumptions.
-    const terminalG = crp > 0.02
+    //
+    // Exception: Energy and Basic Materials companies. Their terminal growth is tied to long-run
+    // commodity price appreciation (0–2% real), not local nominal GDP. An Argentinian oil E&P
+    // (VIST) with CRP=2.3% should NOT use terminalG=rfRate+2%=6.4% — that would assume oil
+    // prices grow at EM GDP pace in perpetuity, producing a 2.7× TV inflation vs 2.5% terminal.
+    const _isEnergyCommodity = /energy|basic material|oil|gas|mining|metal/i.test(
+      (fin.summaryProfile?.sector ?? q.sector ?? '') + ' ' + (fin.summaryProfile?.industry ?? q.industry ?? ''))
+    const terminalG = crp > 0.02 && !_isEnergyCommodity
       ? Math.min(Math.max(_terminalGBase, rfRate + 0.02), 0.07)  // floor at EM-calibrated rate, cap at 7%
       : _terminalGBase
     // Growth model selection (Damodaran): three-stage when growth >> stable (CAGR > 15% or pre-profit).
@@ -1396,6 +1403,25 @@ export async function GET(req: NextRequest) {
       return ratesWithRev.length > 0 ? ratesWithRev[ratesWithRev.length - 1] : 0.06
     })()
 
+    // Capex rate (capex / revenue) computed from last 3 historical CF rows.
+    // Using a revenue-proportional rate rather than flat avgCapexM in $ ensures
+    // projected capex scales with revenue — critical for high-capex growth companies
+    // (e.g. VIST / Vaca Muerta ramp) where flat averaging understates future capex.
+    // Falls back to avgCapexM / latestRevM if no revenue match is available.
+    const avgCapexRateFromCF: number | null = (() => {
+      const rows = cfHistoricalRows.filter(r => r.capex != null && r.year != null).slice(-3)
+      const rates = rows.map(r => {
+        const incRow = isHistoricalRows.find(i => i.year === r.year)
+        const rev = incRow?.revenue
+        return (r.capex != null && rev != null && rev > 0) ? Math.abs(r.capex) / rev : null
+      }).filter((v): v is number => v != null)
+      if (rates.length === 0) return null
+      const median = [...rates].sort((a, b) => a - b)[Math.floor(rates.length / 2)]
+      const last = rates[rates.length - 1]
+      // Blend: 60% median, 40% most-recent (same blend as normalizeInputs)
+      return rates.length >= 2 ? median * 0.60 + last * 0.40 : last
+    })()
+
     // Infer fiscal year-end month/day from last historical CF row
     const lastCfFiscalDate = cfHistoricalRows[cfHistoricalRows.length - 1]?.fiscalDate ?? null
     const fiscalMonthDay = (lastCfFiscalDate && lastCfFiscalDate.length >= 10) ? lastCfFiscalDate.slice(5) : '12-31'
@@ -1403,12 +1429,19 @@ export async function GET(req: NextRequest) {
     const cfProjectedRows = Array.from({ length: 5 }, (_, idx) => {
       const t = idx + 1
       const projFCF = dcfResult.projections[t - 1]?.cashFlow ?? 0
-      const hasCapex = avgCapexM !== 0
-      const projOpCF = hasCapex ? projFCF - avgCapexM : projFCF
+      const projRevM = latestRevM * Math.pow(1 + cagr, t)
+      // Use revenue-proportional capex rate when available; fall back to flat avgCapexM.
+      // Rate-based capex correctly scales with growing revenue (critical for high-capex
+      // growth companies like VIST where flat averaging severely understates future capex).
+      const projCapexM = avgCapexRateFromCF != null
+        ? -(projRevM * avgCapexRateFromCF)
+        : avgCapexM
+      const hasCapex = projCapexM !== 0
+      const projOpCF = hasCapex ? projFCF - projCapexM : projFCF
       return {
         year: `${baseYear + t}E`,
         operatingCF: Math.round(projOpCF),
-        capex: hasCapex ? Math.round(avgCapexM) : null,
+        capex: hasCapex ? Math.round(projCapexM) : null,
         freeCashFlow: Math.round(projFCF),
         investingCF: null,
         financingCF: null,
@@ -1626,6 +1659,14 @@ export async function GET(req: NextRequest) {
         baseFCF = _lastHistFCF
         fcfCapApplied = true
       }
+    }
+    // Negative-FCF stale guard: Yahoo fd.freeCashflow sometimes returns a stale positive
+    // value when the company has recently turned FCF-negative (e.g. high-capex growth ramp).
+    // VIST (Vaca Muerta ramp): Yahoo=+$489M, actual FY2025=-$671M.
+    // When histFCF is negative and baseFCF is positive, Yahoo is stale — use the actual.
+    if (!_isFinancialForGuard && !fcfCapApplied && _lastHistFCF < 0 && baseFCF > 0) {
+      baseFCF = _lastHistFCF
+      fcfCapApplied = true
     }
 
     // Analyst forward estimates from earningsTrend (EPS + revenue by period)
