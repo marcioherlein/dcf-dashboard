@@ -246,7 +246,8 @@ export async function GET(req: NextRequest) {
       : _terminalGBase
     // Growth model selection (Damodaran): three-stage when growth >> stable (CAGR > 15% or pre-profit).
     // companyType is detected later; cagr + isNegativeFCF covers all practical cases before that.
-    const growthModel = (cagr > 0.15 || isNegativeFCF) ? 'three-stage' as const : 'two-stage' as const
+    // NOTE: growthModel is re-evaluated after the stale-baseFCF guard (which can flip isNegativeFCF).
+    let growthModel = (cagr > 0.15 || isNegativeFCF) ? 'three-stage' as const : 'two-stage' as const
     const dcfResult = projectCashFlows({ baseFCF, cagr, wacc: waccResult.wacc, terminalG, growthModel })
 
     // Balance sheet items — convert to quote currency
@@ -1675,6 +1676,13 @@ export async function GET(req: NextRequest) {
     // but isNegativeFCF was set to false (can happen when financial sector path uses NI proxy)
     if (!_isFinancialForGuard && baseFCF < 0 && !isNegativeFCF) {
       isNegativeFCF = true
+    }
+    // Re-evaluate growthModel now that isNegativeFCF may have been corrected by the stale guards.
+    // STNE: baseFCF was already -$99M from Yahoo, but isNegativeFCF was False (financial path
+    // in extractFCFInputs set it to false). Correcting isNegativeFCF to True here triggers
+    // three-stage growth model as appropriate for a company with negative current FCF.
+    if (isNegativeFCF && growthModel === 'two-stage') {
+      growthModel = 'three-stage'
     }
 
     // Analyst forward estimates from earningsTrend (EPS + revenue by period)

@@ -835,7 +835,12 @@ export function computeCockpitOutput(
   // For true financial/fintech companies (already using NI-based FCF proxy), leave as-is.
   const isFintechOrInternetRetail =
     /internet.*retail/i.test((snapshot.sector ?? '') + ' ' + (snapshot.industry ?? '')) ||
-    /fintech|neobank|digital.?bank|payment|credit.?service|consumer.?finance/i.test(snapshot.industry ?? '')
+    /fintech|neobank|digital.?bank|payment|credit.?service|consumer.?finance/i.test(snapshot.industry ?? '') ||
+    // STNE pattern: EM Tech/Software company (terminalG > 3.5% = EM floor fired) —
+    // Yahoo OCF includes lending-book flows that inflate FCF margin same as MELI.
+    // terminalG > 3.5% is a reliable proxy for EM-domiciled companies (the EM floor
+    // only fires when CRP > 2%, pushing terminalG to rfRate+2% ≈ 6.4%).
+    (assumptions.terminalG > 0.035 && /technology|software/i.test((snapshot.sector ?? '') + ' ' + (snapshot.industry ?? '')))
   const rawFcfMargin = snapshot.fcfMargin
   let normalizedFcfMargin = rawFcfMargin
   if (
