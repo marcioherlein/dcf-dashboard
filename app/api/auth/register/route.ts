@@ -84,7 +84,11 @@ export async function POST(req: NextRequest) {
 
     if (existing) {
       // Unverified account exists — update password hash if they're retrying
-      await sb.from('users').update({ password_hash, name: name.trim() }).eq('email', normalizedEmail)
+      await sb.from('users').update({
+        password_hash,
+        name: name.trim(),
+        terms_accepted_at: new Date().toISOString(),
+      }).eq('email', normalizedEmail)
     } else {
       // Create new unverified user
       // BUG-12 FIX: include terms_accepted_at
