@@ -1,6 +1,8 @@
 'use client'
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 
+import { cn } from '@/lib/utils'
+
 import IndexSnapshotGrid     from '@/components/markets/IndexSnapshotGrid'
 import MarketPulse           from '@/components/markets/MarketPulse'
 import NormalizedPerfChart   from '@/components/markets/NormalizedPerfChart'
@@ -167,7 +169,7 @@ export default function MarketsPage() {
             id="markets-panel-overview"
             role="tabpanel"
             aria-labelledby="markets-tab-overview"
-            className={`lg:h-full lg:flex lg:flex-col lg:overflow-hidden${activeTab !== 'overview' ? ' hidden' : ''}`}
+            className={cn('lg:h-full lg:flex lg:flex-col lg:overflow-hidden', activeTab !== 'overview' && 'hidden')}
           >
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 lg:flex-1 lg:min-h-[200px] lg:overflow-hidden">
               <div className="lg:col-span-3 lg:h-full lg:min-h-0 lg:overflow-hidden">
@@ -190,7 +192,7 @@ export default function MarketsPage() {
             id="markets-panel-sectors"
             role="tabpanel"
             aria-labelledby="markets-tab-sectors"
-            className={`lg:h-full lg:flex lg:flex-col lg:overflow-hidden${activeTab !== 'sectors' ? ' hidden' : ''}`}
+            className={cn('lg:h-full lg:flex lg:flex-col lg:overflow-hidden', activeTab !== 'sectors' && 'hidden')}
           >
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 lg:flex-1 lg:min-h-0 lg:overflow-hidden pb-4 lg:pb-0">
               <div className="lg:col-span-7 lg:h-full lg:min-h-0 lg:overflow-hidden">
@@ -215,7 +217,7 @@ export default function MarketsPage() {
             id="markets-panel-news"
             role="tabpanel"
             aria-labelledby="markets-tab-news"
-            className={`lg:h-full lg:flex lg:flex-col lg:overflow-hidden${activeTab !== 'news' ? ' hidden' : ''}`}
+            className={cn('lg:h-full lg:flex lg:flex-col lg:overflow-hidden', activeTab !== 'news' && 'hidden')}
           >
             {!mkt ? (
               <Sk h="h-48" />
@@ -239,7 +241,7 @@ export default function MarketsPage() {
             id="markets-panel-calendar"
             role="tabpanel"
             aria-labelledby="markets-tab-calendar"
-            className={`lg:h-full lg:overflow-hidden${activeTab !== 'calendar' ? ' hidden' : ''}`}
+            className={cn('lg:h-full lg:overflow-hidden', activeTab !== 'calendar' && 'hidden')}
           >
             {mountedTabs.has('calendar') && <CalendarTab />}
           </div>
@@ -249,7 +251,7 @@ export default function MarketsPage() {
             id="markets-panel-valuation"
             role="tabpanel"
             aria-labelledby="markets-tab-valuation"
-            className={`flex flex-col lg:flex-row gap-3 lg:h-full lg:overflow-hidden${activeTab !== 'valuation' ? ' hidden' : ''}`}
+            className={cn('flex flex-col lg:flex-row gap-3 lg:h-full lg:overflow-hidden', activeTab !== 'valuation' && 'hidden')}
           >
             {/* Left col: YieldCurveChart */}
             <div className="lg:flex-1 lg:min-h-0 lg:overflow-hidden flex flex-col">
