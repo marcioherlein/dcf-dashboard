@@ -49,6 +49,8 @@ function applyFilters(
   query: string,
   upside: FilterUpside,
   confidence: FilterConfidence,
+  filterStale: boolean,
+  filterHasNote: boolean,
 ): WatchlistEntry[] {
   let res = entries
   if (query.trim()) {
@@ -61,6 +63,8 @@ function applyFilters(
   if (confidence === 'high')     res = res.filter((e) => e.overallScore != null && e.overallScore >= 0.7)
   if (confidence === 'medium')   res = res.filter((e) => e.overallScore != null && e.overallScore >= 0.4 && e.overallScore < 0.7)
   if (confidence === 'low')      res = res.filter((e) => e.overallScore != null && e.overallScore < 0.4)
+  if (filterStale)    res = res.filter((e) => daysSince(e.updatedAt) > 30)
+  if (filterHasNote)  res = res.filter((e) => !!(e.notes?.['__thesis__']?.trim()))
   return res
 }
 
@@ -551,9 +555,11 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
   const [refreshing,        setRefreshing]        = useState<Set<string>>(new Set())
   const [justRefreshed,     setJustRefreshed]     = useState<Set<string>>(new Set())
   const [selectedTickers,   setSelectedTickers]   = useState<Set<string>>(new Set())
-  const [viewPreset,        setViewPreset]        = useState<'valuation'|'quality'|'risk'|'market'>('valuation')
+  const [viewPreset,        setViewPreset]        = useState<'valuation'|'quality'|'risk'|'market'|'performance'|'analyst'|'events'|'custom'>('valuation')
   const [compact,           setCompact]           = useState(false)
   const [groupByName,       setGroupByName]       = useState(false)
+  const [filterStale,       setFilterStale]       = useState(false)
+  const [filterHasNote,     setFilterHasNote]     = useState(false)
   // Load data
   useEffect(() => {
     setLoading(true)
@@ -611,9 +617,17 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
     const avgUpside  = withUpside.length > 0
       ? withUpside.reduce((s, e) => s + (e.snapshot.upsidePct ?? 0), 0) / withUpside.length
       : null
-    const undervalued = entries.filter((e) => (e.snapshot.upsidePct ?? 0) >= 0.20).length
-    const stale       = entries.filter((e) => daysSince(e.updatedAt) > 30).length
-    return { tracked, avgUpside, undervalued, stale }
+    const sorted = [...withUpside].sort((a, b) => (a.snapshot.upsidePct ?? 0) - (b.snapshot.upsidePct ?? 0))
+    const mid = Math.floor(sorted.length / 2)
+    const medianUpside = sorted.length > 0
+      ? sorted.length % 2 === 0
+        ? ((sorted[mid - 1].snapshot.upsidePct ?? 0) + (sorted[mid].snapshot.upsidePct ?? 0)) / 2
+        : (sorted[mid].snapshot.upsidePct ?? 0)
+      : null
+    const undervalued    = entries.filter((e) => (e.snapshot.upsidePct ?? 0) >= 0.20).length
+    const highConviction = entries.filter((e) => e.overallScore != null && e.overallScore >= 0.7).length
+    const stale          = entries.filter((e) => daysSince(e.updatedAt) > 30).length
+    return { tracked, avgUpside, medianUpside, undervalued, highConviction, stale }
   }, [entries])
 
   // Tab counts
@@ -628,11 +642,11 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
   // Filter pipeline
   const displayEntries = useMemo(() => {
     const tabbed   = tabFilter(entries, activeTab)
-    const filtered = applyFilters(tabbed, searchQuery, filterUpside, filterConfidence)
+    const filtered = applyFilters(tabbed, searchQuery, filterUpside, filterConfidence, filterStale, filterHasNote)
     const effectiveKey = activeTab === 'recent' ? 'updatedAt' as SortKey : sortKey
     const effectiveDir = activeTab === 'recent' ? 'desc' as const : sortDir
     return sortEntries(filtered, effectiveKey, effectiveDir)
-  }, [entries, activeTab, searchQuery, filterUpside, filterConfidence, sortKey, sortDir])
+  }, [entries, activeTab, searchQuery, filterUpside, filterConfidence, filterStale, filterHasNote, sortKey, sortDir])
 
   const paginatedEntries = useMemo(() => {
     const start = (currentPage - 1) * pageSize
@@ -640,7 +654,7 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
   }, [displayEntries, currentPage, pageSize])
 
   // Reset page when filters change
-  useEffect(() => { setCurrentPage(1) }, [activeTab, searchQuery, filterUpside, filterConfidence, sortKey, sortDir])
+  useEffect(() => { setCurrentPage(1) }, [activeTab, searchQuery, filterUpside, filterConfidence, filterStale, filterHasNote, sortKey, sortDir])
 
   // Derived groups
   const derivedGroups = Array.from(new Set(entries.map((e) => e.groupName).filter((g): g is string => !!g)))
@@ -744,7 +758,7 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
     }
   }
 
-  const hasFilters = filterUpside !== 'all' || filterConfidence !== 'all' || !!searchQuery.trim()
+  const hasFilters = filterUpside !== 'all' || filterConfidence !== 'all' || !!searchQuery.trim() || filterStale || filterHasNote
 
   return (
     <div className="min-h-dvh bg-background px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
@@ -763,19 +777,35 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
       {!loading && entries.length > 0 && (
         <div className="space-y-4">
 
-          {/* KPI bar */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <KpiCard icon={Bookmark}    iconCls="bg-[#EAF1FF] text-[#2563EB]" label="Tracked"      value={kpi.tracked}    sub="companies" />
-            <KpiCard icon={TrendingUp}  iconCls="bg-[#E8F7EF] text-[#11875D]" label="Avg Upside"   value={kpi.avgUpside != null ? (kpi.avgUpside >= 0 ? '+' : '') + (kpi.avgUpside * 100).toFixed(1) + '%' : '—'} sub="across all" />
-            <KpiCard icon={CheckCircle} iconCls="bg-[#E8F7EF] text-[#11875D]" label="Undervalued"  value={kpi.undervalued} sub="companies" />
-            <KpiCard icon={Clock}       iconCls="bg-[#FFF4DA] text-[#B56A00]" label="Stale (30d+)" value={kpi.stale}      sub="need refresh" />
+          {/* KPI compact strip */}
+          <div className="flex items-center gap-4 flex-wrap px-1">
+            {([
+              { label: 'Tracked',        value: String(kpi.tracked),       cls: 'text-[#111111]' },
+              { label: 'Undervalued',    value: String(kpi.undervalued),   cls: 'text-[#11875D]' },
+              { label: 'Avg upside',     value: kpi.avgUpside != null ? (kpi.avgUpside >= 0 ? '+' : '') + (kpi.avgUpside * 100).toFixed(1) + '%' : '—', cls: kpi.avgUpside != null && kpi.avgUpside >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]' },
+              { label: 'Median upside',  value: kpi.medianUpside != null ? (kpi.medianUpside >= 0 ? '+' : '') + (kpi.medianUpside * 100).toFixed(1) + '%' : '—', cls: kpi.medianUpside != null && kpi.medianUpside >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]' },
+              { label: 'High conviction',value: String(kpi.highConviction), cls: 'text-[#2563EB]' },
+              { label: 'Stale 30d+',     value: String(kpi.stale),         cls: kpi.stale > 0 ? 'text-[#B56A00]' : 'text-[#9B9B9B]' },
+            ]).map(({ label, value, cls }) => (
+              <div key={label} className="flex items-center gap-1.5">
+                <span className="text-[11px] text-[#9B9B9B]">{label}</span>
+                <span className={cn('text-[13px] font-[700] tabular-nums', cls)}>{value}</span>
+              </div>
+            ))}
+            {kpi.stale > 0 && (
+              <button
+                onClick={() => entries.filter(e => daysSince(e.updatedAt) > 30).forEach(e => handleRefresh(e.ticker))}
+                className="text-[11px] font-[650] text-[#B56A00] hover:text-[#966000] border border-[#F3D391] rounded-md px-2 py-0.5 hover:bg-[#FFF4DA] transition-colors"
+              >
+                Refresh stale
+              </button>
+            )}
           </div>
 
           {/* Toolbar */}
-          <div className="bg-white border border-[#E5E5E5] rounded-xl overflow-hidden shadow-sm">
-            {/* Segment tabs */}
+          <div className="bg-white border border-[#E5E5E5] rounded-xl shadow-sm">
             {/* Segment tabs — mobile only; desktop tabs in TopBar */}
-            <div className="flex items-center gap-2 px-4 pt-1 lg:hidden">
+            <div className="flex items-center gap-2 px-4 pt-3 lg:hidden">
               <div className="flex-1 min-w-0 overflow-x-auto scrollbar-hide">
                 <SegmentTabs active={activeTab} counts={tabCounts} onSelect={setActiveTab} />
               </div>
@@ -805,15 +835,15 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
               <div className="flex items-center gap-2 flex-wrap">
                 <SortDropdown current={sortKey} dir={sortDir} onSort={handleSort} />
                 {/* View presets — desktop only */}
-                <div className="hidden lg:flex items-center gap-0.5 bg-[#F5F5F5] rounded-lg p-0.5">
-                  {(['valuation','quality','risk','market'] as const).map(p => (
+                <div className="hidden lg:flex items-center gap-0.5 bg-[#F5F5F5] rounded-lg p-0.5 overflow-x-auto scrollbar-hide max-w-[360px]">
+                  {(['valuation','performance','quality','risk','analyst','custom'] as const).map(p => (
                     <button key={p} onClick={() => setViewPreset(p)}
-                      className={cn('px-2.5 py-1 rounded-md text-[11px] font-[650] capitalize transition-colors min-h-[32px]',
+                      className={cn('px-2.5 py-1 rounded-md text-[11px] font-[650] capitalize transition-colors min-h-[32px] whitespace-nowrap',
                         viewPreset === p ? 'bg-white text-[#111111] shadow-sm' : 'text-[#9B9B9B] hover:text-[#6B6B6B]'
                       )}>{p}</button>
                   ))}
                 </div>
-                {view === 'table' && viewPreset === 'valuation' && (
+                {view === 'table' && (
                   <ColumnPicker selected={selectedCols} onChange={setSelectedCols} />
                 )}
                 {/* Export CSV */}
@@ -893,7 +923,7 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
                 {hasFilters && (
                   <button
                     className="flex items-center gap-1.5 px-3 py-2 text-[12px] font-semibold border rounded-xl transition-colors min-h-[44px] bg-olive-50 border-olive-700 text-olive-700"
-                    onClick={() => { setFilterUpside('all'); setFilterConfidence('all'); setSearch('') }}
+                    onClick={() => { setFilterUpside('all'); setFilterConfidence('all'); setSearch(''); setFilterStale(false); setFilterHasNote(false) }}
                   >
                     <SlidersHorizontal size={13} />
                     Clear filters
@@ -902,8 +932,8 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
               </div>
             </div>
 
-            {/* Filter chips */}
-            <div className="flex items-center gap-1.5 px-4 pb-3 flex-wrap">
+            {/* Filter chips — Row 1: verdict */}
+            <div className="flex items-center gap-1.5 px-4 pb-2 flex-wrap">
               {([
                 { value: 'all',         label: 'All' },
                 { value: 'undervalued', label: 'Undervalued' },
@@ -930,6 +960,34 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
                   </button>
                 )
               })}
+            </div>
+            {/* Filter chips — Row 2: confidence + workflow */}
+            <div className="flex items-center gap-1.5 px-4 pb-3 flex-wrap border-t border-[#F5F5F5] pt-2">
+              <span className="text-[10px] font-[650] text-[#9B9B9B] shrink-0">Also:</span>
+              <button
+                onClick={() => setFilterConfidence(filterConfidence === 'high' ? 'all' : 'high')}
+                className={cn('inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-[11px] font-[650] transition-colors min-h-[28px]',
+                  filterConfidence === 'high'
+                    ? 'bg-[#2563EB] border-[#2563EB] text-white'
+                    : 'bg-white border-[#E5E5E5] text-[#6B6B6B] hover:border-[#2563EB] hover:text-[#2563EB]'
+                )}
+              >High conviction</button>
+              <button
+                onClick={() => setFilterStale(v => !v)}
+                className={cn('inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-[11px] font-[650] transition-colors min-h-[28px]',
+                  filterStale
+                    ? 'bg-[#B56A00] border-[#B56A00] text-white'
+                    : 'bg-white border-[#E5E5E5] text-[#6B6B6B] hover:border-[#B56A00] hover:text-[#B56A00]'
+                )}
+              >Stale</button>
+              <button
+                onClick={() => setFilterHasNote(v => !v)}
+                className={cn('inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-[11px] font-[650] transition-colors min-h-[28px]',
+                  filterHasNote
+                    ? 'bg-[#2563EB] border-[#2563EB] text-white'
+                    : 'bg-white border-[#E5E5E5] text-[#6B6B6B] hover:border-[#2563EB] hover:text-[#2563EB]'
+                )}
+              >Has notes</button>
             </div>
           </div>
 

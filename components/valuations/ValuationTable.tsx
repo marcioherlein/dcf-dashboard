@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import type { WatchlistEntry, ListTag } from '@/lib/simplifier/types'
 import { Sparkline, SparklineSkeleton } from '@/components/ui/Sparkline'
@@ -16,30 +17,75 @@ export type SortKey =
   | 'return1y' | 'return3y' | 'return5y'
   | 'bearScenario' | 'baseScenario' | 'bullScenario'
   | 'piotroski'
+  // Quality — data in FinancialSnapshot
+  | 'grossMargin' | 'fcfMargin' | 'roic' | 'beta' | 'marketCap'
+  // Scenario-derived
+  | 'downsideToBear'
 
 // ── Optional column definitions ───────────────────────────────────────────────
 
 export interface ColDef {
   id:       SortKey
   label:    string
-  group:    'Valuation' | 'Returns' | 'Fundamentals' | 'Scenarios'
-  format:   'pct' | 'multiple' | 'int' | 'price' | 'pct_return'
+  group:    'Performance' | 'Valuation' | 'Quality' | 'Risk' | 'Events' | 'Fundamentals' | 'Returns' | 'Scenarios'
+  format:   'pct' | 'multiple' | 'int' | 'price' | 'pct_return' | 'large_num'
   hint?:    string
+  todo?:    boolean  // true = data pipeline not ready, hidden from picker
 }
 
-export const OPTIONAL_COLUMNS: ColDef[] = [
-  { id: 'peRatio',      label: 'P/E (TTM)',   group: 'Fundamentals', format: 'multiple', hint: 'Trailing price-to-earnings ratio' },
-  { id: 'pegRatio',     label: 'PEG',         group: 'Fundamentals', format: 'multiple', hint: 'P/E relative to earnings growth' },
-  { id: 'evToEbitda',   label: 'EV/EBITDA',   group: 'Fundamentals', format: 'multiple', hint: 'Enterprise value to EBITDA' },
-  { id: 'dividendYield',label: 'Div. Yield',  group: 'Fundamentals', format: 'pct',      hint: 'Trailing dividend yield' },
-  { id: 'piotroski',    label: 'F-Score',     group: 'Fundamentals', format: 'int',      hint: 'Piotroski F-Score (0–9). 7+ = strong.' },
-  { id: 'return1y',     label: 'Return 1Y',   group: 'Returns',      format: 'pct_return' },
-  { id: 'return3y',     label: 'Return 3Y',   group: 'Returns',      format: 'pct_return' },
-  { id: 'return5y',     label: 'Return 5Y',   group: 'Returns',      format: 'pct_return' },
-  { id: 'bearScenario', label: 'Bear',        group: 'Scenarios',    format: 'price',    hint: 'Bear case fair value' },
-  { id: 'baseScenario', label: 'Base',        group: 'Scenarios',    format: 'price',    hint: 'Base case fair value' },
-  { id: 'bullScenario', label: 'Bull',        group: 'Scenarios',    format: 'price',    hint: 'Bull case fair value' },
+interface ColGroup { group: string; cols: ColDef[] }
+
+export const ALL_COLUMN_GROUPS: ColGroup[] = [
+  {
+    group: 'Performance',
+    cols: [
+      { id: 'return1y', label: '1Y Return',  group: 'Performance', format: 'pct_return', hint: '1-year price return' },
+      { id: 'return3y', label: '3Y Return',  group: 'Performance', format: 'pct_return', hint: '3-year price return' },
+      { id: 'return5y', label: '5Y Return',  group: 'Performance', format: 'pct_return', hint: '5-year price return' },
+      // TODO: return1d, return5d, return1m, return3m, return6m, returnYTD, sinceSave — need data pipeline
+    ],
+  },
+  {
+    group: 'Valuation',
+    cols: [
+      { id: 'peRatio',       label: 'P/E (TTM)',   group: 'Valuation', format: 'multiple',  hint: 'Trailing price-to-earnings' },
+      { id: 'pegRatio',      label: 'PEG',         group: 'Valuation', format: 'multiple',  hint: 'P/E ÷ earnings growth rate' },
+      { id: 'evToEbitda',    label: 'EV/EBITDA',   group: 'Valuation', format: 'multiple',  hint: 'Enterprise value to EBITDA' },
+      { id: 'dividendYield', label: 'Div. Yield',  group: 'Valuation', format: 'pct',       hint: 'Trailing dividend yield' },
+      { id: 'marketCap',     label: 'Market Cap',  group: 'Valuation', format: 'large_num', hint: 'Market capitalisation' },
+      // TODO: forwardPE, ps, evSales, evFcf, analystTarget, analystUpside — need snapshot fields
+    ],
+  },
+  {
+    group: 'Quality',
+    cols: [
+      { id: 'grossMargin', label: 'Gross Margin', group: 'Quality', format: 'pct', hint: 'Gross profit ÷ revenue' },
+      { id: 'fcfMargin',   label: 'FCF Margin',   group: 'Quality', format: 'pct', hint: 'Free cash flow ÷ revenue' },
+      { id: 'roic',        label: 'ROIC',         group: 'Quality', format: 'pct', hint: 'Return on invested capital' },
+      { id: 'piotroski',   label: 'F-Score',      group: 'Quality', format: 'int', hint: 'Piotroski F-Score 0–9. 7+ = strong.' },
+      // TODO: roe, revenueGrowthTTM, epsGrowthTTM, altmanZ, beneishM — need snapshot fields
+    ],
+  },
+  {
+    group: 'Risk',
+    cols: [
+      { id: 'beta',          label: 'Beta',          group: 'Risk', format: 'multiple',  hint: 'Sensitivity vs S&P 500' },
+      { id: 'bearScenario',  label: 'Bear FV',        group: 'Risk', format: 'price',     hint: 'Bear case fair value' },
+      { id: 'baseScenario',  label: 'Base FV',        group: 'Risk', format: 'price',     hint: 'Base case fair value' },
+      { id: 'bullScenario',  label: 'Bull FV',        group: 'Risk', format: 'price',     hint: 'Bull case fair value' },
+      { id: 'downsideToBear', label: 'Downside (Bear)', group: 'Risk', format: 'pct_return', hint: 'Current price vs bear case FV' },
+      // TODO: vol30d, vol90d, netDebtEbitda — need snapshot fields
+    ],
+  },
+  {
+    group: 'Events',
+    cols: [
+      // TODO: nextEarningsDate, daysToEarnings, staleness, dataConfidence — need data pipeline
+    ],
+  },
 ]
+
+export const OPTIONAL_COLUMNS: ColDef[] = ALL_COLUMN_GROUPS.flatMap(g => g.cols).filter(c => !c.todo)
 
 const STORAGE_KEY = 'insic_valuation_cols_v1'
 const DEFAULT_COLS: SortKey[] = []  // no extra columns by default
@@ -68,6 +114,11 @@ function formatColValue(val: number | null | undefined, format: ColDef['format']
     case 'multiple':   return val.toFixed(2) + '×'
     case 'int':        return String(Math.round(val))
     case 'price':      return '$' + val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    case 'large_num': {
+      if (val >= 1e12) return '$' + (val / 1e12).toFixed(1) + 'T'
+      if (val >= 1e9)  return '$' + (val / 1e9).toFixed(1) + 'B'
+      return '$' + (val / 1e6).toFixed(0) + 'M'
+    }
   }
 }
 
@@ -81,7 +132,7 @@ function colValueClass(val: number | null | undefined, format: ColDef['format'],
   return 'text-[#111111]'
 }
 
-// ── Column Picker ─────────────────────────────────────────────────────────────
+// ── Column Picker — portal-based to escape overflow-hidden parents ─────────────
 
 export function ColumnPicker({
   selected,
@@ -91,15 +142,29 @@ export function ColumnPicker({
   onChange: (cols: SortKey[]) => void
 }) {
   const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
+  const [pos, setPos] = useState({ top: 0, right: 0 })
+  const btnRef = useRef<HTMLButtonElement>(null)
+  const dropRef = useRef<HTMLDivElement>(null)
+
+  const openDropdown = () => {
+    if (btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect()
+      setPos({ top: r.bottom + window.scrollY + 6, right: window.innerWidth - r.right })
+    }
+    setOpen(true)
+  }
 
   useEffect(() => {
     if (!open) return
     const h = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+      if (btnRef.current?.contains(e.target as Node)) return
+      if (dropRef.current?.contains(e.target as Node)) return
+      setOpen(false)
     }
+    const k = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
     document.addEventListener('mousedown', h)
-    return () => document.removeEventListener('mousedown', h)
+    document.addEventListener('keydown', k)
+    return () => { document.removeEventListener('mousedown', h); document.removeEventListener('keydown', k) }
   }, [open])
 
   const toggle = (id: SortKey) => {
@@ -108,14 +173,59 @@ export function ColumnPicker({
     saveCols(next)
   }
 
-  const groups = ['Fundamentals', 'Returns', 'Scenarios'] as const
+  const dropdown = (typeof window !== 'undefined' && open) ? createPortal(
+    <div
+      ref={dropRef}
+      className="fixed bg-white border border-[#E5E5E5] rounded-xl shadow-xl w-72 p-3 max-h-[480px] overflow-y-auto"
+      style={{ top: pos.top, right: pos.right, zIndex: 9999 }}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-[10px] font-bold text-[#9B9B9B] uppercase tracking-wider">Column Manager</p>
+        {selected.length > 0 && (
+          <button
+            onClick={() => { onChange([]); saveCols([]) }}
+            className="text-[10px] text-[#D83B3B] hover:text-[#B02A2A] transition-colors"
+          >
+            Clear all
+          </button>
+        )}
+      </div>
+      {ALL_COLUMN_GROUPS.filter(g => g.cols.filter(c => !c.todo).length > 0).map(({ group, cols }) => (
+        <div key={group} className="mb-3">
+          <p className="text-[10px] font-semibold text-[#9B9B9B] mb-1.5 uppercase tracking-wide">{group}</p>
+          <div className="flex flex-wrap gap-1.5">
+            {cols.filter(c => !c.todo).map(col => {
+              const active = selected.includes(col.id)
+              return (
+                <button
+                  key={col.id}
+                  onClick={() => toggle(col.id)}
+                  title={col.hint}
+                  className={cn(
+                    'px-2 py-1 rounded-md border text-[11px] font-semibold transition-all',
+                    active
+                      ? 'bg-[#5F790B] border-[#5F790B] text-white'
+                      : 'bg-white border-[#E5E5E5] text-[#6B6B6B] hover:border-[#BFD2A1] hover:text-[#5F790B]',
+                  )}
+                >
+                  {col.label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      ))}
+    </div>,
+    document.body
+  ) : null
 
   return (
-    <div ref={ref} className="relative">
+    <div className="relative">
       <button
-        onClick={() => setOpen(v => !v)}
+        ref={btnRef}
+        onClick={() => open ? setOpen(false) : openDropdown()}
         className={cn(
-          'flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px] font-semibold transition-all',
+          'flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px] font-semibold transition-all min-h-[36px]',
           selected.length > 0
             ? 'border-[#5F790B] text-[#5F790B] bg-[#F6FAEA]'
             : 'border-[#E5E5E5] text-[#6B6B6B] bg-white hover:border-[#BFD2A1] hover:text-[#5F790B]',
@@ -131,45 +241,7 @@ export function ColumnPicker({
           </span>
         )}
       </button>
-
-      {open && (
-        <div className="absolute right-0 top-full mt-1 z-50 bg-white border border-[#E5E5E5] rounded-xl shadow-lg w-64 p-3">
-          <p className="text-[10px] font-bold text-[#9B9B9B] uppercase tracking-wider mb-2">Add columns</p>
-          {groups.map(group => (
-            <div key={group} className="mb-3">
-              <p className="text-[10px] font-semibold text-[#6B6B6B] mb-1.5">{group}</p>
-              <div className="flex flex-wrap gap-1.5">
-                {OPTIONAL_COLUMNS.filter(c => c.group === group).map(col => {
-                  const active = selected.includes(col.id)
-                  return (
-                    <button
-                      key={col.id}
-                      onClick={() => toggle(col.id)}
-                      title={col.hint}
-                      className={cn(
-                        'px-2 py-1 rounded-md border text-[11px] font-semibold transition-all',
-                        active
-                          ? 'bg-[#5F790B] border-[#5F790B] text-white'
-                          : 'bg-white border-[#E5E5E5] text-[#6B6B6B] hover:border-[#BFD2A1] hover:text-[#5F790B]',
-                      )}
-                    >
-                      {col.label}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          ))}
-          {selected.length > 0 && (
-            <button
-              onClick={() => { onChange([]); saveCols([]) }}
-              className="text-[11px] text-[#D83B3B] hover:text-[#B02A2A] mt-1 transition-colors"
-            >
-              Clear all
-            </button>
-          )}
-        </div>
-      )}
+      {dropdown}
     </div>
   )
 }
@@ -193,7 +265,7 @@ export interface ValuationTableProps {
   justRefreshed?:    Set<string>
   selectedTickers?:  Set<string>
   onSelectionChange?: (tickers: Set<string>) => void
-  viewPreset?:       'valuation' | 'quality' | 'risk' | 'market'
+  viewPreset?:       'valuation' | 'performance' | 'quality' | 'risk' | 'analyst' | 'events' | 'market' | 'performance' | 'analyst' | 'events' | 'custom'
   compact?:          boolean
   groupByName?:      boolean
 }
@@ -501,13 +573,14 @@ function ActionsMenu({ entry, groups, onDelete, onTagUpdate, onGroupUpdate }: {
 
 // ── Sortable Header Cell ───────────────────────────────────────────────────────
 
-function Th({ label, sortKey, current, dir, onSort, align = 'right' }: {
-  label:    string
-  sortKey:  SortKey
-  current:  SortKey
-  dir:      'asc' | 'desc'
-  onSort:   (k: SortKey) => void
-  align?:   'left' | 'right'
+function Th({ label, sortKey, current, dir, onSort, align = 'right', className }: {
+  label:      string
+  sortKey:    SortKey
+  current:    SortKey
+  dir:        'asc' | 'desc'
+  onSort:     (k: SortKey) => void
+  align?:     'left' | 'right'
+  className?: string
 }) {
   const active = current === sortKey
   return (
@@ -516,6 +589,7 @@ function Th({ label, sortKey, current, dir, onSort, align = 'right' }: {
       className={cn(
         'px-3 py-2 text-[10px] font-semibold text-[#6B6B6B] cursor-pointer select-none hover:text-[#6B6B6B] transition-colors whitespace-nowrap',
         align === 'right' ? 'text-right' : 'text-left',
+        className,
       )}
     >
       <span className={cn('inline-flex items-center gap-1', align === 'right' ? 'justify-end' : 'justify-start')}>
@@ -691,8 +765,15 @@ function MobileValuationRow({ entry, sparklines, onDelete, onTagUpdate, onGroupU
           {activeCols.length > 0 && (
             <div className="grid grid-cols-3 gap-3 mb-4">
               {activeCols.map(col => {
-                const rawVal = entry.snapshot[col.id as keyof typeof entry.snapshot] as number | null | undefined
-                const val = typeof rawVal === 'number' ? rawVal : null
+                let val: number | null = null
+                if (col.id === 'downsideToBear') {
+                  const bear = entry.snapshot.bearScenario ?? null
+                  const price = entry.snapshot.price ?? null
+                  val = (bear != null && price != null && price > 0) ? (bear - price) / price : null
+                } else {
+                  const rawVal = entry.snapshot[col.id as keyof typeof entry.snapshot] as number | null | undefined
+                  val = typeof rawVal === 'number' ? rawVal : null
+                }
                 return (
                   <div key={col.id}>
                     <p className="text-[10px] text-[#9B9B9B] font-semibold uppercase tracking-wide mb-0.5">{col.label}</p>
@@ -809,10 +890,15 @@ function mosCls(upside: number | null): string {
 // ── Preset column map ─────────────────────────────────────────────────────────
 
 const PRESET_COLS: Record<string, SortKey[]> = {
-  valuation: [],
-  quality:   ['peRatio','pegRatio','evToEbitda','piotroski'],
-  risk:      ['bearScenario','baseScenario','bullScenario'],
-  market:    ['return1y','return3y','dividendYield'],
+  valuation:   ['peRatio', 'evToEbitda', 'dividendYield', 'marketCap'],
+  performance: ['return1y', 'return3y', 'return5y'],
+  quality:     ['grossMargin', 'fcfMargin', 'roic', 'piotroski'],
+  risk:        ['beta', 'bearScenario', 'baseScenario', 'bullScenario', 'downsideToBear'],
+  analyst:     ['peRatio', 'pegRatio', 'dividendYield', 'marketCap'],
+  events:      [],
+  custom:      [],
+  // legacy aliases
+  market:      ['return1y', 'return3y', 'dividendYield'],
 }
 
 // ── Main Table ─────────────────────────────────────────────────────────────────
@@ -820,7 +906,10 @@ const PRESET_COLS: Record<string, SortKey[]> = {
 export function ValuationTable({ entries, sparklines, livePrices = {}, groups, sortKey, sortDir, onSort, onDelete, onTagUpdate, onGroupUpdate, onNoteSave, selectedCols = [], onRefresh, refreshing, justRefreshed, selectedTickers, onSelectionChange, viewPreset, compact = false, groupByName = false }: ValuationTableProps) {
   const [expandedTicker, setExpandedTicker] = useState<string | null>(null)
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
-  const activeCols = OPTIONAL_COLUMNS.filter(c => (viewPreset ? PRESET_COLS[viewPreset] : selectedCols ?? []).includes(c.id))
+  const activeCols = OPTIONAL_COLUMNS.filter(c => {
+    const ids: SortKey[] = viewPreset ? (PRESET_COLS[viewPreset] ?? []) : (selectedCols ?? [])
+    return ids.includes(c.id)
+  })
 
   const toggleGroup = (name: string) => {
     setCollapsedGroups(prev => {
@@ -837,17 +926,27 @@ export function ValuationTable({ entries, sparklines, livePrices = {}, groups, s
     let va: string | number, vb: string | number
     const snap = (e: WatchlistEntry, k: SortKey): number => {
       switch (k) {
-        case 'peRatio':      return e.snapshot.peRatio      ?? -Infinity
-        case 'pegRatio':     return e.snapshot.pegRatio     ?? -Infinity
-        case 'evToEbitda':   return e.snapshot.evToEbitda   ?? -Infinity
-        case 'dividendYield':return e.snapshot.dividendYield ?? -Infinity
-        case 'return1y':     return e.snapshot.return1y     ?? -Infinity
-        case 'return3y':     return e.snapshot.return3y     ?? -Infinity
-        case 'return5y':     return e.snapshot.return5y     ?? -Infinity
-        case 'bearScenario': return e.snapshot.bearScenario ?? -Infinity
-        case 'baseScenario': return e.snapshot.baseScenario ?? -Infinity
-        case 'bullScenario': return e.snapshot.bullScenario ?? -Infinity
-        case 'piotroski':    return e.snapshot.piotroski    ?? -Infinity
+        case 'peRatio':       return e.snapshot.peRatio       ?? -Infinity
+        case 'pegRatio':      return e.snapshot.pegRatio      ?? -Infinity
+        case 'evToEbitda':    return e.snapshot.evToEbitda    ?? -Infinity
+        case 'dividendYield': return e.snapshot.dividendYield ?? -Infinity
+        case 'return1y':      return e.snapshot.return1y      ?? -Infinity
+        case 'return3y':      return e.snapshot.return3y      ?? -Infinity
+        case 'return5y':      return e.snapshot.return5y      ?? -Infinity
+        case 'bearScenario':  return e.snapshot.bearScenario  ?? -Infinity
+        case 'baseScenario':  return e.snapshot.baseScenario  ?? -Infinity
+        case 'bullScenario':  return e.snapshot.bullScenario  ?? -Infinity
+        case 'piotroski':     return e.snapshot.piotroski     ?? -Infinity
+        case 'grossMargin':   return e.snapshot.grossMargin   ?? -Infinity
+        case 'fcfMargin':     return e.snapshot.fcfMargin     ?? -Infinity
+        case 'roic':          return e.snapshot.roic          ?? -Infinity
+        case 'beta':          return e.snapshot.beta          ?? -Infinity
+        case 'marketCap':     return e.snapshot.marketCap     ?? -Infinity
+        case 'downsideToBear': {
+          const bear = e.snapshot.bearScenario ?? null
+          const price = e.snapshot.price ?? null
+          return (bear != null && price != null && price > 0) ? (bear - price) / price : -Infinity
+        }
         default: return -Infinity
       }
     }
@@ -889,7 +988,7 @@ export function ValuationTable({ entries, sparklines, livePrices = {}, groups, s
             <thead>
               <tr className="bg-[#F8F8F8] border-b border-[#E5E5E5]">
                 {/* Checkbox column */}
-                <th className="w-8 px-2 py-2">
+                <th className="w-8 px-2 py-2 sticky left-0 z-10 bg-[#F8F8F8]">
                   <input type="checkbox"
                     className="w-3 h-3 rounded accent-[#5F790B]"
                     checked={selectedTickers != null && paginatedTickers.length > 0 && paginatedTickers.every(t => selectedTickers.has(t))}
@@ -900,8 +999,8 @@ export function ValuationTable({ entries, sparklines, livePrices = {}, groups, s
                   />
                 </th>
                 {/* Expand column */}
-                <th className="w-8 px-2 py-2" />
-                <Th label="Ticker & Company" sortKey="ticker"       current={sortKey} dir={sortDir} onSort={handleSort} align="left" />
+                <th className="w-8 px-2 py-2 sticky left-[32px] z-10 bg-[#F8F8F8]" />
+                <Th label="Ticker & Company" sortKey="ticker" current={sortKey} dir={sortDir} onSort={handleSort} align="left" className="sticky left-[64px] z-10 bg-[#F8F8F8] shadow-[2px_0_4px_rgba(0,0,0,0.06)]" />
                 <th className="px-3 py-2 text-[10px] font-semibold text-[#6B6B6B] text-left whitespace-nowrap">Tag</th>
                 {/* Sparkline column header — hidden in compact mode */}
                 {!compact && <th className="px-3 py-2 text-[10px] font-semibold text-[#6B6B6B] text-center whitespace-nowrap">1M</th>}
@@ -1025,7 +1124,7 @@ export function ValuationTable({ entries, sparklines, livePrices = {}, groups, s
                       )}
                     >
                       {/* Checkbox */}
-                      <td className={cn('w-8 px-2', compact ? 'py-1' : 'py-2')}>
+                      <td className={cn('w-8 px-2 sticky left-0 z-10 bg-white', compact ? 'py-1' : 'py-2')}>
                         <input type="checkbox"
                           className="w-3 h-3 rounded accent-[#5F790B]"
                           checked={selectedTickers?.has(entry.ticker) ?? false}
@@ -1039,7 +1138,7 @@ export function ValuationTable({ entries, sparklines, livePrices = {}, groups, s
                       </td>
 
                       {/* Expand chevron */}
-                      <td className="px-2 py-2 w-8">
+                      <td className="px-2 py-2 w-8 sticky left-[32px] z-10 bg-white">
                         <div className="relative">
                           <button
                             onClick={() => toggleExpand(entry.ticker)}
@@ -1060,7 +1159,7 @@ export function ValuationTable({ entries, sparklines, livePrices = {}, groups, s
                       </td>
 
                       {/* Ticker & Company */}
-                      <td className={cn('px-3 min-w-[120px]', compact ? 'py-1' : 'py-2')}>
+                      <td className={cn('px-3 min-w-[120px] sticky left-[64px] z-10 bg-white shadow-[2px_0_4px_rgba(0,0,0,0.06)]', compact ? 'py-1' : 'py-2')}>
                         <div className="flex items-center gap-2">
                           {!compact && <TickerAvatar ticker={entry.ticker} />}
                           <div className="min-w-0">
@@ -1187,8 +1286,16 @@ export function ValuationTable({ entries, sparklines, livePrices = {}, groups, s
 
                       {/* Dynamic optional columns */}
                       {activeCols.map(col => {
-                        const rawVal = entry.snapshot[col.id as keyof typeof entry.snapshot] as number | null | undefined
-                        const val = typeof rawVal === 'number' ? rawVal : null
+                        // Computed columns that aren't direct snapshot fields
+                        let val: number | null = null
+                        if (col.id === 'downsideToBear') {
+                          const bear = entry.snapshot.bearScenario ?? null
+                          const price = entry.snapshot.price ?? null
+                          val = (bear != null && price != null && price > 0) ? (bear - price) / price : null
+                        } else {
+                          const rawVal = entry.snapshot[col.id as keyof typeof entry.snapshot] as number | null | undefined
+                          val = typeof rawVal === 'number' ? rawVal : null
+                        }
                         const text = formatColValue(val, col.format)
                         const cls  = colValueClass(val, col.format, col.id)
                         const isStale = entry.snapshot.metricsUpdatedAt == null
