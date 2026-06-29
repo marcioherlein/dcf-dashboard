@@ -2169,6 +2169,8 @@ export default function FinancialsHub({ statementsData, financialsData, currency
         }
       />
     )}
+    {/* Data source attribution */}
+    <p className="text-[10px] text-[#C0C0C0] px-4 pt-2 pb-4">Data source: Financial Modeling Prep (FMP) · Prices: Yahoo Finance</p>
     </>
   )
 }

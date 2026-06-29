@@ -258,7 +258,10 @@ export default function PricingPage() {
                   userEmail={session?.user?.email}
                   onSignInRequired={() => router.push('/auth/sign-in?callbackUrl=/pricing')}
                 />
-                <p className="text-center text-[11px] text-gray-500 mt-2">Cancel anytime · No contracts</p>
+                <p className="text-center text-[11px] text-gray-500 mt-2">
+                  Cancel anytime · No contracts ·{' '}
+                  <a href="/refund-policy" className="underline hover:text-gray-400">Refund policy</a>
+                </p>
                 <p className="text-center text-[11px] text-gray-500 mt-1.5">
                   By subscribing you agree to our{' '}
                   <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-300">Terms of Service</a>

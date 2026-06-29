@@ -549,13 +549,19 @@ export default function ScreenerPage() {
 
             {/* Result count */}
             {!loading && !error && (
-              <span className="ml-auto text-[11px] text-[#6B6B6B] shrink-0 tabular-nums">
-                <TrendingUp size={11} className="inline mr-1 mb-px" />
-                {displayed.length.toLocaleString()} stocks
-                {!isPro && stocks.length > FREE_SCREENER_LIMIT && (
-                  <span className="ml-1.5 text-[#5F790B] font-[600]">
-                    · {stocks.length - FREE_SCREENER_LIMIT} more with Pro
-                  </span>
+              <span className="ml-auto text-[11px] text-[#6B6B6B] shrink-0 tabular-nums flex items-center gap-1">
+                {!isPro && stocks.length > FREE_SCREENER_LIMIT ? (
+                  <>
+                    Showing <strong className="text-[#111111] font-[650]">{FREE_SCREENER_LIMIT}</strong> of{' '}
+                    <strong className="text-[#111111] font-[650]">{stocks.length.toLocaleString()}</strong>{' '}
+                    <span className="text-[#9B9B9B]">—</span>{' '}
+                    <a href="/pricing" className="text-[#5F790B] font-[600] hover:underline whitespace-nowrap">Upgrade to see all →</a>
+                  </>
+                ) : (
+                  <>
+                    <TrendingUp size={11} className="inline mr-0.5 mb-px" />
+                    {displayed.length.toLocaleString()} stocks
+                  </>
                 )}
               </span>
             )}

@@ -196,7 +196,10 @@ export default function VerdictHero({
 
           {/* Headline — fair value leads, verdict word follows */}
           <div>
-            <p className="text-[10px] font-[650] text-white/45 leading-tight mb-1">Fair value estimate</p>
+            <p className="text-[10px] font-[650] text-white/45 leading-tight mb-1 flex items-center gap-1.5">
+              Fair value estimate
+              {' '}<InfoTooltip text={`Blended average of ${output.methods.filter(m => m.fairValue != null && m.fairValue > 0).length} valuation model${output.methods.filter(m => m.fairValue != null && m.fairValue > 0).length === 1 ? '' : 's'} — DCF, Forward P/E, EV/EBITDA, and Revenue Multiple. Based on most recent annual filing.`} side="bottom" />
+            </p>
             <h2 className="text-[2rem] sm:text-[2.2rem] font-[800] leading-none tabular-nums text-white tracking-tight">
               {output.blendedFairValue != null ? fmtPrice(output.blendedFairValue, currency) : '—'}
             </h2>
@@ -338,6 +341,7 @@ export default function VerdictHero({
             baseCagr={output.scenarios.base.cagr}
             bullCagr={output.scenarios.bull.cagr}
           />
+          <p className="text-[9px] text-white/20 mt-1">Data: Financial Modeling Prep (FMP) · Yahoo Finance · FRED</p>
         </div>
 
       </div>

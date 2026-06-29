@@ -283,7 +283,7 @@ function EarningsList({ items, loading }: { items: EarningsItem[]; loading: bool
 
 function EconomicList({ events, loading, missingKey, fetchError }: { events: EconomicEvent[]; loading: boolean; missingKey?: boolean; fetchError?: boolean }) {
   if (loading) return <LoadingRows />
-  if (missingKey) return <EmptyState icon={<AlertCircle size={28} />} message="Economic calendar data unavailable — FMP_API_KEY not configured." />
+  if (missingKey) return <EmptyState icon={<AlertCircle size={28} />} message="Economic calendar data is temporarily unavailable. Check back soon." />
   if (fetchError) return <EmptyState icon={<AlertCircle size={28} />} message="Could not load economic events — check your connection and try again." />
   if (events.length === 0) return <EmptyState message="No U.S. high-impact economic events scheduled this week." />
 
@@ -349,7 +349,7 @@ function EconomicList({ events, loading, missingKey, fetchError }: { events: Eco
 
 function SplitsList({ splits, loading, missingKey, fetchError }: { splits: SplitItem[]; loading: boolean; missingKey?: boolean; fetchError?: boolean }) {
   if (loading) return <LoadingRows />
-  if (missingKey) return <EmptyState icon={<AlertCircle size={28} />} message="Splits calendar unavailable — FMP_API_KEY not configured." />
+  if (missingKey) return <EmptyState icon={<AlertCircle size={28} />} message="Splits calendar is temporarily unavailable. Check back soon." />
   if (fetchError) return <EmptyState icon={<AlertCircle size={28} />} message="Could not load splits data — check your connection and try again." />
   if (splits.length === 0) return <EmptyState icon={<Scissors size={28} />} message="No stock splits scheduled this week." />
 
@@ -397,7 +397,7 @@ function SplitsList({ splits, loading, missingKey, fetchError }: { splits: Split
 
 function IposList({ ipos, loading, missingKey, fetchError }: { ipos: IpoItem[]; loading: boolean; missingKey?: boolean; fetchError?: boolean }) {
   if (loading) return <LoadingRows />
-  if (missingKey) return <EmptyState icon={<AlertCircle size={28} />} message="IPO calendar unavailable — FMP_API_KEY not configured." />
+  if (missingKey) return <EmptyState icon={<AlertCircle size={28} />} message="IPO calendar is temporarily unavailable. Check back soon." />
   if (fetchError) return <EmptyState icon={<AlertCircle size={28} />} message="Could not load IPO data — check your connection and try again." />
   if (ipos.length === 0) return <EmptyState icon={<Rocket size={28} />} message="No IPO pricings found for this week." />
 

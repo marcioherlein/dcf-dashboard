@@ -118,7 +118,10 @@ export default function PricingSection() {
               <span className="text-[44px] font-bold text-[#111111] leading-none tabular-nums">${monthlyPrice}</span>
               <span className="text-[13px] text-[#6B6B6B] font-medium">/month</span>
             </div>
-            <p className="text-[12px] text-[#6B6B6B] mb-5">Cancel anytime · No contracts.</p>
+            <p className="text-[12px] text-[#6B6B6B] mb-5">
+              Cancel anytime · No contracts ·{' '}
+              <a href="/refund-policy" className="underline hover:text-[#111111]">Refund policy</a>
+            </p>
 
             {isPro ? (
               <div className="w-full flex items-center justify-center gap-2 rounded-md py-3 text-[13.5px] font-semibold text-[#5F790B] bg-[#EEF2FA] border border-[#BFD2A1] mb-5 min-h-[48px]">

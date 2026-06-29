@@ -549,6 +549,7 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
   const [pendingGroups,     setPendingGroups]     = useState<string[]>([])
   const [selectedCols,      setSelectedCols]      = useState<SortKey[]>(() => loadSavedCols())
   const [refreshing,        setRefreshing]        = useState<Set<string>>(new Set())
+  const [justRefreshed,     setJustRefreshed]     = useState<Set<string>>(new Set())
   const [selectedTickers,   setSelectedTickers]   = useState<Set<string>>(new Set())
   const [viewPreset,        setViewPreset]        = useState<'valuation'|'quality'|'risk'|'market'>('valuation')
   // Load data
@@ -626,7 +627,9 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
   const displayEntries = useMemo(() => {
     const tabbed   = tabFilter(entries, activeTab)
     const filtered = applyFilters(tabbed, searchQuery, filterUpside, filterConfidence)
-    return sortEntries(filtered, sortKey, sortDir)
+    const effectiveKey = activeTab === 'recent' ? 'updatedAt' as SortKey : sortKey
+    const effectiveDir = activeTab === 'recent' ? 'desc' as const : sortDir
+    return sortEntries(filtered, effectiveKey, effectiveDir)
   }, [entries, activeTab, searchQuery, filterUpside, filterConfidence, sortKey, sortDir])
 
   const paginatedEntries = useMemo(() => {
@@ -699,6 +702,8 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
         return updated
       }))
       if (livePrice != null) setLivePrices(prev => ({ ...prev, [ticker]: livePrice }))
+      setJustRefreshed(prev => new Set(prev).add(ticker))
+      setTimeout(() => setJustRefreshed(prev => { const s = new Set(prev); s.delete(ticker); return s }), 2000)
     } catch { /* ignore */ } finally {
       setRefreshing(prev => { const s = new Set(prev); s.delete(ticker); return s })
     }
@@ -925,6 +930,7 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
               selectedCols={selectedCols}
               onRefresh={handleRefresh}
               refreshing={refreshing}
+              justRefreshed={justRefreshed}
               selectedTickers={selectedTickers}
               onSelectionChange={setSelectedTickers}
               viewPreset={viewPreset}

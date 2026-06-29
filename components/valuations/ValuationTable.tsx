@@ -190,6 +190,7 @@ export interface ValuationTableProps {
   selectedCols?:     SortKey[]
   onRefresh?:        (ticker: string) => Promise<void>
   refreshing?:       Set<string>
+  justRefreshed?:    Set<string>
   selectedTickers?:  Set<string>
   onSelectionChange?: (tickers: Set<string>) => void
   viewPreset?:       'valuation' | 'quality' | 'risk' | 'market'
@@ -814,7 +815,7 @@ const PRESET_COLS: Record<string, SortKey[]> = {
 
 // ── Main Table ─────────────────────────────────────────────────────────────────
 
-export function ValuationTable({ entries, sparklines, livePrices = {}, groups, sortKey, sortDir, onSort, onDelete, onTagUpdate, onGroupUpdate, onNoteSave, selectedCols = [], onRefresh, refreshing, selectedTickers, onSelectionChange, viewPreset }: ValuationTableProps) {
+export function ValuationTable({ entries, sparklines, livePrices = {}, groups, sortKey, sortDir, onSort, onDelete, onTagUpdate, onGroupUpdate, onNoteSave, selectedCols = [], onRefresh, refreshing, justRefreshed, selectedTickers, onSelectionChange, viewPreset }: ValuationTableProps) {
   const [expandedTicker, setExpandedTicker] = useState<string | null>(null)
   const activeCols = OPTIONAL_COLUMNS.filter(c => (viewPreset ? PRESET_COLS[viewPreset] : selectedCols ?? []).includes(c.id))
 
@@ -1141,8 +1142,13 @@ export function ValuationTable({ entries, sparklines, livePrices = {}, groups, s
                               onClick={(e) => { e.stopPropagation(); onRefresh(entry.ticker) }}
                               disabled={refreshing?.has(entry.ticker)}
                               aria-label="Refresh analysis"
-                              title="Refresh live data"
-                              className="p-1.5 rounded-lg text-[#9B9B9B] hover:text-[#5F790B] hover:bg-[#F0F4E8] transition-colors disabled:opacity-40"
+                              title="Re-fetch live price and recalculate upside"
+                              className={cn(
+                                'p-1.5 rounded-lg transition-colors disabled:opacity-40',
+                                justRefreshed?.has(entry.ticker)
+                                  ? 'text-[#11875D]'
+                                  : 'text-[#9B9B9B] hover:text-[#5F790B] hover:bg-[#F0F4E8]',
+                              )}
                             >
                               {refreshing?.has(entry.ticker)
                                 ? <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>

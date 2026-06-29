@@ -108,6 +108,20 @@ export default function ConvictionScoreCard({ conviction, ticker }: Props) {
               {conviction.gradeFull}
             </span>
             <span className="text-[11px] text-[#6B6B6B]">out of 100</span>
+            {/* Scale legend */}
+            <div className="flex flex-wrap gap-1 mt-1.5">
+              {([
+                { range: '0–40',   label: 'Weak',        color: '#D83B3B' },
+                { range: '41–65',  label: 'Moderate',    color: '#B56A00' },
+                { range: '66–84',  label: 'Strong',      color: '#2563EB' },
+                { range: '85–100', label: 'Exceptional', color: '#11875D' },
+              ] as const).map(({ range, label, color }) => (
+                <span key={range} className="text-[9px] font-[600] px-1.5 py-0.5 rounded-full border whitespace-nowrap"
+                  style={{ color, borderColor: color + '40', background: color + '15' }}>
+                  {range} {label}
+                </span>
+              ))}
+            </div>
           </div>
           <div className="flex-1 min-w-0 ml-1">
             <p className="text-[14px] font-[700] text-[#111111] leading-snug">{conviction.label}</p>
