@@ -15,6 +15,10 @@
     {
       "path": "/api/cron/digest-autosend",
       "schedule": "0 13 * * 1"
+    },
+    {
+      "path": "/api/cron/posting-health",
+      "schedule": "0 13 * * 1-5"
     }
   ]
 }

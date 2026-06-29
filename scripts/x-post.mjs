@@ -23,6 +23,27 @@ const BUFFER_API_KEY      = process.env.BUFFER_API_KEY      || ''
 const BUFFER_CHANNEL_ID   = process.env.BUFFER_CHANNEL_ID   || ''
 const LINKEDIN_CHANNEL_ID = process.env.LINKEDIN_CHANNEL_ID || ''
 
+// ─── Startup validation ───────────────────────────────────────────────────────
+// Fail fast with clear error if required secrets are missing.
+// This prevents silent failures where posts are quietly skipped.
+if (!DRY_RUN) {
+  const missing = [
+    ['BUFFER_API_KEY',            BUFFER_API_KEY],
+    ['BUFFER_CHANNEL_ID',         BUFFER_CHANNEL_ID],
+    ['AUTOMATION_API_KEY',        process.env.AUTOMATION_API_KEY],
+    ['NEXT_PUBLIC_SUPABASE_URL',  process.env.NEXT_PUBLIC_SUPABASE_URL],
+    ['SUPABASE_SERVICE_ROLE_KEY', process.env.SUPABASE_SERVICE_ROLE_KEY],
+  ].filter(([, v]) => !v).map(([k]) => k)
+  if (missing.length > 0) {
+    console.error(`STARTUP FAILURE: missing required env vars: ${missing.join(', ')}`)
+    console.error('Set these secrets in GitHub Actions settings → Secrets and variables → Actions')
+    process.exit(1)
+  }
+  if (!LINKEDIN_CHANNEL_ID) {
+    console.warn('WARN: LINKEDIN_CHANNEL_ID not set — all LinkedIn posts will fail')
+  }
+}
+
 // ─── US Market Holidays ───────────────────────────────────────────────────────
 // NYSE is closed on these dates. Intraday modes (market_open, midday_pulse,
 // sector_spotlight, pre_close, market_close, after_hours, etf_pulse) should
@@ -4321,8 +4342,8 @@ async function runRatioExplained() {
 
 async function postLinkedIn(text, imageUrl = null) {
   if (!LINKEDIN_CHANNEL_ID) {
-    console.warn('LINKEDIN_CHANNEL_ID not set — skipping LinkedIn post')
-    return
+    // Throw so the caller records a failure — not a silent skip
+    throw new Error('LINKEDIN_CHANNEL_ID not configured. Set this GitHub Actions secret.')
   }
   validatePost(text)
   if (DRY_RUN) {
@@ -7660,21 +7681,41 @@ if (!MODES[MODE]) {
   process.exit(1)
 }
 
-// ─── Per-mode daily dedup ─────────────────────────────────────────────────────
-// Prevents double-posts when a mode is fired manually AND by the auto cron same day.
-// Modes with their own finer dedup (earnings_results, economic_results) are exempt.
+// ─── Execution block ──────────────────────────────────────────────────────────
+// Dedup, holiday redirect, mode execution, failure recording.
+// - Skip (exit 0): already posted, holiday redirect, no data available
+// - Failure (exit 1): real errors — Buffer down, invalid content, missing config
+//   GitHub marks the run red so failures are visible. The 48 explicit cron entries
+//   (not */15) mean GitHub won't disable the workflow after failures.
+
 const DEDUP_EXEMPT = new Set(['earnings_results', 'economic_results', 'holiday_deep_dive'])
-if (!DEDUP_EXEMPT.has(MODE) && !DRY_RUN) {
-  if (await checkModeToday(MODE)) {
-    console.log(`Skipping ${MODE} — already posted today`)
+const today = new Date().toISOString().split('T')[0]  // YYYY-MM-DD in UTC
+
+// Atomic dedup check — uses the existing posted_tweet_events table.
+// Modes not in DEDUP_EXEMPT get a daily key. DEDUP_EXEMPT modes use hourly keys
+// (they can post multiple times per day but not multiple times per hour).
+const dedupKey = DEDUP_EXEMPT.has(MODE)
+  ? `mode:${MODE}:${new Date().toISOString().slice(0, 13)}`  // YYYY-MM-DDTHH
+  : `mode:${MODE}:${today}`
+
+if (!DRY_RUN) {
+  let alreadyPosted = false
+  try {
+    alreadyPosted = await checkPostedEvent(dedupKey)
+  } catch (dbErr) {
+    // Supabase unreachable: fail closed — skip to avoid duplicate
+    console.error(`Dedup check failed (Supabase unreachable): ${dbErr.message}. Skipping ${MODE} to avoid duplicate.`)
+    process.exit(0)
+  }
+  if (alreadyPosted) {
+    console.log(`Skipping ${MODE} — already posted (key: ${dedupKey})`)
     process.exit(0)
   }
 }
 
-// ─── Holiday redirect ─────────────────────────────────────────────────────────
-const todayForHolidayCheck = new Date().toISOString().split('T')[0]
-if (INTRADAY_MODES.has(MODE) && isMarketHoliday(todayForHolidayCheck)) {
-  console.log(`🏖️ Market holiday (${todayForHolidayCheck}): replacing ${MODE} with holiday_deep_dive`)
+// Holiday redirect
+if (INTRADAY_MODES.has(MODE) && isMarketHoliday(today)) {
+  console.log(`Market holiday (${today}): replacing ${MODE} with holiday_deep_dive`)
   try {
     await runHolidayDeepDive()
     console.log(`Done (mode=holiday_deep_dive, original=${MODE})`)
@@ -7686,12 +7727,31 @@ if (INTRADAY_MODES.has(MODE) && isMarketHoliday(todayForHolidayCheck)) {
 
 try {
   await MODES[MODE]()
-  // Mark as posted so the cron won't double-fire today
-  if (!DEDUP_EXEMPT.has(MODE)) await markModePosted(MODE)
+
+  // Mark as posted (atomic upsert — race-safe via UNIQUE constraint on event_key)
+  if (!DRY_RUN) {
+    try {
+      await markPostedEvent(dedupKey, MODE, null, today, '')
+    } catch (dbErr) {
+      // Post succeeded but mark failed — log prominently, next run may duplicate
+      console.error(`WARN: post succeeded but dedup mark failed: ${dbErr.message}. Next cron fire may duplicate.`)
+    }
+  }
   console.log(`Done (mode=${MODE})`)
+
 } catch (err) {
-  // Exit 0 even on failure — prevents GitHub from pausing the */15 cron.
-  // The error is logged but not treated as a workflow failure.
-  console.error(`Failed (mode=${MODE}):`, err.message)
-  process.exit(0)
+  // Real failure — exit 1 so GitHub marks the run red (visible in UI and email)
+  console.error(`FAILED (mode=${MODE}): ${err.message}`)
+
+  // Record failure in Supabase so the status endpoint can surface it
+  if (!DRY_RUN) {
+    try {
+      await markPostedEvent(
+        `mode:${MODE}:${today}:failed`,
+        MODE, null, today,
+        `FAILED at ${new Date().toISOString()}: ${err.message.slice(0, 500)}`
+      )
+    } catch { /* don't let the failure recorder block the exit */ }
+  }
+  process.exit(1)
 }
