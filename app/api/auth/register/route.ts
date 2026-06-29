@@ -101,9 +101,11 @@ export async function POST(req: NextRequest) {
 
     const emailResult = await sendVerificationCode(normalizedEmail, name.trim(), code)
     if (!emailResult.ok) {
+      // Return the actual provider error so we can diagnose it
+      console.error('[auth.register.email_failed] provider_error:', emailResult.error)
       return NextResponse.json({
         ok: false, emailSent: false, code: 'VERIFICATION_EMAIL_FAILED',
-        error: 'Could not send verification code. Please try again or contact support.',
+        error: `Could not send verification code: ${emailResult.error ?? 'unknown error'}`,
       })
     }
 
