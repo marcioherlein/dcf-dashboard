@@ -207,14 +207,17 @@ export default function PricingPage() {
 
             <button
               onClick={() => !session && router.push('/auth/sign-in')}
+              disabled={isPro}
               className={cn(
                 'w-full rounded-xl border-2 py-3.5 text-[13.5px] font-semibold transition-colors mb-8 min-h-[48px]',
-                session
-                  ? 'border-gray-200 text-gray-400 cursor-default'
-                  : 'border-gray-300 text-gray-700 hover:border-[#5F790B] hover:bg-[#F6FAEA]'
+                isPro
+                  ? 'border-gray-100 text-gray-300 cursor-default bg-gray-50'
+                  : session
+                    ? 'border-gray-200 text-gray-400 cursor-default'
+                    : 'border-gray-300 text-gray-700 hover:border-[#5F790B] hover:bg-[#F6FAEA]'
               )}
             >
-              {session ? 'Current plan' : 'Get started free →'}
+              {isPro ? 'Included in Pro' : session ? 'Current plan' : 'Get started free →'}
             </button>
 
             <ul className="space-y-3 flex-1">

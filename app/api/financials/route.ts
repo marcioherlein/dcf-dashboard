@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { rateLimit } from '@/lib/rateLimit'
+import { getUserEntitlement, currentMonthStart } from '@/lib/entitlements'
 import { getFmpBundle, getFmpSecFilings, getFmpTopInstitutionalOwners, type FmpIncomeStatement, type FmpBalanceSheet, type FmpCashFlowStatement } from '@/lib/data/fmpClient'
 import { getFinancials, getQuote, getHistorical, getSPYHistorical, getFXRate, getPeerQuotes, getAnnualBalanceSheet, getAnnualCashFlow, getAnnualIncomeStatement } from '@/lib/data/yahooClient'
 import { calculateBeta } from '@/lib/dcf/calculateBeta'
@@ -52,47 +53,44 @@ export async function GET(req: NextRequest) {
   // The client-side gate can be bypassed by blocking the /api/stock-views fetch.
   // This enforces the limit at the data layer — the authoritative check.
   if (session?.user?.email) {
-    const sbUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const sbKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-    if (sbUrl && sbKey) {
-      const { createClient } = await import('@supabase/supabase-js')
-      const sb = createClient(sbUrl, sbKey)
-      const { data: userRow } = await sb
-        .from('users')
-        .select('id, plan')
-        .eq('email', session.user.email)
-        .single()
+    const entitlement = await getUserEntitlement(session.user.email)
 
-      if (userRow) {
-        const plan = (userRow as { plan?: string }).plan
-        if (plan !== 'pro') {
-          const FREE_LIMIT = FREE_STOCK_ANALYSES_PER_MONTH
-          const monthStart = new Date()
-          monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0)
+    if (!entitlement.ok) {
+      // System error (DB unavailable, user not found) — FAIL OPEN.
+      // Do not block Pro users due to backend failures.
+      console.warn('[financials] entitlement check failed:', entitlement.code, 'for', session.user.email, '— failing open')
+    } else if (entitlement.plan !== 'pro') {
+      // Free user — enforce monthly view limit
+      const FREE_LIMIT = FREE_STOCK_ANALYSES_PER_MONTH
+      const sbUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+      const sbKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+      if (sbUrl && sbKey) {
+        const { createClient } = await import('@supabase/supabase-js')
+        const sb = createClient(sbUrl, sbKey)
+        const monthStart = currentMonthStart()  // UTC-consistent
 
-          // Check if this ticker is already unlocked this month
-          const { data: existingView } = await sb
+        // Check if this ticker is already unlocked this month (revisit is always free)
+        const { data: existingView } = await sb
+          .from('stock_views')
+          .select('id')
+          .eq('user_id', entitlement.userId)
+          .eq('ticker', ticker)
+          .gte('first_viewed_at', monthStart)
+          .maybeSingle()
+
+        if (!existingView) {
+          // Not yet unlocked — check monthly count
+          const { data: monthRows } = await sb
             .from('stock_views')
-            .select('id')
-            .eq('user_id', (userRow as { id: string }).id)
-            .eq('ticker', ticker)
-            .gte('first_viewed_at', monthStart.toISOString())
-            .maybeSingle()
-
-          if (!existingView) {
-            // Not yet unlocked — check monthly count
-            const { data: monthRows } = await sb
-              .from('stock_views')
-              .select('ticker')
-              .eq('user_id', (userRow as { id: string }).id)
-              .gte('first_viewed_at', monthStart.toISOString())
-            const monthCount = new Set(monthRows?.map((r: { ticker: string }) => r.ticker) ?? []).size
-            if (monthCount >= FREE_LIMIT) {
-              return NextResponse.json(
-                { error: 'Monthly limit reached. Upgrade to Pro for unlimited access.', code: 'VIEW_LIMIT_REACHED', limit: FREE_LIMIT },
-                { status: 402 }
-              )
-            }
+            .select('ticker')
+            .eq('user_id', entitlement.userId)
+            .gte('first_viewed_at', monthStart)
+          const monthCount = new Set(monthRows?.map((r: { ticker: string }) => r.ticker) ?? []).size
+          if (monthCount >= FREE_LIMIT) {
+            return NextResponse.json(
+              { error: 'Monthly limit reached. Upgrade to Pro for unlimited access.', code: 'VIEW_LIMIT_REACHED', limit: FREE_LIMIT },
+              { status: 402 }
+            )
           }
         }
       }

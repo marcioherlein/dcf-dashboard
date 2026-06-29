@@ -245,12 +245,34 @@ function StockPageBody() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ticker }),
     })
-      .then(r => r.json())
-      .then((res: { allowed: boolean; viewCount: number }) => {
-        setViewCount(res.viewCount)
-        setViewGate(res.allowed ? 'allowed' : 'upgrade')
+      .then(async r => {
+        // System errors (503, 403 USER_NOT_FOUND, etc.) — fail open.
+        // Only show upgrade wall when the backend explicitly says VIEW_LIMIT_REACHED.
+        if (!r.ok && r.status !== 200) {
+          console.warn('[stock-views] non-200 response:', r.status, '— failing open')
+          setViewGate('allowed')
+          return
+        }
+        const res = await r.json() as { allowed: boolean; viewCount: number; code?: string; systemError?: boolean }
+        setViewCount(res.viewCount ?? 0)
+        // systemError: DB/config issue — do not punish authenticated user with upgrade wall
+        if (res.systemError) {
+          console.warn('[stock-views] system error:', res.code, '— failing open')
+          setViewGate('allowed')
+          return
+        }
+        // Only upgrade wall when backend explicitly returns VIEW_LIMIT_REACHED
+        if (!res.allowed && res.code === 'VIEW_LIMIT_REACHED') {
+          setViewGate('upgrade')
+          return
+        }
+        setViewGate(res.allowed ? 'allowed' : 'allowed') // fail open for any other non-allowed without explicit code
       })
-      .catch(() => setViewGate(session?.user ? 'upgrade' : 'login'))
+      .catch(() => {
+        // Network failure — fail open for authenticated users, not upgrade wall
+        console.warn('[stock-views] fetch error — failing open')
+        setViewGate(session?.user ? 'allowed' : 'login')
+      })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, ticker])
 

@@ -51,10 +51,26 @@ export default function PayPalSubscribeButton({ userEmail, onSignInRequired }: P
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ subscriptionId: data.subscriptionID }),
           })
-          if (res.ok) {
+          const json = await res.json().catch(() => ({})) as { ok?: boolean; refreshSession?: boolean; error?: string; code?: string }
+          if (res.ok && json.ok) {
+            // Force NextAuth JWT re-issue so session.user.plan reflects 'pro' immediately.
+            // Without this, the client-side session stays stale until the 24h rotation window.
+            if (json.refreshSession) {
+              try {
+                const { getSession } = await import('next-auth/react')
+                await getSession() // triggers JWT callback + cookie rewrite
+              } catch {
+                // Non-fatal — user will see Pro after next navigation
+              }
+            }
             router.push('/analyze?upgraded=true')
           } else {
-            setError('Payment received but activation failed — please contact support.')
+            const msg = json.code === 'PAYPAL_STATUS_NOT_ACTIVE'
+              ? 'Subscription is not active yet. Please wait a moment and try again.'
+              : json.code === 'PAYPAL_EMAIL_MISMATCH'
+                ? 'PayPal account email does not match your insic account. Please contact support.'
+                : 'Activation failed — please contact support.'
+            setError(msg)
           }
         } catch {
           setError('Network error — please contact support.')
