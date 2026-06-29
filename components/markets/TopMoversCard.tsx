@@ -70,7 +70,7 @@ export default function TopMoversCard() {
   const TABS: { id: Tab; label: string; activeCls: string }[] = [
     { id: 'gainers', label: 'Gainers', activeCls: 'bg-[#11875D] text-white' },
     { id: 'losers',  label: 'Losers',  activeCls: 'bg-[#D83B3B] text-white' },
-    { id: 'unusual', label: '⚡ Vol',   activeCls: 'bg-[#B56A00] text-white' },
+    { id: 'unusual', label: 'Vol',      activeCls: 'bg-[#B56A00] text-white' },
   ]
 
   return (

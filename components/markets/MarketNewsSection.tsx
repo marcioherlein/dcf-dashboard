@@ -13,8 +13,7 @@ function extractTicker(title: string): string | null {
 const COMMON_TICKERS = new Set([
   'NVDA','AAPL','MSFT','AMZN','GOOGL','GOOG','META','TSLA','AMD','PLTR',
   'MELI','JPM','BAC','V','NFLX','ORCL','CRM','AVGO','ASML','ADBE','QCOM',
-  'MU','TSM','PYPL','INTC','SPY','QQQ','DIA','IWM','BRK','GS','MS',
-  'BTC','ETH','USO','GLD','TLT','XLK','XLF','XLE','XLV','XLY',
+  'MU','TSM','PYPL','INTC','BRK','GS','MS',
 ])
 
 function extractKnownTicker(title: string): string | null {
@@ -28,7 +27,7 @@ function extractKnownTicker(title: string): string | null {
 
 export default function MarketNewsSection({ news }: { news: NewsItem[] }) {
   if (!news.length) return null
-  const visible = news.slice(0, 8)
+  const visible = news
 
   return (
     <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm overflow-hidden">
@@ -39,7 +38,7 @@ export default function MarketNewsSection({ news }: { news: NewsItem[] }) {
           const inner = (
             <div className="px-4 py-3 flex items-start gap-3 min-h-[52px] hover:bg-[#FAFAFA] transition-colors group">
               <div className="flex-1 min-w-0">
-                <p className="text-[12.5px] font-medium text-[#111111] leading-snug line-clamp-1">
+                <p className="text-[12.5px] font-medium text-[#111111] leading-snug line-clamp-2">
                   {item.title}
                 </p>
                 <div className="flex items-center gap-2 mt-0.5">

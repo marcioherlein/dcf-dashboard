@@ -14,6 +14,7 @@ export default function YieldCurveChart({ points }: Props) {
   const minY    = Math.min(...yields)
   const maxY    = Math.max(...yields)
   const range   = maxY - minY || 0.5
+  const midY    = (minY + maxY) / 2
 
   // Detect inversion: 2Y > 10Y
   const y2  = valid.find(p => p.tenor === '2Y')?.yield ?? null
@@ -65,11 +66,20 @@ export default function YieldCurveChart({ points }: Props) {
           className="w-full"
           style={{ height: 80 }}
           aria-label="Yield curve"
+          aria-describedby="yield-curve-desc"
         >
+          <desc id="yield-curve-desc">
+            US Treasury yield curve — {inverted ? 'Inverted: 2Y yield exceeds 10Y yield, signaling potential recession risk.' : 'Normal shape: yields rise with maturity.'}{spread != null ? ` 2Y-10Y spread: ${spread}bp.` : ''}
+          </desc>
+          <text x="2" y={PAD.t + innerH} textAnchor="start" fill="#9B9B9B" fontSize="7" fontFamily="monospace">{minY.toFixed(2)}%</text>
+          <text x="2" y={PAD.t + innerH / 2} textAnchor="start" fill="#9B9B9B" fontSize="7" fontFamily="monospace">{midY.toFixed(2)}%</text>
+          <text x="2" y={PAD.t + 4} textAnchor="start" fill="#9B9B9B" fontSize="7" fontFamily="monospace">{maxY.toFixed(2)}%</text>
           <path d={fillD} fill={fillColor} />
           <path d={pathD} fill="none" stroke={lineColor} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
           {pts.map(({ x, y, p }) => (
-            <circle key={p.tenor} cx={x} cy={y} r={3} fill={lineColor} />
+            <circle key={p.tenor} cx={x} cy={y} r={3} fill={lineColor}>
+              <title>{p.tenor}: {(p.yield as number).toFixed(2)}%</title>
+            </circle>
           ))}
         </svg>
 

@@ -30,26 +30,24 @@ export interface IpoItem {
 
 // Returns ISO strings (stable primitives) for the week at the given offset
 function getWeekRange(offset = 0): { from: string; to: string; label: string } {
-  const now = new Date()
-  const day = now.getDay()
-  const monday = new Date(now)
-  monday.setDate(now.getDate() - (day === 0 ? 6 : day - 1) + offset * 7)
+  // Use ET (America/New_York) as the reference timezone for financial week boundaries
+  const nowET = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }))
+  const day = nowET.getDay()
+  const monday = new Date(nowET)
+  monday.setDate(nowET.getDate() - (day === 0 ? 6 : day - 1) + offset * 7)
   monday.setHours(0, 0, 0, 0)
   const sunday = new Date(monday)
   sunday.setDate(monday.getDate() + 6)
 
-  const fmt = (d: Date) =>
-    d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
   const label =
     monday.getFullYear() === sunday.getFullYear()
       ? `${fmt(monday)} – ${fmt(sunday)}, ${monday.getFullYear()}`
       : `${fmt(monday)}, ${monday.getFullYear()} – ${fmt(sunday)}, ${sunday.getFullYear()}`
 
-  return {
-    from:  monday.toISOString().split('T')[0],
-    to:    sunday.toISOString().split('T')[0],
-    label,
-  }
+  // Return YYYY-MM-DD strings relative to the monday in ET
+  const toISO = (d: Date) => d.toISOString().split('T')[0]
+  return { from: toISO(monday), to: toISO(sunday), label }
 }
 
 function inRange(dateStr: string, from: string, to: string): boolean {
@@ -220,7 +218,7 @@ function WeekGrid({ days, earnings, economic, splits, ipos, onSubTab }: WeekGrid
 
 function EarningsList({ items, loading }: { items: EarningsItem[]; loading: boolean }) {
   if (loading) return <LoadingRows />
-  if (items.length === 0) return <EmptyState message="No earnings scheduled this week for major S&P 500 companies." />
+  if (!loading && items.length === 0) return <EmptyState icon={<Calendar size={28} />} message="No events scheduled for this week." />
 
   const byDate = items.reduce<Record<string, EarningsItem[]>>((acc, e) => {
     acc[e.date] ??= []
@@ -265,10 +263,6 @@ function EarningsList({ items, loading }: { items: EarningsItem[]; loading: bool
                   <span className={cn('shrink-0 px-2 py-0.5 rounded-md text-[10px] font-semibold', IMPACT_COLORS[imp])}>
                     {imp}
                   </span>
-                  {/* EPS estimate */}
-                  <span className="shrink-0 w-14 text-right text-[12px] font-semibold text-[#111111] tabular-nums">
-                    {item.epsEstimate != null ? `$${item.epsEstimate.toFixed(2)}` : '—'}
-                  </span>
                 </div>
               )
             })}
@@ -285,7 +279,7 @@ function EconomicList({ events, loading, missingKey, fetchError }: { events: Eco
   if (loading) return <LoadingRows />
   if (missingKey) return <EmptyState icon={<AlertCircle size={28} />} message="Economic calendar data is temporarily unavailable. Check back soon." />
   if (fetchError) return <EmptyState icon={<AlertCircle size={28} />} message="Could not load economic events — check your connection and try again." />
-  if (events.length === 0) return <EmptyState message="No U.S. high-impact economic events scheduled this week." />
+  if (!loading && !missingKey && !fetchError && events.length === 0) return <EmptyState icon={<Calendar size={28} />} message="No events scheduled for this week." />
 
   const byDate = events.reduce<Record<string, EconomicEvent[]>>((acc, e) => {
     acc[e.date] ??= []
@@ -351,7 +345,7 @@ function SplitsList({ splits, loading, missingKey, fetchError }: { splits: Split
   if (loading) return <LoadingRows />
   if (missingKey) return <EmptyState icon={<AlertCircle size={28} />} message="Splits calendar is temporarily unavailable. Check back soon." />
   if (fetchError) return <EmptyState icon={<AlertCircle size={28} />} message="Could not load splits data — check your connection and try again." />
-  if (splits.length === 0) return <EmptyState icon={<Scissors size={28} />} message="No stock splits scheduled this week." />
+  if (!loading && !missingKey && !fetchError && splits.length === 0) return <EmptyState icon={<Calendar size={28} />} message="No events scheduled for this week." />
 
   const byDate = splits.reduce<Record<string, SplitItem[]>>((acc, e) => {
     acc[e.date] ??= []
@@ -399,7 +393,7 @@ function IposList({ ipos, loading, missingKey, fetchError }: { ipos: IpoItem[]; 
   if (loading) return <LoadingRows />
   if (missingKey) return <EmptyState icon={<AlertCircle size={28} />} message="IPO calendar is temporarily unavailable. Check back soon." />
   if (fetchError) return <EmptyState icon={<AlertCircle size={28} />} message="Could not load IPO data — check your connection and try again." />
-  if (ipos.length === 0) return <EmptyState icon={<Rocket size={28} />} message="No IPO pricings found for this week." />
+  if (!loading && !missingKey && !fetchError && ipos.length === 0) return <EmptyState icon={<Calendar size={28} />} message="No events scheduled for this week." />
 
   const byDate = ipos.reduce<Record<string, IpoItem[]>>((acc, e) => {
     acc[e.date] ??= []
@@ -537,7 +531,8 @@ export default function CalendarTab() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setOffset(o => o - 1)}
-            className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-md border border-[#E5E5E5] text-[#6B6B6B] hover:bg-[#F5F5F5] hover:text-[#111111] transition-colors"
+            disabled={weekOffset <= -4}
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-md border border-[#E5E5E5] text-[#6B6B6B] hover:bg-[#F5F5F5] hover:text-[#111111] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             aria-label="Previous week"
           >
             <ChevronLeft size={14} />
@@ -601,14 +596,127 @@ export default function CalendarTab() {
           anyLoading ? (
             <LoadingRows />
           ) : (
-            <WeekGrid
-              days={days}
-              earnings={earnings}
-              economic={economic}
-              splits={splits}
-              ipos={ipos}
-              onSubTab={setSub}
-            />
+            (() => {
+              // Build a flat list of all events sorted by date for the combined view
+              type AllEvent =
+                | { kind: 'earnings'; date: string; data: EarningsItem }
+                | { kind: 'economic'; date: string; data: EconomicEvent }
+                | { kind: 'split';    date: string; data: SplitItem }
+                | { kind: 'ipo';      date: string; data: IpoItem }
+
+              const allEvents: AllEvent[] = [
+                ...earnings.map(e => ({ kind: 'earnings' as const, date: e.date, data: e })),
+                ...economic.map(e => ({ kind: 'economic' as const, date: e.date, data: e })),
+                ...splits.map(e =>   ({ kind: 'split'    as const, date: e.date, data: e })),
+                ...ipos.map(e =>     ({ kind: 'ipo'      as const, date: e.date, data: e })),
+              ].sort((a, b) => a.date.localeCompare(b.date))
+
+              if (allEvents.length === 0) {
+                return <EmptyState icon={<Calendar size={28} />} message="No events scheduled for this week." />
+              }
+
+              const byDate = allEvents.reduce<Record<string, AllEvent[]>>((acc, e) => {
+                acc[e.date] ??= []
+                acc[e.date].push(e)
+                return acc
+              }, {})
+
+              return (
+                <div className="divide-y divide-[#E5E5E5]">
+                  {Object.entries(byDate).sort(([a], [b]) => a.localeCompare(b)).map(([date, group]) => {
+                    const d = new Date(date + 'T00:00:00')
+                    const today = isToday(d)
+                    return (
+                      <div key={date}>
+                        <div className={cn(
+                          'px-4 py-2 text-[10px] font-bold tracking-wider border-b border-[#E5E5E5]',
+                          today ? 'text-[#5F790B] bg-[#F6FAEA]' : 'text-[#6B6B6B] bg-[#FAFAFA]',
+                        )}>
+                          {today ? 'TODAY · ' : ''}
+                          {d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase()}
+                        </div>
+                        {group.map((ev, idx) => {
+                          if (ev.kind === 'earnings') {
+                            const item = ev.data as EarningsItem
+                            const imp = earningsImportance(item.ticker)
+                            return (
+                              <div key={`e-${item.ticker}-${idx}`} className="flex items-center gap-3 px-4 py-2.5 hover:bg-[#FAFAFA] transition-colors">
+                                <span className="text-[9px] font-[700] px-1.5 py-px rounded-full bg-[#EAF1FF] text-[#2563EB] border border-[#C7D9FC] shrink-0">Earnings</span>
+                                <Link
+                                  href={`/stock/${item.ticker}`}
+                                  className="shrink-0 px-2 py-0.5 rounded text-[11px] font-bold bg-[#F5F5F5] text-[#111111] hover:bg-[#EEF2FA] hover:text-[#5F790B] transition-colors"
+                                >
+                                  {item.ticker}
+                                </Link>
+                                <span className="flex-1 min-w-0 text-[13px] text-[#111111] truncate">{item.company}</span>
+                                {item.timeOfDay && (
+                                  <span className="shrink-0 text-[10px] text-[#9B9B9B]">
+                                    {item.timeOfDay === 'BMO' ? 'Pre-market' : item.timeOfDay === 'AMC' ? 'After hours' : item.timeOfDay === 'TAS' ? 'Time specified' : ''}
+                                  </span>
+                                )}
+                                <span className={cn('shrink-0 px-2 py-0.5 rounded-md text-[10px] font-semibold', IMPACT_COLORS[imp])}>
+                                  {imp}
+                                </span>
+                              </div>
+                            )
+                          }
+                          if (ev.kind === 'economic') {
+                            const item = ev.data as EconomicEvent
+                            return (
+                              <div key={`ec-${date}-${item.event}-${idx}`} className="flex items-center gap-3 px-4 py-2.5 hover:bg-[#FAFAFA] transition-colors">
+                                <span className="text-[9px] font-[700] px-1.5 py-px rounded-full bg-[#FFF4DA] text-[#B56A00] border border-[#F3D391] shrink-0">Economic</span>
+                                <span className="shrink-0 w-20 text-[11px] text-[#6B6B6B] tabular-nums">{item.time || '—'}</span>
+                                <span className="flex-1 min-w-0 text-[13px] text-[#111111] truncate">{item.event}</span>
+                                <span className={cn('shrink-0 px-2 py-0.5 rounded-md text-[10px] font-semibold', IMPACT_COLORS[item.impact])}>
+                                  {item.impact}
+                                </span>
+                              </div>
+                            )
+                          }
+                          if (ev.kind === 'split') {
+                            const item = ev.data as SplitItem
+                            return (
+                              <div key={`s-${item.ticker}-${idx}`} className="flex items-center gap-3 px-4 py-2.5 hover:bg-[#FAFAFA] transition-colors">
+                                <span className="text-[9px] font-[700] px-1.5 py-px rounded-full bg-[#F5F5F5] text-[#6B6B6B] border border-[#E5E5E5] shrink-0">Split</span>
+                                <Link
+                                  href={`/stock/${item.ticker}`}
+                                  className="shrink-0 px-2 py-0.5 rounded text-[11px] font-bold bg-[#F5F5F5] text-[#111111] hover:bg-[#EEF2FA] hover:text-[#5F790B] transition-colors"
+                                >
+                                  {item.ticker}
+                                </Link>
+                                <span className="flex-1 min-w-0 text-[13px] text-[#111111] truncate">{item.company}</span>
+                                <span className="shrink-0 px-2.5 py-0.5 rounded-md bg-[#ECFDF5] border border-[#BBF7D0] text-[#047857] text-[11px] font-semibold">
+                                  {item.numerator}-for-{item.denominator}
+                                </span>
+                              </div>
+                            )
+                          }
+                          if (ev.kind === 'ipo') {
+                            const item = ev.data as IpoItem
+                            return (
+                              <div key={`i-${date}-${item.company}-${idx}`} className="flex items-center gap-3 px-4 py-2.5 hover:bg-[#FAFAFA] transition-colors">
+                                <span className="text-[9px] font-[700] px-1.5 py-px rounded-full bg-[#F3F0FF] text-[#6D28D9] border border-[#DDD6FE] shrink-0">IPO</span>
+                                <span className="shrink-0 px-2 py-0.5 rounded text-[11px] font-bold bg-[#FAF5FF] border border-[#E9D5FF] text-[#7C3AED]">
+                                  {item.ticker || 'IPO'}
+                                </span>
+                                <span className="flex-1 min-w-0 text-[13px] text-[#111111] truncate">{item.company}</span>
+                                {item.exchange && (
+                                  <span className="shrink-0 text-[10px] text-[#9B9B9B]">{item.exchange}</span>
+                                )}
+                                {item.priceRange && (
+                                  <span className="shrink-0 text-[12px] font-semibold text-[#111111] tabular-nums">{item.priceRange}</span>
+                                )}
+                              </div>
+                            )
+                          }
+                          return null
+                        })}
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+            })()
           )
         )}
 
@@ -617,7 +725,6 @@ export default function CalendarTab() {
             <ListHeader>
               <span className="flex-1">TICKER / COMPANY</span>
               <span className="w-24 text-right">IMPORTANCE</span>
-              <span className="w-14 text-right">EPS EST.</span>
             </ListHeader>
             <EarningsList items={earnings} loading={loadingE} />
           </>

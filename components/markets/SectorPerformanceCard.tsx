@@ -24,6 +24,14 @@ const SECTOR_NAMES: Record<string, string> = {
 export default function SectorPerformanceCard({ sectors }: Props) {
   const [showAll, setShowAll] = useState(false)
 
+  if (!sectors || sectors.length === 0) {
+    return (
+      <div className="bg-white rounded-xl border border-[#E5E5E5] shadow-sm flex items-center justify-center min-h-[120px]">
+        <span className="text-[12px] text-[#9B9B9B]">No sector data available</span>
+      </div>
+    )
+  }
+
   const sorted = [...sectors]
     .filter(s => s.changePct != null)
     .sort((a, b) => (b.changePct ?? 0) - (a.changePct ?? 0))

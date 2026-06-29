@@ -94,11 +94,9 @@ interface CellProps {
   interpretation: React.ReactNode
   rateMode?: boolean
   href?: string
-  borderRight?: boolean
-  borderBottom?: boolean
 }
 
-function Cell({ label, sublabel, value, rawChangePct, interpretation, rateMode, href, borderRight, borderBottom }: CellProps) {
+function Cell({ label, sublabel, value, rawChangePct, interpretation, rateMode, href }: CellProps) {
   const pctCls = changeCls(rawChangePct, rateMode)
 
   const inner = (
@@ -118,10 +116,7 @@ function Cell({ label, sublabel, value, rawChangePct, interpretation, rateMode, 
   )
 
   return (
-    <div className={cn(
-      borderRight  && 'border-r border-[#F0F0F0]',
-      borderBottom && 'border-b border-[#F0F0F0]',
-    )}>
+    <div className="border-b border-r border-[#F0F0F0] [&:nth-child(2n)]:border-r-0 sm:[&:nth-child(2n)]:border-r sm:[&:nth-child(3n)]:border-r-0 md:[&:nth-child(3n)]:border-r md:[&:nth-child(5n)]:border-r-0">
       {href ? (
         <Link href={href} className="block rounded-md hover:bg-[#F8F8F8] transition-colors h-full">
           {inner}
@@ -246,21 +241,14 @@ export default function IndexSnapshotGrid({ spx, ndx, dji, vix, tnx, dxy, vwo, v
           <span className="text-[10px] text-[#6B6B6B]">Live snapshot</span>
         </div>
       )}
-      {/* Responsive grid — 2 cols on mobile, 5 cols on md+ — no overflow, no scroll */}
+      {/* Responsive grid — 2 cols on mobile, 3 cols on sm, 5 cols on md+ — no overflow, no scroll */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5">
-        {CELLS.map((cell, i) => {
-          const col = i % 5
-          const row = Math.floor(i / 5)
-          const totalRows = Math.ceil(CELLS.length / 5)
-          return (
-            <Cell
-              key={cell.label}
-              {...cell}
-              borderRight={col < 4}
-              borderBottom={row < totalRows - 1}
-            />
-          )
-        })}
+        {CELLS.map((cell) => (
+          <Cell
+            key={cell.label}
+            {...cell}
+          />
+        ))}
       </div>
     </div>
   )

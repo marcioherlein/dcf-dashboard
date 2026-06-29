@@ -115,6 +115,15 @@ export function normalizeModellingInputs(ticker: string, apiData: any, statement
   const sectorForNWC = (apiData?.quote?.sector ?? '').toLowerCase()
   const industryForNWC = (apiData?.quote?.industry ?? '').toLowerCase()
   const isFintechHybridForNWC = FINTECH_INDUSTRY_RE_NWC.test(sectorForNWC + ' ' + industryForNWC)
+    // STNE / StoneCo pattern: Brazilian payment acquirer classified as Technology/Software by Yahoo.
+    // financialCurrency=BRL + CRP>2% + Technology sector = likely EM fintech with quasi-financial NWC.
+    // The credit receivables from the SME lending book cause the same NWC swing as a bank's loan book.
+    || (
+      (apiData?.wacc?.financialCurrency ?? 'USD') !== 'USD' &&
+      (apiData?.wacc?.crp ?? 0) > 0.02 &&
+      /technology|software/i.test(sectorForNWC + ' ' + industryForNWC) &&
+      !FINANCIAL_TYPES_EARLY.has(companyTypeEarly)
+    )
   // isFinancialSector: full treatment — zeros D&A, Capex, and NWC, uses NI-derived EBIT.
   // Only applies to true financial/fintech companyTypes, NOT fintech-hybrids like MELI.
   // MELI has real physical capex (warehouses, POS hardware) and meaningful D&A — these

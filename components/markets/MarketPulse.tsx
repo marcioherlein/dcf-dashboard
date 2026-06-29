@@ -16,7 +16,7 @@ function sentimentColor(label: SentimentLabel): string {
 }
 
 function vixColor(vix: number): string {
-  if (vix < 15) return 'text-[#B56A00]'
+  if (vix < 15) return 'text-[#11875D]'
   if (vix < 20) return 'text-[#11875D]'
   if (vix < 25) return 'text-[#B56A00]'
   if (vix < 35) return 'text-[#D83B3B]'

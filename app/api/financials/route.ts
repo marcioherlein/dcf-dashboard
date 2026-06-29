@@ -199,8 +199,9 @@ export async function GET(req: NextRequest) {
     // FCF + CAGR — values are in financial currency; convert to quote currency
     // Pass foreignCurrency=true when reporting currency ≠ quote currency so that
     // the CAGR model discards inflation-distorted local revenue history.
-    const { baseFCF: baseFCFLocal, cagr, cagrAnalysis, historicalRevenues: historicalRevenuesLocal, isNegativeFCF, normalizedNetIncomeM: normalizedNetIncomeMLocal } = extractFCFInputs(fin, fxRate !== 1)
+    const { baseFCF: baseFCFLocal, cagr, cagrAnalysis, historicalRevenues: historicalRevenuesLocal, isNegativeFCF: isNegativeFCFLocal, normalizedNetIncomeM: normalizedNetIncomeMLocal } = extractFCFInputs(fin, fxRate !== 1)
     let baseFCF = baseFCFLocal * fxRate
+    let isNegativeFCF = isNegativeFCFLocal
     const historicalRevenues = historicalRevenuesLocal.map((r) => r * fxRate)
     const normalizedNetIncomeM = normalizedNetIncomeMLocal * fxRate
 
@@ -1658,6 +1659,7 @@ export async function GET(req: NextRequest) {
         // Yahoo fd.freeCashflow is likely pre-capex-surge stale — use most-recent reported FCF
         baseFCF = _lastHistFCF
         fcfCapApplied = true
+        if (baseFCF <= 0) isNegativeFCF = true
       }
     }
     // Negative-FCF stale guard: Yahoo fd.freeCashflow sometimes returns a stale positive
@@ -1666,7 +1668,13 @@ export async function GET(req: NextRequest) {
     // When histFCF is negative and baseFCF is positive, Yahoo is stale — use the actual.
     if (!_isFinancialForGuard && !fcfCapApplied && _lastHistFCF < 0 && baseFCF > 0) {
       baseFCF = _lastHistFCF
+      isNegativeFCF = true
       fcfCapApplied = true
+    }
+    // Also update isNegativeFCF when baseFCF was already negative from extractFCFInputs
+    // but isNegativeFCF was set to false (can happen when financial sector path uses NI proxy)
+    if (!_isFinancialForGuard && baseFCF < 0 && !isNegativeFCF) {
+      isNegativeFCF = true
     }
 
     // Analyst forward estimates from earningsTrend (EPS + revenue by period)

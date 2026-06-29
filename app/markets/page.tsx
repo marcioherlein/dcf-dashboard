@@ -54,8 +54,8 @@ export default function MarketsPage() {
   const [err,        setErr]        = useState(false)
   const [newsErr,    setNewsErr]    = useState(false)
   const [lastFetch,  setLastFetch]  = useState<number>(0)
-  const [status]                    = useState(getMarketStatus)
   const [activeTab,  setActiveTab]  = useState<MarketTab>('overview')
+  const [mountedTabs, setMountedTabs] = useState<Set<string>>(new Set(['overview']))
 
   const marketTabs = useMemo(() => [
     { id: 'overview',  label: 'Overview'  },
@@ -67,11 +67,17 @@ export default function MarketsPage() {
   useSetTopBarTabs(marketTabs, activeTab, (id: string) => setActiveTab(id as MarketTab))
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  const [, setTick] = useState(0)
+  const [tick, setTick] = useState(0)
   useEffect(() => {
     const t = setInterval(() => setTick(n => n + 1), 10_000)
     return () => clearInterval(t)
   }, [])
+
+  // Lazy-mount tabs after first visit + keep market status fresh
+  useEffect(() => {
+    setMountedTabs(prev => new Set(Array.from(prev).concat(activeTab)))
+  }, [activeTab])
+  const liveStatus = useMemo(() => getMarketStatus(), [tick])
 
   const fetchAll = useCallback(async () => {
     try {
@@ -145,7 +151,7 @@ export default function MarketsPage() {
         {/* ── Persistent: Index snapshot strip ── */}
         <div className="shrink-0 mb-2">
           {mkt ? (
-            <IndexSnapshotGrid spx={spx} ndx={ndx} dji={dji} vix={vix} tnx={tnx} dxy={dxy} vwo={vwo} vgk={vgk} mchi={mchi} botz={botz} marketStatus={status} />
+            <IndexSnapshotGrid spx={spx} ndx={ndx} dji={dji} vix={vix} tnx={tnx} dxy={dxy} vwo={vwo} vgk={vgk} mchi={mchi} botz={botz} marketStatus={liveStatus} />
           ) : (
             <div className="bg-white border border-[#E5E5E5] rounded-xl h-[56px] motion-safe:animate-pulse" />
           )}
@@ -167,7 +173,7 @@ export default function MarketsPage() {
             className={`h-full flex flex-col overflow-y-auto lg:overflow-hidden${activeTab !== 'overview' ? ' hidden' : ''}`}
           >
             {/* Row 1 (flex-1 on desktop, natural height on mobile): 3-col grid */}
-            <div className="min-h-[280px] lg:flex-1 lg:min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-3 lg:overflow-hidden">
+            <div className="min-h-[280px] lg:flex-1 lg:min-h-[200px] grid grid-cols-1 lg:grid-cols-12 gap-3 lg:overflow-hidden">
               <div className="lg:col-span-3 lg:h-full lg:min-h-0 lg:overflow-hidden">
                 {ctx ? <MarketPulse pulse={ctx.pulse} /> : <Sk h="h-[280px]" />}
               </div>
@@ -197,11 +203,11 @@ export default function MarketsPage() {
                 {mkt ? <MarketHeatmapCard sectors={mkt.sectors} /> : <Sk h="h-[320px]" />}
               </div>
               <div className="lg:col-span-5 lg:h-full lg:min-h-0 flex flex-col gap-3 lg:overflow-hidden">
-                <div className="lg:flex-1 lg:min-h-0 lg:overflow-hidden">
-                  {ctx ? <SectorRotation sectors={ctx.sectors} /> : <Sk h="h-[200px]" />}
+                <div className="lg:flex-none lg:h-[180px] lg:overflow-hidden">
+                  {ctx ? <SectorRotation sectors={ctx.sectors} /> : <Sk h="h-[180px]" />}
                 </div>
-                <div className="lg:flex-1 lg:min-h-0 lg:overflow-hidden">
-                  {mkt ? <SectorPerformanceCard sectors={mkt.sectors} /> : <Sk h="h-[200px]" />}
+                <div className="lg:flex-none lg:h-[180px] lg:overflow-hidden">
+                  {mkt ? <SectorPerformanceCard sectors={mkt.sectors} /> : <Sk h="h-[180px]" />}
                 </div>
                 <div className="lg:flex-1 lg:min-h-0 lg:overflow-hidden">
                   <SectorStocksCard />
@@ -241,7 +247,7 @@ export default function MarketsPage() {
             aria-labelledby="markets-tab-calendar"
             className={`h-full overflow-y-auto lg:overflow-hidden${activeTab !== 'calendar' ? ' hidden' : ''}`}
           >
-            <CalendarTab />
+            {mountedTabs.has('calendar') && <CalendarTab />}
           </div>
 
           {/* ── VALUATION ── */}
@@ -265,7 +271,7 @@ export default function MarketsPage() {
             </div>
 
             {/* Right col: ValuationContext + HY Spread + PriceTables */}
-            <div className="lg:flex-1 lg:min-h-0 lg:overflow-y-auto flex flex-col gap-3 pb-4 lg:pb-0">
+            <div className="lg:flex-1 lg:min-h-0 overflow-y-auto flex flex-col gap-3 pb-4 lg:pb-0">
               {ctx ? <ValuationContext valuation={ctx.valuation} /> : <Sk h="h-56" />}
 
               {/* HY Credit Spread */}
@@ -278,21 +284,21 @@ export default function MarketsPage() {
                   negative: { bg: 'bg-[#FCEAEA]', text: 'text-[#D83B3B]', border: 'border-[#F0B8B8]' },
                   neutral:  { bg: 'bg-[#F5F5F5]', text: 'text-[#6B6B6B]', border: 'border-[#E5E5E5]' },
                 }
-                const t = toneMap[(hySignal as { tone: string }).tone] ?? toneMap.neutral
+                const t = toneMap[(hySignal as { tone?: string }).tone ?? 'neutral'] ?? toneMap.neutral
                 return (
                   <div className="rounded-xl border border-[#E3E1DA] bg-white p-5" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
                     <div className="flex items-start justify-between gap-4 mb-3">
                       <div>
                         <p className="text-[11px] font-[700] uppercase tracking-[0.05em] text-[#9B9B9B] mb-1">HY Credit Spread (OAS)</p>
                         <p className="text-[24px] font-[800] tabular-nums text-[#111111] leading-none">
-                          {(hySignal as { value: string }).value}
+                          {(hySignal as { value?: string }).value ?? '—'}
                         </p>
                         <p className="text-[12px] text-[#566174] mt-1 leading-snug max-w-[380px]">
-                          {(hySignal as { equityImplication: string }).equityImplication}
+                          {(hySignal as { equityImplication?: string }).equityImplication ?? ''}
                         </p>
                       </div>
                       <span className={`inline-flex text-[11px] font-[700] px-3 py-1.5 rounded-full border shrink-0 ${t.bg} ${t.text} ${t.border}`}>
-                        {(hySignal as { regimeLabel: string }).regimeLabel}
+                        {(hySignal as { regimeLabel?: string }).regimeLabel ?? '—'}
                       </span>
                     </div>
                     <p className="text-[11px] text-[#9B9B9B] leading-snug border-t border-[#F5F5F5] pt-3">

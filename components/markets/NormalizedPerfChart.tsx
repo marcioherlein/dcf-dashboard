@@ -192,8 +192,8 @@ export default function NormalizedPerfChart() {
                 placeholder="AAPL"
                 className="w-20 px-2 py-0.5 text-[16px] rounded-full border border-[#93B4F5] bg-white text-[#111111] outline-none focus:border-blue-500"
               />
-              <button type="submit" className="text-[11px] font-semibold text-olive-700 hover:text-[#2563EB] py-1">Add</button>
-              <button type="button" onClick={() => setShowAddInput(false)} className="text-[11px] text-[#6B6B6B] hover:text-[#6B6B6B] py-1">✕</button>
+              <button type="submit" className="text-[12px] font-semibold text-olive-700 hover:text-[#2563EB] py-1 min-h-[28px]">Add</button>
+              <button type="button" onClick={() => setShowAddInput(false)} className="flex items-center justify-center w-6 h-6 rounded text-[#6B6B6B] hover:text-[#111111] hover:bg-[#F0F0F0] transition-colors"><X size={10} /></button>
             </form>
           ) : (
             <button
