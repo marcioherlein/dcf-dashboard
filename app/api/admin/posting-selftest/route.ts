@@ -14,7 +14,7 @@ import { BufferAdapter, getBufferConfig } from '@/lib/posting/buffer-adapter'
 
 // ─── Auth ──────────────────────────────────────────────────────────────────────
 
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? 'marcioherlein@gmail.com')
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? 'marciofabrizio@gmail.com')
   .split(',')
   .map((e) => e.trim())
 

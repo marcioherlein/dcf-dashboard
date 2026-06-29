@@ -4,7 +4,7 @@ import { Resend } from 'resend'
 
 export const maxDuration = 30
 
-const ADMIN_EMAIL = (process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? 'marcioherlein@gmail.com')
+const ADMIN_EMAIL = (process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? 'marciofabrizio@gmail.com')
   .split(',')[0].trim()
 
 function getServiceClient() {

@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { Search, Users, BarChart3, Mail, ChevronRight, CheckCircle, AlertCircle, MessageSquare, Share2, Copy, RefreshCw, ExternalLink } from 'lucide-react'
 
-const ADMIN_EMAILS = (process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? 'marcioherlein@gmail.com')
+const ADMIN_EMAILS = (process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? 'marciofabrizio@gmail.com')
   .split(',').map(e => e.trim())
 
 interface AdminUser {

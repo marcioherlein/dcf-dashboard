@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? 'marcioherlein@gmail.com')
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? 'marciofabrizio@gmail.com')
   .split(',').map(e => e.trim())
 
 type Format = 'insight' | 'lesson' | 'observation'
