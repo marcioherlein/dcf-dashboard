@@ -2957,6 +2957,195 @@ async function markPostedEvent(eventKey, tweetType, ticker, eventDate, tweetText
   } catch (e) { console.warn('Could not mark event as posted:', e.message) }
 }
 
+// ─── Queue-aware execution ────────────────────────────────────────────────────
+// Claims a post_queue row atomically, runs the mode, posts, marks done.
+// Falls back to the legacy posted_tweet_events path when no queue row exists.
+//
+// Error classification for post_queue.failure_reason:
+//   config_error  — missing env vars, unconfigured channel
+//   content_error — no data found, validatePost rejection
+//   api_error     — Buffer/LinkedIn API returned an error
+//   unknown       — anything else
+
+function classifyError(err) {
+  const msg = err.message || ''
+  if (msg.includes('not configured') || msg.includes('missing') || msg.includes('CHANNEL_ID')) return 'config_error'
+  if (msg.includes('No ') || msg.includes('no data') || msg.includes('validatePost') || msg.includes('too long') || msg.includes('empty')) return 'content_error'
+  if (msg.includes('Buffer') || msg.includes('LinkedIn') || msg.includes('API') || msg.includes('fetch')) return 'api_error'
+  return 'unknown'
+}
+
+async function claimAndPost(mode, platform, ticker = '') {
+  if (!MODES[mode]) {
+    console.error(`Unknown MODE="${mode}". Use: ${Object.keys(MODES).join(' | ')}`)
+    process.exit(1)
+  }
+
+  const today = new Date().toISOString().split('T')[0]  // YYYY-MM-DD in UTC
+
+  // Holiday redirect for intraday modes — happens before any queue/dedup logic
+  if (INTRADAY_MODES.has(mode) && isMarketHoliday(today)) {
+    console.log(`Market holiday (${today}): replacing ${mode} with holiday_deep_dive`)
+    try {
+      await runHolidayDeepDive()
+      console.log(`Done (mode=holiday_deep_dive, original=${mode})`)
+    } catch (err) {
+      console.warn(`holiday_deep_dive failed (non-fatal):`, err.message)
+    }
+    process.exit(0)
+  }
+
+  // ── Queue path ──────────────────────────────────────────────────────────────
+  // Idempotency key format: platform:mode:YYYY-MM-DD
+  // For DEDUP_EXEMPT modes the key is hourly so multiple posts per day are allowed.
+  const DEDUP_EXEMPT = new Set(['earnings_results', 'economic_results', 'holiday_deep_dive'])
+  const idempotencyKey = DEDUP_EXEMPT.has(mode)
+    ? `${platform}:${mode}:${new Date().toISOString().slice(0, 13)}`  // YYYY-MM-DDTHH
+    : `${platform}:${mode}:${today}`
+
+  const sb = await _getSupabase()
+  let queueRowId = null
+
+  if (sb && !DRY_RUN) {
+    // Attempt atomic claim via RPC
+    let claimError = null
+    try {
+      const { data: claimed, error } = await sb.rpc('claim_post', {
+        p_idempotency_key: idempotencyKey,
+        p_worker_id: `github-actions-${Date.now()}`,
+      })
+      if (error) claimError = error
+      else if (claimed) {
+        queueRowId = claimed.id ?? claimed  // RPC may return the row or just the id
+        console.log(`Claimed queue row (id=${queueRowId}) for ${mode} [${platform}]`)
+      }
+    } catch (rpcErr) {
+      claimError = rpcErr
+    }
+
+    if (claimError) {
+      // RPC failed (function may not exist yet) — fall through to legacy path
+      console.warn(`claim_post RPC unavailable (${claimError.message}) — using legacy dedup`)
+    }
+
+    if (!queueRowId && !claimError) {
+      // Claim returned nothing: either already running/posted, or no queue row.
+      // Inspect the row to decide which.
+      try {
+        const { data: existing } = await sb
+          .from('post_queue')
+          .select('id, status')
+          .eq('idempotency_key', idempotencyKey)
+          .maybeSingle()
+
+        if (existing?.status === 'posted') {
+          console.log(`Skipping ${mode} — already posted (queue, key: ${idempotencyKey})`)
+          process.exit(0)
+        }
+        if (existing?.status === 'running') {
+          // Another worker has it — skip silently
+          console.log(`Skipping ${mode} — claimed by another worker (queue, key: ${idempotencyKey})`)
+          process.exit(0)
+        }
+        // existing is null (no queue row) or has some other status — fall through to legacy
+        if (existing) {
+          console.warn(`Unexpected queue status "${existing.status}" for key ${idempotencyKey} — falling through to legacy`)
+        }
+      } catch (lookupErr) {
+        console.warn(`Queue row lookup failed (${lookupErr.message}) — falling through to legacy`)
+      }
+    }
+  }
+
+  // ── Legacy dedup path (when no queue row was found or Supabase unavailable) ─
+  const useLegacy = !queueRowId
+  const dedupKey = DEDUP_EXEMPT.has(mode)
+    ? `mode:${mode}:${new Date().toISOString().slice(0, 13)}`
+    : `mode:${mode}:${today}`
+
+  if (useLegacy && !DRY_RUN) {
+    let alreadyPosted = false
+    try {
+      alreadyPosted = await checkPostedEvent(dedupKey)
+    } catch (dbErr) {
+      console.error(`Dedup check failed (Supabase unreachable): ${dbErr.message}. Skipping ${mode} to avoid duplicate.`)
+      process.exit(0)
+    }
+    if (alreadyPosted) {
+      console.log(`Skipping ${mode} — already posted (legacy, key: ${dedupKey})`)
+      process.exit(0)
+    }
+  }
+
+  // ── Run mode + post ─────────────────────────────────────────────────────────
+  // MODES[mode]() is responsible for calling post() or postLinkedIn() internally.
+  // The platform argument here is informational — each mode function already knows
+  // which channel to post to. We do not call post()/postLinkedIn() again here.
+  try {
+    await MODES[mode]()
+
+    // ── Mark success ──────────────────────────────────────────────────────────
+    if (!DRY_RUN) {
+      if (queueRowId && sb) {
+        // Update queue row to posted
+        try {
+          await sb
+            .from('post_queue')
+            .update({ status: 'posted', posted_at: new Date().toISOString() })
+            .eq('id', queueRowId)
+        } catch (markErr) {
+          console.error(`WARN: post succeeded but queue mark failed (id=${queueRowId}): ${markErr.message}`)
+          // Best-effort legacy mark to prevent duplicate next run
+          try { await markPostedEvent(dedupKey, mode, ticker || null, today, '') } catch { /* ignore */ }
+        }
+      } else {
+        // Legacy path: mark in posted_tweet_events
+        try {
+          await markPostedEvent(dedupKey, mode, ticker || null, today, '')
+        } catch (dbErr) {
+          console.error(`WARN: post succeeded but dedup mark failed: ${dbErr.message}. Next cron fire may duplicate.`)
+        }
+      }
+    }
+
+    console.log(`Done (mode=${mode}, platform=${platform})`)
+
+  } catch (err) {
+    // Real failure — exit 1 so GitHub marks the run red
+    console.error(`FAILED (mode=${mode}): ${err.message}`)
+
+    if (!DRY_RUN) {
+      const failureReason = classifyError(err)
+
+      if (queueRowId && sb) {
+        // Update queue row to failed with classification
+        try {
+          await sb
+            .from('post_queue')
+            .update({
+              status: 'failed',
+              failure_reason: failureReason,
+              error_message: err.message.slice(0, 500),
+              failed_at: new Date().toISOString(),
+            })
+            .eq('id', queueRowId)
+        } catch { /* don't let failure recorder block exit */ }
+      } else {
+        // Legacy path: record failure in posted_tweet_events
+        try {
+          await markPostedEvent(
+            `mode:${mode}:${today}:failed`,
+            mode, ticker || null, today,
+            `FAILED at ${new Date().toISOString()}: ${err.message.slice(0, 500)}`
+          )
+        } catch { /* don't let failure recorder block exit */ }
+      }
+    }
+
+    process.exit(1)
+  }
+}
+
 async function runEarningsResults() {
   const todayUtc     = new Date().toISOString().split('T')[0]
   const yesterday    = new Date()
@@ -7682,76 +7871,22 @@ if (!MODES[MODE]) {
 }
 
 // ─── Execution block ──────────────────────────────────────────────────────────
-// Dedup, holiday redirect, mode execution, failure recording.
+// Routes through claimAndPost() which handles:
+//   - Queue-row atomic claim (post_queue table via claim_post RPC)
+//   - Legacy fallback (posted_tweet_events) when queue row not found
+//   - Holiday redirect for intraday modes
+//   - Dedup (daily or hourly for DEDUP_EXEMPT modes)
+//   - Failure recording with error classification
+//
+// Platform is inferred from MODE prefix:
+//   li_*  → 'linkedin'
+//   else  → 'twitter'
+//
 // - Skip (exit 0): already posted, holiday redirect, no data available
 // - Failure (exit 1): real errors — Buffer down, invalid content, missing config
 //   GitHub marks the run red so failures are visible. The 48 explicit cron entries
 //   (not */15) mean GitHub won't disable the workflow after failures.
 
-const DEDUP_EXEMPT = new Set(['earnings_results', 'economic_results', 'holiday_deep_dive'])
-const today = new Date().toISOString().split('T')[0]  // YYYY-MM-DD in UTC
+const platform = MODE.startsWith('li_') ? 'linkedin' : 'twitter'
 
-// Atomic dedup check — uses the existing posted_tweet_events table.
-// Modes not in DEDUP_EXEMPT get a daily key. DEDUP_EXEMPT modes use hourly keys
-// (they can post multiple times per day but not multiple times per hour).
-const dedupKey = DEDUP_EXEMPT.has(MODE)
-  ? `mode:${MODE}:${new Date().toISOString().slice(0, 13)}`  // YYYY-MM-DDTHH
-  : `mode:${MODE}:${today}`
-
-if (!DRY_RUN) {
-  let alreadyPosted = false
-  try {
-    alreadyPosted = await checkPostedEvent(dedupKey)
-  } catch (dbErr) {
-    // Supabase unreachable: fail closed — skip to avoid duplicate
-    console.error(`Dedup check failed (Supabase unreachable): ${dbErr.message}. Skipping ${MODE} to avoid duplicate.`)
-    process.exit(0)
-  }
-  if (alreadyPosted) {
-    console.log(`Skipping ${MODE} — already posted (key: ${dedupKey})`)
-    process.exit(0)
-  }
-}
-
-// Holiday redirect
-if (INTRADAY_MODES.has(MODE) && isMarketHoliday(today)) {
-  console.log(`Market holiday (${today}): replacing ${MODE} with holiday_deep_dive`)
-  try {
-    await runHolidayDeepDive()
-    console.log(`Done (mode=holiday_deep_dive, original=${MODE})`)
-  } catch (err) {
-    console.warn(`holiday_deep_dive failed (non-fatal):`, err.message)
-  }
-  process.exit(0)
-}
-
-try {
-  await MODES[MODE]()
-
-  // Mark as posted (atomic upsert — race-safe via UNIQUE constraint on event_key)
-  if (!DRY_RUN) {
-    try {
-      await markPostedEvent(dedupKey, MODE, null, today, '')
-    } catch (dbErr) {
-      // Post succeeded but mark failed — log prominently, next run may duplicate
-      console.error(`WARN: post succeeded but dedup mark failed: ${dbErr.message}. Next cron fire may duplicate.`)
-    }
-  }
-  console.log(`Done (mode=${MODE})`)
-
-} catch (err) {
-  // Real failure — exit 1 so GitHub marks the run red (visible in UI and email)
-  console.error(`FAILED (mode=${MODE}): ${err.message}`)
-
-  // Record failure in Supabase so the status endpoint can surface it
-  if (!DRY_RUN) {
-    try {
-      await markPostedEvent(
-        `mode:${MODE}:${today}:failed`,
-        MODE, null, today,
-        `FAILED at ${new Date().toISOString()}: ${err.message.slice(0, 500)}`
-      )
-    } catch { /* don't let the failure recorder block the exit */ }
-  }
-  process.exit(1)
-}
+await claimAndPost(MODE, platform, TICKER)
