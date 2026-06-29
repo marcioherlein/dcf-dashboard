@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 
-const ADMIN_EMAILS = (process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? 'marcioherlein@gmail.com')
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? 'marcioherlein@gmail.com')
   .split(',').map(e => e.trim())
 
 function getClient() {

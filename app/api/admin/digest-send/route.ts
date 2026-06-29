@@ -7,7 +7,7 @@ import WeeklyDigestEmail, { type WatchlistStock, type DigestContent } from '@/em
 
 export const maxDuration = 300
 
-const ADMIN_EMAILS = (process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? 'marcioherlein@gmail.com')
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? 'marcioherlein@gmail.com')
   .split(',').map(e => e.trim())
 
 function getServiceClient() {

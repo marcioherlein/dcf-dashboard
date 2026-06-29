@@ -4,10 +4,10 @@ import { authOptions } from '@/lib/auth'
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 
-const ADMIN_EMAILS = (process.env.NEXT_PUBLIC_ADMIN_EMAILS ?? 'marcioherlein@gmail.com')
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? 'marcioherlein@gmail.com')
   .split(',').map(e => e.trim())
 
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest) {
   const session = await getServerSession(authOptions)
   if (!ADMIN_EMAILS.includes(session?.user?.email ?? '')) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
