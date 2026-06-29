@@ -165,7 +165,7 @@ export const authOptions: NextAuthOptions = {
       return true
     },
 
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account: _account }) {
       // ── On initial sign-in: fetch Supabase UUID and plan ──────────────────
       // BUG-09 FIX: For Google users, token.sub is the Google account ID,
       // not the Supabase UUID. We fetch and store the actual DB UUID here
