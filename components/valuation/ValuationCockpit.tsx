@@ -311,15 +311,24 @@ function buildFcfMarginSeries(apiData: ApiData): SparkPoint[] {
 
 export default function ValuationCockpit({ apiData, ticker, statementsData, limitedHistory, historyYears, onNavigateToFinancials: _onNavigateToFinancials, onNavigateToConviction: _onNavigateToConviction, onLiveDcfFVChange }: Props) {
   const { data: session } = useSession()
-  const [isPro, setIsPro] = useState(false)
+
+  // Seed from session immediately (avoids flash of locked state for Pro users),
+  // then confirm with a fresh DB read via /api/user/plan.
+  const sessionPlan = (session?.user as { plan?: string } | undefined)?.plan
+  const [isPro, setIsPro] = useState(sessionPlan === 'pro')
 
   useEffect(() => {
+    // Always prefer session signal first to avoid flash of locked state
+    if (sessionPlan === 'pro') { setIsPro(true); return }
     if (!session?.user?.email) return
     fetch('/api/user/plan')
       .then(r => r.json())
       .then(d => setIsPro(d?.plan === 'pro'))
-      .catch(() => {})
-  }, [session?.user?.email])
+      .catch(() => {
+        // On fetch failure, keep whatever the session says rather than defaulting to false
+        if (sessionPlan === 'pro') setIsPro(true)
+      })
+  }, [session?.user?.email, sessionPlan])
 
   const snapshot        = useMemo(() => buildSnapshot(apiData, statementsData), [apiData, statementsData])
   const defaults        = useMemo(() => seedAssumptions(apiData), [apiData])
