@@ -1,8 +1,4 @@
 {
-  "_notes": [
-    "VERCEL PLAN WARNING: Hobby plan supports max 2 crons. This file currently defines 5 active crons + 1 pending (social-queue-worker). Upgrade to Pro plan to enable all crons.",
-    "PENDING CRON (requires Pro): { \"path\": \"/api/cron/social-queue-worker\", \"schedule\": \"*/30 * * * *\" }"
-  ],
   "crons": [
     {
       "path": "/api/cron/etf-snapshot",
