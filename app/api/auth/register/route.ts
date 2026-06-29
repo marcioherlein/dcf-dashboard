@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'An account with this email already exists. Try signing in instead.', code: 'ALREADY_EXISTS' }, { status: 409 })
     }
 
-    const password_hash = await bcrypt.hash(password, 12)
+    const password_hash = await bcrypt.hash(password, 10)
 
     if (existing) {
       await sb.from('users').update({ password_hash, name: name.trim(), terms_accepted_at: new Date().toISOString() }).eq('email', normalizedEmail)
