@@ -532,6 +532,43 @@ async function buildIdeas(): Promise<IdeasResponse> {
   const metaMap = new Map(SCREENER_UNIVERSE.map(t => [t.ticker, t]))
   const rfRate = await getRfRate()
 
+  // ── Load stored cockpit valuations from daily_valuations ──────────────────
+  // The valuation-batch cron runs nightly and stores the real 4-model blended
+  // fair value for each ticker. We prefer these over the single-model DCF below.
+  // Fall back to computeLightweightDCF for tickers not yet in the table.
+  const storedValuations = new Map<string, { fairValue: number; upsidePct: number }>()
+  try {
+    const sbUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const sbKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    if (sbUrl && sbKey) {
+      const { createClient } = await import('@supabase/supabase-js')
+      const sb = createClient(sbUrl, sbKey)
+      // Accept rows from the last 3 days — weekends / holidays skip batch runs
+      const cutoff = new Date(Date.now() - 3 * 86400000).toISOString().slice(0, 10)
+      const { data } = await sb
+        .from('daily_valuations')
+        .select('ticker, fair_value, upside_pct, date')
+        .gte('date', cutoff)
+        .not('fair_value', 'is', null)
+        .order('date', { ascending: false })
+      if (data) {
+        // Keep the most recent row per ticker
+        const seen = new Set<string>()
+        for (const row of data) {
+          if (!seen.has(row.ticker) && row.fair_value != null && row.upside_pct != null) {
+            storedValuations.set(row.ticker, {
+              fairValue: row.fair_value,
+              upsidePct: row.upside_pct,
+            })
+            seen.add(row.ticker)
+          }
+        }
+      }
+    }
+  } catch {
+    // Non-fatal — falls back to lightweight DCF for all tickers
+  }
+
   // Batch quote fetch
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const quoteMap = new Map<string, any>()
@@ -615,8 +652,12 @@ async function buildIdeas(): Promise<IdeasResponse> {
     const upsidePct    = (analystTarget != null && price > 0) ? (analystTarget / price) - 1 : null
     const expectation  = impliedCAGR != null ? classifyExpectation(impliedCAGR, revenueGrowthPct) : null
 
-    const insicFairValue   = s ? computeLightweightDCF(s, q, rfRate) : null
-    const insicUpsidePct   = (insicFairValue != null && price > 0) ? (insicFairValue / price) - 1 : null
+    // Prefer stored cockpit valuation (real 4-model blend from nightly batch).
+    // Fall back to single-model lightweight DCF if no stored value available.
+    const stored = storedValuations.get(ticker)
+    const lightweightFV = stored == null && s ? computeLightweightDCF(s, q, rfRate) : null
+    const insicFairValue   = stored?.fairValue ?? lightweightFV
+    const insicUpsidePct   = stored?.upsidePct ?? (lightweightFV != null && price > 0 ? (lightweightFV / price) - 1 : null)
     const epsRevision      = s ? extractEpsRevision(s) : null
     const insiderSentiment = s ? extractInsiderSentiment(s) : null
     const fwdPE: number | null = (q.forwardPE != null && q.forwardPE > 0 && q.forwardPE < 200) ? q.forwardPE : null
