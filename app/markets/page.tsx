@@ -156,7 +156,7 @@ export default function MarketsPage() {
           <MarketsTabNav active={activeTab} onChange={setActiveTab} />
         </div>
 
-        {/* ── Tab panels container — fixed height, all tabs always mounted ── */}
+        {/* ── Tab panels container ── */}
         <div className="flex-1 min-h-0 overflow-hidden">
 
           {/* ── OVERVIEW ── */}
@@ -164,23 +164,23 @@ export default function MarketsPage() {
             id="markets-panel-overview"
             role="tabpanel"
             aria-labelledby="markets-tab-overview"
-            className={`h-full overflow-hidden flex flex-col${activeTab !== 'overview' ? ' hidden' : ''}`}
+            className={`h-full flex flex-col overflow-y-auto lg:overflow-hidden${activeTab !== 'overview' ? ' hidden' : ''}`}
           >
-            {/* Row 1 (flex-1): 3-col grid — MarketPulse | NormalizedPerfChart | TopMoversCard */}
-            <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-3 overflow-hidden">
-              <div className="lg:col-span-3 h-full min-h-0 overflow-hidden">
-                {ctx ? <MarketPulse pulse={ctx.pulse} /> : <Sk h="h-full" />}
+            {/* Row 1 (flex-1 on desktop, natural height on mobile): 3-col grid */}
+            <div className="min-h-[280px] lg:flex-1 lg:min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-3 lg:overflow-hidden">
+              <div className="lg:col-span-3 lg:h-full lg:min-h-0 lg:overflow-hidden">
+                {ctx ? <MarketPulse pulse={ctx.pulse} /> : <Sk h="h-[280px]" />}
               </div>
-              <div className="lg:col-span-6 h-full min-h-0 overflow-hidden">
+              <div className="lg:col-span-6 lg:h-full lg:min-h-0 lg:overflow-hidden">
                 <NormalizedPerfChart />
               </div>
-              <div className="lg:col-span-3 h-full min-h-0 overflow-hidden">
+              <div className="lg:col-span-3 lg:h-full lg:min-h-0 lg:overflow-hidden">
                 <TopMoversCard />
               </div>
             </div>
 
-            {/* Row 2 (shrink-0): MacroSignals compact strip */}
-            <div className="shrink-0 mt-2">
+            {/* Row 2: MacroSignals compact strip */}
+            <div className="shrink-0 mt-2 pb-4 lg:pb-1">
               {ctx ? <MacroSignals signals={ctx.signals} /> : <Sk h="h-[72px]" />}
             </div>
           </div>
@@ -190,23 +190,20 @@ export default function MarketsPage() {
             id="markets-panel-sectors"
             role="tabpanel"
             aria-labelledby="markets-tab-sectors"
-            className={`h-full overflow-hidden flex flex-col${activeTab !== 'sectors' ? ' hidden' : ''}`}
+            className={`h-full flex flex-col overflow-y-auto lg:overflow-hidden${activeTab !== 'sectors' ? ' hidden' : ''}`}
           >
-            {/* Main 2-col grid */}
-            <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-3 overflow-hidden">
-              {/* Left: Heatmap */}
-              <div className="lg:col-span-7 h-full min-h-0 overflow-hidden">
-                {mkt ? <MarketHeatmapCard sectors={mkt.sectors} /> : <Sk h="h-full" />}
+            <div className="lg:flex-1 lg:min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-3 lg:overflow-hidden pb-4 lg:pb-0">
+              <div className="lg:col-span-7 lg:h-full lg:min-h-0 lg:overflow-hidden">
+                {mkt ? <MarketHeatmapCard sectors={mkt.sectors} /> : <Sk h="h-[320px]" />}
               </div>
-              {/* Right: Rotation (top) + Sector Stocks (bottom) + Performance (bottom) stacked */}
-              <div className="lg:col-span-5 h-full min-h-0 flex flex-col gap-3 overflow-hidden">
-                <div className="flex-1 min-h-0 overflow-hidden">
-                  {ctx ? <SectorRotation sectors={ctx.sectors} /> : <Sk h="h-full" />}
+              <div className="lg:col-span-5 lg:h-full lg:min-h-0 flex flex-col gap-3 lg:overflow-hidden">
+                <div className="lg:flex-1 lg:min-h-0 lg:overflow-hidden">
+                  {ctx ? <SectorRotation sectors={ctx.sectors} /> : <Sk h="h-[200px]" />}
                 </div>
-                <div className="flex-1 min-h-0 overflow-hidden">
-                  {mkt ? <SectorPerformanceCard sectors={mkt.sectors} /> : <Sk h="h-full" />}
+                <div className="lg:flex-1 lg:min-h-0 lg:overflow-hidden">
+                  {mkt ? <SectorPerformanceCard sectors={mkt.sectors} /> : <Sk h="h-[200px]" />}
                 </div>
-                <div className="flex-1 min-h-0 overflow-hidden">
+                <div className="lg:flex-1 lg:min-h-0 lg:overflow-hidden">
                   <SectorStocksCard />
                 </div>
               </div>
@@ -218,7 +215,7 @@ export default function MarketsPage() {
             id="markets-panel-news"
             role="tabpanel"
             aria-labelledby="markets-tab-news"
-            className={`h-full overflow-hidden flex flex-col${activeTab !== 'news' ? ' hidden' : ''}`}
+            className={`h-full flex flex-col overflow-y-auto lg:overflow-hidden${activeTab !== 'news' ? ' hidden' : ''}`}
           >
             {!mkt ? (
               <Sk h="h-48" />
@@ -227,7 +224,7 @@ export default function MarketsPage() {
                 <p className="text-[13px] text-[#6B6B6B]">Market news could not be loaded. Try refreshing.</p>
               </div>
             ) : mkt.news.length > 0 ? (
-              <div className="flex-1 min-h-0 overflow-y-auto">
+              <div className="lg:flex-1 lg:min-h-0 lg:overflow-y-auto">
                 <MarketNewsSection news={mkt.news} />
               </div>
             ) : (
@@ -242,7 +239,7 @@ export default function MarketsPage() {
             id="markets-panel-calendar"
             role="tabpanel"
             aria-labelledby="markets-tab-calendar"
-            className={`h-full overflow-hidden${activeTab !== 'calendar' ? ' hidden' : ''}`}
+            className={`h-full overflow-y-auto lg:overflow-hidden${activeTab !== 'calendar' ? ' hidden' : ''}`}
           >
             <CalendarTab />
           </div>
@@ -252,12 +249,12 @@ export default function MarketsPage() {
             id="markets-panel-valuation"
             role="tabpanel"
             aria-labelledby="markets-tab-valuation"
-            className={`h-full overflow-hidden flex flex-col lg:flex-row gap-3${activeTab !== 'valuation' ? ' hidden' : ''}`}
+            className={`h-full flex flex-col lg:flex-row gap-3 overflow-y-auto lg:overflow-hidden${activeTab !== 'valuation' ? ' hidden' : ''}`}
           >
-            {/* Left col: YieldCurveChart fills height */}
-            <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+            {/* Left col: YieldCurveChart */}
+            <div className="lg:flex-1 lg:min-h-0 lg:overflow-hidden flex flex-col">
               {!mkt ? (
-                <Sk h="h-full" />
+                <Sk h="h-[280px]" />
               ) : mkt.yieldCurve.length > 0 ? (
                 <YieldCurveChart points={mkt.yieldCurve} />
               ) : (
@@ -267,8 +264,8 @@ export default function MarketsPage() {
               )}
             </div>
 
-            {/* Right col: ValuationContext + HY Spread + PriceTables — scrollable */}
-            <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-3">
+            {/* Right col: ValuationContext + HY Spread + PriceTables */}
+            <div className="lg:flex-1 lg:min-h-0 lg:overflow-y-auto flex flex-col gap-3 pb-4 lg:pb-0">
               {ctx ? <ValuationContext valuation={ctx.valuation} /> : <Sk h="h-56" />}
 
               {/* HY Credit Spread */}

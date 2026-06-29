@@ -6,12 +6,12 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import {
   PieChart, X, Globe, Bookmark, SlidersHorizontal,
-  Settings, TrendingUp, Search,
+  Settings, TrendingUp, Search, Lightbulb,
 } from 'lucide-react'
 
 // ── Nav items ─────────────────────────────────────────────────────────────────
-// 5 primary items: Markets · Valuations · Analyze (center FAB) · Screener · ETFs
-// Settings accessible via a swipe-up drawer (no "More" button taking a slot)
+// 5 primary items: Markets · Valuations · Analyze (center FAB) · Ideas · Screener
+// ETFs and Settings accessible via the swipe-up drawer
 
 const NAV_ITEMS = [
   {
@@ -27,7 +27,7 @@ const NAV_ITEMS = [
   },
   {
     href: '/valuations',
-    label: 'Watchlist',
+    label: 'Valuations',
     match: (p: string) => p.startsWith('/valuations'),
     icon: (active: boolean) => (
       <Bookmark
@@ -40,6 +40,17 @@ const NAV_ITEMS = [
 
 const NAV_ITEMS_RIGHT = [
   {
+    href: '/ideas',
+    label: 'Ideas',
+    match: (p: string) => p.startsWith('/ideas'),
+    icon: (active: boolean) => (
+      <Lightbulb
+        className={cn('w-[22px] h-[22px]', active ? 'text-[#7C9A19]' : 'text-[rgba(255,255,255,0.50)]')}
+        strokeWidth={active ? 2.2 : 1.6}
+      />
+    ),
+  },
+  {
     href: '/screener',
     label: 'Screener',
     match: (p: string) => p.startsWith('/screener'),
@@ -50,26 +61,16 @@ const NAV_ITEMS_RIGHT = [
       />
     ),
   },
-  {
-    href: '/etf',
-    label: 'ETFs',
-    match: (p: string) => p.startsWith('/etf'),
-    icon: (active: boolean) => (
-      <PieChart
-        className={cn('w-[22px] h-[22px]', active ? 'text-[#7C9A19]' : 'text-[rgba(255,255,255,0.50)]')}
-        strokeWidth={active ? 2.2 : 1.6}
-      />
-    ),
-  },
 ]
 
 const DRAWER_ITEMS = [
-  { href: '/markets',    label: 'Markets',     icon: Globe           },
-  { href: '/valuations', label: 'My Valuations', icon: TrendingUp    },
-  { href: '/screener',   label: 'Screener',    icon: SlidersHorizontal },
-  { href: '/etf',        label: 'ETF Tracker', icon: PieChart        },
-  { href: '/analyze',    label: 'Analyze',     icon: Search          },
-  { href: '/settings',   label: 'Settings',    icon: Settings        },
+  { href: '/markets',    label: 'Markets',       icon: Globe           },
+  { href: '/valuations', label: 'My Valuations',  icon: TrendingUp      },
+  { href: '/ideas',      label: 'Ideas',          icon: Lightbulb       },
+  { href: '/screener',   label: 'Screener',       icon: SlidersHorizontal },
+  { href: '/etf',        label: 'ETF Tracker',    icon: PieChart        },
+  { href: '/analyze',    label: 'Analyze',        icon: Search          },
+  { href: '/settings',   label: 'Settings',       icon: Settings        },
 ]
 
 export default function BottomNav() {

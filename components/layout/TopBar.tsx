@@ -129,7 +129,7 @@ function StockTabPills() {
             style={{ padding: '6px 8px' }}
             className={cn(
               'relative flex items-center gap-1.5 rounded-[10px] whitespace-nowrap shrink-0 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[rgba(95,121,11,0.7)]',
-              'text-[13px] sm:gap-1.5',
+              'text-[13px]',
               active ? 'text-white font-[650]' : 'text-[rgba(255,255,255,0.42)] hover:text-[rgba(255,255,255,0.80)] font-[500]',
             )}
           >
@@ -146,12 +146,13 @@ function StockTabPills() {
                 aria-hidden="true"
               />
             )}
+            {/* Icon hidden on mobile to save space — tabs are label-only below sm */}
             <Icon
               size={13}
-              className={cn('relative z-10 shrink-0', active ? 'text-[#7CB518]' : 'text-[rgba(255,255,255,0.30)]')}
+              className={cn('relative z-10 shrink-0 hidden sm:block', active ? 'text-[#7CB518]' : 'text-[rgba(255,255,255,0.30)]')}
               aria-hidden="true"
             />
-            {/* mobile: short label always visible. sm+: full label */}
+            {/* mobile: short label; sm+: full label */}
             <span className="relative z-10 sm:hidden">{labelShort}</span>
             <span className="relative z-10 hidden sm:inline">{label}</span>
           </button>
@@ -365,11 +366,12 @@ function StockFloatingBar({
       style={{ height: 52 }}
     >
 
-      {/* ── Pill 1: Tabs (left-aligned, takes natural width) ──────────────── */}
+      {/* ── Pill 1: Tabs (left-aligned, scrollable on mobile) ────────────── */}
       <nav
-        style={glassPill({ padding: '0 6px', gap: 2, flexShrink: 0 })}
+        style={glassPill({ padding: '0 4px', gap: 0, flexShrink: 1, minWidth: 0, overflowX: 'auto', WebkitOverflowScrolling: 'touch' })}
         role="tablist"
         aria-label="Stock sections"
+        className="scrollbar-hide"
       >
         <StockTabPills />
       </nav>
@@ -378,7 +380,7 @@ function StockFloatingBar({
       <div className="flex-1 min-w-0" />
 
       {/* ── Right group: stock · features · search ────────────────────────── */}
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
 
         {/* Pill 2: Stock identity */}
         <div style={glassPill({ padding: '0 12px', gap: 8 })}>
