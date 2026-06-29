@@ -172,7 +172,11 @@ function computeLightweightDCF(s: any, q: any, rfRate: number): number | null {
 
     const fvResult = calculateFairValue(dcfResult, cashM, debtM, sharesM, price)
     const fv = fvResult.fairValuePerShare
-    if (fv == null || fv <= 0 || fv > price * 15 || isNaN(fv)) return null
+    // Cap at 4x current price (300% upside max). The full cockpit blends 4 models
+    // which pulls extreme DCF-only results down significantly. Without the cap,
+    // high-FCF stocks (especially Chinese ADRs with depressed market prices) produce
+    // 900%+ numbers that are artifacts of the single-model DCF, not real opportunities.
+    if (fv == null || fv <= 0 || fv > price * 4 || isNaN(fv)) return null
     return Math.round(fv * 100) / 100
   } catch {
     return null

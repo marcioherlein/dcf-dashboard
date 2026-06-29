@@ -27,7 +27,7 @@ const SIGNALS: {
     id: 'insic_dcf',
     label: 'insic DCF Discount',
     shortLabel: 'insic DCF',
-    description: 'Stocks trading most below insic\'s own DCF intrinsic value estimate. Unlike analyst price targets, insic\'s fair value is derived from a full discounted cash flow model — WACC, free cash flow projections, terminal value — using the same methodology applied on each stock\'s detailed page.',
+    description: 'Stocks trading most below insic\'s DCF intrinsic value estimate. This uses a single-model DCF — open any stock for the full 4-model blended verdict with editable assumptions.',
     icon: Cpu,
     cardBg: 'linear-gradient(145deg, #0c1a35 0%, #112252 100%)',
     accentColor: '#60a5fa',
@@ -194,7 +194,8 @@ function IdeaCard({ stock, signalId, index }: { stock: IdeaStock; signalId: Sign
 
   // Primary upside: insic DCF preferred, analyst target fallback
   const primaryUpside = stock.insicUpsidePct ?? stock.upsidePct
-  const primarySource = stock.insicUpsidePct != null ? 'insic DCF' : 'analyst target'
+  // Ideas uses a single-model DCF estimate; the full blended verdict is on the stock page
+  const primarySource = stock.insicUpsidePct != null ? 'vs insic DCF' : 'vs analyst target'
 
   // Signals aligned: both insic DCF and analyst target agree it's undervalued
   const signalsAligned = stock.insicUpsidePct != null && stock.insicUpsidePct > 0 &&
@@ -252,7 +253,8 @@ function IdeaCard({ stock, signalId, index }: { stock: IdeaStock; signalId: Sign
             {fmtUpside(primaryUpside)}
           </span>
           <div className="flex flex-col gap-0.5">
-            <span className="text-[10px] text-[rgba(255,255,255,0.35)] leading-tight">vs {primarySource}</span>
+            <span className="text-[10px] text-[rgba(255,255,255,0.35)] leading-tight">{primarySource}</span>
+            <span className="text-[9px] text-[rgba(255,255,255,0.22)] leading-tight">single-model est.</span>
             {stock.insicFairValue != null && (
               <span className="text-[10px] text-[rgba(255,255,255,0.50)] tabular-nums leading-tight">
                 FV ${stock.insicFairValue.toFixed(2)}
