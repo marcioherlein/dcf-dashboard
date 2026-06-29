@@ -5,50 +5,22 @@ import { projectCashFlows, extractFCFInputs } from '@/lib/dcf/projectCashFlows'
 import { calculateFairValue } from '@/lib/dcf/calculateFairValue'
 import { getCRPByCountry } from '@/lib/dcf/countryRiskPremium'
 import { getRfRate } from '@/lib/data/fredClient'
+import type {
+  IdeaStock,
+  SignalId,
+  IdeasResponse,
+  DataCoverage,
+  EvidenceItem,
+  RiskFlag,
+  RiskFlagType,
+  IdeaSnapshot,
+} from '@/lib/data/ideasTypes'
+
+export type { IdeaStock, SignalId, IdeasResponse, DataCoverage, EvidenceItem, RiskFlag, RiskFlagType, IdeaSnapshot }
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const YahooFinance = require('yahoo-finance2').default
 const yf = new YahooFinance({ suppressNotices: ['ripHistorical', 'yahooSurvey'] })
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-export interface IdeaStock {
-  ticker: string
-  name: string
-  sector: string | null
-  price: number | null
-  analystTarget: number | null
-  upsidePct: number | null
-  insicFairValue: number | null
-  insicUpsidePct: number | null
-  convictionBand: 'A' | 'B' | 'C' | 'D' | null
-  epsRevision: { direction: 'up' | 'flat' | 'down'; magnitude: number } | null
-  insiderSentiment: { sentiment: 'net_buyer' | 'net_seller' | 'neutral'; buyCount: number; sellCount: number } | null
-  sectorContext: { medianFwdPE: number | null; stockFwdPE: number | null; pctVsMedianFwdPE: number | null } | null
-  narrativeHook: string | null
-  impliedCAGR: number | null
-  historicalCagr3y: number | null
-  expectation: 'Conservative' | 'Moderate' | 'Aggressive' | 'Very Aggressive' | null
-  marketCap: number | null
-  pctFrom52WHigh: number | null
-  analystRating: number | null
-}
-
-export type SignalId =
-  | 'insic_dcf'
-  | 'estimate_upgrades'
-  | 'insider_buying'
-  | 'undervalued'
-  | 'priced_for_perfection'
-  | 'contrarian'
-  | 'near_52w_low'
-  | 'high_conviction'
-
-export interface IdeasResponse {
-  signals: Record<SignalId, IdeaStock[]>
-  updatedAt: string
-  totalAnalyzed: number
-}
 
 // ─── Cache — 6-hour TTL ───────────────────────────────────────────────────────
 
@@ -117,6 +89,188 @@ function estimateImpliedCAGR(
 function getAnalystTarget(targetMeanPrice: number | null, price: number): number | null {
   if (targetMeanPrice != null && targetMeanPrice > 0 && targetMeanPrice < price * 8) return targetMeanPrice
   return null
+}
+
+function deriveMarketCapBucket(marketCap: number | null): IdeaStock['marketCapBucket'] {
+  if (marketCap == null) return null
+  if (marketCap >= 200e9) return 'mega'
+  if (marketCap >= 10e9) return 'large'
+  if (marketCap >= 2e9) return 'mid'
+  return 'small'
+}
+
+// ─── IdeaScore (0–100) ────────────────────────────────────────────────────────
+
+type ScoreInputs = Pick<
+  IdeaStock,
+  | 'insicUpsidePct'
+  | 'upsidePct'
+  | 'epsRevision'
+  | 'insiderSentiment'
+  | 'analystRating'
+  | 'sectorContext'
+  | 'pctFrom52WHigh'
+>
+
+function computeIdeaScore(stock: ScoreInputs): number {
+  let score = 0
+
+  // DCF upside component (max +25, min -10)
+  if (stock.insicUpsidePct != null) {
+    if (stock.insicUpsidePct >= 0.30)      score += 25
+    else if (stock.insicUpsidePct >= 0.15) score += 15
+    else if (stock.insicUpsidePct >= 0.05) score +=  8
+    else if (stock.insicUpsidePct <  0)    score -= 10
+  }
+
+  // Analyst target upside component (max +15)
+  if (stock.upsidePct != null) {
+    if (stock.upsidePct >= 0.20)      score += 15
+    else if (stock.upsidePct >= 0.10) score +=  8
+  }
+
+  // EPS revision component (max +12, min -8)
+  if (stock.epsRevision != null) {
+    const { direction, magnitude } = stock.epsRevision
+    if (direction === 'up' && magnitude > 0.05)       score += 12
+    else if (direction === 'up' && magnitude >= 0.02) score +=  6
+    else if (direction === 'down')                    score -=  8
+  }
+
+  // Insider sentiment component (max +10, min -8)
+  if (stock.insiderSentiment != null) {
+    if (stock.insiderSentiment.sentiment === 'net_buyer')  score += 10
+    if (stock.insiderSentiment.sentiment === 'net_seller') score -=  8
+  }
+
+  // Analyst rating component (max +12, min -6)
+  if (stock.analystRating != null) {
+    if (stock.analystRating <= 1.8)      score += 12
+    else if (stock.analystRating <= 2.5) score +=  6
+    else if (stock.analystRating >= 3.8) score -=  6
+  }
+
+  // Sector valuation component (max +8)
+  if (stock.sectorContext?.pctVsMedianFwdPE != null) {
+    const pct = stock.sectorContext.pctVsMedianFwdPE
+    if (pct <= -0.20)      score += 8
+    else if (pct <= -0.10) score += 4
+  }
+
+  // 52-week position component (max +6)
+  // pctFrom52WHigh is expressed as a signed percentage (e.g. -30 means 30% below the high)
+  if (stock.pctFrom52WHigh != null) {
+    if (stock.pctFrom52WHigh <= -30)      score += 6
+    else if (stock.pctFrom52WHigh <= -20) score += 3
+  }
+
+  return Math.min(100, Math.max(0, score))
+}
+
+// ─── Evidence List ────────────────────────────────────────────────────────────
+
+function buildEvidenceList(stock: ScoreInputs & Pick<IdeaStock, 'sector'>): EvidenceItem[] {
+  const items: EvidenceItem[] = []
+
+  if (stock.insicUpsidePct != null) {
+    const sign = stock.insicUpsidePct >= 0 ? '+' : ''
+    items.push({
+      label: 'DCF upside',
+      value: `${sign}${(stock.insicUpsidePct * 100).toFixed(1)}%`,
+      positive: stock.insicUpsidePct > 0,
+    })
+  }
+
+  if (items.length < 5 && stock.upsidePct != null) {
+    const sign = stock.upsidePct >= 0 ? '+' : ''
+    items.push({
+      label: 'Analyst target',
+      value: `${sign}${(stock.upsidePct * 100).toFixed(1)}%`,
+      positive: stock.upsidePct > 0,
+    })
+  }
+
+  if (items.length < 5 && stock.epsRevision != null && stock.epsRevision.direction !== 'flat') {
+    const arrow = stock.epsRevision.direction === 'up' ? '↑' : '↓'
+    items.push({
+      label: 'EPS revision',
+      value: `${arrow} ${(Math.abs(stock.epsRevision.magnitude) * 100).toFixed(0)}% (90d)`,
+      positive: stock.epsRevision.direction === 'up',
+    })
+  }
+
+  if (items.length < 5 && stock.insiderSentiment != null) {
+    const { sentiment, buyCount, sellCount } = stock.insiderSentiment
+    items.push({
+      label: 'Insider activity',
+      value: `${buyCount}b ${sellCount}s 90d`,
+      positive: sentiment === 'net_buyer' ? true : sentiment === 'net_seller' ? false : null,
+    })
+  }
+
+  if (items.length < 5 && stock.sectorContext?.pctVsMedianFwdPE != null && Math.abs(stock.sectorContext.pctVsMedianFwdPE) >= 0.10) {
+    const pct = Math.abs(stock.sectorContext.pctVsMedianFwdPE * 100).toFixed(0)
+    const dir = stock.sectorContext.pctVsMedianFwdPE < 0 ? 'cheaper' : 'pricier'
+    items.push({
+      label: 'vs sector P/E',
+      value: `${pct}% ${dir}`,
+      positive: stock.sectorContext.pctVsMedianFwdPE < 0,
+    })
+  }
+
+  if (items.length < 5 && stock.analystRating != null) {
+    const rLabel =
+      stock.analystRating <= 1.5 ? 'Strong Buy' :
+      stock.analystRating <= 2.2 ? 'Buy' :
+      stock.analystRating <= 2.5 ? 'Overweight' :
+      stock.analystRating <= 3.5 ? 'Hold' : 'Sell'
+    items.push({
+      label: 'Analyst rating',
+      value: `${stock.analystRating.toFixed(1)}/5 ${rLabel}`,
+      positive: stock.analystRating <= 2.5,
+    })
+  }
+
+  if (items.length < 5 && stock.pctFrom52WHigh != null) {
+    items.push({
+      label: '52W position',
+      value: `${stock.pctFrom52WHigh.toFixed(1)}% from high`,
+      positive: stock.pctFrom52WHigh < -25,
+    })
+  }
+
+  return items.slice(0, 5)
+}
+
+// ─── Risk Flags ───────────────────────────────────────────────────────────────
+
+type RiskInputs = Pick<IdeaStock, 'insicFairValue' | 'expectation' | 'sectorContext' | 'pctFrom52WHigh' | 'insiderSentiment'>
+
+function buildRiskFlags(stock: RiskInputs): RiskFlag[] {
+  const flags: RiskFlag[] = []
+
+  if (stock.insicFairValue == null) {
+    flags.push({ type: 'dcf_unavailable' as RiskFlagType, message: 'No DCF estimate available — analyst target only' })
+  }
+
+  if (stock.expectation === 'Very Aggressive') {
+    flags.push({ type: 'very_aggressive' as RiskFlagType, message: 'Market pricing in >25% EPS growth' })
+  }
+
+  if (stock.sectorContext?.pctVsMedianFwdPE != null && stock.sectorContext.pctVsMedianFwdPE > 0.25) {
+    const pct = Math.round(stock.sectorContext.pctVsMedianFwdPE * 100)
+    flags.push({ type: 'expensive_sector' as RiskFlagType, message: `${pct}% pricier than sector median P/E` })
+  }
+
+  if (stock.pctFrom52WHigh != null && stock.pctFrom52WHigh > -5) {
+    flags.push({ type: 'near_52w_high' as RiskFlagType, message: 'Trading near 52-week high' })
+  }
+
+  if (stock.insiderSentiment?.sentiment === 'net_seller') {
+    flags.push({ type: 'insider_selling' as RiskFlagType, message: 'Net insider selling in 90 days' })
+  }
+
+  return flags
 }
 
 // ─── Lightweight DCF ─────────────────────────────────────────────────────────
@@ -295,7 +449,6 @@ function buildNarrativeHook(stock: IdeaStock, signalId: SignalId): string | null
   const fmtAbs = (v: number) => `${Math.abs(v).toFixed(0)}%`
   const fmt = (v: number) => v >= 0 ? `+${v.toFixed(1)}%` : `${v.toFixed(1)}%`
 
-  // Sector context snippet reused by multiple signals
   const sectorSnippet = (() => {
     const sc = stock.sectorContext
     if (sc?.pctVsMedianFwdPE == null || Math.abs(sc.pctVsMedianFwdPE) < 0.10) return ''
@@ -382,6 +535,7 @@ async function buildIdeas(): Promise<IdeasResponse> {
   // Batch quote fetch
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const quoteMap = new Map<string, any>()
+  const failedQuoteTickers: string[] = []
   for (let i = 0; i < IDEAS_UNIVERSE.length; i += 50) {
     const batch = IDEAS_UNIVERSE.slice(i, i + 50)
     try {
@@ -396,12 +550,15 @@ async function buildIdeas(): Promise<IdeasResponse> {
       for (const q of (Array.isArray(results) ? results : [])) {
         if (q?.symbol) quoteMap.set(q.symbol, q)
       }
-    } catch { /* skip batch */ }
+    } catch {
+      failedQuoteTickers.push(...batch)
+    }
   }
 
   // Enriched fundamentals — DCF modules + insider transactions
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const summaryMap = new Map<string, any>()
+  const failedSummaryTickers: string[] = []
   for (let i = 0; i < IDEAS_UNIVERSE.length; i += 10) {
     const batch = IDEAS_UNIVERSE.slice(i, i + 10)
     await Promise.allSettled(batch.map(async (ticker) => {
@@ -418,14 +575,19 @@ async function buildIdeas(): Promise<IdeasResponse> {
           ],
         }, { validateResult: false })
         summaryMap.set(ticker, s)
-      } catch { /* skip */ }
+      } catch {
+        failedSummaryTickers.push(ticker)
+      }
     }))
   }
 
   // ─── Pass 1: assemble stocks (sectorContext added in pass 2) ─────────────
 
-  // Temp storage for sector median computation
-  const stocksWithFwdPE: Array<IdeaStock & { _fwdPE: number | null }> = []
+  type StockWithFwdPE = Omit<IdeaStock, 'ideaScore' | 'evidenceList' | 'riskFlags'> & {
+    _fwdPE: number | null
+    sectorContext: IdeaStock['sectorContext']
+  }
+  const stocksWithFwdPE: StockWithFwdPE[] = []
 
   for (const ticker of IDEAS_UNIVERSE) {
     const q = quoteMap.get(ticker)
@@ -458,12 +620,15 @@ async function buildIdeas(): Promise<IdeasResponse> {
     const epsRevision      = s ? extractEpsRevision(s) : null
     const insiderSentiment = s ? extractInsiderSentiment(s) : null
     const fwdPE: number | null = (q.forwardPE != null && q.forwardPE > 0 && q.forwardPE < 200) ? q.forwardPE : null
+    const trailingPE: number | null = (q.trailingPE != null && q.trailingPE > 0 && q.trailingPE < 500) ? q.trailingPE : null
 
     const convictionBand = quickConvictionBand(
       insicUpsidePct, analystRating, epsRevision?.direction ?? null, pctFrom52WHigh, insiderSentiment
     )
 
     const sector = meta?.sector ?? null
+    const marketCap: number | null = q.marketCap ?? null
+    const marketCapBucket = deriveMarketCapBucket(marketCap)
 
     stocksWithFwdPE.push({
       ticker,
@@ -477,14 +642,17 @@ async function buildIdeas(): Promise<IdeasResponse> {
       convictionBand,
       epsRevision,
       insiderSentiment,
-      sectorContext: null, // filled in pass 2
+      sectorContext: null,
       narrativeHook: null,
       impliedCAGR,
       historicalCagr3y: revenueGrowthPct,
       expectation,
-      marketCap: q.marketCap ?? null,
+      marketCap,
       pctFrom52WHigh,
       analystRating,
+      fwdPE,
+      trailingPE,
+      marketCapBucket,
       _fwdPE: fwdPE,
     })
   }
@@ -495,7 +663,7 @@ async function buildIdeas(): Promise<IdeasResponse> {
     stocksWithFwdPE.map(s => ({ sector: s.sector, fwdPE: s._fwdPE }))
   )
 
-  const stocks: IdeaStock[] = stocksWithFwdPE.map(s => {
+  const stocksBase = stocksWithFwdPE.map(s => {
     const medianFwdPE   = s.sector ? sectorMedians.get(s.sector) ?? null : null
     const stockFwdPE    = s._fwdPE
     const pctVsMedianFwdPE = (stockFwdPE != null && medianFwdPE != null)
@@ -505,6 +673,15 @@ async function buildIdeas(): Promise<IdeasResponse> {
     void _unused
     return { ...rest, sectorContext: { medianFwdPE, stockFwdPE, pctVsMedianFwdPE } }
   })
+
+  // ─── Pass 3: compute ideaScore, evidenceList, riskFlags ───────────────────
+
+  const stocks: IdeaStock[] = stocksBase.map(s => ({
+    ...s,
+    ideaScore: computeIdeaScore(s),
+    evidenceList: buildEvidenceList(s),
+    riskFlags: buildRiskFlags(s),
+  }))
 
   // ─── Build signals ────────────────────────────────────────────────────────
 
@@ -577,6 +754,28 @@ async function buildIdeas(): Promise<IdeasResponse> {
     'high_conviction'
   )
 
+  // ─── DataCoverage ─────────────────────────────────────────────────────────
+
+  const dcfAvailableCount = stocks.filter(s => s.insicFairValue != null).length
+  const requestedCount = IDEAS_UNIVERSE.length
+  const quoteSuccessCount = quoteMap.size
+  const summarySuccessCount = summaryMap.size
+
+  // Collect failed tickers: explicit failures + tickers with no quote at all
+  const failedSet = new Set([...failedQuoteTickers, ...failedSummaryTickers])
+  for (const ticker of IDEAS_UNIVERSE) {
+    if (!quoteMap.has(ticker)) failedSet.add(ticker)
+  }
+
+  const dataCoverage: DataCoverage = {
+    requestedCount,
+    quoteSuccessCount,
+    summarySuccessCount,
+    dcfAvailableCount,
+    dataCoveragePct: Math.round((summarySuccessCount / requestedCount) * 100),
+    failedTickers: Array.from(failedSet),
+  }
+
   const result: IdeasResponse = {
     signals: {
       insic_dcf,
@@ -590,6 +789,7 @@ async function buildIdeas(): Promise<IdeasResponse> {
     },
     updatedAt: new Date().toISOString(),
     totalAnalyzed: stocks.length,
+    dataCoverage,
   }
 
   _cache = { data: result, ts: now }
