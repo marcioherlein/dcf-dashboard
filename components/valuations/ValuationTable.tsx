@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import type { WatchlistEntry, ListTag } from '@/lib/simplifier/types'
 import { Sparkline, SparklineSkeleton } from '@/components/ui/Sparkline'
@@ -194,6 +194,8 @@ export interface ValuationTableProps {
   selectedTickers?:  Set<string>
   onSelectionChange?: (tickers: Set<string>) => void
   viewPreset?:       'valuation' | 'quality' | 'risk' | 'market'
+  compact?:          boolean
+  groupByName?:      boolean
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -815,9 +817,19 @@ const PRESET_COLS: Record<string, SortKey[]> = {
 
 // ── Main Table ─────────────────────────────────────────────────────────────────
 
-export function ValuationTable({ entries, sparklines, livePrices = {}, groups, sortKey, sortDir, onSort, onDelete, onTagUpdate, onGroupUpdate, onNoteSave, selectedCols = [], onRefresh, refreshing, justRefreshed, selectedTickers, onSelectionChange, viewPreset }: ValuationTableProps) {
+export function ValuationTable({ entries, sparklines, livePrices = {}, groups, sortKey, sortDir, onSort, onDelete, onTagUpdate, onGroupUpdate, onNoteSave, selectedCols = [], onRefresh, refreshing, justRefreshed, selectedTickers, onSelectionChange, viewPreset, compact = false, groupByName = false }: ValuationTableProps) {
   const [expandedTicker, setExpandedTicker] = useState<string | null>(null)
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
   const activeCols = OPTIONAL_COLUMNS.filter(c => (viewPreset ? PRESET_COLS[viewPreset] : selectedCols ?? []).includes(c.id))
+
+  const toggleGroup = (name: string) => {
+    setCollapsedGroups(prev => {
+      const next = new Set(prev)
+      if (next.has(name)) next.delete(name)
+      else next.add(name)
+      return next
+    })
+  }
 
   const handleSort = (key: SortKey) => { onSort(key) }
 
@@ -891,7 +903,8 @@ export function ValuationTable({ entries, sparklines, livePrices = {}, groups, s
                 <th className="w-8 px-2 py-2" />
                 <Th label="Ticker & Company" sortKey="ticker"       current={sortKey} dir={sortDir} onSort={handleSort} align="left" />
                 <th className="px-3 py-2 text-[10px] font-semibold text-[#6B6B6B] text-left whitespace-nowrap">Tag</th>
-                <th className="px-3 py-2 text-[10px] font-semibold text-[#6B6B6B] text-center whitespace-nowrap">1M</th>
+                {/* Sparkline column header — hidden in compact mode */}
+                {!compact && <th className="px-3 py-2 text-[10px] font-semibold text-[#6B6B6B] text-center whitespace-nowrap">1M</th>}
                 <Th label="Price"      sortKey="price"        current={sortKey} dir={sortDir} onSort={handleSort} />
                 <Th label="Fair Value" sortKey="fairValue"    current={sortKey} dir={sortDir} onSort={handleSort} />
                 <th className="px-3 py-2 text-[10px] font-semibold text-[#6B6B6B] text-right whitespace-nowrap">MoS</th>
@@ -908,7 +921,72 @@ export function ValuationTable({ entries, sparklines, livePrices = {}, groups, s
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E3E1DA]">
-              {sorted.map((entry) => {
+              {(() => {
+                // Build display list: if groupByName, inject group header rows
+                type GroupHeader = { _isGroup: true; name: string; count: number; avgUpside: number | null }
+                type Row = WatchlistEntry | GroupHeader
+
+                let rows: Row[]
+                if (groupByName) {
+                  // Group entries by groupName (null = "Ungrouped")
+                  const groupMap = new Map<string, WatchlistEntry[]>()
+                  for (const e of sorted) {
+                    const key = e.groupName ?? '— Ungrouped'
+                    if (!groupMap.has(key)) groupMap.set(key, [])
+                    groupMap.get(key)!.push(e)
+                  }
+                  rows = []
+                  for (const [name, members] of Array.from(groupMap)) {
+                    const withUpside = members.filter((e: WatchlistEntry) => e.snapshot.upsidePct != null)
+                    const avgUpside = withUpside.length > 0
+                      ? withUpside.reduce((s: number, e: WatchlistEntry) => s + (e.snapshot.upsidePct ?? 0), 0) / withUpside.length
+                      : null
+                    rows.push({ _isGroup: true, name, count: members.length, avgUpside })
+                    if (!collapsedGroups.has(name)) rows.push(...members)
+                  }
+                } else {
+                  rows = sorted
+                }
+
+                return rows.map((rowOrGroup) => {
+                  // ── Group header row ────────────────────────────────────
+                  if ('_isGroup' in rowOrGroup) {
+                    const grp = rowOrGroup
+                    const isCollapsed = collapsedGroups.has(grp.name)
+                    const totalCols = 10 + activeCols.length + (compact ? 0 : 1)
+                    return (
+                      <tr key={`group-${grp.name}`} className="bg-[#F5F7FA] border-b border-[#E5E5E5]">
+                        <td colSpan={totalCols} className="px-3 py-1.5">
+                          <button
+                            onClick={() => toggleGroup(grp.name)}
+                            className="flex items-center gap-2 text-left w-full group/grp"
+                          >
+                            <svg
+                              className={cn('w-3 h-3 text-[#9B9B9B] transition-transform shrink-0', !isCollapsed && 'rotate-90')}
+                              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                            </svg>
+                            <span className="text-[11px] font-[700] text-[#566174] group-hover/grp:text-[#111111] transition-colors">
+                              {grp.name}
+                            </span>
+                            <span className="text-[10px] text-[#9B9B9B] font-[500]">{grp.count}</span>
+                            {grp.avgUpside != null && (
+                              <span className={cn(
+                                'ml-2 text-[10px] font-[650] tabular-nums',
+                                grp.avgUpside >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]'
+                              )}>
+                                avg {grp.avgUpside >= 0 ? '+' : ''}{(grp.avgUpside * 100).toFixed(1)}%
+                              </span>
+                            )}
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                  }
+
+                  // ── Data row ─────────────────────────────────────────────
+                  const entry = rowOrGroup
                 const prices      = sparklines[entry.ticker]
                 const sparkLoading= !(entry.ticker in sparklines)
                 const up          = prices && prices.length >= 2 ? prices[prices.length - 1] >= prices[0] : true
@@ -938,16 +1016,16 @@ export function ValuationTable({ entries, sparklines, livePrices = {}, groups, s
                   : null
 
                 return (
-                  <>
+                  <React.Fragment key={entry.ticker}>
                     <tr
-                      key={entry.ticker}
                       className={cn(
                         'group transition-colors cursor-default',
                         isExpanded ? 'bg-[#F8FBFF]' : 'hover:bg-[#F8F8F8]',
+                        compact && 'text-[11px]',
                       )}
                     >
                       {/* Checkbox */}
-                      <td className="w-8 px-2 py-2">
+                      <td className={cn('w-8 px-2', compact ? 'py-1' : 'py-2')}>
                         <input type="checkbox"
                           className="w-3 h-3 rounded accent-[#5F790B]"
                           checked={selectedTickers?.has(entry.ticker) ?? false}
@@ -981,48 +1059,52 @@ export function ValuationTable({ entries, sparklines, livePrices = {}, groups, s
                         </div>
                       </td>
 
-                      {/* Ticker & Company — single compact line */}
-                      <td className="px-3 py-2 min-w-[160px]">
+                      {/* Ticker & Company */}
+                      <td className={cn('px-3 min-w-[120px]', compact ? 'py-1' : 'py-2')}>
                         <div className="flex items-center gap-2">
-                          <TickerAvatar ticker={entry.ticker} />
+                          {!compact && <TickerAvatar ticker={entry.ticker} />}
                           <div className="min-w-0">
                             <Link
                               href={`/stock/${entry.ticker}`}
-                              className="text-[12px] font-bold font-mono text-[#111111] hover:text-olive-700 transition-colors leading-none"
+                              className={cn('font-bold font-mono text-[#111111] hover:text-olive-700 transition-colors leading-none', compact ? 'text-[11px]' : 'text-[12px]')}
                             >
                               {entry.ticker}
                             </Link>
-                            <p className="text-[11px] text-[#8A95A6] leading-tight truncate max-w-[130px] mt-0.5">
-                              {entry.companyName === entry.ticker ? '' : entry.companyName}
-                            </p>
+                            {!compact && (
+                              <p className="text-[11px] text-[#8A95A6] leading-tight truncate max-w-[130px] mt-0.5">
+                                {entry.companyName === entry.ticker ? '' : entry.companyName}
+                              </p>
+                            )}
                           </div>
                         </div>
                       </td>
 
                       {/* Tag */}
-                      <td className="px-3 py-2 whitespace-nowrap">
+                      <td className={cn('px-3 whitespace-nowrap', compact ? 'py-1' : 'py-2')}>
                         {tInfo ? (
                           <span className={cn('inline-flex items-center gap-1 text-[10px] font-bold rounded-full px-1.5 py-0.5 border', tInfo.cls)}>
                             <span className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', tInfo.dot)} />
-                            {tInfo.label}
+                            {!compact && tInfo.label}
                           </span>
                         ) : (
                           <span className="text-[#C0C0C0] text-[11px]">—</span>
                         )}
                       </td>
 
-                      {/* 1M Sparkline */}
-                      <td className="px-3 py-2">
-                        <div className="flex items-center justify-center" style={{ minWidth: 80 }}>
-                          {sparkLoading ? (
-                            <SparklineSkeleton width={80} height={24} />
-                          ) : prices && prices.length >= 2 ? (
-                            <Sparkline prices={prices} up={up} width={80} height={24} />
-                          ) : (
-                            <span className="text-[#9B9B9B] text-[11px]">—</span>
-                          )}
-                        </div>
-                      </td>
+                      {/* 1M Sparkline — hidden in compact mode */}
+                      {!compact && (
+                        <td className="px-3 py-2">
+                          <div className="flex items-center justify-center" style={{ minWidth: 80 }}>
+                            {sparkLoading ? (
+                              <SparklineSkeleton width={80} height={24} />
+                            ) : prices && prices.length >= 2 ? (
+                              <Sparkline prices={prices} up={up} width={80} height={24} />
+                            ) : (
+                              <span className="text-[#9B9B9B] text-[11px]">—</span>
+                            )}
+                          </div>
+                        </td>
+                      )}
 
                       {/* Price — single line: price (change%) */}
                       <td className="px-3 py-2 text-right whitespace-nowrap">
@@ -1176,9 +1258,10 @@ export function ValuationTable({ entries, sparklines, livePrices = {}, groups, s
                         onClose={() => setExpandedTicker(null)}
                       />
                     )}
-                  </>
+                  </React.Fragment>
                 )
-              })}
+                }) // end rows.map
+              })()} {/* end IIFE */}
             </tbody>
           </table>
         </div>

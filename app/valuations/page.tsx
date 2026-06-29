@@ -552,6 +552,8 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
   const [justRefreshed,     setJustRefreshed]     = useState<Set<string>>(new Set())
   const [selectedTickers,   setSelectedTickers]   = useState<Set<string>>(new Set())
   const [viewPreset,        setViewPreset]        = useState<'valuation'|'quality'|'risk'|'market'>('valuation')
+  const [compact,           setCompact]           = useState(false)
+  const [groupByName,       setGroupByName]       = useState(false)
   // Load data
   useEffect(() => {
     setLoading(true)
@@ -844,6 +846,50 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
                     <LayoutGrid size={15} />
                   </button>
                 </div>
+                {/* Compact density toggle — table view only */}
+                {view === 'table' && (
+                  <button
+                    onClick={() => setCompact(v => !v)}
+                    title={compact ? 'Comfortable density' : 'Compact density'}
+                    aria-pressed={compact}
+                    className={cn(
+                      'p-2 rounded-lg border transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center',
+                      compact
+                        ? 'bg-olive-50 border-olive-700 text-olive-700'
+                        : 'bg-white border-[#DDE6F2] text-[#6B6B6B] hover:border-[#5F790B] hover:text-[#5F790B]',
+                    )}
+                  >
+                    {/* Compact icon: tight horizontal lines */}
+                    <svg className="w-[15px] h-[15px]" fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={1.8}>
+                      <line x1="1" y1="4"  x2="15" y2="4" />
+                      <line x1="1" y1="7"  x2="15" y2="7" />
+                      <line x1="1" y1="10" x2="15" y2="10" />
+                      <line x1="1" y1="13" x2="15" y2="13" />
+                    </svg>
+                  </button>
+                )}
+                {/* Group by name toggle — table view only */}
+                {view === 'table' && (
+                  <button
+                    onClick={() => setGroupByName(v => !v)}
+                    title={groupByName ? 'Flat list' : 'Group by portfolio'}
+                    aria-pressed={groupByName}
+                    className={cn(
+                      'flex items-center gap-1.5 px-3 py-2 rounded-lg border text-[12px] font-[650] transition-colors min-h-[44px]',
+                      groupByName
+                        ? 'bg-olive-50 border-olive-700 text-olive-700'
+                        : 'bg-white border-[#DDE6F2] text-[#6B6B6B] hover:border-[#5F790B] hover:text-[#5F790B]',
+                    )}
+                  >
+                    <svg className="w-[14px] h-[14px]" fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={1.8}>
+                      <rect x="1" y="1" width="14" height="4" rx="1" />
+                      <line x1="3" y1="8"  x2="15" y2="8" />
+                      <line x1="3" y1="11" x2="15" y2="11" />
+                      <line x1="3" y1="14" x2="15" y2="14" />
+                    </svg>
+                    Groups
+                  </button>
+                )}
                 {hasFilters && (
                   <button
                     className="flex items-center gap-1.5 px-3 py-2 text-[12px] font-semibold border rounded-xl transition-colors min-h-[44px] bg-olive-50 border-olive-700 text-olive-700"
@@ -934,6 +980,8 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
               selectedTickers={selectedTickers}
               onSelectionChange={setSelectedTickers}
               viewPreset={viewPreset}
+              compact={compact}
+              groupByName={groupByName}
             />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
