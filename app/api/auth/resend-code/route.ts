@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { randomInt } from 'crypto'
+import { createElement } from 'react'
 import VerificationEmail from '@/emails/VerificationEmail'
 import { sendEmail } from '@/lib/email/sendEmail'
 
@@ -79,7 +80,7 @@ export async function POST(req: NextRequest) {
   const sendResult = await sendEmail({
     to:       normalizedEmail,
     subject:  `Your insic verification code`,
-    react:    VerificationEmail({ name: user.name ?? null, verifyUrl: '', code }),
+    react:    createElement(VerificationEmail, { name: user.name ?? null, verifyUrl: '', code }),
     logEvent: 'auth.resend',
   })
 
