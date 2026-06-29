@@ -182,7 +182,8 @@ export default function StockLoginWall({ ticker, companyName, price, currency, f
           <div className="px-4 py-4 bg-[#F6FAEA]">
             <div className="mb-3">
               <p className="text-[12px] font-bold text-[#5F790B]">Pro</p>
-              <p className="text-[20px] font-bold text-[#06101F] leading-none mt-0.5">$17<span className="text-[12px] font-medium text-[#8A95A6]">/mo</span></p>
+              <p className="text-[20px] font-bold text-[#06101F] leading-none mt-0.5">$19<span className="text-[12px] font-medium text-[#8A95A6]">/mo</span></p>
+              <p className="text-[10px] text-[#5F790B] font-semibold mt-0.5">7-day free trial</p>
             </div>
             <ul className="space-y-2">
               <li className="flex items-start gap-2">

@@ -172,11 +172,11 @@ export default function StockUpgradeWall({ ticker, companyName, price, currency,
             ) : (
               <>
                 <Zap size={15} aria-hidden="true" />
-                Upgrade to Pro — $19/mo
+                Start 7-day free trial — then $19/mo
               </>
             )}
           </button>
-          <p className="text-center text-[11px] text-[#8A95A6] mt-2.5">Cancel anytime. No contracts.</p>
+          <p className="text-center text-[11px] text-[#8A95A6] mt-2.5">No charge for 7 days · Cancel anytime</p>
         </div>
 
         {/* Pro highlights */}
