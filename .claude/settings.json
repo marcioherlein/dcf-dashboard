@@ -1,3 +1,16 @@
 {
-  "enabledMcpjsonServers": ["bloom"]
+  "enabledMcpjsonServers": [
+    "bloom"
+  ],
+  "extraKnownMarketplaces": {
+    "rune-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "vinhnxv/rune"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "rune@rune-marketplace": true
+  }
 }

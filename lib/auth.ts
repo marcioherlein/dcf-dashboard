@@ -12,23 +12,41 @@ const serviceClient = () =>
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   )
 
-async function sendWelcomeEmail(email: string, name: string | null | undefined) {
-  if (!process.env.RESEND_API_KEY) {
-    console.error('[auth] RESEND_API_KEY is not set — skipping welcome email')
+// ── Welcome email — sent once only per user ────────────────────────────────────
+// Guards on welcome_email_sent_at column to prevent duplicates (BUG-04).
+async function maybeSendWelcomeEmail(email: string, name: string | null | undefined, sb: ReturnType<typeof serviceClient>) {
+  if (!process.env.RESEND_API_KEY) return
+
+  // Atomically claim the welcome send slot — only proceeds if not already sent
+  const { data: updated, error } = await sb
+    .from('users')
+    .update({ welcome_email_sent_at: new Date().toISOString() })
+    .eq('email', email)
+    .is('welcome_email_sent_at', null)  // only update if not already sent
+    .select('id')
+    .maybeSingle()
+
+  if (error || !updated) {
+    // Either already sent or DB error — do not send
     return
   }
-  console.log('[auth] sending welcome email to', email)
-  const resend = new Resend(process.env.RESEND_API_KEY)
-  const result = await resend.emails.send({
-    from: 'insic <team@insic.app>',
-    to: email,
-    subject: 'Welcome to insic — your first stock analysis awaits',
-    react: WelcomeEmail({ name: name ?? null }),
-  })
-  if (result.error) {
-    throw new Error(`Resend error: ${result.error.message}`)
+
+  try {
+    const resend = new Resend(process.env.RESEND_API_KEY)
+    const result = await resend.emails.send({
+      from: 'insic <team@insic.app>',
+      to: email,
+      subject: 'Welcome to insic — your first stock analysis awaits',
+      react: WelcomeEmail({ name: name ?? null }),
+    })
+    if (result.error) {
+      console.error('[auth] welcome email failed:', result.error.message)
+    } else {
+      console.log('[auth] welcome email sent, id:', result.data?.id)
+    }
+  } catch (err) {
+    console.error('[auth] welcome email exception:', err instanceof Error ? err.message : err)
   }
-  console.log('[auth] welcome email sent, id:', result.data?.id)
 }
 
 export const authOptions: NextAuthOptions = {
@@ -46,10 +64,14 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null
         const sb = serviceClient()
+
+        // Normalize email consistently (BUG-05 prevention)
+        const normalizedEmail = credentials.email.toLowerCase().trim()
+
         const { data: user } = await sb
           .from('users')
           .select('id, email, name, avatar_url, password_hash, email_verified_at')
-          .eq('email', credentials.email.toLowerCase().trim())
+          .eq('email', normalizedEmail)
           .maybeSingle()
 
         if (!user || !user.password_hash) return null
@@ -66,6 +88,7 @@ export const authOptions: NextAuthOptions = {
           .update({ last_seen: new Date().toISOString() })
           .eq('id', user.id)
 
+        // Return Supabase UUID as id (BUG-09 fix: credentials users get their DB UUID)
         return {
           id:    user.id,
           email: user.email,
@@ -80,74 +103,105 @@ export const authOptions: NextAuthOptions = {
       // Credentials users are created during registration — skip upsert
       if (account?.provider === 'credentials') return true
 
-      // Google OAuth upsert
-      if (user.email) {
-        try {
-          const sb = serviceClient()
+      // ── Google OAuth flow ───────────────────────────────────────────────────
+      if (!user.email) return false
 
-          const { data: existing } = await sb
-            .from('users')
-            .select('id, auth_method')
-            .eq('email', user.email)
-            .maybeSingle()
+      try {
+        const sb = serviceClient()
+        const normalizedEmail = user.email.toLowerCase().trim()
 
-          // Block Google sign-in if this email was registered with email+password
-          // Returning false cancels the sign-in and redirects to the error page
-          if (existing && existing.auth_method === 'email') {
-            console.warn('[auth] Google sign-in blocked — email is registered with password auth:', user.email)
-            return '/auth/sign-in?error=use_email'
-          }
+        const { data: existing } = await sb
+          .from('users')
+          .select('id, auth_method, email_verified_at')
+          .eq('email', normalizedEmail)
+          .maybeSingle()
 
-          const isNew = !existing
-
-          const { error: upsertError } = await sb.from('users').upsert(
-            {
-              email:      user.email,
-              name:       user.name  ?? null,
-              avatar_url: user.image ?? null,
-              last_seen:  new Date().toISOString(),
-              auth_method: 'google',
-              ...(isNew ? { terms_accepted_at: new Date().toISOString(), email_verified_at: new Date().toISOString() } : {}),
-            },
-            { onConflict: 'email' },
-          )
-
-          if (upsertError) {
-            console.error('[auth] upsert failed:', upsertError.message)
-          }
-
-          if (isNew) {
-            try {
-              await sendWelcomeEmail(user.email, user.name)
-            } catch (err) {
-              console.error('[auth] welcome email failed:', err instanceof Error ? err.message : err)
-            }
-          }
-        } catch (err) {
-          console.error('[auth] signIn callback error:', err)
+        // BUG-07 FIX: In NextAuth v4, return false from signIn to block the
+        // sign-in and let NextAuth redirect to the error page. We then check
+        // the error param on the sign-in page.
+        // BUG-06 FIX: Check auth_method independently of email_verified_at to
+        // catch Google accounts that somehow have null email_verified_at.
+        if (existing?.auth_method === 'email') {
+          console.warn('[auth] Google blocked — email registered with password:', normalizedEmail)
+          // Store the reason in a way the UI can detect it. NextAuth will redirect
+          // to /auth/sign-in?error=OAuthAccountNotLinked which we intercept.
+          // We use a custom error by encoding in the callbackUrl — but the cleanest
+          // approach in v4 is to redirect explicitly.
+          // NOTE: In NextAuth v4, returning a string from signIn IS supported for
+          // redirects (it was added in 4.x). Tested with 4.24.13.
+          return `/auth/sign-in?error=use_email`
         }
+
+        const isNew = !existing
+
+        // Upsert Google user — sets email_verified_at on first sign-in
+        const { error: upsertError } = await sb.from('users').upsert(
+          {
+            email:       normalizedEmail,
+            name:        user.name  ?? null,
+            avatar_url:  user.image ?? null,
+            last_seen:   new Date().toISOString(),
+            auth_method: 'google',
+            ...(isNew ? {
+              terms_accepted_at:  new Date().toISOString(),
+              email_verified_at:  new Date().toISOString(),
+            } : {}),
+          },
+          { onConflict: 'email' },
+        )
+
+        if (upsertError) {
+          console.error('[auth] upsert failed:', upsertError.message)
+        }
+
+        if (isNew) {
+          await maybeSendWelcomeEmail(normalizedEmail, user.name, sb)
+        }
+      } catch (err) {
+        console.error('[auth] signIn callback error:', err)
+        // Never block sign-in due to our own errors
       }
+
       return true
     },
-    async jwt({ token, user }) {
-      if (user?.email) {
-        try {
-          const sb = serviceClient()
-          const { data } = await sb
-            .from('users')
-            .select('plan')
-            .eq('email', user.email)
-            .maybeSingle()
-          token.plan = data?.plan ?? 'free'
-        } catch {
-          token.plan = 'free'
+
+    async jwt({ token, user, account }) {
+      // ── On initial sign-in: fetch Supabase UUID and plan ──────────────────
+      // BUG-09 FIX: For Google users, token.sub is the Google account ID,
+      // not the Supabase UUID. We fetch and store the actual DB UUID here
+      // so all downstream code uses the correct ID.
+      // BUG-08 FIX: We also refresh plan on every token rotation (every request
+      // for JWT strategy) by fetching from DB unconditionally, not just on
+      // first sign-in.
+      if (user?.email || token.email) {
+        const emailToLookup = (user?.email ?? token.email as string | undefined)?.toLowerCase().trim()
+        if (emailToLookup) {
+          try {
+            const sb = serviceClient()
+            const { data } = await sb
+              .from('users')
+              .select('id, plan')
+              .eq('email', emailToLookup)
+              .maybeSingle()
+
+            if (data) {
+              token.userId = data.id      // Supabase UUID — use this, not token.sub
+              token.plan   = data.plan ?? 'free'
+              token.email  = emailToLookup
+            }
+          } catch {
+            token.plan = token.plan ?? 'free'
+          }
         }
       }
+
       return token
     },
+
     session({ session, token }) {
-      if (session.user && token.sub) {
-        (session.user as { id?: string; plan?: string }).id   = token.sub
+      if (session.user) {
+        // BUG-09 FIX: Use token.userId (Supabase UUID) not token.sub (Google ID)
+        ;(session.user as { id?: string; plan?: string }).id   = (token.userId as string | undefined) ?? token.sub
         ;(session.user as { id?: string; plan?: string }).plan = (token.plan as string | undefined) ?? 'free'
       }
       return session

@@ -18,11 +18,11 @@ export default function WelcomeEmail({ name }: Props) {
         <Container style={{ maxWidth: '560px', margin: '40px auto', backgroundColor: '#ffffff', borderRadius: '16px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
 
           {/* Header */}
-          <Section style={{ backgroundColor: '#0F2A5E', padding: '32px 40px' }}>
+          <Section style={{ backgroundColor: '#111111', padding: '32px 40px' }}>
             <Heading style={{ color: '#ffffff', fontSize: '24px', fontWeight: 800, margin: 0, letterSpacing: '-0.03em' }}>
               insic
             </Heading>
-            <Text style={{ color: '#93C5FD', fontSize: '12px', margin: '4px 0 0', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+            <Text style={{ color: 'rgba(255,255,255,0.45)', fontSize: '12px', margin: '4px 0 0', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
               Valuation Intelligence
             </Text>
           </Section>
@@ -41,7 +41,7 @@ export default function WelcomeEmail({ name }: Props) {
               href="https://insic.app/analyze"
               style={{
                 display: 'inline-block',
-                backgroundColor: '#2563EB',
+                backgroundColor: '#5F790B',
                 color: '#ffffff',
                 fontSize: '14px',
                 fontWeight: 700,
@@ -77,9 +77,9 @@ export default function WelcomeEmail({ name }: Props) {
           <Section style={{ backgroundColor: '#F8FAFC', padding: '20px 40px', borderTop: '1px solid #E2E8F0' }}>
             <Text style={{ fontSize: '12px', color: '#94A3B8', margin: 0, lineHeight: '1.5' }}>
               You're receiving this because you signed up at{' '}
-              <Link href="https://insic.app" style={{ color: '#2563EB' }}>insic.app</Link>.
+              <Link href="https://insic.app" style={{ color: '#5F790B' }}>insic.app</Link>.
               {' '}Questions? Reply to this email or reach us at{' '}
-              <Link href="mailto:team@insic.app" style={{ color: '#2563EB' }}>team@insic.app</Link>.
+              <Link href="mailto:team@insic.app" style={{ color: '#5F790B' }}>team@insic.app</Link>.
             </Text>
           </Section>
 

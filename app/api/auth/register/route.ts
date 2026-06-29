@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { randomInt } from 'crypto'  // BUG-02 FIX: use crypto.randomInt, not Math.random
 import bcrypt from 'bcryptjs'
 import { Resend } from 'resend'
 import VerificationEmail from '@/emails/VerificationEmail'
@@ -15,23 +16,27 @@ function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 }
 
+// BUG-02 FIX: cryptographically secure 6-digit code
 function generateCode(): string {
-  // 6-digit numeric code
-  return String(Math.floor(100000 + Math.random() * 900000))
+  return String(randomInt(100000, 1000000))
 }
 
 async function sendCodeEmail(email: string, name: string, code: string) {
-  if (!process.env.RESEND_API_KEY) return
+  if (!process.env.RESEND_API_KEY) {
+    console.warn('[register] RESEND_API_KEY not set — skipping verification email')
+    return
+  }
   try {
     const resend = new Resend(process.env.RESEND_API_KEY)
-    // Reuse VerificationEmail but pass the code as the verifyUrl for simplicity
-    // We override the template to show the code
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from: 'insic <team@insic.app>',
       to: email,
       subject: `${code} is your insic verification code`,
       react: VerificationEmail({ name, verifyUrl: '', code }),
     })
+    if (result.error) {
+      console.error('[register] resend error:', result.error.message)
+    }
   } catch (err) {
     console.error('[register] email send error:', err)
   }
@@ -59,14 +64,15 @@ export async function POST(req: NextRequest) {
       .eq('email', normalizedEmail)
       .maybeSingle()
 
+    // BUG-06 FIX: check auth_method independently of email_verified_at
+    if (existing?.auth_method === 'google') {
+      return NextResponse.json({
+        error: 'This email is linked to a Google account. Please sign in with Google instead.',
+        code: 'USE_GOOGLE',
+      }, { status: 409 })
+    }
+
     if (existing?.email_verified_at) {
-      // Give a specific message depending on how they signed up
-      if (existing.auth_method === 'google') {
-        return NextResponse.json({
-          error: 'This email is linked to a Google account. Please sign in with Google instead.',
-          code: 'USE_GOOGLE',
-        }, { status: 409 })
-      }
       return NextResponse.json({
         error: 'An account with this email already exists. Try signing in instead.',
         code: 'ALREADY_EXISTS',
@@ -77,20 +83,30 @@ export async function POST(req: NextRequest) {
     const password_hash = await bcrypt.hash(password, 12)
 
     if (existing) {
-      // Unverified account exists — update password hash in case they're retrying
+      // Unverified account exists — update password hash if they're retrying
       await sb.from('users').update({ password_hash, name: name.trim() }).eq('email', normalizedEmail)
     } else {
       // Create new unverified user
+      // BUG-12 FIX: include terms_accepted_at
       const { error: insertError } = await sb.from('users').insert({
-        email:       normalizedEmail,
-        name:        name.trim(),
+        email:             normalizedEmail,
+        name:              name.trim(),
         password_hash,
-        auth_method: 'email',
-        plan:        'free',
+        auth_method:       'email',
+        plan:              'free',
+        terms_accepted_at: new Date().toISOString(),
       })
       if (insertError) {
         console.error('[register] insert error:', insertError.message, insertError.code)
-        return NextResponse.json({ error: 'Failed to create account: ' + insertError.message }, { status: 500 })
+        // Don't leak internal error details to client
+        if (insertError.code === '23505') {
+          // Unique constraint — concurrent registration race
+          return NextResponse.json({
+            error: 'An account with this email already exists. Try signing in instead.',
+            code: 'ALREADY_EXISTS',
+          }, { status: 409 })
+        }
+        return NextResponse.json({ error: 'Failed to create account. Please try again.' }, { status: 500 })
       }
     }
 
@@ -111,23 +127,20 @@ export async function POST(req: NextRequest) {
       token: code,
       type: 'verify_email',
       expires_at,
+      failed_attempts: 0,  // BUG-11 FIX: track failed attempts for brute-force protection
     })
 
     if (tokenError) {
-      console.error('[register] token insert error:', tokenError.message, tokenError.code, tokenError.details)
-      // Return a user-facing error so they know to contact support
-      return NextResponse.json({
-        error: `Failed to create verification code: ${tokenError.message}. Please contact support.`,
-      }, { status: 500 })
+      console.error('[register] token insert error:', tokenError.message, tokenError.code)
+      return NextResponse.json({ error: 'Failed to create verification code. Please try again.' }, { status: 500 })
     }
 
-    // Token saved — send the email
     await sendCodeEmail(normalizedEmail, name.trim(), code)
 
     return NextResponse.json({ ok: true })
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     console.error('[register] exception:', msg)
-    return NextResponse.json({ error: 'Something went wrong: ' + msg }, { status: 500 })
+    return NextResponse.json({ error: 'Something went wrong. Please try again.' }, { status: 500 })
   }
 }

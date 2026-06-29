@@ -315,7 +315,12 @@ export function SignInPage() {
         {error && <p className="text-[12px] text-red-500">{error}</p>}
         {unverified && (
           <div className="rounded-xl bg-[#FFF4DA] border border-[#F3D391] px-4 py-3 text-[13px] text-[#B56A00]">
-            Please verify your email first. Check your inbox for the verification link.
+            <p className="font-medium mb-1.5">Email not verified yet.</p>
+            <p className="mb-2">Check your inbox for the 6-digit code, or{' '}
+              <Link href={`/auth/sign-up?email=${encodeURIComponent(email)}`} className="font-semibold underline underline-offset-2 hover:text-[#9A5800]">
+                go back to verify
+              </Link>.
+            </p>
           </div>
         )}
         <button type="submit" disabled={loading} className={BTN_PRIMARY}>

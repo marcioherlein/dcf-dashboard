@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { randomInt } from 'crypto'  // BUG-02 FIX
 import { Resend } from 'resend'
 import VerificationEmail from '@/emails/VerificationEmail'
 
@@ -12,8 +13,9 @@ function getClient() {
   )
 }
 
+// BUG-02 FIX: cryptographically secure
 function generateCode(): string {
-  return String(Math.floor(100000 + Math.random() * 900000))
+  return String(randomInt(100000, 1000000))
 }
 
 export async function POST(req: NextRequest) {
@@ -65,10 +67,11 @@ export async function POST(req: NextRequest) {
   const expires_at = new Date(Date.now() + 15 * 60 * 1000).toISOString()
 
   await sb.from('auth_tokens').insert({
-    email: normalizedEmail,
-    token: code,
-    type: 'verify_email',
+    email:           normalizedEmail,
+    token:           code,
+    type:            'verify_email',
     expires_at,
+    failed_attempts: 0,  // BUG-11 FIX: reset attempt counter on new code
   })
 
   if (process.env.RESEND_API_KEY) {
