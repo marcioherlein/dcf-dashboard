@@ -120,7 +120,7 @@ interface WeekGridProps {
   onSubTab: (tab: CalSub) => void
 }
 
-function WeekGrid({ days, earnings, economic, splits, ipos, onSubTab }: WeekGridProps) {
+function _WeekGrid({ days, earnings, economic, splits, ipos, onSubTab }: WeekGridProps) {
   const weekdays = days.filter(d => !isWeekend(d))
 
   return (
@@ -512,7 +512,7 @@ export default function CalendarTab() {
       .finally(() => setLoadingI(false))
   }, [week]) // week is memoized — only re-runs when weekOffset changes
 
-  const days = weekDays(week.from)
+  const _days = weekDays(week.from)
   const anyLoading = loadingE || loadingEc || loadingS || loadingI
 
   // Column header row labels for the list views
