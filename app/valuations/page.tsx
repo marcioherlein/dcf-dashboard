@@ -13,7 +13,7 @@ import { loadWatchlist, saveWatchlistEntry, deleteWatchlistEntry } from '@/lib/s
 import type { WatchlistEntry, ListTag } from '@/lib/simplifier/types'
 import { upsideZone } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
-import { ValuationTable, ColumnPicker, loadSavedCols, type SortKey } from '@/components/valuations/ValuationTable'
+import { ValuationTable, ColumnPicker, loadSavedCols, saveCols, OPTIONAL_COLUMNS, type SortKey } from '@/components/valuations/ValuationTable'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -552,6 +552,41 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
   const [pageSize,          setPageSize]          = useState(10)
   const [pendingGroups,     setPendingGroups]     = useState<string[]>([])
   const [selectedCols,      setSelectedCols]      = useState<SortKey[]>(() => loadSavedCols())
+
+  // ── Saved column views ───────────────────────────────────────────────────────
+  const SAVED_VIEWS_KEY = 'insic_saved_col_views_v1'
+
+  type SavedView = { name: string; cols: SortKey[] }
+
+  function loadSavedViews(): SavedView[] {
+    if (typeof window === 'undefined') return []
+    try { return JSON.parse(localStorage.getItem(SAVED_VIEWS_KEY) ?? '[]') } catch { return [] }
+  }
+
+  function persistSavedViews(views: SavedView[]): void {
+    try { localStorage.setItem(SAVED_VIEWS_KEY, JSON.stringify(views)) } catch { /* ignore */ }
+  }
+
+  const [savedViews, setSavedViews] = useState<SavedView[]>(() => loadSavedViews())
+
+  function _saveCurrentView(name: string) {
+    const updated = [...savedViews.filter(v => v.name !== name), { name, cols: selectedCols }]
+    setSavedViews(updated)
+    persistSavedViews(updated)
+  }
+
+  function _loadView(savedView: SavedView) {
+    setSelectedCols(savedView.cols)
+    saveCols(savedView.cols)
+    setViewPreset('custom')
+  }
+
+  function _deleteView(name: string) {
+    const updated = savedViews.filter(v => v.name !== name)
+    setSavedViews(updated)
+    persistSavedViews(updated)
+  }
+  // ────────────────────────────────────────────────────────────────────────────
   const [refreshing,        setRefreshing]        = useState<Set<string>>(new Set())
   const [justRefreshed,     setJustRefreshed]     = useState<Set<string>>(new Set())
   const [selectedTickers,   setSelectedTickers]   = useState<Set<string>>(new Set())
@@ -560,6 +595,21 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
   const [groupByName,       setGroupByName]       = useState(false)
   const [filterStale,       setFilterStale]       = useState(false)
   const [filterHasNote,     setFilterHasNote]     = useState(false)
+
+  // Derive active columns based on preset or custom selection
+  const activeCols = useMemo(() => {
+    const PRESET_COLS: Record<string, SortKey[]> = {
+      valuation:   ['peRatio', 'evToEbitda', 'dividendYield', 'marketCap'],
+      performance: ['return1y', 'return3y', 'return5y'],
+      quality:     ['grossMargin', 'fcfMargin', 'roic', 'piotroski'],
+      risk:        ['beta', 'bearScenario', 'baseScenario', 'bullScenario', 'downsideToBear'],
+      analyst:     ['peRatio', 'pegRatio', 'dividendYield', 'marketCap'],
+      events:      [] as SortKey[],
+      custom:      selectedCols,
+    }
+    const ids = PRESET_COLS[viewPreset] ?? selectedCols
+    return OPTIONAL_COLUMNS.filter(c => ids.includes(c.id as SortKey))
+  }, [viewPreset, selectedCols])
   // Load data
   useEffect(() => {
     setLoading(true)
@@ -726,29 +776,45 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
   }, [userEmail])
 
   const handleExport = useCallback(() => {
+    // Use selected rows if any, otherwise use all displayEntries
+    const toExport = selectedTickers.size > 0
+      ? displayEntries.filter(e => selectedTickers.has(e.ticker))
+      : displayEntries
+
+    // Build header from visible columns
+    const baseHeaders = ['Ticker','Company','Fair Value','Price','Upside %','MoS %','Verdict','Confidence','Updated']
+    const colHeaders = activeCols.map(c => c.label)
+    const allHeaders = [...baseHeaders, ...(colHeaders.length > 0 ? colHeaders : []), 'Note']
+
     const rows = [
-      ['Ticker','Company','Fair Value','Price (saved)','Upside %','Verdict','Confidence','Bear','Base','Bull','Updated','Note'],
-      ...displayEntries.map(e => {
+      allHeaders,
+      ...toExport.map(e => {
         const upside = e.snapshot.upsidePct
         const verdict = upside == null ? 'Needs Review' : upside >= 0.2 ? 'Undervalued' : upside >= 0 ? 'Fairly Valued' : 'Overvalued'
-        return [
+        const mos = upside != null ? ((upside * 100).toFixed(1) + '%') : ''
+        const base = [
           e.ticker, e.companyName,
           e.snapshot.fairValue ?? '', e.snapshot.price ?? '',
-          upside != null ? ((upside*100).toFixed(1)+'%') : '',
+          upside != null ? ((upside * 100).toFixed(1) + '%') : '',
+          mos,
           verdict,
-          e.overallScore != null ? (e.overallScore*100).toFixed(0)+'%' : '',
-          e.snapshot.bearScenario ?? '', e.snapshot.baseScenario ?? '', e.snapshot.bullScenario ?? '',
-          e.updatedAt.slice(0,10),
-          (e.notes?.['__thesis__'] ?? '').replace(/,/g,'').replace(/\n/g,' '),
+          e.overallScore != null ? (e.overallScore * 100).toFixed(0) + '%' : '',
+          e.updatedAt.slice(0, 10),
         ]
+        const colVals = activeCols.map(col => {
+          const v = e.snapshot[col.id as keyof typeof e.snapshot]
+          return v ?? ''
+        })
+        const note = (e.notes?.['__thesis__'] ?? '').replace(/,/g, '').replace(/\n/g, ' ')
+        return [...base, ...colVals, note]
       })
     ]
-    const csv = rows.map(r => r.join(',')).join('\n')
+    const csv = rows.map(r => (r as (string | number)[]).join(',')).join('\n')
     const a = document.createElement('a')
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }))
     a.download = 'insic-valuations.csv'
     a.click()
-  }, [displayEntries])
+  }, [displayEntries, selectedTickers, activeCols])
 
   const handleSort = (key: SortKey, dir?: 'asc' | 'desc') => {
     if (dir) { setSortKey(key); setSortDir(dir) }
@@ -811,7 +877,7 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
               </div>
             </div>
 
-            {/* Search + Sort + View toggle + Export + Clear */}
+            {/* Row 1: Search + Sort + Presets + ColumnPicker + Export */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-4 py-3 border-t border-[#EDF2F7]">
               <div className="relative flex-1 min-w-0 sm:min-w-[180px] sm:max-w-xs">
                 <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9B9B9B] pointer-events-none" />
@@ -835,15 +901,15 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
               <div className="flex items-center gap-2 flex-wrap">
                 <SortDropdown current={sortKey} dir={sortDir} onSort={handleSort} />
                 {/* View presets — desktop only */}
-                <div className="hidden lg:flex items-center gap-0.5 bg-[#F5F5F5] rounded-lg p-0.5 overflow-x-auto scrollbar-hide max-w-[360px]">
-                  {(['valuation','performance','quality','risk','analyst','custom'] as const).map(p => (
+                <div className="hidden lg:flex items-center gap-0.5 bg-[#F5F5F5] rounded-lg p-0.5 overflow-x-auto scrollbar-hide max-w-[340px]">
+                  {(['valuation','performance','quality','risk','analyst','events','custom'] as const).map(p => (
                     <button key={p} onClick={() => setViewPreset(p)}
                       className={cn('px-2.5 py-1 rounded-md text-[11px] font-[650] capitalize transition-colors min-h-[32px] whitespace-nowrap',
                         viewPreset === p ? 'bg-white text-[#111111] shadow-sm' : 'text-[#9B9B9B] hover:text-[#6B6B6B]'
                       )}>{p}</button>
                   ))}
                 </div>
-                {view === 'table' && (
+                {view === 'table' && viewPreset === 'custom' && (
                   <ColumnPicker selected={selectedCols} onChange={setSelectedCols} />
                 )}
                 {/* Export CSV */}
@@ -855,71 +921,6 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
                 >
                   <Download size={15} />
                 </button>
-                {/* View toggle */}
-                <div className="flex items-center gap-0.5 p-0.5 bg-[#F5F5F5] rounded-xl shrink-0">
-                  <button
-                    onClick={() => setView('table')}
-                    title="Table view"
-                    aria-label="Table view"
-                    aria-pressed={view === 'table'}
-                    className={cn('p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center', view === 'table' ? 'bg-white text-olive-700 shadow-sm' : 'text-[#9B9B9B] hover:text-[#6B6B6B]')}
-                  >
-                    <List size={15} />
-                  </button>
-                  <button
-                    onClick={() => setView('grid')}
-                    title="Grid view"
-                    aria-label="Grid view"
-                    aria-pressed={view === 'grid'}
-                    className={cn('p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center', view === 'grid' ? 'bg-white text-olive-700 shadow-sm' : 'text-[#9B9B9B] hover:text-[#6B6B6B]')}
-                  >
-                    <LayoutGrid size={15} />
-                  </button>
-                </div>
-                {/* Compact density toggle — table view only */}
-                {view === 'table' && (
-                  <button
-                    onClick={() => setCompact(v => !v)}
-                    title={compact ? 'Comfortable density' : 'Compact density'}
-                    aria-pressed={compact}
-                    className={cn(
-                      'p-2 rounded-lg border transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center',
-                      compact
-                        ? 'bg-olive-50 border-olive-700 text-olive-700'
-                        : 'bg-white border-[#DDE6F2] text-[#6B6B6B] hover:border-[#5F790B] hover:text-[#5F790B]',
-                    )}
-                  >
-                    {/* Compact icon: tight horizontal lines */}
-                    <svg className="w-[15px] h-[15px]" fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={1.8}>
-                      <line x1="1" y1="4"  x2="15" y2="4" />
-                      <line x1="1" y1="7"  x2="15" y2="7" />
-                      <line x1="1" y1="10" x2="15" y2="10" />
-                      <line x1="1" y1="13" x2="15" y2="13" />
-                    </svg>
-                  </button>
-                )}
-                {/* Group by name toggle — table view only */}
-                {view === 'table' && (
-                  <button
-                    onClick={() => setGroupByName(v => !v)}
-                    title={groupByName ? 'Flat list' : 'Group by portfolio'}
-                    aria-pressed={groupByName}
-                    className={cn(
-                      'flex items-center gap-1.5 px-3 py-2 rounded-lg border text-[12px] font-[650] transition-colors min-h-[44px]',
-                      groupByName
-                        ? 'bg-olive-50 border-olive-700 text-olive-700'
-                        : 'bg-white border-[#DDE6F2] text-[#6B6B6B] hover:border-[#5F790B] hover:text-[#5F790B]',
-                    )}
-                  >
-                    <svg className="w-[14px] h-[14px]" fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={1.8}>
-                      <rect x="1" y="1" width="14" height="4" rx="1" />
-                      <line x1="3" y1="8"  x2="15" y2="8" />
-                      <line x1="3" y1="11" x2="15" y2="11" />
-                      <line x1="3" y1="14" x2="15" y2="14" />
-                    </svg>
-                    Groups
-                  </button>
-                )}
                 {hasFilters && (
                   <button
                     className="flex items-center gap-1.5 px-3 py-2 text-[12px] font-semibold border rounded-xl transition-colors min-h-[44px] bg-olive-50 border-olive-700 text-olive-700"
@@ -931,6 +932,108 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
                 )}
               </div>
             </div>
+
+            {/* Row 2: View toggle + Density + Groups — table view only */}
+            {view === 'table' && (
+              <div className="flex items-center gap-2 px-4 pb-3 border-t border-[#F5F5F5] pt-2 flex-wrap">
+                {/* View toggle */}
+                {(() => {
+                  const v = view as ViewMode
+                  return (
+                    <div className="flex items-center gap-0.5 p-0.5 bg-[#F5F5F5] rounded-xl shrink-0">
+                      <button
+                        onClick={() => setView('table')}
+                        title="Table view"
+                        aria-label="Table view"
+                        aria-pressed={v === 'table'}
+                        className={cn('p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center', v === 'table' ? 'bg-white text-olive-700 shadow-sm' : 'text-[#9B9B9B] hover:text-[#6B6B6B]')}
+                      >
+                        <List size={15} />
+                      </button>
+                      <button
+                        onClick={() => setView('grid')}
+                        title="Grid view"
+                        aria-label="Grid view"
+                        aria-pressed={v === 'grid'}
+                        className={cn('p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center', v === 'grid' ? 'bg-white text-olive-700 shadow-sm' : 'text-[#9B9B9B] hover:text-[#6B6B6B]')}
+                      >
+                        <LayoutGrid size={15} />
+                      </button>
+                    </div>
+                  )
+                })()}
+                {/* Compact density toggle */}
+                <button
+                  onClick={() => setCompact(v => !v)}
+                  title={compact ? 'Comfortable density' : 'Compact density'}
+                  aria-pressed={compact}
+                  className={cn(
+                    'p-2 rounded-lg border transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center',
+                    compact
+                      ? 'bg-olive-50 border-olive-700 text-olive-700'
+                      : 'bg-white border-[#DDE6F2] text-[#6B6B6B] hover:border-[#5F790B] hover:text-[#5F790B]',
+                  )}
+                >
+                  {/* Compact icon: tight horizontal lines */}
+                  <svg className="w-[15px] h-[15px]" fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={1.8}>
+                    <line x1="1" y1="4"  x2="15" y2="4" />
+                    <line x1="1" y1="7"  x2="15" y2="7" />
+                    <line x1="1" y1="10" x2="15" y2="10" />
+                    <line x1="1" y1="13" x2="15" y2="13" />
+                  </svg>
+                </button>
+                {/* Group by name toggle */}
+                <button
+                  onClick={() => setGroupByName(v => !v)}
+                  title={groupByName ? 'Flat list' : 'Group by portfolio'}
+                  aria-pressed={groupByName}
+                  className={cn(
+                    'flex items-center gap-1.5 px-3 py-2 rounded-lg border text-[12px] font-[650] transition-colors min-h-[44px]',
+                    groupByName
+                      ? 'bg-olive-50 border-olive-700 text-olive-700'
+                      : 'bg-white border-[#DDE6F2] text-[#6B6B6B] hover:border-[#5F790B] hover:text-[#5F790B]',
+                  )}
+                >
+                  <svg className="w-[14px] h-[14px]" fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={1.8}>
+                    <rect x="1" y="1" width="14" height="4" rx="1" />
+                    <line x1="3" y1="8"  x2="15" y2="8" />
+                    <line x1="3" y1="11" x2="15" y2="11" />
+                    <line x1="3" y1="14" x2="15" y2="14" />
+                  </svg>
+                  Groups
+                </button>
+              </div>
+            )}
+            {/* View toggle for grid mode (outside row 2) */}
+            {view === 'grid' && (
+              <div className="flex items-center gap-2 px-4 pb-3 border-t border-[#F5F5F5] pt-2">
+                {(() => {
+                  const v = view as ViewMode
+                  return (
+                    <div className="flex items-center gap-0.5 p-0.5 bg-[#F5F5F5] rounded-xl shrink-0">
+                      <button
+                        onClick={() => setView('table')}
+                        title="Table view"
+                        aria-label="Table view"
+                        aria-pressed={v === 'table'}
+                        className={cn('p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center', v === 'table' ? 'bg-white text-olive-700 shadow-sm' : 'text-[#9B9B9B] hover:text-[#6B6B6B]')}
+                      >
+                        <List size={15} />
+                      </button>
+                      <button
+                        onClick={() => setView('grid')}
+                        title="Grid view"
+                        aria-label="Grid view"
+                        aria-pressed={v === 'grid'}
+                        className={cn('p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center', v === 'grid' ? 'bg-white text-olive-700 shadow-sm' : 'text-[#9B9B9B] hover:text-[#6B6B6B]')}
+                      >
+                        <LayoutGrid size={15} />
+                      </button>
+                    </div>
+                  )
+                })()}
+              </div>
+            )}
 
             {/* Filter chips — Row 1: verdict */}
             <div className="flex items-center gap-1.5 px-4 pb-2 flex-wrap">
@@ -1011,6 +1114,24 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
                   }
                 }} className="px-2.5 py-1 rounded-lg border border-[#F0B8B8] text-[11px] font-semibold text-[#D83B3B] hover:bg-[#D83B3B] hover:text-white transition-colors min-h-[32px]">
                   Delete
+                </button>
+                <button
+                  onClick={() => {
+                    Array.from(selectedTickers).forEach(t => handleRefresh(t))
+                    setSelectedTickers(new Set())
+                  }}
+                  className="px-2.5 py-1 rounded-lg border border-[#BFD2A1] text-[11px] font-semibold text-[#5F790B] hover:bg-[#F0F4E8] transition-colors min-h-[32px]"
+                >
+                  Refresh
+                </button>
+                <button
+                  onClick={() => {
+                    // Export selected — reuse handleExport which already filters by selectedTickers
+                    handleExport()
+                  }}
+                  className="px-2.5 py-1 rounded-lg border border-[#DDE6F2] text-[11px] font-semibold text-[#6B6B6B] hover:bg-[#F5F5F5] transition-colors min-h-[32px]"
+                >
+                  Export
                 </button>
                 <button onClick={() => setSelectedTickers(new Set())} className="text-[11px] text-[#6B6B6B] hover:text-[#111111] min-h-[32px] px-1">Cancel</button>
               </div>
