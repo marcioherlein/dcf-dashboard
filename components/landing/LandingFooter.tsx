@@ -7,8 +7,10 @@ const NAV_COLS = [
     items: [
       { label: 'Product', href: '/analyze' },
       { label: 'Pricing', href: '/pricing' },
+      { label: 'Methodology', href: '/methodology' },
       { label: 'Privacy', href: '/privacy' },
       { label: 'Terms', href: '/terms' },
+      { label: 'Refund Policy', href: '/refund-policy' },
     ],
   },
 ]
