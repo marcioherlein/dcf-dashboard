@@ -70,8 +70,12 @@ const COMPARISON_ROWS = [
 
 const FAQS = [
   {
+    q: 'Does Pro have a free trial?',
+    a: 'Yes — Pro starts with a 7-day free trial. No credit card charge until the trial ends. If you cancel within 7 days, you pay nothing and drop back to the Free plan automatically.',
+  },
+  {
     q: 'Is the free plan really free forever?',
-    a: 'Yes. Free is not a trial. You get 5 full stock analyses per month — every feature unlocked, nothing hidden. The only limit is how many stocks you can analyze each month. Upgrade to Pro for unlimited analyses.',
+    a: 'Yes. The Free plan never expires and requires no credit card. You get 5 full stock analyses per month with every feature unlocked. Pro adds unlimited analyses — and starts with a 7-day free trial, no charge upfront.',
   },
   {
     q: 'What happens when I hit the 5-stock limit?',
@@ -247,7 +251,7 @@ export default function PricingPage() {
                 <span className="text-5xl font-bold text-white tabular-nums">$19</span>
                 <span className="text-gray-500 text-sm">/month</span>
               </div>
-              <p className="text-[13px] text-gray-400">Cancel anytime · No contracts</p>
+              <p className="text-[13px] text-gray-400">7-day free trial · Cancel anytime · No contracts</p>
             </div>
 
             {isPro ? (

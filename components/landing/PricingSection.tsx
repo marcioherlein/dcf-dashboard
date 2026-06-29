@@ -119,7 +119,7 @@ export default function PricingSection() {
               <span className="text-[13px] text-[#6B6B6B] font-medium">/month</span>
             </div>
             <p className="text-[12px] text-[#6B6B6B] mb-5">
-              Cancel anytime · No contracts ·{' '}
+              7-day free trial · Cancel anytime ·{' '}
               <a href="/refund-policy" className="underline hover:text-[#111111]">Refund policy</a>
             </p>
 
