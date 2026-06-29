@@ -212,5 +212,6 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: 'jwt',
+    updateAge: 0,  // Re-issue JWT on every request so plan changes are reflected immediately
   },
 }
