@@ -543,8 +543,8 @@ async function buildIdeas(): Promise<IdeasResponse> {
     if (sbUrl && sbKey) {
       const { createClient } = await import('@supabase/supabase-js')
       const sb = createClient(sbUrl, sbKey)
-      // Accept rows from the last 3 days — weekends / holidays skip batch runs
-      const cutoff = new Date(Date.now() - 3 * 86400000).toISOString().slice(0, 10)
+      // Accept rows from the last 8 days — batch runs weekly on Sundays
+      const cutoff = new Date(Date.now() - 8 * 86400000).toISOString().slice(0, 10)
       const { data } = await sb
         .from('daily_valuations')
         .select('ticker, fair_value, upside_pct, date')

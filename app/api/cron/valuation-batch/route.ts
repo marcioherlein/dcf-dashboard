@@ -7,7 +7,7 @@
  * The Ideas API then reads from this table instead of running its own
  * lightweight single-model DCF — so ideas page fair values match the stock page.
  *
- * Schedule: 23:00 UTC weekdays (after US markets + ETH settle, before Ideas refresh)
+ * Schedule: Sunday 23:00 UTC (weekly — valuations don't change daily)
  * Concurrency: 3 tickers at a time — each calls /api/financials which itself
  * makes ~10 external API calls; too much parallelism hits Yahoo rate limits.
  *

@@ -6,7 +6,7 @@
     },
     {
       "path": "/api/cron/valuation-batch",
-      "schedule": "0 23 * * 1-5"
+      "schedule": "0 23 * * 0"
     },
     {
       "path": "/api/reddit-post?format=insight",
