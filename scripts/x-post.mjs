@@ -8352,6 +8352,319 @@ const MODES = {
   li_movers:              runLiMovers,
 }
 
+// ─── Additional engagement modes ──────────────────────────────────────────────
+// All modes below rotate using dayOfYear so the same tickers never repeat.
+
+async function runOvervaluedList() {
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+  const sliceStart = (dayOfYear * 17) % (BROAD_POOL.length - 25)
+  const pool = BROAD_POOL.slice(sliceStart, sliceStart + 25)
+  const scored = []
+  await Promise.all(pool.map(async ticker => {
+    try {
+      const d = await fetchValuation(ticker)
+      const upside = appUpside(d), fair = appFairValue(d), price = d?.quote?.price
+      const fwdPE = d?.analystForwardPE ?? null
+      const impliedG = d?.valuationMethods?.models?.reverseDcf?.impliedCAGR
+      const hist3y = d?.cagrAnalysis?.historicalCagr3y
+      if (!upside || !fair || !price || upside > -0.08) return
+      scored.push({ ticker, upside, fair, price, fwdPE, impliedG, hist3y })
+    } catch { /* skip */ }
+  }))
+  if (scored.length < 3) { console.warn('overvalued_list: not enough data'); return }
+  scored.sort((a, b) => a.upside - b.upside)
+  const top = scored.slice(0, 6), worst = top[0]
+  const q = LIST_QUESTIONS_BEARISH[dayOfYear % LIST_QUESTIONS_BEARISH.length]
+  const lines = [
+    `6 large caps trading the furthest above our fair value estimate.`,
+    ``,
+    `Premium priced ≠ bad business. But it means expectations are high.`,
+    ``,
+    ...top.map((s, i) => {
+      const peNote = s.fwdPE ? ` · ${s.fwdPE.toFixed(0)}× fwd P/E` : ''
+      const implied = s.impliedG != null ? ` · market pricing ${pct(s.impliedG, false)}/yr` : ''
+      return `${i+1}. $${s.ticker} — ${Math.abs((s.upside*100)).toFixed(0)}% above model${peNote}${implied}`
+    }),
+    ``,
+    `$${worst.ticker} leads at ${Math.abs((worst.upside*100)).toFixed(0)}% above fair value.${worst.impliedG && worst.hist3y ? ` Market pricing ${pct(worst.impliedG, false)}/yr vs ${pct(worst.hist3y, false)} historical.` : ''}`,
+    ``, q, ``,
+    `#Stocks #Overvalued #DCF #Investing`,
+  ]
+  await post(lines.join('\n'))
+}
+
+async function runSectorPeRank() {
+  const SECTOR_ETFS = [
+    {sym:'XLK',name:'Technology'},{sym:'XLV',name:'Healthcare'},{sym:'XLF',name:'Financials'},
+    {sym:'XLY',name:'Cons. Cyclical'},{sym:'XLI',name:'Industrials'},{sym:'XLC',name:'Comm. Services'},
+    {sym:'XLP',name:'Cons. Defensive'},{sym:'XLE',name:'Energy'},{sym:'XLRE',name:'Real Estate'},
+    {sym:'XLB',name:'Materials'},{sym:'XLU',name:'Utilities'},
+  ]
+  const etfs = await fetchLatestEtfScores()
+  const byTicker = Object.fromEntries(etfs.map(e => [e.ticker, e]))
+  const rows = SECTOR_ETFS
+    .map(s => ({ ...s, pe: byTicker[s.sym]?.pe_ratio ?? null, score: byTicker[s.sym]?.score ?? null }))
+    .filter(s => s.pe != null).sort((a, b) => (a.pe ?? 999) - (b.pe ?? 999))
+  if (rows.length < 5) { console.warn('sector_pe_rank: not enough data'); return }
+  const cheapest = rows[0], richest = rows[rows.length - 1]
+  const lines = [
+    `All 11 sectors ranked by P/E right now.`,
+    ``,
+    ...rows.map((r, i) => `${i+1}. ${r.name} — ${r.pe.toFixed(0)}×${r.score != null ? ` · score ${r.score}` : ''}`),
+    ``,
+    `${((richest.pe ?? 0) - (cheapest.pe ?? 0)).toFixed(0)}× spread between cheapest and richest. ${cheapest.name} looks cheap; ${richest.name} is pricing in growth.`,
+    ``,
+    `Which sector has the best risk/reward?`,
+    ``,
+    `#SectorRotation #ETF #Investing`,
+  ]
+  await post(lines.join('\n'))
+}
+
+async function runMomentumLeaders() {
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+  const results = []
+  for (let i = 0; i < BROAD_POOL.length; i += 8) {
+    const batch = BROAD_POOL.slice(i, i + 8)
+    const settled = await Promise.allSettled(batch.map(async t => {
+      const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${t}?interval=1d&range=1mo`,
+        { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(6000) }).catch(() => null)
+      if (!res?.ok) return null
+      const d = await res.json().catch(() => null)
+      const closes = d?.chart?.result?.[0]?.indicators?.quote?.[0]?.close?.filter(v => v != null) ?? []
+      const meta = d?.chart?.result?.[0]?.meta
+      if (closes.length < 10 || !meta?.regularMarketPrice) return null
+      const moChg = (meta.regularMarketPrice - closes[0]) / closes[0] * 100
+      if (moChg < 5) return null
+      return { symbol: t, price: meta.regularMarketPrice, moChg }
+    }))
+    for (const r of settled) if (r.status === 'fulfilled' && r.value) results.push(r.value)
+    if (i + 8 < BROAD_POOL.length) await new Promise(r => setTimeout(r, 300))
+  }
+  if (results.length < 4) { console.warn('momentum_leaders: not enough data'); return }
+  results.sort((a, b) => b.moChg - a.moChg)
+  const top = results.slice(0, 6), leader = top[0]
+  let dcfLine = null
+  try {
+    const data = await fetchValuation(leader.symbol)
+    const fair = appFairValue(data), upside = appUpside(data)
+    const impliedG = data?.valuationMethods?.models?.reverseDcf?.impliedCAGR
+    if (fair && upside != null) {
+      dcfLine = upside < -0.15
+        ? `$${leader.symbol} up ${leader.moChg.toFixed(0)}% in a month — model puts fair value at ${fmt(fair)}, ${Math.abs((upside*100)).toFixed(0)}% below today.`
+        : upside > 0.10
+        ? `$${leader.symbol} up ${leader.moChg.toFixed(0)}% — model still sees ${(upside*100).toFixed(0)}% upside.`
+        : `$${leader.symbol} up ${leader.moChg.toFixed(0)}% — near fair value.`
+      if (impliedG) dcfLine += ` Pricing in ~${pct(impliedG, false)}/yr growth.`
+    }
+  } catch { /* skip */ }
+  const q = LIST_QUESTIONS_MIXED[dayOfYear % LIST_QUESTIONS_MIXED.length]
+  const lines = [
+    `Strongest 1-month momentum in large caps.`,
+    ``,
+    ...top.map((s, i) => `${i+1}. $${s.symbol} — +${s.moChg.toFixed(1)}% in 30 days · ${fmt(s.price)}`),
+    ``,
+    dcfLine, ``,
+    `Momentum + fundamentals is the combo. Momentum alone is hope.`,
+    q, ``,
+    `#Momentum #Stocks #Investing`,
+  ].filter(Boolean)
+  await post(lines.join('\n'))
+}
+
+async function runEarningsWeekPreview() {
+  const now = new Date()
+  const dow = now.getUTCDay()
+  const monday = new Date(now)
+  monday.setUTCDate(now.getUTCDate() - (dow === 0 ? 6 : dow - 1))
+  monday.setUTCHours(0, 0, 0, 0)
+  const weekDates = new Set(Array.from({length: 5}, (_, i) => {
+    const d = new Date(monday); d.setUTCDate(monday.getUTCDate() + i)
+    return d.toISOString().split('T')[0]
+  }))
+  const reporting = []
+  for (let i = 0; i < SP500_SAMPLE.length; i += 8) {
+    const batch = SP500_SAMPLE.slice(i, i + 8)
+    const settled = await Promise.allSettled(batch.map(async t => {
+      const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${t}?interval=1d&range=1d`,
+        { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(5000) }).catch(() => null)
+      if (!res?.ok) return null
+      const d = await res.json().catch(() => null)
+      const meta = d?.chart?.result?.[0]?.meta
+      if (!meta?.earningsTimestampStart || (meta.marketCap ?? 0) < 20_000_000_000) return null
+      const date = new Date(meta.earningsTimestampStart * 1000).toISOString().split('T')[0]
+      return weekDates.has(date) ? { symbol: t, date, marketCap: meta.marketCap ?? 0 } : null
+    }))
+    for (const r of settled) if (r.status === 'fulfilled' && r.value) reporting.push(r.value)
+    if (i + 8 < SP500_SAMPLE.length) await new Promise(r => setTimeout(r, 300))
+  }
+  if (reporting.length === 0) { console.warn('earnings_week_preview: no earnings found'); return }
+  reporting.sort((a, b) => b.marketCap - a.marketCap)
+  const top = reporting.slice(0, 8)
+  const lines = [
+    `Every large cap reporting this week. Run the model before the number hits.`,
+    ``,
+    ...top.map(e => {
+      const dayLabel = new Date(e.date + 'T12:00:00Z').toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'})
+      return `▸ $${e.symbol} — ${dayLabel}`
+    }),
+    ``,
+    `The beat/miss moves the price. Whether the intrinsic value changed is the real question.`,
+    ``,
+    `#Earnings #Stocks #EarningsSeason`,
+  ]
+  await post(lines.join('\n'))
+}
+
+async function runValueVsGrowth() {
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+  const VALUE_TICKERS = ['JPM','BAC','XOM','CVX','JNJ','PG','KO','PEP','VZ','T','WMT','MO','LMT','MMM']
+  const GROWTH_TICKERS = ['NVDA','META','GOOGL','AMZN','MSFT','NFLX','ADBE','CRM','NOW','AVGO','AMD','PLTR']
+  const sliceV = (dayOfYear * 3) % (VALUE_TICKERS.length - 5)
+  const sliceG = (dayOfYear * 5) % (GROWTH_TICKERS.length - 4)
+  const fetchGroup = async (tickers) => {
+    const results = []
+    await Promise.all(tickers.map(async t => {
+      try {
+        const d = await fetchValuation(t)
+        const upside = appUpside(d), fair = appFairValue(d), price = d?.quote?.price
+        const fwdPE = d?.analystForwardPE ?? null, analyst1y = d?.cagrAnalysis?.analystEstimate1y ?? null
+        if (!price || !fair) return
+        results.push({ ticker: t, upside, fair, price, fwdPE, analyst1y })
+      } catch { /* skip */ }
+    }))
+    return results
+  }
+  const [valueStocks, growthStocks] = await Promise.all([
+    fetchGroup(VALUE_TICKERS.slice(sliceV, sliceV+5)),
+    fetchGroup(GROWTH_TICKERS.slice(sliceG, sliceG+4)),
+  ])
+  valueStocks.sort((a, b) => (b.upside ?? -1) - (a.upside ?? -1))
+  growthStocks.sort((a, b) => (b.analyst1y ?? 0) - (a.analyst1y ?? 0))
+  const topV = valueStocks.slice(0, 3), topG = growthStocks.slice(0, 3)
+  if (topV.length < 2 || topG.length < 2) { console.warn('value_vs_growth: not enough data'); return }
+  const q = LIST_QUESTIONS_MIXED[dayOfYear % LIST_QUESTIONS_MIXED.length]
+  const lines = [
+    `Value vs Growth — same DCF engine, different philosophies.`,
+    ``,
+    `Value picks:`,
+    ...topV.map((s, i) => `${i+1}. $${s.ticker} — ${s.upside != null ? `${(s.upside*100).toFixed(0)}% upside` : 'fair'}${s.fwdPE ? ` · ${s.fwdPE.toFixed(0)}× P/E` : ''}`),
+    ``,
+    `Growth picks:`,
+    ...topG.map((s, i) => `${i+1}. $${s.ticker} — ${s.analyst1y != null ? `+${(s.analyst1y*100).toFixed(0)}% growth` : 'high growth'}${s.fwdPE ? ` · ${s.fwdPE.toFixed(0)}× P/E` : ''}`),
+    ``,
+    `Value = margin of safety. Growth = compounding. The best investments offer both.`,
+    q, ``,
+    `#ValueInvesting #GrowthStocks #Investing`,
+  ]
+  await post(lines.join('\n'))
+}
+
+async function runCashRich() {
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+  const sliceStart = (dayOfYear * 13) % (BROAD_POOL.length - 20)
+  const pool = BROAD_POOL.slice(sliceStart, sliceStart + 20)
+  const scored = []
+  await Promise.all(pool.map(async ticker => {
+    try {
+      const d = await fetchValuation(ticker)
+      const balanceSheet = d?.financialStatements?.balanceSheet ?? []
+      const latest = balanceSheet.filter(r => !r.isProjected).slice(-1)[0]
+      const cash = latest?.cash ?? null, longTermDebt = latest?.longTermDebt ?? null
+      const marketCap = d?.quote?.marketCap ?? null, price = d?.quote?.price
+      const upside = appUpside(d), fair = appFairValue(d)
+      if (!cash || !marketCap || marketCap <= 0 || !price) return
+      const netCashPct = ((cash - (longTermDebt ?? 0)) * 1e6) / marketCap * 100
+      const netCashB = (cash - (longTermDebt ?? 0)) / 1000
+      if (netCashPct < 5) return
+      scored.push({ ticker, netCashPct, netCashB, price, upside, fair })
+    } catch { /* skip */ }
+  }))
+  if (scored.length < 3) { console.warn('cash_rich: not enough data'); return }
+  scored.sort((a, b) => b.netCashPct - a.netCashPct)
+  const top = scored.slice(0, 5), leader = top[0]
+  const q = LIST_QUESTIONS_MIXED[dayOfYear % LIST_QUESTIONS_MIXED.length]
+  const lines = [
+    `Large caps sitting on the most cash relative to market cap.`,
+    ``,
+    `Net cash = total cash minus long-term debt. High cash = optionality.`,
+    ``,
+    ...top.map((s, i) => {
+      const modelNote = s.upside != null ? ` · model ${s.upside >= 0 ? '+' : ''}${(s.upside*100).toFixed(0)}%` : ''
+      return `${i+1}. $${s.ticker} — ${s.netCashB.toFixed(1)}B net cash (${s.netCashPct.toFixed(0)}% of mkt cap)${modelNote}`
+    }),
+    ``,
+    `$${leader.ticker} holds ${leader.netCashB.toFixed(1)}B net cash — ${leader.netCashPct.toFixed(0)}% of its market cap. That's dry powder.`,
+    q, ``,
+    `#CashRich #Stocks #ValueInvesting`,
+  ]
+  await post(lines.join('\n'))
+}
+
+async function runDailyListRotation() {
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+  const fns = [
+    runLowestPe, runLowestPeg, runAnalystTopBuys, runHighestUpsideConsensus,
+    runHighRoicCheap, runOvervaluedList, runValueVsGrowth, runCashRich,
+    runMomentumLeaders, runQualityRank, runDividendValue, runLowestPe,
+  ]
+  await fns[dayOfYear % fns.length]()
+}
+
+async function runMorningStockPick() {
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+  const day = new Date().getDay()
+  const pool = ROTATION2[day] ?? ROTATION2[1]
+  let ticker = null, data = null
+  for (let attempt = 0; attempt < Math.min(6, pool.length); attempt++) {
+    const candidate = pool[(dayOfYear + attempt + 3) % pool.length]
+    try {
+      const result = await fetchValuation(candidate)
+      if (result?.quote?.price && appFairValue(result) && result?.ratings?.moat) {
+        ticker = candidate; data = result; break
+      }
+    } catch { /* try next */ }
+  }
+  if (!data) { console.warn('morning_stock_pick: no data'); return }
+  const price = data.quote?.price, fair = appFairValue(data), upside = appUpside(data)
+  const impliedG = data?.valuationMethods?.models?.reverseDcf?.impliedCAGR
+  const hist3y = data?.cagrAnalysis?.historicalCagr3y
+  const analyst1y = data?.cagrAnalysis?.analystEstimate1y, numAnalysts = data?.cagrAnalysis?.numAnalysts ?? 0
+  const roicSpread = data?.scores?.roic?.spread
+  const v = verdictLabel(upside ?? 0)
+  const hist = historicalContext(data, ticker)
+  const recLabel = (() => {
+    const r = data?.analystRecommendation ?? ''
+    return r === 'strong_buy' ? 'Strong Buy' : r === 'buy' ? 'Buy' : r === 'hold' ? 'Hold' : null
+  })()
+  const lines = [
+    `${v.emoji} $${ticker} — this morning's pick`,
+    ``,
+    impliedG != null
+      ? `At ${fmt(price)}, the market prices in ~${pct(impliedG, false)}/yr growth.${hist3y ? ` Historical pace: ${pct(hist3y, false)}.` : ''}`
+      : `${v.short} at ${fmt(price)}. Model fair value: ${fmt(fair)} (${pct(upside)}).`,
+    analyst1y != null && numAnalysts >= 3 ? `${numAnalysts} analysts expect ${pct(analyst1y, false)}/yr revenue growth.` : null,
+    roicSpread != null && Math.abs(roicSpread) > 0.03 ? `ROIC ${roicSpread > 0 ? '+' : ''}${(roicSpread*100).toFixed(0)}pp vs cost of capital.` : null,
+    recLabel ? `Wall St: ${recLabel}.` : null,
+    hist, ``,
+    `insic.app/stock/${ticker}`,
+    `$${ticker} #StockPick #DCF #Investing`,
+  ].filter(Boolean)
+  await post(lines.join('\n'))
+}
+
+Object.assign(MODES, {
+  overvalued_list:        runOvervaluedList,
+  sector_pe_rank:         runSectorPeRank,
+  momentum_leaders:       runMomentumLeaders,
+  earnings_week_preview:  runEarningsWeekPreview,
+  value_vs_growth:        runValueVsGrowth,
+  cash_rich:              runCashRich,
+  daily_list_rotation:    runDailyListRotation,
+  morning_stock_pick:     runMorningStockPick,
+})
+
+
 if (!MODES[MODE]) {
   console.error(`Unknown MODE="${MODE}". Use: ${Object.keys(MODES).join(' | ')}`)
   process.exit(1)

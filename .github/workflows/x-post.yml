@@ -23,7 +23,9 @@ on:
                   etf_vs_etf, profit_forecast_list, etf_ratio_breakdown,
                   sector_momentum_rank, dcf_vs_analyst_framed,
                   lowest_pe, lowest_peg, analyst_top_buys, highest_upside_consensus,
-                  high_roic_cheap, dividend_value, weekly_followup, quality_rank]
+                  high_roic_cheap, dividend_value, weekly_followup, quality_rank,
+                  overvalued_list, sector_pe_rank, momentum_leaders, earnings_week_preview,
+                  value_vs_growth, cash_rich, daily_list_rotation, morning_stock_pick]
       ticker:
         description: 'Ticker override (dcf/dcf2/dcf_bear only)'
         required: false
@@ -37,6 +39,7 @@ on:
   schedule:
     # ── Weekdays Mon-Fri ──────────────────────────────────────────────────────
     - cron: '0 11 * * 1-5'    # 08:00 ART morning_brief
+    - cron: '30 11 * * 1-5'   # 08:30 ART morning_stock_pick
     - cron: '0 12 * * 1-5'    # 09:00 ART earnings
     - cron: '0 13 * * 1-5'    # 10:00 ART feature
     - cron: '30 13 * * 1-5'   # 10:30 ART market_open
@@ -45,6 +48,7 @@ on:
     - cron: '0 15 * * 1-5'    # 12:00 ART midday_pulse
     - cron: '15 15 * * 2,4'   # 12:15 ART market_vs_model (Tue/Thu)
     - cron: '30 15 * * 2,4'   # 12:30 ART ratio_explained (Tue/Thu)
+    - cron: '45 15 * * 1-5'   # 12:45 ART earnings_week_preview
     - cron: '0 16 * * 1-5'    # 13:00 ART macro
     - cron: '30 16 * * 1-5'   # 13:30 ART dcf2
     - cron: '0 17 * * 1-5'    # 14:00 ART etf_pulse
@@ -52,51 +56,69 @@ on:
     - cron: '0 18 * * 1-5'    # 15:00 ART dcf_bear
     - cron: '15 18 * * 1-5'   # 15:15 ART movers
     - cron: '30 18 * * 1-5'   # 15:30 ART pre_close
+    - cron: '45 18 * * 1-5'   # 15:45 ART value_vs_growth
     - cron: '0 19 * * 1,3,5'  # 16:00 ART insider_buy (Mon/Wed/Fri)
     - cron: '0 19 * * 2,4'    # 16:00 ART low_52w (Tue/Thu)
     - cron: '15 19 * * 1-5'   # 16:15 ART undervalued_list
     - cron: '30 19 * * 1-5'   # 16:30 ART sector_undervalued
+    - cron: '45 19 * * 1-5'   # 16:45 ART overvalued_list
     - cron: '0 20 * * 1,3,5'  # 17:00 ART conviction_score (Mon/Wed/Fri)
     - cron: '0 20 * * 2,4'    # 17:00 ART biggest_winners_day (Tue/Thu)
     - cron: '15 20 * * 1-5'   # 17:15 ART market_close
     - cron: '30 20 * * 1,3,5' # 17:30 ART biggest_losers_day (Mon/Wed/Fri)
+    - cron: '45 20 * * 1-5'   # 17:45 ART momentum_leaders
     - cron: '0 21 * * 1-5'    # 18:00 ART after_hours
+    - cron: '15 21 * * 1-5'   # 18:15 ART cash_rich
     - cron: '30 21 * * 1-5'   # 18:30 ART near_52w_high
+    - cron: '45 21 * * 1-5'   # 18:45 ART weekly_followup
     - cron: '0 22 * * 1'      # 19:00 ART dcf_vs_analyst_framed (Mon)
     - cron: '0 22 * * 2,4'    # 19:00 ART etf_vs_etf (Tue/Thu)
     - cron: '0 22 * * 3,5'    # 19:00 ART profit_forecast_list (Wed/Fri)
     - cron: '15 22 * * 1-5'   # 19:15 ART etf_ratio_breakdown
+    - cron: '30 22 * * 1-5'   # 19:30 ART daily_list_rotation
+    - cron: '45 22 * * 1-5'   # 19:45 ART dividend_value
     - cron: '0 23 * * 1-5'    # 20:00 ART earnings_results
+    - cron: '15 23 * * 1-5'   # 20:15 ART sector_pe_rank
+    - cron: '0 0 * * 2-6'     # 21:00 ART quality_rank
     - cron: '0 1 * * 2-6'     # 22:00 ART theory_overnight
     # ── Saturday ──────────────────────────────────────────────────────────────
     - cron: '0 13 * * 6'      # 10:00 ART etf_pulse
     - cron: '0 14 * * 6'      # 11:00 ART feature
+    - cron: '30 14 * * 6'     # 11:30 ART momentum_leaders
     - cron: '0 15 * * 6'      # 12:00 ART weekly_wrap
+    - cron: '30 15 * * 6'     # 12:30 ART overvalued_list
     - cron: '0 16 * * 6'      # 13:00 ART sector_scan
+    - cron: '30 16 * * 6'     # 13:30 ART analyst_top_buys
     - cron: '0 17 * * 6'      # 14:00 ART dcf
+    - cron: '30 17 * * 6'     # 14:30 ART cash_rich
     - cron: '0 18 * * 6'      # 15:00 ART sentiment
+    - cron: '30 18 * * 6'     # 15:30 ART value_vs_growth
     - cron: '0 19 * * 6'      # 16:00 ART ratio_explained
+    - cron: '30 19 * * 6'     # 16:30 ART high_roic_cheap
     - cron: '0 20 * * 6'      # 17:00 ART sector_momentum_rank
+    - cron: '30 20 * * 6'     # 17:30 ART quality_rank
+    - cron: '0 21 * * 6'      # 18:00 ART earnings_week_preview
+    - cron: '30 21 * * 6'     # 18:30 ART sector_pe_rank
     - cron: '0 2 * * 6'       # 23:00 ART theory_overnight
     # ── Sunday ────────────────────────────────────────────────────────────────
     - cron: '0 13 * * 0'      # 10:00 ART sentiment
+    - cron: '30 13 * * 0'     # 10:30 ART undervalued_list
     - cron: '0 14 * * 0'      # 11:00 ART top_undervalued
     - cron: '30 14 * * 0'     # 11:30 ART question
     - cron: '0 15 * * 0'      # 12:00 ART sector_scan
+    - cron: '30 15 * * 0'     # 12:30 ART overvalued_list
     - cron: '0 16 * * 0'      # 13:00 ART etf_pulse
+    - cron: '30 16 * * 0'     # 13:30 ART momentum_leaders
     - cron: '0 17 * * 0'      # 14:00 ART dcf_vs_analyst_framed
+    - cron: '30 17 * * 0'     # 14:30 ART value_vs_growth
+    - cron: '0 18 * * 0'      # 15:00 ART weekly_followup
+    - cron: '30 18 * * 0'     # 15:30 ART high_roic_cheap
+    - cron: '0 19 * * 0'      # 16:00 ART analyst_top_buys
+    - cron: '30 19 * * 0'     # 16:30 ART cash_rich
+    - cron: '0 20 * * 0'      # 17:00 ART daily_list_rotation
+    - cron: '30 20 * * 0'     # 17:30 ART sector_pe_rank
+    - cron: '0 21 * * 0'      # 18:00 ART earnings_week_preview
     - cron: '0 2 * * 0'       # 23:00 ART theory_overnight
-    # ── New list/engagement modes ────────────────────────────────────────────
-    - cron: '30 22 * * 1'     # 19:30 ART Mon  lowest_pe
-    - cron: '30 22 * * 2'     # 19:30 ART Tue  lowest_peg
-    - cron: '30 22 * * 3'     # 19:30 ART Wed  analyst_top_buys
-    - cron: '30 22 * * 4'     # 19:30 ART Thu  highest_upside_consensus
-    - cron: '30 22 * * 5'     # 19:30 ART Fri  high_roic_cheap
-    - cron: '30 22 * * 1-5'   # 19:30 ART Mon-Fri  quality_rank (rotates with above via MODE map)
-    - cron: '0 18 * * 1'      # 15:00 ART Mon  weekly_followup
-    - cron: '0 18 * * 4'      # 15:00 ART Thu  dividend_value
-    - cron: '30 20 * * 6'     # 17:30 ART Sat  quality_rank
-    - cron: '0 18 * * 0'      # 15:00 ART Sun  weekly_followup
 
 jobs:
   post:
@@ -125,6 +147,7 @@ jobs:
 
             # Exact match on hour:minute:dow — one entry per mode
             if   [ "$HOUR" = "11" ] && [ "$MIN" -lt "30" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="morning_brief"
+            elif [ "$HOUR" = "11" ] && [ "$MIN" -ge "29" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="morning_stock_pick"
             elif [ "$HOUR" = "12" ] && [ "$MIN" -lt "30" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="earnings"
             elif [ "$HOUR" = "13" ] && [ "$MIN" -lt "15" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="feature"
             elif [ "$HOUR" = "13" ] && [ "$MIN" -ge "29" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="market_open"
@@ -132,51 +155,78 @@ jobs:
             elif [ "$HOUR" = "14" ] && [ "$MIN" -ge "29" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="sector_spotlight"
             elif [ "$HOUR" = "15" ] && [ "$MIN" -lt "10" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="midday_pulse"
             elif [ "$HOUR" = "15" ] && [ "$MIN" -ge "14" ] && [ "$MIN" -lt "25" ] && ([ "$DOW" = "2" ] || [ "$DOW" = "4" ]); then MODE="market_vs_model"
-            elif [ "$HOUR" = "15" ] && [ "$MIN" -ge "29" ] && ([ "$DOW" = "2" ] || [ "$DOW" = "4" ]); then MODE="ratio_explained"
+            elif [ "$HOUR" = "15" ] && [ "$MIN" -ge "29" ] && [ "$MIN" -lt "40" ] && ([ "$DOW" = "2" ] || [ "$DOW" = "4" ]); then MODE="ratio_explained"
+            elif [ "$HOUR" = "15" ] && [ "$MIN" -ge "44" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="earnings_week_preview"
             elif [ "$HOUR" = "16" ] && [ "$MIN" -lt "15" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="macro"
             elif [ "$HOUR" = "16" ] && [ "$MIN" -ge "29" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="dcf2"
             elif [ "$HOUR" = "17" ] && [ "$MIN" -lt "15" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="etf_pulse"
             elif [ "$HOUR" = "17" ] && [ "$MIN" -ge "29" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="economic_results"
             elif [ "$HOUR" = "18" ] && [ "$MIN" -lt "10" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="dcf_bear"
             elif [ "$HOUR" = "18" ] && [ "$MIN" -ge "14" ] && [ "$MIN" -lt "25" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="movers"
-            elif [ "$HOUR" = "18" ] && [ "$MIN" -ge "29" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="pre_close"
+            elif [ "$HOUR" = "18" ] && [ "$MIN" -ge "29" ] && [ "$MIN" -lt "40" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="pre_close"
+            elif [ "$HOUR" = "18" ] && [ "$MIN" -ge "44" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="value_vs_growth"
             elif [ "$HOUR" = "19" ] && [ "$MIN" -lt "10" ] && ([ "$DOW" = "1" ] || [ "$DOW" = "3" ] || [ "$DOW" = "5" ]); then MODE="insider_buy"
             elif [ "$HOUR" = "19" ] && [ "$MIN" -lt "10" ] && ([ "$DOW" = "2" ] || [ "$DOW" = "4" ]); then MODE="low_52w"
             elif [ "$HOUR" = "19" ] && [ "$MIN" -ge "14" ] && [ "$MIN" -lt "25" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="undervalued_list"
-            elif [ "$HOUR" = "19" ] && [ "$MIN" -ge "29" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="sector_undervalued"
+            elif [ "$HOUR" = "19" ] && [ "$MIN" -ge "29" ] && [ "$MIN" -lt "40" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="sector_undervalued"
+            elif [ "$HOUR" = "19" ] && [ "$MIN" -ge "44" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="overvalued_list"
             elif [ "$HOUR" = "20" ] && [ "$MIN" -lt "10" ] && ([ "$DOW" = "1" ] || [ "$DOW" = "3" ] || [ "$DOW" = "5" ]); then MODE="conviction_score"
             elif [ "$HOUR" = "20" ] && [ "$MIN" -lt "10" ] && ([ "$DOW" = "2" ] || [ "$DOW" = "4" ]); then MODE="biggest_winners_day"
             elif [ "$HOUR" = "20" ] && [ "$MIN" -ge "14" ] && [ "$MIN" -lt "25" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="market_close"
-            elif [ "$HOUR" = "20" ] && [ "$MIN" -ge "29" ] && ([ "$DOW" = "1" ] || [ "$DOW" = "3" ] || [ "$DOW" = "5" ]); then MODE="biggest_losers_day"
-            elif [ "$HOUR" = "21" ] && [ "$MIN" -lt "15" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="after_hours"
-            elif [ "$HOUR" = "21" ] && [ "$MIN" -ge "29" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="near_52w_high"
+            elif [ "$HOUR" = "20" ] && [ "$MIN" -ge "29" ] && [ "$MIN" -lt "40" ] && ([ "$DOW" = "1" ] || [ "$DOW" = "3" ] || [ "$DOW" = "5" ]); then MODE="biggest_losers_day"
+            elif [ "$HOUR" = "20" ] && [ "$MIN" -ge "44" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="momentum_leaders"
+            elif [ "$HOUR" = "21" ] && [ "$MIN" -lt "10" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="after_hours"
+            elif [ "$HOUR" = "21" ] && [ "$MIN" -ge "14" ] && [ "$MIN" -lt "25" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="cash_rich"
+            elif [ "$HOUR" = "21" ] && [ "$MIN" -ge "29" ] && [ "$MIN" -lt "40" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="near_52w_high"
+            elif [ "$HOUR" = "21" ] && [ "$MIN" -ge "44" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="weekly_followup"
             elif [ "$HOUR" = "22" ] && [ "$MIN" -lt "10" ] && [ "$DOW" = "1" ]; then MODE="dcf_vs_analyst_framed"
             elif [ "$HOUR" = "22" ] && [ "$MIN" -lt "10" ] && ([ "$DOW" = "2" ] || [ "$DOW" = "4" ]); then MODE="etf_vs_etf"
             elif [ "$HOUR" = "22" ] && [ "$MIN" -lt "10" ] && ([ "$DOW" = "3" ] || [ "$DOW" = "5" ]); then MODE="profit_forecast_list"
             elif [ "$HOUR" = "22" ] && [ "$MIN" -ge "14" ] && [ "$MIN" -lt "25" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="etf_ratio_breakdown"
-            elif [ "$HOUR" = "22" ] && [ "$MIN" -ge "29" ] && [ "$DOW" = "1" ]; then MODE="lowest_pe"
-            elif [ "$HOUR" = "22" ] && [ "$MIN" -ge "29" ] && [ "$DOW" = "2" ]; then MODE="lowest_peg"
-            elif [ "$HOUR" = "22" ] && [ "$MIN" -ge "29" ] && [ "$DOW" = "3" ]; then MODE="analyst_top_buys"
-            elif [ "$HOUR" = "22" ] && [ "$MIN" -ge "29" ] && [ "$DOW" = "4" ]; then MODE="highest_upside_consensus"
-            elif [ "$HOUR" = "22" ] && [ "$MIN" -ge "29" ] && [ "$DOW" = "5" ]; then MODE="high_roic_cheap"
-            elif [ "$HOUR" = "23" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="earnings_results"
-            elif [ "$HOUR" = "1" ] && [ "$DOW" -ge "2" ] && [ "$DOW" -le "6" ]; then MODE="theory_overnight"
+            elif [ "$HOUR" = "22" ] && [ "$MIN" -ge "29" ] && [ "$MIN" -lt "40" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="daily_list_rotation"
+            elif [ "$HOUR" = "22" ] && [ "$MIN" -ge "44" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="dividend_value"
+            elif [ "$HOUR" = "23" ] && [ "$MIN" -lt "10" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="earnings_results"
+            elif [ "$HOUR" = "23" ] && [ "$MIN" -ge "14" ] && [ "$MIN" -lt "25" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="sector_pe_rank"
+            elif [ "$HOUR" = "0"  ] && [ "$DOW" -ge "2" ] && [ "$DOW" -le "6" ]; then MODE="quality_rank"
+            elif [ "$HOUR" = "1"  ] && [ "$DOW" -ge "2" ] && [ "$DOW" -le "6" ]; then MODE="theory_overnight"
             # Saturday (DOW=6)
-            elif [ "$HOUR" = "13" ] && [ "$DOW" = "6" ]; then MODE="etf_pulse"
-            elif [ "$HOUR" = "14" ] && [ "$DOW" = "6" ]; then MODE="feature"
-            elif [ "$HOUR" = "15" ] && [ "$DOW" = "6" ]; then MODE="weekly_wrap"
-            elif [ "$HOUR" = "16" ] && [ "$DOW" = "6" ]; then MODE="sector_scan"
-            elif [ "$HOUR" = "17" ] && [ "$DOW" = "6" ]; then MODE="dcf"
-            elif [ "$HOUR" = "18" ] && [ "$DOW" = "6" ]; then MODE="sentiment"
-            elif [ "$HOUR" = "19" ] && [ "$DOW" = "6" ]; then MODE="ratio_explained"
+            elif [ "$HOUR" = "13" ] && [ "$MIN" -lt "25" ] && [ "$DOW" = "6" ]; then MODE="etf_pulse"
+            elif [ "$HOUR" = "14" ] && [ "$MIN" -lt "25" ] && [ "$DOW" = "6" ]; then MODE="feature"
+            elif [ "$HOUR" = "14" ] && [ "$MIN" -ge "29" ] && [ "$DOW" = "6" ]; then MODE="momentum_leaders"
+            elif [ "$HOUR" = "15" ] && [ "$MIN" -lt "25" ] && [ "$DOW" = "6" ]; then MODE="weekly_wrap"
+            elif [ "$HOUR" = "15" ] && [ "$MIN" -ge "29" ] && [ "$DOW" = "6" ]; then MODE="overvalued_list"
+            elif [ "$HOUR" = "16" ] && [ "$MIN" -lt "25" ] && [ "$DOW" = "6" ]; then MODE="sector_scan"
+            elif [ "$HOUR" = "16" ] && [ "$MIN" -ge "29" ] && [ "$DOW" = "6" ]; then MODE="analyst_top_buys"
+            elif [ "$HOUR" = "17" ] && [ "$MIN" -lt "25" ] && [ "$DOW" = "6" ]; then MODE="dcf"
+            elif [ "$HOUR" = "17" ] && [ "$MIN" -ge "29" ] && [ "$DOW" = "6" ]; then MODE="cash_rich"
+            elif [ "$HOUR" = "18" ] && [ "$MIN" -lt "25" ] && [ "$DOW" = "6" ]; then MODE="sentiment"
+            elif [ "$HOUR" = "18" ] && [ "$MIN" -ge "29" ] && [ "$DOW" = "6" ]; then MODE="value_vs_growth"
+            elif [ "$HOUR" = "19" ] && [ "$MIN" -lt "25" ] && [ "$DOW" = "6" ]; then MODE="ratio_explained"
+            elif [ "$HOUR" = "19" ] && [ "$MIN" -ge "29" ] && [ "$DOW" = "6" ]; then MODE="high_roic_cheap"
             elif [ "$HOUR" = "20" ] && [ "$MIN" -lt "25" ] && [ "$DOW" = "6" ]; then MODE="sector_momentum_rank"
             elif [ "$HOUR" = "20" ] && [ "$MIN" -ge "29" ] && [ "$DOW" = "6" ]; then MODE="quality_rank"
+            elif [ "$HOUR" = "21" ] && [ "$MIN" -lt "25" ] && [ "$DOW" = "6" ]; then MODE="earnings_week_preview"
+            elif [ "$HOUR" = "21" ] && [ "$MIN" -ge "29" ] && [ "$DOW" = "6" ]; then MODE="sector_pe_rank"
             elif [ "$HOUR" = "2"  ] && [ "$DOW" = "6" ]; then MODE="theory_overnight"
             # Sunday (DOW=7)
-            elif [ "$HOUR" = "13" ] && [ "$DOW" = "7" ]; then MODE="sentiment"
+            elif [ "$HOUR" = "13" ] && [ "$MIN" -lt "25" ] && [ "$DOW" = "7" ]; then MODE="sentiment"
+            elif [ "$HOUR" = "13" ] && [ "$MIN" -ge "29" ] && [ "$DOW" = "7" ]; then MODE="undervalued_list"
             elif [ "$HOUR" = "14" ] && [ "$MIN" -lt "15" ] && [ "$DOW" = "7" ]; then MODE="top_undervalued"
-            elif [ "$HOUR" = "14" ] && [ "$MIN" -ge "29" ] && [ "$DOW" = "7" ]; then MODE="question"
-            elif [ "$HOUR" = "15" ] && [ "$DOW" = "7" ]; then MODE="sector_scan"
+            elif [ "$HOUR" = "14" ] && [ "$MIN" -ge "29" ] && [ "$MIN" -lt "40" ] && [ "$DOW" = "7" ]; then MODE="question"
+            elif [ "$HOUR" = "15" ] && [ "$MIN" -lt "25" ] && [ "$DOW" = "7" ]; then MODE="sector_scan"
+            elif [ "$HOUR" = "15" ] && [ "$MIN" -ge "29" ] && [ "$DOW" = "7" ]; then MODE="overvalued_list"
+            elif [ "$HOUR" = "16" ] && [ "$MIN" -lt "25" ] && [ "$DOW" = "7" ]; then MODE="etf_pulse"
+            elif [ "$HOUR" = "16" ] && [ "$MIN" -ge "29" ] && [ "$DOW" = "7" ]; then MODE="momentum_leaders"
+            elif [ "$HOUR" = "17" ] && [ "$MIN" -lt "25" ] && [ "$DOW" = "7" ]; then MODE="dcf_vs_analyst_framed"
+            elif [ "$HOUR" = "17" ] && [ "$MIN" -ge "29" ] && [ "$DOW" = "7" ]; then MODE="value_vs_growth"
+            elif [ "$HOUR" = "18" ] && [ "$MIN" -lt "25" ] && [ "$DOW" = "7" ]; then MODE="weekly_followup"
+            elif [ "$HOUR" = "18" ] && [ "$MIN" -ge "29" ] && [ "$DOW" = "7" ]; then MODE="high_roic_cheap"
+            elif [ "$HOUR" = "19" ] && [ "$MIN" -lt "25" ] && [ "$DOW" = "7" ]; then MODE="analyst_top_buys"
+            elif [ "$HOUR" = "19" ] && [ "$MIN" -ge "29" ] && [ "$DOW" = "7" ]; then MODE="cash_rich"
+            elif [ "$HOUR" = "20" ] && [ "$MIN" -lt "25" ] && [ "$DOW" = "7" ]; then MODE="daily_list_rotation"
+            elif [ "$HOUR" = "20" ] && [ "$MIN" -ge "29" ] && [ "$DOW" = "7" ]; then MODE="sector_pe_rank"
+            elif [ "$HOUR" = "21" ] && [ "$DOW" = "7" ]; then MODE="earnings_week_preview"
+            elif [ "$HOUR" = "2"  ] && [ "$DOW" = "7" ]; then MODE="theory_overnight"
             elif [ "$HOUR" = "16" ] && [ "$DOW" = "7" ]; then MODE="etf_pulse"
             elif [ "$HOUR" = "17" ] && [ "$DOW" = "7" ]; then MODE="dcf_vs_analyst_framed"
             elif [ "$HOUR" = "18" ] && [ "$DOW" = "7" ]; then MODE="weekly_followup"

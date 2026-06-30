@@ -21,6 +21,8 @@ const VALID_MODES = [
   'sector_momentum_rank','dcf_vs_analyst_framed',
   'lowest_pe','lowest_peg','analyst_top_buys','highest_upside_consensus',
   'high_roic_cheap','dividend_value','weekly_followup','quality_rank',
+  'overvalued_list','sector_pe_rank','momentum_leaders','earnings_week_preview',
+  'value_vs_growth','cash_rich','daily_list_rotation','morning_stock_pick',
 ]
 
 export async function GET(req: NextRequest) {
