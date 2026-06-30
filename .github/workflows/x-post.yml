@@ -21,7 +21,9 @@ on:
                   sector_undervalued, biggest_losers_day, biggest_winners_day, ytd_losers,
                   ytd_winners, near_52w_high, most_shorted, conviction_score,
                   etf_vs_etf, profit_forecast_list, etf_ratio_breakdown,
-                  sector_momentum_rank, dcf_vs_analyst_framed]
+                  sector_momentum_rank, dcf_vs_analyst_framed,
+                  lowest_pe, lowest_peg, analyst_top_buys, highest_upside_consensus,
+                  high_roic_cheap, dividend_value, weekly_followup, quality_rank]
       ticker:
         description: 'Ticker override (dcf/dcf2/dcf_bear only)'
         required: false
@@ -84,6 +86,17 @@ on:
     - cron: '0 16 * * 0'      # 13:00 ART etf_pulse
     - cron: '0 17 * * 0'      # 14:00 ART dcf_vs_analyst_framed
     - cron: '0 2 * * 0'       # 23:00 ART theory_overnight
+    # ── New list/engagement modes ────────────────────────────────────────────
+    - cron: '30 22 * * 1'     # 19:30 ART Mon  lowest_pe
+    - cron: '30 22 * * 2'     # 19:30 ART Tue  lowest_peg
+    - cron: '30 22 * * 3'     # 19:30 ART Wed  analyst_top_buys
+    - cron: '30 22 * * 4'     # 19:30 ART Thu  highest_upside_consensus
+    - cron: '30 22 * * 5'     # 19:30 ART Fri  high_roic_cheap
+    - cron: '30 22 * * 1-5'   # 19:30 ART Mon-Fri  quality_rank (rotates with above via MODE map)
+    - cron: '0 18 * * 1'      # 15:00 ART Mon  weekly_followup
+    - cron: '0 18 * * 4'      # 15:00 ART Thu  dividend_value
+    - cron: '30 20 * * 6'     # 17:30 ART Sat  quality_rank
+    - cron: '0 18 * * 0'      # 15:00 ART Sun  weekly_followup
 
 jobs:
   post:
@@ -141,6 +154,11 @@ jobs:
             elif [ "$HOUR" = "22" ] && [ "$MIN" -lt "10" ] && ([ "$DOW" = "2" ] || [ "$DOW" = "4" ]); then MODE="etf_vs_etf"
             elif [ "$HOUR" = "22" ] && [ "$MIN" -lt "10" ] && ([ "$DOW" = "3" ] || [ "$DOW" = "5" ]); then MODE="profit_forecast_list"
             elif [ "$HOUR" = "22" ] && [ "$MIN" -ge "14" ] && [ "$MIN" -lt "25" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="etf_ratio_breakdown"
+            elif [ "$HOUR" = "22" ] && [ "$MIN" -ge "29" ] && [ "$DOW" = "1" ]; then MODE="lowest_pe"
+            elif [ "$HOUR" = "22" ] && [ "$MIN" -ge "29" ] && [ "$DOW" = "2" ]; then MODE="lowest_peg"
+            elif [ "$HOUR" = "22" ] && [ "$MIN" -ge "29" ] && [ "$DOW" = "3" ]; then MODE="analyst_top_buys"
+            elif [ "$HOUR" = "22" ] && [ "$MIN" -ge "29" ] && [ "$DOW" = "4" ]; then MODE="highest_upside_consensus"
+            elif [ "$HOUR" = "22" ] && [ "$MIN" -ge "29" ] && [ "$DOW" = "5" ]; then MODE="high_roic_cheap"
             elif [ "$HOUR" = "23" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="earnings_results"
             elif [ "$HOUR" = "1" ] && [ "$DOW" -ge "2" ] && [ "$DOW" -le "6" ]; then MODE="theory_overnight"
             # Saturday (DOW=6)
@@ -151,7 +169,8 @@ jobs:
             elif [ "$HOUR" = "17" ] && [ "$DOW" = "6" ]; then MODE="dcf"
             elif [ "$HOUR" = "18" ] && [ "$DOW" = "6" ]; then MODE="sentiment"
             elif [ "$HOUR" = "19" ] && [ "$DOW" = "6" ]; then MODE="ratio_explained"
-            elif [ "$HOUR" = "20" ] && [ "$DOW" = "6" ]; then MODE="sector_momentum_rank"
+            elif [ "$HOUR" = "20" ] && [ "$MIN" -lt "25" ] && [ "$DOW" = "6" ]; then MODE="sector_momentum_rank"
+            elif [ "$HOUR" = "20" ] && [ "$MIN" -ge "29" ] && [ "$DOW" = "6" ]; then MODE="quality_rank"
             elif [ "$HOUR" = "2"  ] && [ "$DOW" = "6" ]; then MODE="theory_overnight"
             # Sunday (DOW=7)
             elif [ "$HOUR" = "13" ] && [ "$DOW" = "7" ]; then MODE="sentiment"
@@ -160,7 +179,9 @@ jobs:
             elif [ "$HOUR" = "15" ] && [ "$DOW" = "7" ]; then MODE="sector_scan"
             elif [ "$HOUR" = "16" ] && [ "$DOW" = "7" ]; then MODE="etf_pulse"
             elif [ "$HOUR" = "17" ] && [ "$DOW" = "7" ]; then MODE="dcf_vs_analyst_framed"
+            elif [ "$HOUR" = "18" ] && [ "$DOW" = "7" ]; then MODE="weekly_followup"
             elif [ "$HOUR" = "2"  ] && [ "$DOW" = "7" ]; then MODE="theory_overnight"
+            # Weekday extra: weekly_followup Mon, dividend_value Thu (slot: hour 18, within weekday block)
             else MODE="SKIP"
             fi
 

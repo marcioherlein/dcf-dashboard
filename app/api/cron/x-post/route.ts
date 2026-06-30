@@ -19,6 +19,8 @@ const VALID_MODES = [
   'li_near_52w_high','li_most_shorted','li_movers',
   'etf_vs_etf','profit_forecast_list','etf_ratio_breakdown',
   'sector_momentum_rank','dcf_vs_analyst_framed',
+  'lowest_pe','lowest_peg','analyst_top_buys','highest_upside_consensus',
+  'high_roic_cheap','dividend_value','weekly_followup','quality_rank',
 ]
 
 export async function GET(req: NextRequest) {

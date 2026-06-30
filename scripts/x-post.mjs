@@ -7799,6 +7799,485 @@ async function runDcfVsAnalystFramed() {
   await post(lines.join('\n'))
 }
 
+// ─── Shared large-cap pool for new list modes ─────────────────────────────────
+const BROAD_POOL = [...new Set([
+  'AAPL','MSFT','GOOGL','META','AMZN','NVDA','TSLA','AMD','NFLX','SMCI',
+  'PLTR','INTC','QCOM','MU','CRM','NOW','ADBE','ORCL','IBM','AVGO',
+  'JPM','BAC','GS','MS','V','MA','BLK','AXP','BX','SCHW',
+  'UNH','LLY','ABBV','MRK','JNJ','PFE','AMGN','BMY','GILD','TMO',
+  'XOM','CVX','COP','EOG','SLB','MPC','PSX',
+  'WMT','COST','AMZN','HD','MCD','SBUX','NKE','CMG','TGT',
+  'PG','KO','PEP','MMM','T','VZ','MO',
+  'HON','CAT','GE','RTX','DE','BA','LMT',
+  'INTU','WDAY','SNOW','PANW','CRWD','ZS',
+])]
+
+// ─── Mode: lowest_pe ─────────────────────────────────────────────────────────
+// Stocks with lowest forward P/E in the large-cap universe — but quality-filtered.
+// Low P/E only means something if the business is healthy.
+
+async function runLowestPe() {
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+  const sliceStart = (dayOfYear * 11) % (BROAD_POOL.length - 25)
+  const pool = BROAD_POOL.slice(sliceStart, sliceStart + 25)
+
+  const scored = []
+  await Promise.all(pool.map(async ticker => {
+    try {
+      const d = await fetchValuation(ticker)
+      const fwdPE = d?.analystForwardPE ?? null
+      const roicSpread = d?.scores?.roic?.spread ?? null
+      const piotroski = d?.scores?.piotroski?.score ?? null
+      const price = d?.quote?.price
+      const fair = appFairValue(d)
+      const upside = appUpside(d)
+      const analyst1y = d?.cagrAnalysis?.analystEstimate1y ?? null
+      const sector = d?.quote?.sector ?? ''
+      if (!fwdPE || fwdPE <= 0 || fwdPE > 50 || !price) return
+      // Quality filter — must not be destroying capital
+      if (roicSpread != null && roicSpread < -0.04) return
+      if (piotroski != null && piotroski < 3) return
+      scored.push({ ticker, fwdPE, price, fair, upside, analyst1y, roicSpread, sector, d })
+    } catch { /* skip */ }
+  }))
+
+  if (scored.length < 4) { console.warn('lowest_pe: not enough data'); return }
+  scored.sort((a, b) => a.fwdPE - b.fwdPE)
+  const top = scored.slice(0, 6)
+  const leader = top[0]
+  const dayOfYear2 = Math.floor(Date.now() / 86400000)
+  const question = LIST_QUESTIONS_MIXED[dayOfYear2 % LIST_QUESTIONS_MIXED.length]
+
+  const lines = [
+    `The 6 cheapest large caps on forward earnings right now.`,
+    ``,
+    `Low P/E only matters if the business is healthy. These pass the quality filter.`,
+    ``,
+    ...top.map((s, i) => {
+      const roicNote = s.roicSpread != null && s.roicSpread > 0.04 ? ` · ROIC spread +${(s.roicSpread*100).toFixed(0)}pp` : ''
+      const growthNote = s.analyst1y != null ? ` · ${(s.analyst1y*100).toFixed(0)}% growth` : ''
+      const modelNote = s.upside != null && s.fair ? ` · model ${s.upside >= 0 ? '+' : ''}${(s.upside*100).toFixed(0)}%` : ''
+      return `${i+1}. $${s.ticker} — ${s.fwdPE.toFixed(0)}× fwd P/E${growthNote}${roicNote}${modelNote}`
+    }),
+    ``,
+    `$${leader.ticker} at ${leader.fwdPE.toFixed(0)}× is the cheapest. ${leader.upside != null && leader.upside > 0.05 ? `Our model agrees — ${(leader.upside*100).toFixed(0)}% below fair value.` : leader.upside != null && leader.upside < -0.05 ? `Our model is less convinced — fair value is lower.` : `Our model sees it near fair value.`}`,
+    ``,
+    question,
+    ``,
+    `#Stocks #ValueInvesting #PE #Investing`,
+  ]
+  await post(lines.join('\n'))
+}
+
+// ─── Mode: lowest_peg ────────────────────────────────────────────────────────
+// PEG ratio = forward P/E ÷ earnings growth rate. Below 1.0 = potentially cheap.
+// The growth-at-a-reasonable-price (GARP) screen.
+
+async function runLowestPeg() {
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+  const sliceStart = (dayOfYear * 17) % (BROAD_POOL.length - 25)
+  const pool = BROAD_POOL.slice(sliceStart, sliceStart + 25)
+
+  const scored = []
+  await Promise.all(pool.map(async ticker => {
+    try {
+      const d = await fetchValuation(ticker)
+      const pegRatio = d?.quote?.pegRatio ?? null
+      const fwdPE = d?.analystForwardPE ?? null
+      const analyst1y = d?.cagrAnalysis?.analystEstimate1y ?? null
+      const price = d?.quote?.price
+      const upside = appUpside(d)
+      const fair = appFairValue(d)
+      if (!pegRatio || pegRatio <= 0 || pegRatio > 3 || !price || !fwdPE) return
+      // Need positive growth to make PEG meaningful
+      if (!analyst1y || analyst1y < 0.05) return
+      scored.push({ ticker, pegRatio, fwdPE, analyst1y, price, upside, fair, d })
+    } catch { /* skip */ }
+  }))
+
+  if (scored.length < 4) { console.warn('lowest_peg: not enough data'); return }
+  scored.sort((a, b) => a.pegRatio - b.pegRatio)
+  const top = scored.slice(0, 6)
+  const leader = top[0]
+  const question = LIST_QUESTIONS_BULLISH[dayOfYear % LIST_QUESTIONS_BULLISH.length]
+
+  const lines = [
+    `PEG ratio below 1.0 = paying less than $1 per dollar of growth. Here's who qualifies.`,
+    ``,
+    ...top.map((s, i) => {
+      const growthStr = `${(s.analyst1y*100).toFixed(0)}% growth`
+      const modelNote = s.upside != null ? ` · model ${s.upside >= 0 ? '+' : ''}${(s.upside*100).toFixed(0)}%` : ''
+      return `${i+1}. $${s.ticker} — PEG ${s.pegRatio.toFixed(2)} · ${s.fwdPE.toFixed(0)}× P/E · ${growthStr}${modelNote}`
+    }),
+    ``,
+    `$${leader.ticker} has the lowest PEG at ${leader.pegRatio.toFixed(2)}. That means you're paying ${leader.fwdPE.toFixed(0)}× earnings for ${(leader.analyst1y*100).toFixed(0)}% growth.`,
+    ``,
+    question,
+    ``,
+    `#GARP #ValueInvesting #Stocks #Investing`,
+  ]
+  await post(lines.join('\n'))
+}
+
+// ─── Mode: analyst_top_buys ───────────────────────────────────────────────────
+// Most analyst Buy/Strong Buy ratings + our model's verdict on each.
+// The tension when analysts love something our model doesn't = engagement.
+
+async function runAnalystTopBuys() {
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+  const sliceStart = (dayOfYear * 13) % (BROAD_POOL.length - 25)
+  const pool = BROAD_POOL.slice(sliceStart, sliceStart + 25)
+
+  const scored = []
+  await Promise.all(pool.map(async ticker => {
+    try {
+      const d = await fetchValuation(ticker)
+      const trend = d?.analystRatingTrend ?? []
+      if (!trend.length) return
+      const latest = trend[0]
+      const sb = latest.strongBuy ?? 0
+      const b  = latest.buy ?? 0
+      const h  = latest.hold ?? 0
+      const s  = latest.sell ?? 0
+      const ss = latest.strongSell ?? 0
+      const total = sb + b + h + s + ss
+      if (total < 5) return
+      const bullPct = Math.round(((sb + b) / total) * 100)
+      if (bullPct < 60) return
+      const price = d?.quote?.price
+      const fair = appFairValue(d)
+      const upside = appUpside(d)
+      const target = d?.quote?.analystTargetMean ?? null
+      if (!price) return
+      scored.push({ ticker, bullPct, total, sb, b, price, fair, upside, target, d })
+    } catch { /* skip */ }
+  }))
+
+  if (scored.length < 4) { console.warn('analyst_top_buys: not enough data'); return }
+  scored.sort((a, b) => b.bullPct - a.bullPct)
+  const top = scored.slice(0, 6)
+  const leader = top[0]
+  const question = LIST_QUESTIONS_MIXED[dayOfYear % LIST_QUESTIONS_MIXED.length]
+
+  // Find the most interesting tension — analyst loves it but our model disagrees
+  const tension = top.find(s => s.upside != null && s.upside < -0.10)
+  const agreement = top.find(s => s.upside != null && s.upside > 0.10)
+
+  const lines = [
+    `Wall Street is most bullish on these stocks right now.`,
+    ``,
+    ...top.map((s, i) => {
+      const targetNote = s.target ? ` · target ${fmt(s.target)}` : ''
+      const modelNote = s.upside != null ? ` · model ${s.upside >= 0 ? '+' : ''}${(s.upside*100).toFixed(0)}%` : ''
+      return `${i+1}. $${s.ticker} — ${s.bullPct}% bullish (${s.total} analysts)${targetNote}${modelNote}`
+    }),
+    ``,
+    tension
+      ? `Interesting: ${tension.bullPct}% of analysts love $${tension.ticker} — our model sees it ${Math.abs((tension.upside*100)).toFixed(0)}% above fair value. Someone is wrong.`
+      : agreement
+      ? `$${agreement.ticker} is rare: ${agreement.bullPct}% analyst consensus AND our model sees ${(agreement.upside*100).toFixed(0)}% upside. Both sides agree.`
+      : `$${leader.ticker} leads with ${leader.bullPct}% of analysts bullish. Run the DCF before you follow the crowd.`,
+    ``,
+    question,
+    ``,
+    `#Stocks #AnalystRatings #WallStreet #Investing`,
+  ]
+  await post(lines.join('\n'))
+}
+
+// ─── Mode: highest_upside_consensus ──────────────────────────────────────────
+// Biggest gap between current price and analyst consensus target.
+// "What if the Street is right?" — drives debate.
+
+async function runHighestUpsideConsensus() {
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+  const sliceStart = (dayOfYear * 7) % (BROAD_POOL.length - 25)
+  const pool = BROAD_POOL.slice(sliceStart, sliceStart + 25)
+
+  const scored = []
+  await Promise.all(pool.map(async ticker => {
+    try {
+      const d = await fetchValuation(ticker)
+      const price = d?.quote?.price
+      const target = d?.quote?.analystTargetMean ?? null
+      const numAnalysts = d?.cagrAnalysis?.numAnalysts ?? 0
+      if (!price || !target || numAnalysts < 5 || target <= price) return
+      const streetUpside = (target - price) / price
+      if (streetUpside < 0.10) return
+      const ourUpside = appUpside(d)
+      const fair = appFairValue(d)
+      const sector = d?.quote?.sector ?? ''
+      scored.push({ ticker, price, target, streetUpside, ourUpside, fair, numAnalysts, sector })
+    } catch { /* skip */ }
+  }))
+
+  if (scored.length < 4) { console.warn('highest_upside_consensus: not enough data'); return }
+  scored.sort((a, b) => b.streetUpside - a.streetUpside)
+  const top = scored.slice(0, 6)
+  const leader = top[0]
+  const question = LIST_QUESTIONS_BULLISH[dayOfYear % LIST_QUESTIONS_BULLISH.length]
+
+  const lines = [
+    `These stocks have the biggest gap between price and analyst consensus target.`,
+    ``,
+    ...top.map((s, i) => {
+      const modelNote = s.ourUpside != null
+        ? ` · our model: ${s.ourUpside >= 0 ? '+' : ''}${(s.ourUpside*100).toFixed(0)}%`
+        : ''
+      return `${i+1}. $${s.ticker} — ${(s.streetUpside*100).toFixed(0)}% to ${fmt(s.target)} (${s.numAnalysts} analysts)${modelNote}`
+    }),
+    ``,
+    `$${leader.ticker} has ${(leader.streetUpside*100).toFixed(0)}% upside to the analyst target of ${fmt(leader.target)}. ${leader.ourUpside != null && Math.abs(leader.ourUpside - leader.streetUpside) > 0.15 ? `Our DCF ${leader.ourUpside > leader.streetUpside ? 'agrees and then some' : `disagrees — we see fair value at ${fmt(leader.fair)}`}.` : `Our model aligns.`}`,
+    ``,
+    question,
+    ``,
+    `#Stocks #AnalystTargets #Upside #Investing`,
+  ]
+  await post(lines.join('\n'))
+}
+
+// ─── Mode: high_roic_cheap ────────────────────────────────────────────────────
+// The combination most investors miss: high ROIC spread AND trading below fair value.
+// Compounders at a discount — rarest and highest quality screen.
+
+async function runHighRoicCheap() {
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+  const sliceStart = (dayOfYear * 19) % (BROAD_POOL.length - 30)
+  const pool = BROAD_POOL.slice(sliceStart, sliceStart + 30)
+
+  const scored = []
+  await Promise.all(pool.map(async ticker => {
+    try {
+      const d = await fetchValuation(ticker)
+      const roicSpread = d?.scores?.roic?.spread ?? null
+      const roic = d?.scores?.roic?.roic ?? null
+      const upside = appUpside(d)
+      const fair = appFairValue(d)
+      const price = d?.quote?.price
+      const fwdPE = d?.analystForwardPE ?? null
+      const analyst1y = d?.cagrAnalysis?.analystEstimate1y ?? null
+      if (!roicSpread || roicSpread < 0.05 || !upside || upside < 0.05 || !price || !fair) return
+      // ROIC spread > 5pp AND model sees upside
+      scored.push({ ticker, roicSpread, roic, upside, fair, price, fwdPE, analyst1y, d })
+    } catch { /* skip */ }
+  }))
+
+  if (scored.length < 3) { console.warn('high_roic_cheap: not enough data'); return }
+  // Sort by combined score: roicSpread * upside (both matter equally)
+  scored.sort((a, b) => (b.roicSpread * b.upside) - (a.roicSpread * a.upside))
+  const top = scored.slice(0, 5)
+  const leader = top[0]
+  const question = LIST_QUESTIONS_BULLISH[dayOfYear % LIST_QUESTIONS_BULLISH.length]
+
+  const lines = [
+    `High ROIC + trading below fair value. The rarest combination in large caps.`,
+    ``,
+    `Most investors find one or the other. Both at once is where the real opportunity is.`,
+    ``,
+    ...top.map((s, i) => {
+      const roicStr = `ROIC +${(s.roicSpread*100).toFixed(0)}pp above cost of capital`
+      const upsideStr = `${(s.upside*100).toFixed(0)}% below model fair value`
+      return `${i+1}. $${s.ticker} — ${roicStr} · ${upsideStr}`
+    }),
+    ``,
+    `$${leader.ticker} is the standout: ${(leader.roicSpread*100).toFixed(0)}pp ROIC spread and still ${(leader.upside*100).toFixed(0)}% below our fair value estimate.`,
+    ``,
+    question,
+    ``,
+    `#ROIC #ValueInvesting #Compounders #Investing`,
+  ]
+  await post(lines.join('\n'))
+}
+
+// ─── Mode: dividend_value ─────────────────────────────────────────────────────
+// High dividend yield + undervalued by model + sustainable payout.
+// Income + value in one list — bookmarkable.
+
+async function runDividendValue() {
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+  const DIV_POOL = [
+    'JNJ','PG','KO','PEP','MMM','T','VZ','MO','PM','MCD',
+    'XOM','CVX','ABT','ABBV','MRK','BMY','LMT','RTX','NEE','D',
+    'O','SCHD','VYM','V','MA','JPM','BAC','WMT','HD','COST',
+  ]
+
+  const scored = []
+  await Promise.all(DIV_POOL.map(async ticker => {
+    try {
+      const d = await fetchValuation(ticker)
+      const divYield = d?.quote?.dividendYield ?? null
+      const payoutRatio = d?.quote?.payoutRatio ?? null
+      const upside = appUpside(d)
+      const fair = appFairValue(d)
+      const price = d?.quote?.price
+      const fcfMargin = d?.businessProfile?.fcfMargin ?? null
+      if (!divYield || divYield < 0.015 || !price) return
+      if (payoutRatio != null && payoutRatio > 0.85) return // unsustainable payout
+      if (fcfMargin != null && fcfMargin < 0.05) return // not generating enough cash
+      scored.push({ ticker, divYield, payoutRatio, upside, fair, price, fcfMargin })
+    } catch { /* skip */ }
+  }))
+
+  if (scored.length < 4) { console.warn('dividend_value: not enough data'); return }
+  // Sort by dividend yield × (1 + upside) — rewards both income and value
+  scored.sort((a, b) => {
+    const aScore = a.divYield * (1 + Math.max(0, a.upside ?? 0))
+    const bScore = b.divYield * (1 + Math.max(0, b.upside ?? 0))
+    return bScore - aScore
+  })
+  const top = scored.slice(0, 6)
+  const leader = top[0]
+  const question = LIST_QUESTIONS_BULLISH[dayOfYear % LIST_QUESTIONS_BULLISH.length]
+
+  const lines = [
+    `High yield + undervalued by our model. Rare combination.`,
+    ``,
+    ...top.map((s, i) => {
+      const yieldStr = `${(s.divYield*100).toFixed(1)}% yield`
+      const modelNote = s.upside != null
+        ? ` · model ${s.upside >= 0 ? '+' : ''}${(s.upside*100).toFixed(0)}%`
+        : ''
+      const payoutNote = s.payoutRatio != null ? ` · ${(s.payoutRatio*100).toFixed(0)}% payout` : ''
+      return `${i+1}. $${s.ticker} — ${yieldStr}${payoutNote}${modelNote}`
+    }),
+    ``,
+    `$${leader.ticker} leads: ${(leader.divYield*100).toFixed(1)}% yield${leader.upside != null && leader.upside > 0.05 ? ` and ${(leader.upside*100).toFixed(0)}% below our fair value estimate` : ''}. ${leader.payoutRatio != null && leader.payoutRatio < 0.6 ? 'Payout ratio is sustainable.' : ''}`,
+    ``,
+    question,
+    ``,
+    `#Dividends #IncomeInvesting #ValueInvesting #Stocks`,
+  ]
+  await post(lines.join('\n'))
+}
+
+// ─── Mode: weekly_followup ────────────────────────────────────────────────────
+// Follow-up on a stock that was featured last week.
+// "Last week we said $X was undervalued at $Y. Here's what happened."
+// Drives return visits and builds credibility over time.
+
+const FOLLOWUP_TICKERS_BY_WEEK = [
+  ['MSFT','META','GOOGL'],  // week 0
+  ['NVDA','AAPL','AMZN'],   // week 1
+  ['JPM','V','MA'],         // week 2
+  ['LLY','UNH','ABBV'],     // week 3
+  ['XOM','CVX','COP'],      // week 4
+  ['AMD','INTC','QCOM'],    // week 5
+  ['COST','WMT','HD'],      // week 6
+  ['CRM','NOW','ADBE'],     // week 7
+]
+
+async function runWeeklyFollowup() {
+  const weekOfYear = Math.floor(Date.now() / (86400000 * 7))
+  const tickers = FOLLOWUP_TICKERS_BY_WEEK[weekOfYear % FOLLOWUP_TICKERS_BY_WEEK.length]
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+  // Pick one ticker from this week's group
+  const ticker = tickers[dayOfYear % tickers.length]
+
+  let data = null
+  try { data = await fetchValuation(ticker) } catch { console.warn('weekly_followup: no data'); return }
+
+  const price = data?.quote?.price
+  const fair = appFairValue(data)
+  const upside = appUpside(data)
+  const impliedG = data?.valuationMethods?.models?.reverseDcf?.impliedCAGR
+  const hist3y = data?.cagrAnalysis?.historicalCagr3y
+  const analystTarget = data?.quote?.analystTargetMean
+  const { bear, bull } = appScenarios(data)
+  const roicSpread = data?.scores?.roic?.spread ?? null
+
+  if (!price || !fair) { console.warn('weekly_followup: insufficient data'); return }
+
+  const hist = historicalContext(data, ticker)
+  const v = verdictLabel(upside ?? 0)
+
+  const performanceNote = (() => {
+    const stock1y = data?.holdingReturns?.stock1y
+    const spy1y = data?.holdingReturns?.spy1y
+    if (stock1y != null && spy1y != null) {
+      const diff = (stock1y - spy1y) * 100
+      return diff > 5 ? `Up ${(stock1y*100).toFixed(0)}% in the past year — ${diff.toFixed(0)}pp ahead of the S&P.`
+        : diff < -5 ? `Down ${Math.abs((stock1y*100)).toFixed(0)}% YTD — ${Math.abs(diff).toFixed(0)}pp behind the S&P.`
+        : `Roughly in line with the S&P this year.`
+    }
+    return null
+  })()
+
+  const lines = [
+    `Checking back on $${ticker} — one of the most-discussed stocks on this account.`,
+    ``,
+    `${v.emoji} Currently at ${fmt(price)}. Our model puts fair value at ${fmt(fair)} (${pct(upside)} ${(upside ?? 0) > 0 ? 'upside' : 'premium'}).`,
+    impliedG != null ? `Market is pricing in ~${pct(impliedG, false)}/yr growth.${hist3y != null ? ` Historical pace: ${pct(hist3y, false)}.` : ''}` : null,
+    validScenarios(bear, bull, fair) ? `Scenario range: ${fmt(bear)} bear → ${fmt(bull)} bull.` : null,
+    roicSpread != null ? `ROIC spread: ${roicSpread >= 0 ? '+' : ''}${(roicSpread*100).toFixed(0)}pp above cost of capital.` : null,
+    analystTarget ? `${data?.cagrAnalysis?.numAnalysts ?? '?'} analysts have a ${fmt(analystTarget)} target.` : null,
+    hist,
+    performanceNote,
+    ``,
+    `Has the story changed, or is this still the same setup?`,
+    ``,
+    `insic.app/stock/${ticker}`,
+    `$${ticker} #Stocks #DCF #ValueInvesting`,
+  ].filter(Boolean)
+
+  await post(lines.join('\n'))
+}
+
+// ─── Mode: quality_rank ───────────────────────────────────────────────────────
+// Combined quality ranking: ROIC + FCF margin + gross margin + Piotroski.
+// "Best quality businesses at current prices" — bookmarkable.
+
+async function runQualityRank() {
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+  const sliceStart = (dayOfYear * 23) % (BROAD_POOL.length - 25)
+  const pool = BROAD_POOL.slice(sliceStart, sliceStart + 25)
+
+  const scored = []
+  await Promise.all(pool.map(async ticker => {
+    try {
+      const d = await fetchValuation(ticker)
+      const roicSpread = d?.scores?.roic?.spread ?? null
+      const fcfMargin = d?.businessProfile?.fcfMargin ?? null
+      const grossMargin = d?.businessProfile?.grossMargin ?? null
+      const piotroski = d?.scores?.piotroski?.score ?? null
+      const price = d?.quote?.price
+      const upside = appUpside(d)
+      const fair = appFairValue(d)
+      if (!price || roicSpread == null || fcfMargin == null) return
+      // Composite quality score (0-100)
+      const roicScore = Math.min(100, Math.max(0, (roicSpread + 0.05) / 0.30 * 40))
+      const fcfScore  = Math.min(100, Math.max(0, fcfMargin / 0.35 * 30))
+      const gmScore   = grossMargin != null ? Math.min(100, Math.max(0, grossMargin / 0.70 * 20)) : 10
+      const pioScore  = piotroski != null ? (piotroski / 9) * 10 : 5
+      const qualScore = roicScore + fcfScore + gmScore + pioScore
+      scored.push({ ticker, qualScore, roicSpread, fcfMargin, grossMargin, piotroski, upside, fair, price })
+    } catch { /* skip */ }
+  }))
+
+  if (scored.length < 4) { console.warn('quality_rank: not enough data'); return }
+  scored.sort((a, b) => b.qualScore - a.qualScore)
+  const top = scored.slice(0, 5)
+  const leader = top[0]
+  const question = LIST_QUESTIONS_MIXED[dayOfYear % LIST_QUESTIONS_MIXED.length]
+
+  const lines = [
+    `Quality ranking: ROIC, FCF margin, gross margin, and financial momentum combined.`,
+    ``,
+    ...top.map((s, i) => {
+      const roicStr = `ROIC +${(s.roicSpread*100).toFixed(0)}pp`
+      const fcfStr = `FCF ${(s.fcfMargin*100).toFixed(0)}%`
+      const modelNote = s.upside != null ? ` · model ${s.upside >= 0 ? '+' : ''}${(s.upside*100).toFixed(0)}%` : ''
+      return `${i+1}. $${s.ticker} — ${roicStr} · ${fcfStr}${modelNote}`
+    }),
+    ``,
+    `$${leader.ticker} scores highest. ${leader.upside != null && leader.upside > 0.08 ? `And it's still ${(leader.upside*100).toFixed(0)}% below our fair value estimate. Quality at a discount.` : leader.upside != null && leader.upside < -0.08 ? `But it's ${Math.abs((leader.upside*100)).toFixed(0)}% above our fair value. Quality has a price.` : `Trading near fair value.`}`,
+    ``,
+    question,
+    ``,
+    `#Quality #ROIC #ValueInvesting #Stocks`,
+  ]
+  await post(lines.join('\n'))
+}
+
 const MODES = {
   dcf:               runDcf,
   dcf2:              runDcf2,
@@ -7844,7 +8323,15 @@ const MODES = {
   ytd_losers:         runYtdLosers,
   ytd_winners:        runYtdWinners,
   near_52w_high:      runNear52wHigh,
-  most_shorted:         runMostShorted,
+  most_shorted:             runMostShorted,
+  lowest_pe:                runLowestPe,
+  lowest_peg:               runLowestPeg,
+  analyst_top_buys:         runAnalystTopBuys,
+  highest_upside_consensus: runHighestUpsideConsensus,
+  high_roic_cheap:          runHighRoicCheap,
+  dividend_value:           runDividendValue,
+  weekly_followup:          runWeeklyFollowup,
+  quality_rank:             runQualityRank,
   etf_vs_etf:           runEtfVsEtf,
   profit_forecast_list: runProfitForecastList,
   etf_ratio_breakdown:  runEtfRatioBreakdown,
