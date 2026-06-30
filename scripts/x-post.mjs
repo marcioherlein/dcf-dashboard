@@ -1347,7 +1347,10 @@ async function runWeeklyWrap() {
     }))
     .filter(s => s.price && s.fair)
 
-  if (stocks.length === 0) throw new Error('No valuation data for weekly wrap')
+  if (stocks.length === 0) {
+    console.warn('No valuation data for weekly wrap — skipping')
+    return  // exit 0, not a crash
+  }
 
   // Sort: most undervalued first, most overvalued last — shows the spread
   stocks.sort((a, b) => (b.upside ?? 0) - (a.upside ?? 0))
@@ -8653,15 +8656,485 @@ async function runMorningStockPick() {
   await post(lines.join('\n'))
 }
 
+// ─── Mode: calendar_today ─────────────────────────────────────────────────────
+// What's on the economic/earnings calendar today + what it means for stocks.
+
+async function runCalendarToday() {
+  const todayUtc = new Date().toISOString().split('T')[0]
+
+  // Check MACRO_CALENDAR for today
+  const macroToday = MACRO_CALENDAR.filter(e => e.date === todayUtc)
+
+  // Scan for earnings today from SP500_SAMPLE
+  const earningsToday = []
+  for (let i = 0; i < SP500_SAMPLE.length; i += 8) {
+    const batch = SP500_SAMPLE.slice(i, i + 8)
+    const settled = await Promise.allSettled(batch.map(async t => {
+      const res = await fetch(
+        `https://query1.finance.yahoo.com/v8/finance/chart/${t}?interval=1d&range=1d`,
+        { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(6000) }
+      ).catch(() => null)
+      if (!res?.ok) return null
+      const json = await res.json().catch(() => null)
+      const meta = json?.chart?.result?.[0]?.meta
+      if (!meta?.earningsTimestampStart) return null
+      if ((meta.marketCap ?? 0) < 5_000_000_000) return null
+      const d = new Date(meta.earningsTimestampStart * 1000).toISOString().split('T')[0]
+      return d === todayUtc ? { symbol: t, marketCap: meta.marketCap } : null
+    }))
+    for (const r of settled) if (r.status === 'fulfilled' && r.value) earningsToday.push(r.value)
+    if (i + 8 < SP500_SAMPLE.length) await new Promise(r => setTimeout(r, 300))
+  }
+  earningsToday.sort((a, b) => b.marketCap - a.marketCap)
+
+  if (macroToday.length === 0 && earningsToday.length === 0) {
+    console.log(`No calendar events for ${todayUtc} — skipping`)
+    process.exit(0)
+  }
+
+  const dayLabel = new Date(todayUtc + 'T12:00:00Z').toLocaleDateString('en-US', {
+    weekday: 'long', month: 'short', day: 'numeric',
+  })
+
+  const lines = [`What's moving markets today — ${dayLabel}`, ``]
+
+  if (macroToday.length > 0) {
+    const macroImpact = {
+      FOMC: `Fed rate decision. Whatever they decide, the dot plot and Powell's guidance on cut timing matters more than the headline number. Any shift in the rate path reprices WACC on every stock in your watchlist.`,
+      CPI:  `Inflation data. Watch the core print — that's what actually moves the Fed's calculus. Above consensus = rates stay elevated, DCF fair values compress. Below = path to cuts opens, especially for growth names.`,
+      NFP:  `Jobs report. Strong = Fed stays on hold, discount rates stay high. Weak = cuts are coming, growth stocks benefit. Don't ignore the prior month revision — it often changes the story.`,
+    }
+    for (const e of macroToday) {
+      const emoji = { FOMC: '🏦', CPI: '📊', NFP: '💼' }[e.type] ?? '📅'
+      lines.push(`${emoji} ${e.label}`)
+      if (macroImpact[e.type]) lines.push(macroImpact[e.type])
+      lines.push(``)
+    }
+  }
+
+  if (earningsToday.length > 0) {
+    const names = earningsToday.slice(0, 5).map(t => `$${t.symbol}`)
+    lines.push(`📊 Earnings today: ${names.join(' · ')}`)
+    lines.push(`Beat or miss matters less than whether the result justifies the valuation. Run the model before the print, not after.`)
+    lines.push(``)
+  }
+
+  lines.push(`The calendar tells you when. The model tells you what it's worth.`)
+  lines.push(`#Earnings #Macro #Markets #Investing`)
+
+  await post(lines.join('\n'))
+}
+
+// ─── Mode: calendar_tomorrow ──────────────────────────────────────────────────
+// What to watch tomorrow — macro events + earnings + why it matters.
+
+async function runCalendarTomorrow() {
+  const tomorrowUtc = new Date(Date.now() + 86400000).toISOString().split('T')[0]
+  // Skip weekend: advance to Monday if tomorrow is Saturday/Sunday
+  const tomorrowDay = new Date(tomorrowUtc).getUTCDay()
+  let targetDate = tomorrowUtc
+  if (tomorrowDay === 6) targetDate = new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0]
+  else if (tomorrowDay === 0) targetDate = new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0]
+
+  const macroTomorrow = MACRO_CALENDAR.filter(e => e.date === targetDate)
+
+  // Scan for earnings tomorrow
+  const earningsTomorrow = []
+  for (let i = 0; i < SP500_SAMPLE.length; i += 8) {
+    const batch = SP500_SAMPLE.slice(i, i + 8)
+    const settled = await Promise.allSettled(batch.map(async t => {
+      const res = await fetch(
+        `https://query1.finance.yahoo.com/v8/finance/chart/${t}?interval=1d&range=1d`,
+        { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(6000) }
+      ).catch(() => null)
+      if (!res?.ok) return null
+      const json = await res.json().catch(() => null)
+      const meta = json?.chart?.result?.[0]?.meta
+      if (!meta?.earningsTimestampStart) return null
+      if ((meta.marketCap ?? 0) < 5_000_000_000) return null
+      const d = new Date(meta.earningsTimestampStart * 1000).toISOString().split('T')[0]
+      return d === targetDate ? { symbol: t, marketCap: meta.marketCap } : null
+    }))
+    for (const r of settled) if (r.status === 'fulfilled' && r.value) earningsTomorrow.push(r.value)
+    if (i + 8 < SP500_SAMPLE.length) await new Promise(r => setTimeout(r, 300))
+  }
+  earningsTomorrow.sort((a, b) => b.marketCap - a.marketCap)
+
+  if (macroTomorrow.length === 0 && earningsTomorrow.length === 0) {
+    console.log(`No calendar events for ${targetDate} — skipping`)
+    process.exit(0)
+  }
+
+  const dayLabel = new Date(targetDate + 'T12:00:00Z').toLocaleDateString('en-US', {
+    weekday: 'long', month: 'short', day: 'numeric',
+  })
+
+  const lines = [`What to watch tomorrow — ${dayLabel}`, ``]
+
+  if (macroTomorrow.length > 0) {
+    const context = {
+      FOMC: `The Fed decision is the single most market-moving event of any quarter. Markets will start positioning today. The rate number itself is usually priced in — the surprise lives in the dot plot and language around cuts.`,
+      CPI:  `Inflation report tomorrow. A hot print = rates stay elevated, WACC stays high, growth stock fair values stay compressed. A cool print = door opens to cuts, discount rates fall. Both scenarios update every DCF model you run.`,
+      NFP:  `Jobs report tomorrow. Strong payrolls keep the Fed on hold. Weak payrolls pull rate cuts closer. The prior month revision frequently changes the interpretation of the headline.`,
+    }
+    for (const e of macroTomorrow) {
+      const emoji = { FOMC: '🏦', CPI: '📊', NFP: '💼' }[e.type] ?? '📅'
+      lines.push(`${emoji} ${e.label} — tomorrow`)
+      if (context[e.type]) lines.push(context[e.type])
+      lines.push(``)
+    }
+  }
+
+  if (earningsTomorrow.length > 0) {
+    const names = earningsTomorrow.slice(0, 5).map(t => `$${t.symbol}`)
+    lines.push(`📊 Reporting tomorrow: ${names.join(' · ')}`)
+    lines.push(`The best time to run the pre-earnings model is now — before the noise. What growth rate does the current price already assume?`)
+    lines.push(``)
+  }
+
+  lines.push(`Why it matters for investors: calendars move prices in the short term. Fundamentals determine value in the long term. Know which you're trading.`)
+  lines.push(`#Calendar #Earnings #Macro #Investing`)
+
+  await post(lines.join('\n'))
+}
+
+// ─── Mode: macro_preview ──────────────────────────────────────────────────────
+// Deep dive on the next upcoming CPI/NFP/FOMC event.
+
+async function runMacroPreview() {
+  const todayUtc = new Date().toISOString().split('T')[0]
+
+  // Find the next upcoming event — prefer CPI/NFP/FOMC in that priority for depth
+  const upcoming = MACRO_CALENDAR
+    .filter(e => e.date > todayUtc)
+    .sort((a, b) => a.date.localeCompare(b.date))
+
+  if (upcoming.length === 0) {
+    console.log('No upcoming macro events found — skipping')
+    process.exit(0)
+  }
+
+  // Pick the soonest event
+  const next = upcoming[0]
+  const daysAway = Math.round((new Date(next.date) - new Date(todayUtc)) / 86400000)
+
+  const eventDate = new Date(next.date + 'T12:00:00Z').toLocaleDateString('en-US', {
+    weekday: 'long', month: 'short', day: 'numeric',
+  })
+
+  const typeEmoji = { CPI: '📊', NFP: '💼', FOMC: '🏦' }
+  const hookMap = {
+    CPI:  `CPI drops in ${daysAway} day${daysAway !== 1 ? 's' : ''}. Here's what matters:`,
+    NFP:  `Jobs report in ${daysAway} day${daysAway !== 1 ? 's' : ''}. Here's what's at stake:`,
+    FOMC: `Fed decision in ${daysAway} day${daysAway !== 1 ? 's' : ''}. Here's what actually moves markets:`,
+  }
+
+  const expectationsMap = {
+    CPI: `What consensus expects: core CPI near 0.3% month-over-month. A beat (above 0.4%) keeps rates elevated. A miss (below 0.2%) opens the door to earlier cuts.`,
+    NFP: `What consensus expects: ~150–200K new jobs. Above 250K = Fed stays on hold well into the year. Below 100K = rate cuts move up the calendar.`,
+    FOMC: `What consensus expects: no change at this meeting. The real signal is the dot plot — how many cuts are projected for the year — and any shift in Powell's language on the timing.`,
+  }
+
+  const beatMissMap = {
+    CPI: {
+      beat: `Beat (hot print): yields spike, WACC rises, fair values across the market compress. Growth stocks — especially long-duration tech — take the biggest hit. A 1% rise in WACC reduces a typical growth stock's fair value by 15–25%.`,
+      miss: `Miss (cool print): yields fall, rate cut expectations accelerate, discount rates drop. Growth stocks and REITs benefit most. The sectors most sensitive: tech, utilities, and real estate.`,
+      sectors: `Rate relief benefits: tech, utilities, REITs. Higher-for-longer benefits: financials (NIM expansion), energy (demand signal).`,
+    },
+    NFP: {
+      beat: `Beat (strong jobs): Fed stays on hold. High rates for longer = pressure on rate-sensitive sectors. Financials benefit from margin expansion. Consumer discretionary benefits from employment strength.`,
+      miss: `Miss (weak jobs): cuts come sooner. Lower discount rates lift growth stocks and REITs. But a weak labor market also signals slower consumer spending — watch retail and consumer discretionary.`,
+      sectors: `Jobs beat benefits: banks, consumer discretionary, industrials. Jobs miss benefits: tech growth names, utilities, REITs.`,
+    },
+    FOMC: {
+      beat: `Hawkish surprise (hold or hike): yields rise, WACC rises, growth stocks reprice lower. Value and dividend names are relatively insulated — their near-term cash flows discount less.`,
+      miss: `Dovish surprise (cut or dovish tone): yields fall, growth stocks rally. But if markets already priced in cuts, the real alpha comes from stocks where fair value hasn't caught up to the new rate regime yet.`,
+      sectors: `Dovish outcome benefits: long-duration growth (tech), REITs, utilities. Hawkish outcome benefits: banks, insurance, short-duration value stocks.`,
+    },
+  }
+
+  const detail = expectationsMap[next.type] ?? `${next.label} is ${daysAway} days away.`
+  const beat = beatMissMap[next.type]?.beat ?? ''
+  const miss = beatMissMap[next.type]?.miss ?? ''
+  const sectors = beatMissMap[next.type]?.sectors ?? ''
+
+  const lines = [
+    `${typeEmoji[next.type] ?? '📅'} ${hookMap[next.type] ?? `${next.label} in ${daysAway} days:`}`,
+    ``,
+    detail,
+    ``,
+    `Beat: ${beat}`,
+    ``,
+    `Miss: ${miss}`,
+    ``,
+    sectors ? sectors : null,
+    ``,
+    `The number moves prices for a day. The rate path it implies moves valuations for a year.`,
+    `#${next.type} #Macro #FedWatch #Rates #Investing`,
+  ].filter(Boolean)
+
+  await post(lines.join('\n'))
+}
+
+// ─── Mode: rate_impact ────────────────────────────────────────────────────────
+// How current interest rates affect stock valuations — illustrated with
+// 3 rate-sensitive stocks (REIT, tech, utility).
+
+async function runRateImpact() {
+  // Fetch 10Y yield from Yahoo Finance
+  const tnx = await fetchYahooChart('^TNX').catch(() => null)
+
+  if (!tnx || !isFinite(tnx.price)) {
+    console.warn('Could not fetch 10Y yield — skipping')
+    process.exit(0)
+  }
+
+  const yieldNow = tnx.price
+  const yieldDir = tnx.changePct > 0.3 ? 'rising' : tnx.changePct < -0.3 ? 'falling' : 'steady'
+
+  // Rate-sensitive picks: REIT, growth tech, utility
+  const RATE_TICKERS = ['PLD', 'MSFT', 'NEE'] // industrial REIT, tech, utility
+  const results = await Promise.allSettled(RATE_TICKERS.map(t => fetchValuation(t)))
+  const stocks = results
+    .map((r, i) => r.status === 'fulfilled' && r.value ? { ticker: RATE_TICKERS[i], data: r.value } : null)
+    .filter(Boolean)
+    .map(({ ticker, data }) => ({
+      ticker,
+      price:  data.quote?.price,
+      fair:   appFairValue(data),
+      upside: appUpside(data),
+      wacc:   data.wacc?.wacc,
+      sector: data.quote?.sector ?? '',
+      data,
+    }))
+    .filter(s => s.price && s.fair)
+
+  if (stocks.length === 0) {
+    console.warn('No rate-sensitive stock data — skipping')
+    process.exit(0)
+  }
+
+  const waccNote = yieldNow >= 4.5
+    ? `At ${yieldNow.toFixed(2)}%, the 10Y yield is above the level where it meaningfully compresses growth stock valuations. A 4.5%+ risk-free rate pushes WACC up, which reduces DCF fair values — particularly for long-duration growth.`
+    : yieldNow >= 4.0
+    ? `At ${yieldNow.toFixed(2)}%, the 10Y yield is in mid-range. Direction matters more than level here — a move toward 4.5% would begin to pressure growth stock valuations.`
+    : `At ${yieldNow.toFixed(2)}%, the 10Y yield is relatively benign for equity valuations. Lower rates reduce WACC and lift DCF fair values, especially for long-duration assets.`
+
+  const stockLines = stocks.flatMap(s => {
+    const waccStr = s.wacc != null ? ` WACC: ${(s.wacc * 100).toFixed(1)}%.` : ''
+    const upsideStr = s.upside != null ? ` Model: ${pct(s.upside)} vs price.` : ''
+    const label = s.sector.includes('Real Estate') ? 'REIT'
+      : s.sector.includes('Utilities') ? 'Utility'
+      : s.sector.includes('Technology') ? 'Growth tech' : s.sector
+    return [`$${s.ticker} (${label}):${waccStr}${upsideStr}`]
+  })
+
+  const lines = [
+    `10Y yield ${yieldNow.toFixed(2)}% and ${yieldDir}. Here's what that means for valuations:`,
+    ``,
+    waccNote,
+    ``,
+    `Rule of thumb: a 1% rise in the 10Y yield increases WACC by roughly 0.6–0.8% for most stocks. For a growth stock with 70% of value in the terminal period, that can cut fair value by 20–30%.`,
+    ``,
+    `3 rate-sensitive names and where the model stands:`,
+    ``,
+    ...stockLines,
+    ``,
+    `Growth stocks (long duration) feel rate moves most. Value stocks and dividend payers are relatively insulated — their near-term cash flows discount less.`,
+    ``,
+    `#InterestRates #WACC #DCF #Bonds #Investing`,
+  ].filter(Boolean)
+
+  await post(lines.join('\n'))
+}
+
+// ─── Mode: sector_catalyst ────────────────────────────────────────────────────
+// Upcoming catalysts for a rotating sector — earnings + macro + valuation.
+
+const SECTOR_ROTATION_WEEKLY = [
+  { sym: 'XLK', name: 'Tech',        tickers: ['AAPL','MSFT','NVDA','GOOGL','META'] },
+  { sym: 'XLF', name: 'Financials',  tickers: ['JPM','BAC','GS','V','MA'] },
+  { sym: 'XLV', name: 'Healthcare',  tickers: ['UNH','LLY','JNJ','ABBV','MRK'] },
+  { sym: 'XLE', name: 'Energy',      tickers: ['XOM','CVX','COP','SLB','EOG'] },
+  { sym: 'XLU', name: 'Utilities',   tickers: ['NEE','DUK','SO','AEP','EXC'] },
+  { sym: 'XLI', name: 'Industrials', tickers: ['HON','GE','CAT','RTX','UPS'] },
+]
+
+async function runSectorCatalyst() {
+  const weekOfYear = Math.floor((Date.now() / 86400000 + 4) / 7)
+  const sector = SECTOR_ROTATION_WEEKLY[weekOfYear % SECTOR_ROTATION_WEEKLY.length]
+
+  const todayUtc = new Date().toISOString().split('T')[0]
+
+  // Get current week's Mon–Fri dates
+  const now = new Date()
+  const dow = now.getUTCDay()
+  const monday = new Date(now)
+  monday.setUTCDate(now.getUTCDate() - (dow === 0 ? 6 : dow - 1))
+  monday.setUTCHours(0, 0, 0, 0)
+  const weekDates = new Set(
+    Array.from({ length: 5 }, (_, i) => {
+      const d = new Date(monday)
+      d.setUTCDate(monday.getUTCDate() + i)
+      return d.toISOString().split('T')[0]
+    })
+  )
+
+  // Scan sector tickers for earnings this week
+  const earningsThisWeek = []
+  for (const t of sector.tickers) {
+    try {
+      const res = await fetch(
+        `https://query1.finance.yahoo.com/v8/finance/chart/${t}?interval=1d&range=1d`,
+        { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(6000) }
+      ).catch(() => null)
+      if (!res?.ok) continue
+      const json = await res.json().catch(() => null)
+      const meta = json?.chart?.result?.[0]?.meta
+      if (!meta?.earningsTimestampStart) continue
+      const d = new Date(meta.earningsTimestampStart * 1000).toISOString().split('T')[0]
+      if (weekDates.has(d)) earningsThisWeek.push({ symbol: t, date: d, marketCap: meta.marketCap ?? 0 })
+    } catch { /* skip */ }
+    await new Promise(r => setTimeout(r, 250))
+  }
+
+  // Macro events this week relevant to this sector
+  const macroThisWeek = MACRO_CALENDAR.filter(e => weekDates.has(e.date))
+
+  // Fetch ETF performance
+  const etf = await fetchYahooChart(sector.sym).catch(() => null)
+
+  // Fetch valuation for the largest name in sector
+  let featuredData = null
+  let featuredTicker = null
+  for (const t of sector.tickers) {
+    try {
+      const d = await fetchValuation(t)
+      if (d?.quote?.price && appFairValue(d)) { featuredData = d; featuredTicker = t; break }
+    } catch { /* try next */ }
+  }
+
+  if (!etf && !featuredData) {
+    console.warn('No sector catalyst data — skipping')
+    process.exit(0)
+  }
+
+  const etfStr = etf
+    ? `${sector.name} ETF (${sector.sym}): ${etf.changePct >= 0 ? '+' : ''}${etf.changePct.toFixed(2)}% today`
+    : null
+
+  const valuationStr = featuredData && featuredTicker
+    ? (() => {
+        const fair   = appFairValue(featuredData)
+        const upside = appUpside(featuredData)
+        const price  = featuredData.quote?.price
+        const impliedG = featuredData.valuationMethods?.models?.reverseDcf?.impliedCAGR
+        if (impliedG != null) return `$${featuredTicker} at ${fmt(price)} prices in ~${pct(impliedG, false)}/yr growth. Model sees ${pct(upside)}.`
+        return `$${featuredTicker}: price ${fmt(price)}, model fair value ${fmt(fair)} (${pct(upside)}).`
+      })()
+    : null
+
+  const earningsStr = earningsThisWeek.length > 0
+    ? `Earnings this week: ${earningsThisWeek.map(e => `$${e.symbol}`).join(' · ')}`
+    : null
+
+  const macroStr = macroThisWeek.length > 0
+    ? `Macro this week: ${macroThisWeek.map(e => e.label).join(' · ')}`
+    : null
+
+  const lines = [
+    `${sector.name} sector — what's in play this week`,
+    ``,
+    ...(etfStr ? [etfStr] : []),
+    ...(earningsStr ? [earningsStr] : []),
+    ...(macroStr ? [macroStr] : []),
+    ``,
+    ...(valuationStr ? [valuationStr] : []),
+    ``,
+    `Catalysts move the price. Valuation determines whether the move is justified.`,
+    `#${sector.name.replace(/\s/g, '')} #SectorRotation #Earnings #Investing`,
+  ].filter(Boolean)
+
+  await post(lines.join('\n'))
+}
+
+// ─── Mode: earnings_surprise_hist ─────────────────────────────────────────────
+// Stocks with the best historical EPS surprise rate from our /api/financials data.
+
+async function runEarningsSurpriseHist() {
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+  const sliceStart = (dayOfYear * 11) % Math.max(1, BROAD_POOL.length - 20)
+  const pool = BROAD_POOL.slice(sliceStart, sliceStart + 20)
+
+  const candidates = []
+  await Promise.all(pool.map(async ticker => {
+    try {
+      const d = await fetchValuation(ticker)
+      const surprises = d?.earningsSurprises ?? []
+      if (surprises.length < 4) return
+      const beatCount = surprises.filter(s => (s.surprisePercent ?? 0) > 0).length
+      const beatRate  = beatCount / surprises.length
+      if (beatRate < 0.60) return
+      const avgSurprise = surprises.reduce((sum, s) => sum + (s.surprisePercent ?? 0), 0) / surprises.length
+      const price  = d?.quote?.price
+      const fair   = appFairValue(d)
+      const upside = appUpside(d)
+      const impliedG = d?.valuationMethods?.models?.reverseDcf?.impliedCAGR
+      candidates.push({ ticker, beatRate, beatCount, total: surprises.length, avgSurprise, price, fair, upside, impliedG, d })
+    } catch { /* skip */ }
+  }))
+
+  if (candidates.length < 2) {
+    console.warn('Not enough earnings surprise data — skipping')
+    process.exit(0)
+  }
+
+  candidates.sort((a, b) => b.beatRate - a.beatRate || b.avgSurprise - a.avgSurprise)
+  const top = candidates.slice(0, 4)
+
+  const question = LIST_QUESTIONS_BULLISH[dayOfYear % LIST_QUESTIONS_BULLISH.length]
+
+  const stockLines = top.flatMap(s => {
+    const valStr = s.price && s.fair
+      ? ` Model: ${pct(s.upside)} vs price.`
+      : ''
+    const impliedStr = s.impliedG != null ? ` Market pricing in ~${pct(s.impliedG, false)}/yr growth.` : ''
+    return [
+      `$${s.ticker} — beat ${s.beatCount}/${s.total} quarters (avg surprise ${s.avgSurprise >= 0 ? '+' : ''}${s.avgSurprise.toFixed(1)}%)${valStr}${impliedStr}`,
+    ]
+  })
+
+  const leader = top[0]
+  const lines = [
+    `These companies beat earnings estimates most consistently:`,
+    ``,
+    ...stockLines,
+    ``,
+    `Beat rate matters, but what matters more is whether consistent execution is already in the price. A stock that always beats can still be overvalued if the market's grown used to it.`,
+    ``,
+    question,
+    ``,
+    `#Earnings #EPS #Surprises #Investing #DCF`,
+  ].filter(Boolean)
+
+  await post(lines.join('\n'))
+}
+
 Object.assign(MODES, {
-  overvalued_list:        runOvervaluedList,
-  sector_pe_rank:         runSectorPeRank,
-  momentum_leaders:       runMomentumLeaders,
-  earnings_week_preview:  runEarningsWeekPreview,
-  value_vs_growth:        runValueVsGrowth,
-  cash_rich:              runCashRich,
-  daily_list_rotation:    runDailyListRotation,
-  morning_stock_pick:     runMorningStockPick,
+  overvalued_list:          runOvervaluedList,
+  sector_pe_rank:           runSectorPeRank,
+  momentum_leaders:         runMomentumLeaders,
+  earnings_week_preview:    runEarningsWeekPreview,
+  value_vs_growth:          runValueVsGrowth,
+  cash_rich:                runCashRich,
+  daily_list_rotation:      runDailyListRotation,
+  morning_stock_pick:       runMorningStockPick,
+  calendar_today:           runCalendarToday,
+  calendar_tomorrow:        runCalendarTomorrow,
+  macro_preview:            runMacroPreview,
+  rate_impact:              runRateImpact,
+  sector_catalyst:          runSectorCatalyst,
+  earnings_surprise_hist:   runEarningsSurpriseHist,
 })
 
 
