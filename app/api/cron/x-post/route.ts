@@ -23,6 +23,8 @@ const VALID_MODES = [
   'high_roic_cheap','dividend_value','weekly_followup','quality_rank',
   'overvalued_list','sector_pe_rank','momentum_leaders','earnings_week_preview',
   'value_vs_growth','cash_rich','daily_list_rotation','morning_stock_pick',
+  'calendar_today','calendar_tomorrow','macro_preview',
+  'rate_impact','sector_catalyst','earnings_surprise_hist',
 ]
 
 export async function GET(req: NextRequest) {

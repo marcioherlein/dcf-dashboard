@@ -45,8 +45,10 @@ function getWeekRange(offset = 0): { from: string; to: string; label: string } {
       ? `${fmt(monday)} – ${fmt(sunday)}, ${monday.getFullYear()}`
       : `${fmt(monday)}, ${monday.getFullYear()} – ${fmt(sunday)}, ${sunday.getFullYear()}`
 
-  // Return YYYY-MM-DD strings relative to the monday in ET
-  const toISO = (d: Date) => d.toISOString().split('T')[0]
+  // Return YYYY-MM-DD strings relative to the monday in ET.
+  // Use toLocaleDateString('en-CA') so the date string stays in local ET time
+  // rather than converting to UTC first (which can shift the day by -1 for ET offsets).
+  const toISO = (d: Date) => d.toLocaleDateString('en-CA', { timeZone: 'America/New_York' })
   return { from: toISO(monday), to: toISO(sunday), label }
 }
 
@@ -54,20 +56,12 @@ function inRange(dateStr: string, from: string, to: string): boolean {
   return dateStr >= from && dateStr <= to
 }
 
-function weekDays(from: string): Date[] {
-  return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(from + 'T00:00:00')
-    d.setDate(d.getDate() + i)
-    return d
-  })
-}
-
 function isToday(d: Date): boolean {
   const t = new Date()
   return d.getDate() === t.getDate() && d.getMonth() === t.getMonth() && d.getFullYear() === t.getFullYear()
 }
 
-function isWeekend(d: Date): boolean {
+function _isWeekend(d: Date): boolean {
   return d.getDay() === 0 || d.getDay() === 6
 }
 
@@ -105,111 +99,6 @@ function EmptyState({ message, icon }: { message: string; icon?: React.ReactNode
     <div role="status" className="flex flex-col items-center justify-center py-12 gap-2">
       <span className="text-[#C4C4C4]">{icon ?? <Calendar size={28} />}</span>
       <p className="text-[13px] text-[#6B6B6B] text-center max-w-[280px] leading-snug">{message}</p>
-    </div>
-  )
-}
-
-// ── Week Column Grid (All Events view) ───────────────────────────────────────
-
-interface WeekGridProps {
-  days: Date[]
-  earnings: EarningsItem[]
-  economic: EconomicEvent[]
-  splits: SplitItem[]
-  ipos: IpoItem[]
-  onSubTab: (tab: CalSub) => void
-}
-
-function _WeekGrid({ days, earnings, economic, splits, ipos, onSubTab }: WeekGridProps) {
-  const weekdays = days.filter(d => !isWeekend(d))
-
-  return (
-    <div className="overflow-x-auto">
-      <div className="grid min-w-[640px]" style={{ gridTemplateColumns: `repeat(${weekdays.length}, 1fr)` }}>
-        {weekdays.map(day => {
-          const iso = day.toISOString().split('T')[0]
-          const earningsDay = earnings.filter(e => e.date === iso)
-          const economicDay = economic.filter(e => e.date === iso)
-          const splitsDay   = splits.filter(e => e.date === iso)
-          const iposDay     = ipos.filter(e => e.date === iso)
-          const total = earningsDay.length + economicDay.length + splitsDay.length + iposDay.length
-          const today = isToday(day)
-
-          return (
-            <div
-              key={iso}
-              className={cn(
-                'border-r border-[#E5E5E5] last:border-r-0 p-3',
-                today && 'bg-[#FAFAFA]',
-              )}
-            >
-              {/* Day header */}
-              <div className="mb-3">
-                <div className={cn(
-                  'text-[11px] font-bold tracking-wide',
-                  today ? 'text-[#5F790B]' : 'text-[#111111]',
-                )}>
-                  {day.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()}
-                </div>
-                <div className={cn(
-                  'text-[11px] text-[#6B6B6B]',
-                )}>
-                  {day.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                </div>
-                {today && (
-                  <div className="mt-1 inline-block text-[9px] font-bold bg-[#5F790B] text-white px-1.5 py-0.5 rounded-sm tracking-wide">
-                    TODAY
-                  </div>
-                )}
-              </div>
-
-              {/* Event pills */}
-              {total === 0 ? (
-                <div className="text-[11px] text-[#C4C4C4]">—</div>
-              ) : (
-                <div className="flex flex-col gap-1.5">
-                  {economicDay.length > 0 && (
-                    <button
-                      onClick={() => onSubTab('economic')}
-                      className="flex items-center gap-1.5 px-2 py-1 rounded-md border border-[#FED7AA] bg-[#FFF7ED] text-[#B56A00] text-[11px] font-medium hover:bg-[#FFEDD5] transition-colors text-left"
-                    >
-                      <Landmark size={10} />
-                      <span>{economicDay.length} Economic</span>
-                    </button>
-                  )}
-                  {earningsDay.length > 0 && (
-                    <button
-                      onClick={() => onSubTab('earnings')}
-                      className="flex items-center gap-1.5 px-2 py-1 rounded-md border border-[#BFDBFE] bg-[#EFF6FF] text-[#2563EB] text-[11px] font-medium hover:bg-[#DBEAFE] transition-colors text-left"
-                    >
-                      <TrendingUp size={10} />
-                      <span>{earningsDay.length} Earnings</span>
-                    </button>
-                  )}
-                  {splitsDay.length > 0 && (
-                    <button
-                      onClick={() => onSubTab('splits')}
-                      className="flex items-center gap-1.5 px-2 py-1 rounded-md border border-[#BBF7D0] bg-[#ECFDF5] text-[#047857] text-[11px] font-medium hover:bg-[#D1FAE5] transition-colors text-left"
-                    >
-                      <Scissors size={10} />
-                      <span>{splitsDay.length} Splits</span>
-                    </button>
-                  )}
-                  {iposDay.length > 0 && (
-                    <button
-                      onClick={() => onSubTab('ipos')}
-                      className="flex items-center gap-1.5 px-2 py-1 rounded-md border border-[#E9D5FF] bg-[#FAF5FF] text-[#7C3AED] text-[11px] font-medium hover:bg-[#EDE9FE] transition-colors text-left"
-                    >
-                      <Rocket size={10} />
-                      <span>{iposDay.length} IPO Pricings</span>
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          )
-        })}
-      </div>
     </div>
   )
 }
@@ -445,6 +334,15 @@ const SUB_TABS: { id: CalSub; label: string; icon: React.ReactNode }[] = [
   { id: 'ipos',     label: 'IPO Pricings',   icon: <Rocket size={12} /> },
 ]
 
+// Column header row for the list views — defined at module scope to keep identity stable
+function ListHeader({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-3 px-4 py-2 bg-[#FAFAFA] border-b border-[#E5E5E5] text-[10px] font-bold text-[#9B9B9B] tracking-wider">
+      {children}
+    </div>
+  )
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function CalendarTab() {
@@ -480,6 +378,7 @@ export default function CalendarTab() {
 
     setLoadingEc(true)
     setFetchErrEc(false)
+    setMissingKeyEc(false)
     fetch(`/api/markets/economic-calendar?from=${from}&to=${to}`)
       .then(r => r.json())
       .then(d => {
@@ -491,6 +390,7 @@ export default function CalendarTab() {
 
     setLoadingS(true)
     setFetchErrS(false)
+    setMissingKeyS(false)
     fetch(`/api/markets/splits?from=${from}&to=${to}`)
       .then(r => r.json())
       .then(d => {
@@ -502,6 +402,7 @@ export default function CalendarTab() {
 
     setLoadingI(true)
     setFetchErrI(false)
+    setMissingKeyI(false)
     fetch(`/api/markets/ipos?from=${from}&to=${to}`)
       .then(r => r.json())
       .then(d => {
@@ -512,17 +413,7 @@ export default function CalendarTab() {
       .finally(() => setLoadingI(false))
   }, [week]) // week is memoized — only re-runs when weekOffset changes
 
-  const _days = weekDays(week.from)
   const anyLoading = loadingE || loadingEc || loadingS || loadingI
-
-  // Column header row labels for the list views
-  function ListHeader({ children }: { children: React.ReactNode }) {
-    return (
-      <div className="flex items-center gap-3 px-4 py-2 bg-[#FAFAFA] border-b border-[#E5E5E5] text-[10px] font-bold text-[#9B9B9B] tracking-wider">
-        {children}
-      </div>
-    )
-  }
 
   return (
     <div className="space-y-4">

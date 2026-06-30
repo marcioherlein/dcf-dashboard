@@ -25,7 +25,9 @@ on:
                   lowest_pe, lowest_peg, analyst_top_buys, highest_upside_consensus,
                   high_roic_cheap, dividend_value, weekly_followup, quality_rank,
                   overvalued_list, sector_pe_rank, momentum_leaders, earnings_week_preview,
-                  value_vs_growth, cash_rich, daily_list_rotation, morning_stock_pick]
+                  value_vs_growth, cash_rich, daily_list_rotation, morning_stock_pick,
+                  calendar_today, calendar_tomorrow, macro_preview,
+                  rate_impact, sector_catalyst, earnings_surprise_hist]
       ticker:
         description: 'Ticker override (dcf/dcf2/dcf_bear only)'
         required: false
@@ -81,6 +83,13 @@ on:
     - cron: '15 23 * * 1-5'   # 20:15 ART sector_pe_rank
     - cron: '0 0 * * 2-6'     # 21:00 ART quality_rank
     - cron: '0 1 * * 2-6'     # 22:00 ART theory_overnight
+    # ── New calendar-focused modes ────────────────────────────────────────────
+    - cron: '30 10 * * 1-5'   # 07:30 ART calendar_today (daily Mon-Fri)
+    - cron: '30 0 * * 2-5'    # 21:30 ART calendar_tomorrow (Mon-Thu fires 00:30 UTC next day)
+    - cron: '45 11 * * 1-5'   # 08:45 ART macro_preview (daily Mon-Fri)
+    - cron: '30 23 * * 2,4'   # 20:30 ART rate_impact (Tue/Thu)
+    - cron: '30 12 * * 1,3'   # 09:30 ART sector_catalyst (Mon/Wed)
+    - cron: '45 23 * * 3,5'   # 20:45 ART earnings_surprise_hist (Wed/Fri)
     # ── Saturday ──────────────────────────────────────────────────────────────
     - cron: '0 13 * * 6'      # 10:00 ART etf_pulse
     - cron: '0 14 * * 6'      # 11:00 ART feature
@@ -189,6 +198,13 @@ jobs:
             elif [ "$HOUR" = "23" ] && [ "$MIN" -ge "14" ] && [ "$MIN" -lt "25" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="sector_pe_rank"
             elif [ "$HOUR" = "0"  ] && [ "$DOW" -ge "2" ] && [ "$DOW" -le "6" ]; then MODE="quality_rank"
             elif [ "$HOUR" = "1"  ] && [ "$DOW" -ge "2" ] && [ "$DOW" -le "6" ]; then MODE="theory_overnight"
+            # New calendar-focused modes
+            elif [ "$HOUR" = "10" ] && [ "$MIN" -ge "29" ] && [ "$MIN" -lt "40" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="calendar_today"
+            elif [ "$HOUR" = "0"  ] && [ "$MIN" -ge "29" ] && [ "$MIN" -lt "40" ] && [ "$DOW" -ge "2" ] && [ "$DOW" -le "5" ]; then MODE="calendar_tomorrow"
+            elif [ "$HOUR" = "11" ] && [ "$MIN" -ge "44" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="macro_preview"
+            elif [ "$HOUR" = "23" ] && [ "$MIN" -ge "29" ] && [ "$MIN" -lt "40" ] && ([ "$DOW" = "2" ] || [ "$DOW" = "4" ]); then MODE="rate_impact"
+            elif [ "$HOUR" = "12" ] && [ "$MIN" -ge "29" ] && [ "$MIN" -lt "40" ] && ([ "$DOW" = "1" ] || [ "$DOW" = "3" ]); then MODE="sector_catalyst"
+            elif [ "$HOUR" = "23" ] && [ "$MIN" -ge "44" ] && ([ "$DOW" = "3" ] || [ "$DOW" = "5" ]); then MODE="earnings_surprise_hist"
             # Saturday (DOW=6)
             elif [ "$HOUR" = "13" ] && [ "$MIN" -lt "25" ] && [ "$DOW" = "6" ]; then MODE="etf_pulse"
             elif [ "$HOUR" = "14" ] && [ "$MIN" -lt "25" ] && [ "$DOW" = "6" ]; then MODE="feature"
