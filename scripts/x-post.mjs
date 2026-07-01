@@ -3104,15 +3104,36 @@ async function claimAndPost(mode, platform, ticker = '') {
     : `mode:${mode}:${today}`
 
   if (useLegacy && !DRY_RUN) {
-    let alreadyPosted = false
-    try {
-      alreadyPosted = await checkPostedEvent(dedupKey)
-    } catch (dbErr) {
-      console.error(`Dedup check failed (Supabase unreachable): ${dbErr.message}. Skipping ${mode} to avoid duplicate.`)
+    if (!sb) {
+      // No Supabase at all — skip rather than risk duplicate
+      console.error(`Dedup unavailable (Supabase not configured). Skipping ${mode} to avoid duplicate.`)
       process.exit(0)
     }
-    if (alreadyPosted) {
-      console.log(`Skipping ${mode} — already posted (legacy, key: ${dedupKey})`)
+    // Atomic claim: INSERT ... ON CONFLICT DO NOTHING.
+    // If another worker already inserted this key (same mode, same day), count=0 → skip.
+    // This closes the read-then-write race: only one worker can insert successfully.
+    try {
+      const { count, error } = await sb
+        .from('posted_tweet_events')
+        .insert({ event_key: dedupKey, tweet_type: mode, ticker: ticker || null, event_date: today, tweet_text: '' })
+        .select('id', { count: 'exact', head: true })
+      if (error) {
+        if (error.code === '23505') {
+          // Unique constraint violation = another worker already claimed it
+          console.log(`Skipping ${mode} — already claimed (legacy, key: ${dedupKey})`)
+          process.exit(0)
+        }
+        // Other DB error — skip to avoid duplicate
+        console.error(`Dedup insert failed (${error.message}). Skipping ${mode} to avoid duplicate.`)
+        process.exit(0)
+      }
+      if (count === 0) {
+        console.log(`Skipping ${mode} — already posted (legacy, key: ${dedupKey})`)
+        process.exit(0)
+      }
+      console.log(`Claimed dedup slot for ${mode} (key: ${dedupKey})`)
+    } catch (dbErr) {
+      console.error(`Dedup check failed (${dbErr.message}). Skipping ${mode} to avoid duplicate.`)
       process.exit(0)
     }
   }
@@ -3139,12 +3160,13 @@ async function claimAndPost(mode, platform, ticker = '') {
           try { await markPostedEvent(dedupKey, mode, ticker || null, today, '') } catch { /* ignore */ }
         }
       } else {
-        // Legacy path: mark in posted_tweet_events
+        // Legacy path: dedup slot was claimed pre-post (atomic insert above).
+        // Update tweet_text now that we have it (best-effort, not critical).
         try {
-          await markPostedEvent(dedupKey, mode, ticker || null, today, '')
-        } catch (dbErr) {
-          console.error(`WARN: post succeeded but dedup mark failed: ${dbErr.message}. Next cron fire may duplicate.`)
-        }
+          await sb.from('posted_tweet_events')
+            .update({ tweet_text: '[posted]' })
+            .eq('event_key', dedupKey)
+        } catch { /* ignore — slot is already claimed, tweet_text is cosmetic */ }
       }
     }
 
@@ -3170,15 +3192,12 @@ async function claimAndPost(mode, platform, ticker = '') {
             })
             .eq('id', queueRowId)
         } catch { /* don't let failure recorder block exit */ }
-      } else {
-        // Legacy path: record failure in posted_tweet_events
+      } else if (useLegacy && sb) {
+        // Legacy path: release the dedup slot so retries can work.
+        // We inserted pre-post; on failure we must delete so next run can try again.
         try {
-          await markPostedEvent(
-            `mode:${mode}:${today}:failed`,
-            mode, ticker || null, today,
-            `FAILED at ${new Date().toISOString()}: ${err.message.slice(0, 500)}`
-          )
-        } catch { /* don't let failure recorder block exit */ }
+          await sb.from('posted_tweet_events').delete().eq('event_key', dedupKey)
+        } catch { /* don't let cleanup block exit */ }
       }
     }
 
