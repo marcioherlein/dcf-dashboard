@@ -3105,36 +3105,34 @@ async function claimAndPost(mode, platform, ticker = '') {
 
   if (useLegacy && !DRY_RUN) {
     if (!sb) {
-      // No Supabase at all — skip rather than risk duplicate
-      console.error(`Dedup unavailable (Supabase not configured). Skipping ${mode} to avoid duplicate.`)
-      process.exit(0)
-    }
-    // Atomic claim: INSERT ... ON CONFLICT DO NOTHING.
-    // If another worker already inserted this key (same mode, same day), count=0 → skip.
-    // This closes the read-then-write race: only one worker can insert successfully.
-    try {
-      const { count, error } = await sb
-        .from('posted_tweet_events')
-        .insert({ event_key: dedupKey, tweet_type: mode, ticker: ticker || null, event_date: today, tweet_text: '' })
-        .select('id', { count: 'exact', head: true })
-      if (error) {
-        if (error.code === '23505') {
-          // Unique constraint violation = another worker already claimed it
-          console.log(`Skipping ${mode} — already claimed (legacy, key: ${dedupKey})`)
+      // Supabase client unavailable — post without dedup rather than silently skip.
+      // This means a double-fire could duplicate, but silence is worse than an occasional dup.
+      console.warn(`Dedup unavailable (Supabase client not loaded) — posting ${mode} without dedup guard.`)
+    } else {
+      // Atomic claim: INSERT ... ON CONFLICT DO NOTHING.
+      // Only the first worker to insert the unique key proceeds; others skip.
+      try {
+        const { count, error } = await sb
+          .from('posted_tweet_events')
+          .insert({ event_key: dedupKey, tweet_type: mode, ticker: ticker || null, event_date: today, tweet_text: '' })
+          .select('id', { count: 'exact', head: true })
+        if (error) {
+          if (error.code === '23505') {
+            console.log(`Skipping ${mode} — already claimed (legacy, key: ${dedupKey})`)
+            process.exit(0)
+          }
+          // Other DB error — post without dedup rather than silently skip
+          console.warn(`Dedup insert failed (${error.message}) — posting ${mode} without dedup guard.`)
+        } else if (count === 0) {
+          console.log(`Skipping ${mode} — already posted (legacy, key: ${dedupKey})`)
           process.exit(0)
+        } else {
+          console.log(`Claimed dedup slot for ${mode} (key: ${dedupKey})`)
         }
-        // Other DB error — skip to avoid duplicate
-        console.error(`Dedup insert failed (${error.message}). Skipping ${mode} to avoid duplicate.`)
-        process.exit(0)
+      } catch (dbErr) {
+        // DB unreachable — post without dedup rather than silently skip
+        console.warn(`Dedup check failed (${dbErr.message}) — posting ${mode} without dedup guard.`)
       }
-      if (count === 0) {
-        console.log(`Skipping ${mode} — already posted (legacy, key: ${dedupKey})`)
-        process.exit(0)
-      }
-      console.log(`Claimed dedup slot for ${mode} (key: ${dedupKey})`)
-    } catch (dbErr) {
-      console.error(`Dedup check failed (${dbErr.message}). Skipping ${mode} to avoid duplicate.`)
-      process.exit(0)
     }
   }
 
