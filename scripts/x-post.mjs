@@ -311,7 +311,10 @@ async function _getSupabase() {
     try {
       const { createClient } = await import('@supabase/supabase-js')
       _supabaseClient = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
-    } catch { return null }
+    } catch (e) {
+      console.error(`_getSupabase: createClient failed — ${e.message}`)
+      return null
+    }
   }
   return _supabaseClient
 }
