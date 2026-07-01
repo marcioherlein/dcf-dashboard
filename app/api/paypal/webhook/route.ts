@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { createElement } from 'react'
 import { Resend } from 'resend'
 import ProWelcomeEmail from '@/emails/ProWelcomeEmail'
 
@@ -92,7 +93,7 @@ export async function POST(req: NextRequest) {
               from: 'insic <team@insic.app>',
               to: email,
               subject: 'You\'re on insic Pro — unlimited access is active',
-              react: ProWelcomeEmail({ name, plan: 'monthly' }),
+              react: createElement(ProWelcomeEmail, { name, plan: 'monthly' }),
             })
             console.log('[paypal/webhook] pro welcome email sent to', email)
           } catch (err) {

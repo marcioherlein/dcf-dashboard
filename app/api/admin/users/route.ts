@@ -1,7 +1,10 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { createClient } from '@supabase/supabase-js'
+import { createElement } from 'react'
+import { Resend } from 'resend'
+import ProWelcomeEmail from '@/emails/ProWelcomeEmail'
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? 'marciofabrizio@gmail.com')
   .split(',').map(e => e.trim())
@@ -50,4 +53,48 @@ export async function GET() {
   }))
 
   return NextResponse.json(result)
+}
+
+// PATCH /api/admin/users — update a user's plan and optionally send Pro welcome email
+export async function PATCH(req: NextRequest) {
+  const session = await getServerSession(authOptions)
+  if (!ADMIN_EMAILS.includes(session?.user?.email ?? '')) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
+  const { email, plan } = await req.json().catch(() => ({})) as { email?: string; plan?: string }
+  if (!email || !plan) return NextResponse.json({ error: 'email and plan required' }, { status: 400 })
+  if (!['free', 'pro'].includes(plan)) return NextResponse.json({ error: 'plan must be free or pro' }, { status: 400 })
+
+  const sb = getClient()
+  if (!sb) return NextResponse.json({ error: 'DB unavailable' }, { status: 500 })
+
+  const normalizedEmail = email.toLowerCase().trim()
+
+  const { data: userRow } = await sb.from('users').select('name, plan').eq('email', normalizedEmail).maybeSingle()
+  if (!userRow) return NextResponse.json({ error: 'User not found' }, { status: 404 })
+
+  const wasAlreadyPro = userRow.plan === 'pro'
+
+  await sb.from('users').update({ plan }).eq('email', normalizedEmail)
+
+  // Send Pro welcome email if upgrading to pro (and wasn't already pro)
+  let emailSent = false
+  if (plan === 'pro' && !wasAlreadyPro && process.env.RESEND_API_KEY) {
+    try {
+      const resend = new Resend(process.env.RESEND_API_KEY)
+      const result = await resend.emails.send({
+        from: 'insic <team@insic.app>',
+        to: normalizedEmail,
+        subject: "You're on insic Pro — unlimited access is active",
+        react: createElement(ProWelcomeEmail, { name: userRow.name ?? null, plan: 'monthly' }),
+      })
+      emailSent = !result.error
+      if (result.error) console.error('[admin/users] pro email failed:', result.error.message)
+    } catch (err) {
+      console.error('[admin/users] pro email exception:', err instanceof Error ? err.message : err)
+    }
+  }
+
+  return NextResponse.json({ ok: true, plan, emailSent })
 }
