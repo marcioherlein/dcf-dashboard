@@ -351,15 +351,32 @@ export default function AdminPage() {
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        {u.plan === 'pro' ? (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#E8F7EF] text-[#11875D] border border-[#A3D9BE]">
-                            Pro
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#F5F5F5] text-[#6B6B6B] border border-[#E5E5E5]">
-                            Free
-                          </span>
-                        )}
+                        <button
+                          onClick={async () => {
+                            const newPlan = u.plan === 'pro' ? 'free' : 'pro'
+                            if (!confirm(`Change ${u.email} to ${newPlan}? ${newPlan === 'pro' ? 'This will send a Pro welcome email.' : ''}`)) return
+                            const res = await fetch('/api/admin/users', {
+                              method: 'PATCH',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ email: u.email, plan: newPlan }),
+                            })
+                            const data = await res.json()
+                            if (res.ok) {
+                              setUsers(prev => prev.map(x => x.id === u.id ? { ...x, plan: newPlan as 'free' | 'pro' } : x))
+                              if (data.emailSent) alert(`✓ ${newPlan === 'pro' ? 'Pro welcome' : 'Plan change'} email sent to ${u.email}`)
+                            } else {
+                              alert('Error: ' + (data.error ?? 'Unknown'))
+                            }
+                          }}
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border transition-colors cursor-pointer hover:opacity-80 ${
+                            u.plan === 'pro'
+                              ? 'bg-[#E8F7EF] text-[#11875D] border-[#A3D9BE]'
+                              : 'bg-[#F5F5F5] text-[#6B6B6B] border-[#E5E5E5]'
+                          }`}
+                          title={`Click to toggle to ${u.plan === 'pro' ? 'free' : 'pro'}`}
+                        >
+                          {u.plan === 'pro' ? 'Pro ▾' : 'Free ▾'}
+                        </button>
                       </td>
                       <td className="px-4 py-3 text-[13px] text-[#6B6B6B] tabular-nums">
                         {relativeTime(u.last_seen)}
