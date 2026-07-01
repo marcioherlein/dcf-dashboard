@@ -63,6 +63,14 @@ export interface FinancialSnapshot {
   bullScenario:   number | null | undefined
   piotroski:      number | null | undefined
   metricsUpdatedAt: string | null | undefined  // ISO date — used for staleness indicator
+  // User-edited valuation assumptions — stored when saved from cockpit
+  savedWacc?:          number | null | undefined  // user's WACC at save time
+  savedCagr?:          number | null | undefined  // user's revenue CAGR at save time
+  savedNetMargin?:     number | null | undefined  // user's net margin at save time
+  savedExitPE?:        number | null | undefined  // user's exit P/E at save time
+  savedExitMultiple?:  number | null | undefined  // user's EV/EBITDA at save time
+  savedRevMultiple?:   number | null | undefined  // user's EV/Revenue at save time
+  nextEarningsDate?:   string | null | undefined  // ISO date of next earnings
 }
 
 export interface WatchlistEntry {

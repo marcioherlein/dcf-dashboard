@@ -443,6 +443,7 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
     assetType: 'stock',
     fairValue: output.blendedFairValue,
     upsidePct: output.upsidePct,
+    nextEarningsDate: apiData.quote?.nextEarningsDate ?? null,
     valuationSnapshot: output.blendedFairValue != null ? {
       price_at_save: currentPrice,
       fair_value: output.blendedFairValue,

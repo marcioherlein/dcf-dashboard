@@ -6,6 +6,7 @@ import Link from 'next/link'
 import type { WatchlistEntry, ListTag } from '@/lib/simplifier/types'
 import { Sparkline, SparklineSkeleton } from '@/components/ui/Sparkline'
 import { ConfidenceRing } from './ConfidenceRing'
+import EarningsWatchPanel from './EarningsWatchPanel'
 import { fmtPrice } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 
@@ -405,6 +406,9 @@ function ExpandedNotePanel({ entry, onNoteSave, onClose }: {
                 Close
               </button>
             </div>
+
+            {/* Earnings Watch — what to look for at next results */}
+            <EarningsWatchPanel entry={entry} />
           </div>
         </div>
       </td>

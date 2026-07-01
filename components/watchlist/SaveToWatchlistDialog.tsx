@@ -61,6 +61,7 @@ export interface WatchlistSavePayload {
     inputs: Record<string, number>
     scenarios: { bull: number; base: number; bear: number }
   } | null
+  nextEarningsDate?: string | null
   // Extended live metrics passed at save time
   liveMetrics?: {
     peRatio?: number | null
@@ -117,6 +118,16 @@ export default function SaveToWatchlistDialog({ open, payload, onClose, onReview
               bearScenario: payload.valuationSnapshot?.scenarios.bear ?? existing.snapshot.bearScenario,
               baseScenario: payload.valuationSnapshot?.scenarios.base ?? existing.snapshot.baseScenario,
               bullScenario: payload.valuationSnapshot?.scenarios.bull ?? existing.snapshot.bullScenario,
+              // Persist user-edited assumptions so My Valuations can show what thesis was saved
+              ...(payload.valuationSnapshot?.inputs != null ? {
+                savedWacc:         payload.valuationSnapshot.inputs.wacc          ?? undefined,
+                savedCagr:         payload.valuationSnapshot.inputs.cagr          ?? undefined,
+                savedNetMargin:    payload.valuationSnapshot.inputs.netMargin     ?? undefined,
+                savedExitPE:       payload.valuationSnapshot.inputs.exitPE        ?? undefined,
+                savedExitMultiple: payload.valuationSnapshot.inputs.exitMultiple  ?? undefined,
+                savedRevMultiple:  payload.valuationSnapshot.inputs.revenueMultiple ?? undefined,
+              } : {}),
+              ...(payload.nextEarningsDate !== undefined ? { nextEarningsDate: payload.nextEarningsDate } : {}),
               ...(lm != null ? {
                 peRatio: lm.peRatio, pegRatio: lm.pegRatio, evToEbitda: lm.evToEbitda,
                 dividendYield: lm.dividendYield,
@@ -148,6 +159,13 @@ export default function SaveToWatchlistDialog({ open, payload, onClose, onReview
               bearScenario: payload.valuationSnapshot?.scenarios.bear ?? null,
               baseScenario: payload.valuationSnapshot?.scenarios.base ?? null,
               bullScenario: payload.valuationSnapshot?.scenarios.bull ?? null,
+              savedWacc:         payload.valuationSnapshot?.inputs.wacc          ?? null,
+              savedCagr:         payload.valuationSnapshot?.inputs.cagr          ?? null,
+              savedNetMargin:    payload.valuationSnapshot?.inputs.netMargin     ?? null,
+              savedExitPE:       payload.valuationSnapshot?.inputs.exitPE        ?? null,
+              savedExitMultiple: payload.valuationSnapshot?.inputs.exitMultiple  ?? null,
+              savedRevMultiple:  payload.valuationSnapshot?.inputs.revenueMultiple ?? null,
+              nextEarningsDate:  payload.nextEarningsDate ?? null,
               peRatio: lm?.peRatio, pegRatio: lm?.pegRatio, evToEbitda: lm?.evToEbitda,
               dividendYield: lm?.dividendYield,
               return1y: lm?.return1y, return3y: lm?.return3y, return5y: lm?.return5y,
