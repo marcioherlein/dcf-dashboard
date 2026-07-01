@@ -43,6 +43,9 @@ const INDUSTRY_MEDIANS: Record<string, { pe: number; evEbitda: number; pb: numbe
   // trades at 1–2×. The median of this peer set has shifted up as AWS and advertising dominate.
   'Internet Retail':                   { pe: 35, evEbitda: 25, pb: 8.5, ps: 3.5, evRevenue: 4.5 },
   'Internet Commerce':                 { pe: 35, evEbitda: 25, pb: 8.5, ps: 3.5, evRevenue: 4.5 },
+  // Chinese internet: ~40% structural discount vs US peers (China regulatory + VIE + geopolitical risk)
+  'Internet Retail—China':             { pe: 15, evEbitda: 10, pb: 2.0, ps: 1.5, evRevenue: 1.5 },
+  'Internet Content—China':            { pe: 18, evEbitda: 12, pb: 2.5, ps: 3.5, evRevenue: 4.0 },
   'Consumer Electronics':              { pe: 28, evEbitda: 18, pb: 7.0, ps: 3.5, evRevenue: 3.5 },
   'Electronic Components':             { pe: 20, evEbitda: 14, pb: 4.5, ps: 2.5, evRevenue: 2.8 },
   'IT Services':                       { pe: 22, evEbitda: 14, pb: 5.0, ps: 2.8, evRevenue: 3.0 },
@@ -194,7 +197,13 @@ export const PEER_TICKERS: Record<string, string[]> = {
   'Semiconductors':                    ['NVDA', 'AMD', 'AVGO', 'QCOM', 'AMAT', 'INTC'],
   'Semiconductor Equipment & Materials': ['AMAT', 'LRCX', 'KLAC', 'ASML', 'TER', 'ENTG'],
   'Internet Content & Information':    ['GOOGL', 'META', 'SNAP', 'PINS', 'RDDT', 'IAC'],
+  // Internet Retail: US-based peers only. Chinese ADRs (BABA, JD, PDD, SE) are
+  // excluded because their multiples carry a structural China discount (~30-50%)
+  // that would compress implied FVs for US companies and vice versa.
   'Internet Retail':                   ['AMZN', 'EBAY', 'ETSY', 'CHWY', 'W', 'SHOP'],
+  // Chinese Internet Retail: separate peer group for BABA, JD, SE, PDD.
+  // All trade at a structural discount to US peers; using US medians overstates FV by 2-4×.
+  'Internet Retail—China':             ['JD', 'PDD', 'SE', 'TEMU', 'VIPS'],
   'Consumer Electronics':              ['AAPL', 'SONY', 'HPQ', 'DELL', 'SMCI'],
   'IT Services':                       ['ACN', 'IBM', 'CTSH', 'INFY', 'WIT', 'DXC'],
   'Information Technology Services':   ['ACN', 'IBM', 'CTSH', 'INFY', 'WIT', 'DXC'],
@@ -442,7 +451,7 @@ export function calculateMultiples(input: {
 
   estimates.push(makeEstimate(
     'P/Book', input.priceToBook, 'priceToBook', staticMed.pb,
-    ['financial', 'fintech', 'mreeit', 'bdc', 'standard'],
+    ['financial', 'fintech', 'mreeit', 'bdc'],
     'Price-to-Book',
   ))
 

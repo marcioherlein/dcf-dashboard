@@ -671,12 +671,29 @@ export async function GET(req: NextRequest) {
     const roe = resolvedRoe
     const ddmResult = calculateDDM(dividendPerShare, waccResult.costOfEquity, roe, payoutRatio, currentPrice)
 
-    // FCFE
-    const fcfeResult = calculateFCFE(netIncomeM, cagr, waccResult.costOfEquity, terminalG, cashM, debtM, sharesM, currentPrice)
+    // FCFE proxy (Net Income × 0.90 discounted at Ke)
+    // Do not apply when FCF is structurally negative — negative FCF means the company is
+    // consuming cash, so net income is NOT a valid proxy for equity cash flow.
+    // isNegativeFCF is set from the FCFF extraction; if true the FCFE result is marked
+    // not applicable to prevent it from inflating the cockpit blend (SMCI case).
+    const fcfeResult = isNegativeFCF
+      ? { fairValuePerShare: 0, upsidePct: 0, baseFCFE: 0, discountRate: waccResult.costOfEquity, applicable: false, reason: 'Excluded — FCF is negative; Net Income proxy unreliable' }
+      : calculateFCFE(netIncomeM, cagr, waccResult.costOfEquity, terminalG, cashM, debtM, sharesM, currentPrice)
 
     // Relative multiples — with live peer comparison
     const industry = (profile.industry ?? '') as string
-    const candidatePeers = (PEER_TICKERS[industry] ?? []).filter(
+
+    // For Chinese-domiciled companies, prefer the China-specific peer group and industry
+    // medians. Using US peer multiples for BABA/JD/PDD overstates FV by 2-4× because
+    // China ADRs trade at a structural discount (VIE structure, regulatory risk, geopolitics).
+    const isChineseDomicile = domicileCountry === 'China' || domicileCountry === 'Hong Kong'
+    const effectiveIndustry = isChineseDomicile && industry === 'Internet Retail'
+      ? 'Internet Retail—China'
+      : isChineseDomicile && (industry === 'Internet Content & Information')
+      ? 'Internet Content—China'
+      : industry
+
+    const candidatePeers = (PEER_TICKERS[effectiveIndustry] ?? PEER_TICKERS[industry] ?? []).filter(
       (t) => t !== ticker
     ).slice(0, 6)
 
@@ -688,7 +705,7 @@ export async function GET(req: NextRequest) {
 
     const multiplesResult = calculateMultiples({
       sector: (profile.sector ?? q.sector ?? '') as string,
-      industry,
+      industry: effectiveIndustry,
       companyType,
       currentPrice,
       trailingPE,

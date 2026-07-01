@@ -28,7 +28,7 @@ export const CRP_TABLE: Record<string, number> = {
 
   // ── Emerging / Frontier ──────────────────────────────────────────────────
   BRL: 0.0340,  // Brazil
-  CNY: 0.0072,  // China
+  CNY: 0.0605,  // China — Damodaran Jan 2025: elevated geopolitical + regulatory risk
   INR: 0.0325,  // India
   MXN: 0.0229,  // Mexico
   ZAR: 0.0338,  // South Africa
@@ -58,7 +58,7 @@ export const CRP_TABLE: Record<string, number> = {
   AED: 0.0044,  // UAE
   QAR: 0.0044,  // Qatar
   KWD: 0.0044,  // Kuwait
-  CNH: 0.0072,  // Offshore CNY
+  CNH: 0.0605,  // Offshore CNY
 }
 
 // Country name → CRP (for Yahoo Finance summaryProfile.country)
@@ -75,7 +75,7 @@ const COUNTRY_CRP: Record<string, number> = {
   'Ecuador':      0.0891,
   'Uruguay':      0.0125,
   // ── Asia ──────────────────────────────────────────────────────────────────
-  'China':        0.0072,
+  'China':        0.0605,  // Damodaran Jan 2025 — geopolitical + VIE + regulatory risk
   'India':        0.0325,
   'Indonesia':    0.0176,
   'Philippines':  0.0125,
