@@ -92,8 +92,9 @@ export default function MarketHeatmapCard({ sectors }: Props) {
         </div>
       </div>
 
-      <div className={cn('p-3 transition-opacity flex-1 min-h-0 overflow-y-auto', loading ? 'opacity-50' : '')}>
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
+      <div className={cn('p-3 transition-opacity flex-1 min-h-0', loading ? 'opacity-50' : '')}>
+        {/* Auto rows fill available height — tiles stretch, no whitespace void */}
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5 h-full" style={{ gridTemplateRows: 'repeat(2, minmax(0, 1fr))' }}>
           {sorted.map(s => {
             const changePct = tf === '1D' ? s.changePct : (histData[s.symbol] ?? null)
             const isLarge = s.symbol === 'XLK'
@@ -101,8 +102,8 @@ export default function MarketHeatmapCard({ sectors }: Props) {
               <div
                 key={s.symbol}
                 className={cn(
-                  'rounded-xl p-2 flex flex-col justify-between transition-all hover:scale-[1.02]',
-                  isLarge ? 'col-span-2 min-h-[60px] sm:min-h-[80px]' : 'col-span-1 min-h-[52px] sm:min-h-[62px]',
+                  'rounded-xl p-2 flex flex-col justify-between transition-all hover:scale-[1.02] min-h-[52px]',
+                  isLarge ? 'col-span-2 row-span-1' : 'col-span-1',
                   heatColor(changePct, range),
                 )}
               >

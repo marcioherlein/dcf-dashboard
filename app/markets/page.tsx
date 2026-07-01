@@ -199,14 +199,11 @@ export default function MarketsPage() {
                 {mkt ? <MarketHeatmapCard sectors={mkt.sectors} /> : <Sk h="h-[320px]" />}
               </div>
               <div className="lg:col-span-5 lg:h-full lg:min-h-0 flex flex-col gap-3 lg:overflow-hidden">
-                <div className="lg:flex-none lg:h-[180px] lg:overflow-hidden">
-                  {ctx ? <SectorRotation sectors={ctx.sectors} /> : <Sk h="h-[180px]" />}
+                <div className="flex-1 min-h-0 lg:overflow-hidden">
+                  {ctx ? <SectorRotation sectors={ctx.sectors} /> : <Sk h="h-[240px]" />}
                 </div>
-                <div className="lg:flex-none lg:h-[180px] lg:overflow-hidden">
-                  {mkt ? <SectorPerformanceCard sectors={mkt.sectors} /> : <Sk h="h-[180px]" />}
-                </div>
-                <div className="lg:flex-1 lg:min-h-0 lg:overflow-hidden">
-                  <SectorStocksCard />
+                <div className="shrink-0 lg:overflow-hidden">
+                  {mkt ? <SectorPerformanceCard sectors={mkt.sectors} /> : <Sk h="h-[160px]" />}
                 </div>
               </div>
             </div>
