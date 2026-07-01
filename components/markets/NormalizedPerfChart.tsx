@@ -5,7 +5,7 @@ import {
   ReferenceLine, CartesianGrid,
 } from 'recharts'
 import { cn } from '@/lib/utils'
-import { Plus, X } from 'lucide-react'
+import { Plus, X, ChevronDown } from 'lucide-react'
 import type { ChartPoint } from '@/app/api/markets/chart/route'
 
 const PERIODS = ['5D', '1M', '3M', '6M', 'YTD', '1Y', '3Y', '5Y'] as const
@@ -50,6 +50,7 @@ export default function NormalizedPerfChart() {
   const [loading, setLoading] = useState(true)
   const [showAddInput, setShowAddInput] = useState(false)
   const [addValue, setAddValue] = useState('')
+  const [collapsed, setCollapsed] = useState(false)
   const addInputRef = useRef<HTMLInputElement>(null)
 
   const allSeries = [...DEFAULT_SERIES, ...customSeries]
@@ -124,7 +125,17 @@ export default function NormalizedPerfChart() {
       {/* Header */}
       <div className="px-4 py-2.5 border-b border-[#E5E5E5]">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[11px] font-bold text-[#6B6B6B] shrink-0">Normalized Performance</span>
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-bold text-[#6B6B6B] shrink-0">Normalized Performance</span>
+            {/* Collapse toggle — mobile only */}
+            <button
+              onClick={() => setCollapsed(v => !v)}
+              className="lg:hidden flex items-center justify-center w-5 h-5 rounded text-[#9B9B9B] hover:text-[#111111] transition-colors"
+              aria-label={collapsed ? 'Expand chart' : 'Collapse chart'}
+            >
+              <ChevronDown size={14} className={cn('transition-transform duration-200', collapsed ? '-rotate-90' : '')} />
+            </button>
+          </div>
           <div className="flex gap-1 overflow-x-auto scrollbar-hide ml-2">
             {PERIODS.map(p => (
               <button
@@ -141,119 +152,123 @@ export default function NormalizedPerfChart() {
           </div>
         </div>
         {/* Series toggle chips */}
-        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-0.5">
-          {allSeries.map(s => {
-            const val = lastPoint?.[s.symbol] as number | undefined
-            const isOn = active.has(s.symbol)
-            const isCustom = customSeries.find(c => c.symbol === s.symbol)
-            const tooltipLabel = val != null ? `${s.label}: ${val >= 0 ? '+' : ''}${val.toFixed(2)}%` : s.label
-            return (
-              <div key={s.symbol} className="relative group shrink-0">
-                <button
-                  onClick={() => toggleSeries(s.symbol)}
-                  title={tooltipLabel}
-                  aria-label={tooltipLabel}
-                  className={cn(
-                    'flex items-center gap-1 px-2 py-1 h-7 rounded-full text-[11px] font-semibold border transition-all whitespace-nowrap',
-                    isOn
-                      ? 'border-transparent text-white'
-                      : 'border-[#E5E5E5] bg-transparent text-[#6B6B6B] opacity-50'
-                  )}
-                  style={isOn ? { background: s.color } : {}}
-                >
-                  <span>{s.label}</span>
-                  {val != null && isOn && (
-                    <span className="opacity-80 font-normal hidden sm:inline">
-                      {val >= 0 ? '+' : ''}{val.toFixed(1)}%
-                    </span>
-                  )}
-                </button>
-                {isCustom && (
+        {!collapsed && (
+          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-0.5">
+            {allSeries.map(s => {
+              const val = lastPoint?.[s.symbol] as number | undefined
+              const isOn = active.has(s.symbol)
+              const isCustom = customSeries.find(c => c.symbol === s.symbol)
+              const tooltipLabel = val != null ? `${s.label}: ${val >= 0 ? '+' : ''}${val.toFixed(2)}%` : s.label
+              return (
+                <div key={s.symbol} className="relative group shrink-0">
                   <button
-                    onClick={() => removeCustomSymbol(s.symbol)}
-                    className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#566174] text-white flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                    onClick={() => toggleSeries(s.symbol)}
+                    title={tooltipLabel}
+                    aria-label={tooltipLabel}
+                    className={cn(
+                      'flex items-center gap-1 px-2 py-1 h-7 rounded-full text-[11px] font-semibold border transition-all whitespace-nowrap',
+                      isOn
+                        ? 'border-transparent text-white'
+                        : 'border-[#E5E5E5] bg-transparent text-[#6B6B6B] opacity-50'
+                    )}
+                    style={isOn ? { background: s.color } : {}}
                   >
-                    <X size={8} />
+                    <span>{s.label}</span>
+                    {val != null && isOn && (
+                      <span className="opacity-80 font-normal hidden sm:inline">
+                        {val >= 0 ? '+' : ''}{val.toFixed(1)}%
+                      </span>
+                    )}
                   </button>
-                )}
-              </div>
-            )
-          })}
-          {/* Add symbol button */}
-          {showAddInput ? (
-            <form
-              onSubmit={e => { e.preventDefault(); addCustomSymbol() }}
-              className="flex items-center gap-1 shrink-0"
-            >
-              <input
-                ref={addInputRef}
-                value={addValue}
-                onChange={e => setAddValue(e.target.value.toUpperCase())}
-                placeholder="AAPL"
-                className="w-20 px-2 py-0.5 text-[16px] rounded-full border border-[#93B4F5] bg-white text-[#111111] outline-none focus:border-blue-500"
-              />
-              <button type="submit" className="text-[12px] font-semibold text-olive-700 hover:text-[#2563EB] py-1 min-h-[28px]">Add</button>
-              <button type="button" onClick={() => setShowAddInput(false)} className="flex items-center justify-center w-6 h-6 rounded text-[#6B6B6B] hover:text-[#111111] hover:bg-[#F0F0F0] transition-colors"><X size={10} /></button>
-            </form>
-          ) : (
-            <button
-              onClick={() => setShowAddInput(true)}
-              className="flex items-center gap-1 px-2 py-0.5 h-7 rounded-full text-[11px] font-semibold border border-dashed border-[#E5E5E5] text-[#6B6B6B] hover:border-[#93B4F5] hover:text-[#2563EB] transition-colors"
-            >
-              <Plus size={10} /> Add
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Chart */}
-      <div className="px-4 py-3 flex-1 min-h-0">
-        {loading ? (
-          <div className="h-full flex items-center justify-center">
-            <div className="flex gap-1">
-              {[0, 1, 2].map(i => (
-                <div key={i} className="w-1.5 h-1.5 rounded-full bg-[#8A95A6] motion-safe:animate-pulse" style={{ animationDelay: `${i * 150}ms` }} />
-              ))}
-            </div>
-          </div>
-        ) : (
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={displayData} margin={{ top: 4, right: 8, bottom: 4, left: 4 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.2)" vertical={false} />
-              <XAxis
-                dataKey="date"
-                tick={{ fontSize: 10, fill: '#64748b' }}
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={fmtDate}
-                interval="preserveStartEnd"
-                minTickGap={40}
-              />
-              <YAxis
-                tick={{ fontSize: 10, fill: '#64748b' }}
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={v => `${(v as number).toFixed(0)}%`}
-                width={36}
-              />
-              <Tooltip content={(props) => <ChartTooltip {...props} allSeries={allSeries} />} />
-              <ReferenceLine y={0} stroke="#cbd5e1" strokeWidth={1} strokeDasharray="3 2" />
-              {allSeries.filter(s => active.has(s.symbol)).map(s => (
-                <Line
-                  key={s.symbol}
-                  type="monotone"
-                  dataKey={s.symbol}
-                  stroke={s.color}
-                  strokeWidth={2}
-                  dot={false}
-                  activeDot={{ r: 3, strokeWidth: 0 }}
-                  connectNulls
+                  {isCustom && (
+                    <button
+                      onClick={() => removeCustomSymbol(s.symbol)}
+                      className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#566174] text-white flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                    >
+                      <X size={8} />
+                    </button>
+                  )}
+                </div>
+              )
+            })}
+            {/* Add symbol button */}
+            {showAddInput ? (
+              <form
+                onSubmit={e => { e.preventDefault(); addCustomSymbol() }}
+                className="flex items-center gap-1 shrink-0"
+              >
+                <input
+                  ref={addInputRef}
+                  value={addValue}
+                  onChange={e => setAddValue(e.target.value.toUpperCase())}
+                  placeholder="AAPL"
+                  className="w-20 px-2 py-0.5 text-[16px] rounded-full border border-[#93B4F5] bg-white text-[#111111] outline-none focus:border-blue-500"
                 />
-              ))}
-            </LineChart>
-          </ResponsiveContainer>
+                <button type="submit" className="text-[12px] font-semibold text-olive-700 hover:text-[#2563EB] py-1 min-h-[28px]">Add</button>
+                <button type="button" onClick={() => setShowAddInput(false)} className="flex items-center justify-center w-6 h-6 rounded text-[#6B6B6B] hover:text-[#111111] hover:bg-[#F0F0F0] transition-colors"><X size={10} /></button>
+              </form>
+            ) : (
+              <button
+                onClick={() => setShowAddInput(true)}
+                className="flex items-center gap-1 px-2 py-0.5 h-7 rounded-full text-[11px] font-semibold border border-dashed border-[#E5E5E5] text-[#6B6B6B] hover:border-[#93B4F5] hover:text-[#2563EB] transition-colors"
+              >
+                <Plus size={10} /> Add
+              </button>
+            )}
+          </div>
         )}
       </div>
+
+      {/* Chart — explicit height on mobile so ResponsiveContainer has something to measure */}
+      {!collapsed && (
+        <div className="px-4 py-3 flex-1 min-h-0 h-[220px] lg:h-auto">
+          {loading ? (
+            <div className="h-full flex items-center justify-center">
+              <div className="flex gap-1">
+                {[0, 1, 2].map(i => (
+                  <div key={i} className="w-1.5 h-1.5 rounded-full bg-[#8A95A6] motion-safe:animate-pulse" style={{ animationDelay: `${i * 150}ms` }} />
+                ))}
+              </div>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={displayData} margin={{ top: 4, right: 8, bottom: 4, left: 4 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.2)" vertical={false} />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fontSize: 10, fill: '#64748b' }}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={fmtDate}
+                  interval="preserveStartEnd"
+                  minTickGap={40}
+                />
+                <YAxis
+                  tick={{ fontSize: 10, fill: '#64748b' }}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={v => `${(v as number).toFixed(0)}%`}
+                  width={36}
+                />
+                <Tooltip content={(props) => <ChartTooltip {...props} allSeries={allSeries} />} />
+                <ReferenceLine y={0} stroke="#cbd5e1" strokeWidth={1} strokeDasharray="3 2" />
+                {allSeries.filter(s => active.has(s.symbol)).map(s => (
+                  <Line
+                    key={s.symbol}
+                    type="monotone"
+                    dataKey={s.symbol}
+                    stroke={s.color}
+                    strokeWidth={2}
+                    dot={false}
+                    activeDot={{ r: 3, strokeWidth: 0 }}
+                    connectNulls
+                  />
+                ))}
+              </LineChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+      )}
     </div>
   )
 }
