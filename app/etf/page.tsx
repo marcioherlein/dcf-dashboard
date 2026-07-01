@@ -695,43 +695,6 @@ export default function ETFTrackerPage() {
               </div>
             )}
 
-            {/* My Watchlist — show at top when user has saved ETFs */}
-            {hasWatchlist && (
-              <section>
-                <div className="flex items-center justify-between gap-2 mb-3">
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-[13px] font-[700] text-[#111111]">My Watchlist</h2>
-                    <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-[700] bg-olive-100 text-olive-700">
-                      {watchlist.length}
-                    </span>
-                  </div>
-                  <button onClick={() => setActiveTab('watchlist')} className="text-[11px] font-[600] text-olive-700 hover:text-olive-600 transition-colors flex items-center gap-1">
-                    Full view <ArrowUpRight size={11} />
-                  </button>
-                </div>
-                {/* Show first 3 WatchlistRow cards in overview, full table in Watchlist tab */}
-                <div className="flex flex-col gap-2">
-                  {watchlist.slice(0, 3).map((entry) => (
-                    <WatchlistRow key={entry.ticker} entry={entry} sparklineData={entry.ticker in sparklines ? sparklines[entry.ticker] : undefined} onDelete={handleDelete} />
-                  ))}
-                  {watchlist.length > 3 && (
-                    <button onClick={() => setActiveTab('watchlist')} className="text-center py-2 text-[11px] font-[600] text-[#566174] hover:text-olive-700 transition-colors">
-                      +{watchlist.length - 3} more in Watchlist &rarr;
-                    </button>
-                  )}
-                </div>
-              </section>
-            )}
-
-            {wlLoading && <div className="flex flex-col gap-2">{Array.from({length:2}).map((_,i)=><div key={i} className="h-[72px] bg-white rounded-xl border border-[#E5E5E5] motion-safe:animate-pulse"/>)}</div>}
-
-            {!hasWatchlist && !wlLoading && (
-              <div className="bg-white border border-[#E3E1DA] rounded-xl p-5 flex flex-col items-center text-center gap-3">
-                <p className="text-[13px] font-[600] text-[#111111]">Track ETFs by what they&apos;re actually worth</p>
-                <p className="text-[12px] text-[#8A95A6] max-w-xs">Search above or add from any group below.</p>
-              </div>
-            )}
-
             {/* Theme grid — replaces 8 collapsible sections */}
             <section>
               <div className="flex items-center justify-between gap-2 mb-3">
