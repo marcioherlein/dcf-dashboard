@@ -25,6 +25,7 @@ const VALID_MODES = [
   'value_vs_growth','cash_rich','daily_list_rotation','morning_stock_pick',
   'calendar_today','calendar_tomorrow','macro_preview',
   'rate_impact','sector_catalyst','earnings_surprise_hist',
+  'european_open',
 ]
 
 export async function GET(req: NextRequest) {

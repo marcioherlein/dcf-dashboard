@@ -27,7 +27,8 @@ on:
                   overvalued_list, sector_pe_rank, momentum_leaders, earnings_week_preview,
                   value_vs_growth, cash_rich, daily_list_rotation, morning_stock_pick,
                   calendar_today, calendar_tomorrow, macro_preview,
-                  rate_impact, sector_catalyst, earnings_surprise_hist]
+                  rate_impact, sector_catalyst, earnings_surprise_hist,
+                  european_open]
       ticker:
         description: 'Ticker override (dcf/dcf2/dcf_bear only)'
         required: false
@@ -39,6 +40,15 @@ on:
         options: ['true', 'false']
 
   schedule:
+    # ── European morning block (5AM–7:30AM ART = 8AM–10:30AM CEST) ──────────
+    # Targets European pre-market + open. List/engagement formats work best
+    # here — no live US market data needed, pure fundamentals and rankings.
+    - cron: '0 8 * * 1-5'     # 05:00 ART european_open (overnight + EU data)
+    - cron: '30 8 * * 1-5'    # 05:30 ART undervalued_list (EU audience peak)
+    - cron: '0 9 * * 1-5'     # 06:00 ART calendar_today
+    - cron: '30 9 * * 1-5'    # 06:30 ART daily_list_rotation
+    - cron: '0 10 * * 1-5'    # 07:00 ART sector_pe_rank
+    - cron: '30 10 * * 1-5'   # 07:30 ART calendar_today (moved up, was 07:30)
     # ── Weekdays Mon-Fri ──────────────────────────────────────────────────────
     - cron: '0 11 * * 1-5'    # 08:00 ART morning_brief
     - cron: '30 11 * * 1-5'   # 08:30 ART morning_stock_pick
@@ -155,7 +165,16 @@ jobs:
             echo "Cron fired at UTC ${HOUR}:${MIN} DOW=${DOW}"
 
             # Exact match on hour:minute:dow — one entry per mode
-            if   [ "$HOUR" = "11" ] && [ "$MIN" -lt "30" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="morning_brief"
+            # European morning block (8:00–10:45 UTC = 5:00–7:45 ART)
+            if   [ "$HOUR" = "8"  ] && [ "$MIN" -lt "15" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="european_open"
+            elif [ "$HOUR" = "8"  ] && [ "$MIN" -ge "29" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="undervalued_list"
+            elif [ "$HOUR" = "9"  ] && [ "$MIN" -lt "15" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="calendar_today"
+            elif [ "$HOUR" = "9"  ] && [ "$MIN" -ge "29" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="daily_list_rotation"
+            elif [ "$HOUR" = "10" ] && [ "$MIN" -lt "15" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="sector_pe_rank"
+            elif [ "$HOUR" = "10" ] && [ "$MIN" -ge "29" ] && [ "$MIN" -lt "40" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="macro_preview"
+            elif [ "$HOUR" = "10" ] && [ "$MIN" -ge "44" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="calendar_today"
+            # US session
+            elif [ "$HOUR" = "11" ] && [ "$MIN" -lt "30" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="morning_brief"
             elif [ "$HOUR" = "11" ] && [ "$MIN" -ge "29" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="morning_stock_pick"
             elif [ "$HOUR" = "12" ] && [ "$MIN" -lt "30" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="earnings"
             elif [ "$HOUR" = "13" ] && [ "$MIN" -lt "15" ] && [ "$DOW" -le "5" ] && [ "$DOW" -ge "1" ]; then MODE="feature"

@@ -9135,7 +9135,90 @@ Object.assign(MODES, {
   rate_impact:              runRateImpact,
   sector_catalyst:          runSectorCatalyst,
   earnings_surprise_hist:   runEarningsSurpriseHist,
+  european_open:            runEuropeanOpen,
 })
+
+// ─── Mode: european_open ──────────────────────────────────────────────────────
+// 5:00 AM ART (8:00 UTC) — European market open brief.
+// European traders are hitting their desks. Give them overnight context,
+// key levels, and one stock idea before London open.
+async function runEuropeanOpen() {
+  const dayName = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
+  const dayOfYear = Math.floor(Date.now() / 86400000)
+
+  // Fetch overnight movers + European indices
+  const [sp500, nasdaq, dax, ftse, nikkei, oil, gold, tnx] = await Promise.all([
+    fetchYahooChart('^GSPC').catch(() => null),
+    fetchYahooChart('^IXIC').catch(() => null),
+    fetchYahooChart('^GDAXI').catch(() => null),
+    fetchYahooChart('^FTSE').catch(() => null),
+    fetchYahooChart('^N225').catch(() => null),
+    fetchYahooChart('CL=F').catch(() => null),
+    fetchYahooChart('GC=F').catch(() => null),
+    fetchYahooChart('^TNX').catch(() => null),
+  ])
+
+  // Tone from US futures direction
+  const spChg = sp500?.changePct ?? 0
+  const tone = spChg > 0.5 ? 'US futures pointing higher. Risk-on tone heading into the European session.'
+    : spChg < -0.5 ? 'US futures under pressure. Caution warranted at the European open.'
+    : 'US futures flat. Europe sets its own tone today.'
+
+  // European indices
+  const euLines = [
+    dax   ? `DAX ${dax.changePct >= 0 ? '+' : ''}${dax.changePct.toFixed(2)}%` : null,
+    ftse  ? `FTSE ${ftse.changePct >= 0 ? '+' : ''}${ftse.changePct.toFixed(2)}%` : null,
+    nikkei ? `Nikkei ${nikkei.changePct >= 0 ? '+' : ''}${nikkei.changePct.toFixed(2)}%` : null,
+  ].filter(Boolean)
+
+  // Commodities
+  const commLines = [
+    oil  ? `Oil $${oil.price.toFixed(0)} (${oil.changePct >= 0 ? '+' : ''}${oil.changePct.toFixed(1)}%)` : null,
+    gold ? `Gold $${gold.price.toFixed(0)} (${gold.changePct >= 0 ? '+' : ''}${gold.changePct.toFixed(1)}%)` : null,
+    tnx  ? `10Y ${tnx.price.toFixed(2)}%` : null,
+  ].filter(Boolean)
+
+  // Pick one stock relevant to European traders (large caps with EU exposure)
+  const EU_EXPOSED = ['LVMHF','SAP','ASML','NESN','NOVO-B.CO','SHEL','TTE','BHP','RIO','HSBA.L']
+  const US_EU = ['MSFT','GOOGL','META','NVDA','AAPL','JPM','UNH','XOM','V','MA']
+  const pool = US_EU  // use US tickers since we have valuation data for these
+  let stockLine = null
+  try {
+    const pick = pool[(dayOfYear * 7) % pool.length]
+    const d = await fetchValuation(pick)
+    const fair = appFairValue(d), upside = appUpside(d), price = d?.quote?.price
+    const impliedG = d?.valuationMethods?.models?.reverseDcf?.impliedCAGR
+    if (fair && upside != null && price) {
+      stockLine = impliedG != null
+        ? `On the radar: $${pick} at ${fmt(price)}. Market pricing in ~${pct(impliedG, false)}/yr growth. Model fair value: ${fmt(fair)} (${pct(upside)}).`
+        : `On the radar: $${pick} at ${fmt(price)}. Model fair value: ${fmt(fair)} (${pct(upside)}).`
+    }
+  } catch { /* skip */ }
+
+  // Macro events today for EU traders
+  const todayUtc = new Date().toISOString().split('T')[0]
+  const macroToday = MACRO_CALENDAR.filter(e => e.date === todayUtc)
+  const macroLine = macroToday.length > 0
+    ? `On the calendar today: ${macroToday.map(e => e.label).join(' · ')}.`
+    : null
+
+  const lines = [
+    `European open — ${dayName}`,
+    ``,
+    tone,
+    ``,
+    euLines.length > 0 ? euLines.join(' · ') : null,
+    sp500 ? `S&P futures ${sp500.changePct >= 0 ? '+' : ''}${sp500.changePct.toFixed(2)}%` : null,
+    commLines.length > 0 ? commLines.join(' · ') : null,
+    ``,
+    macroLine,
+    stockLine,
+    ``,
+    `#EuropeanMarkets #StockMarket #Investing #Premarket`,
+  ].filter(Boolean)
+
+  await post(lines.join('\n'))
+}
 
 
 if (!MODES[MODE]) {
