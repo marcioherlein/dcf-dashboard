@@ -868,229 +868,106 @@ function ValuationsPageContent({ userEmail }: { userEmail: string | null }) {
             )}
           </div>
 
-          {/* Toolbar */}
-          <div className="bg-white border border-[#E5E5E5] rounded-xl shadow-sm">
-            {/* Segment tabs — mobile only; desktop tabs in TopBar */}
-            <div className="flex items-center gap-2 px-4 pt-3 lg:hidden">
-              <div className="flex-1 min-w-0 overflow-x-auto scrollbar-hide">
-                <SegmentTabs active={activeTab} counts={tabCounts} onSelect={setActiveTab} />
-              </div>
+          {/* ── Toolbar — single compact bar ── */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Segment tabs — mobile only */}
+            <div className="flex-1 min-w-0 lg:hidden overflow-x-auto scrollbar-hide">
+              <SegmentTabs active={activeTab} counts={tabCounts} onSelect={setActiveTab} />
             </div>
 
-            {/* Row 1: Search + Sort + Presets + ColumnPicker + Export */}
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 px-4 py-3 border-t border-[#EDF2F7]">
-              <div className="relative flex-1 min-w-0 sm:min-w-[180px] sm:max-w-xs">
-                <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9B9B9B] pointer-events-none" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search valuations…"
-                  className="w-full pl-8 pr-8 py-2.5 text-[16px] text-[#111111] bg-white border border-[#DDE6F2] rounded-xl focus:outline-none focus:border-[#5F790B] focus:ring-2 focus:ring-blue-100 transition-all placeholder-slate-400 min-h-[44px]"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearch('')}
-                    aria-label="Clear search"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full bg-[#E5E5E5] hover:bg-[#D0D0D0] text-[#6B6B6B] transition-colors"
-                  >
-                    <span className="text-[11px] font-bold leading-none">×</span>
-                  </button>
-                )}
-              </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <SortDropdown current={sortKey} dir={sortDir} onSort={handleSort} />
-                {/* View presets — desktop only */}
-                <div className="hidden lg:flex items-center gap-0.5 bg-[#F5F5F5] rounded-lg p-0.5 overflow-x-auto scrollbar-hide max-w-[340px]">
-                  {(['valuation','performance','quality','risk','analyst','events','custom'] as const).map(p => (
-                    <button key={p} onClick={() => setViewPreset(p)}
-                      className={cn('px-2.5 py-1 rounded-md text-[11px] font-[650] capitalize transition-colors min-h-[32px] whitespace-nowrap',
-                        viewPreset === p ? 'bg-white text-[#111111] shadow-sm' : 'text-[#9B9B9B] hover:text-[#6B6B6B]'
-                      )}>{p}</button>
-                  ))}
-                </div>
-                {view === 'table' && viewPreset === 'custom' && (
-                  <ColumnPicker selected={selectedCols} onChange={setSelectedCols} />
-                )}
-                {/* Export CSV */}
-                <button
-                  onClick={handleExport}
-                  title="Export to CSV"
-                  aria-label="Export to CSV"
-                  className="p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center border border-[#DDE6F2] text-[#6B6B6B] hover:border-[#5F790B] hover:text-[#5F790B] bg-white"
-                >
-                  <Download size={15} />
+            {/* Search */}
+            <div className="relative w-full sm:w-auto sm:flex-1 sm:max-w-[220px]">
+              <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#9B9B9B] pointer-events-none" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search…"
+                className="w-full pl-7 pr-6 py-1.5 text-[13px] text-[#111111] bg-white border border-[#E5E5E5] rounded-lg focus:outline-none focus:border-[#5F790B] transition-all placeholder-[#9B9B9B] min-h-[34px]"
+              />
+              {searchQuery && (
+                <button onClick={() => setSearch('')} aria-label="Clear" className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[#9B9B9B] hover:text-[#6B6B6B] w-5 h-5 flex items-center justify-center">
+                  <span className="text-[12px] leading-none">×</span>
                 </button>
-                {hasFilters && (
-                  <button
-                    className="flex items-center gap-1.5 px-3 py-2 text-[12px] font-semibold border rounded-xl transition-colors min-h-[44px] bg-olive-50 border-olive-700 text-olive-700"
-                    onClick={() => { setFilterUpside('all'); setFilterConfidence('all'); setSearch(''); setFilterStale(false); setFilterHasNote(false) }}
-                  >
-                    <SlidersHorizontal size={13} />
-                    Clear filters
-                  </button>
-                )}
-              </div>
+              )}
             </div>
 
-            {/* Row 2: View toggle + Density + Groups — table view only */}
-            {view === 'table' && (
-              <div className="flex items-center gap-2 px-4 pb-3 border-t border-[#F5F5F5] pt-2 flex-wrap">
-                {/* View toggle */}
-                {(() => {
-                  const v = view as ViewMode
-                  return (
-                    <div className="flex items-center gap-0.5 p-0.5 bg-[#F5F5F5] rounded-xl shrink-0">
-                      <button
-                        onClick={() => setView('table')}
-                        title="Table view"
-                        aria-label="Table view"
-                        aria-pressed={v === 'table'}
-                        className={cn('p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center', v === 'table' ? 'bg-white text-olive-700 shadow-sm' : 'text-[#9B9B9B] hover:text-[#6B6B6B]')}
-                      >
-                        <List size={15} />
-                      </button>
-                      <button
-                        onClick={() => setView('grid')}
-                        title="Grid view"
-                        aria-label="Grid view"
-                        aria-pressed={v === 'grid'}
-                        className={cn('p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center', v === 'grid' ? 'bg-white text-olive-700 shadow-sm' : 'text-[#9B9B9B] hover:text-[#6B6B6B]')}
-                      >
-                        <LayoutGrid size={15} />
-                      </button>
-                    </div>
-                  )
-                })()}
-                {/* Compact density toggle */}
+            {/* Upside filter — compact chips */}
+            <div className="flex items-center gap-1">
+              {(['all','undervalued','fair','overvalued'] as const).map(v => (
                 <button
-                  onClick={() => setCompact(v => !v)}
-                  title={compact ? 'Comfortable density' : 'Compact density'}
-                  aria-pressed={compact}
+                  key={v}
+                  onClick={() => setFilterUpside(v)}
                   className={cn(
-                    'p-2 rounded-lg border transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center',
-                    compact
-                      ? 'bg-olive-50 border-olive-700 text-olive-700'
-                      : 'bg-white border-[#DDE6F2] text-[#6B6B6B] hover:border-[#5F790B] hover:text-[#5F790B]',
+                    'px-2 py-1 rounded-md text-[11px] font-[650] transition-colors min-h-[30px] whitespace-nowrap',
+                    filterUpside === v
+                      ? 'bg-[#5F790B] text-white'
+                      : 'text-[#6B6B6B] hover:text-[#111111]'
                   )}
                 >
-                  {/* Compact icon: tight horizontal lines */}
-                  <svg className="w-[15px] h-[15px]" fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={1.8}>
-                    <line x1="1" y1="4"  x2="15" y2="4" />
-                    <line x1="1" y1="7"  x2="15" y2="7" />
-                    <line x1="1" y1="10" x2="15" y2="10" />
-                    <line x1="1" y1="13" x2="15" y2="13" />
-                  </svg>
+                  {v === 'all' ? 'All' : v === 'undervalued' ? 'Under' : v === 'fair' ? 'Fair' : 'Over'}
                 </button>
-                {/* Group by name toggle */}
-                <button
-                  onClick={() => setGroupByName(v => !v)}
-                  title={groupByName ? 'Flat list' : 'Group by portfolio'}
-                  aria-pressed={groupByName}
-                  className={cn(
-                    'flex items-center gap-1.5 px-3 py-2 rounded-lg border text-[12px] font-[650] transition-colors min-h-[44px]',
-                    groupByName
-                      ? 'bg-olive-50 border-olive-700 text-olive-700'
-                      : 'bg-white border-[#DDE6F2] text-[#6B6B6B] hover:border-[#5F790B] hover:text-[#5F790B]',
-                  )}
-                >
+              ))}
+            </div>
+
+            {/* View presets — desktop */}
+            <div className="hidden lg:flex items-center gap-0.5">
+              {(['valuation','performance','quality','risk','custom'] as const).map(p => (
+                <button key={p} onClick={() => setViewPreset(p)}
+                  className={cn('px-2.5 py-1 rounded-md text-[11px] font-[650] capitalize transition-colors min-h-[30px] whitespace-nowrap',
+                    viewPreset === p ? 'bg-[#F0F1F6] text-[#111111]' : 'text-[#9B9B9B] hover:text-[#6B6B6B]'
+                  )}>{p}</button>
+              ))}
+            </div>
+
+            {/* Right controls */}
+            <div className="flex items-center gap-1 ml-auto">
+              {view === 'table' && viewPreset === 'custom' && (
+                <ColumnPicker selected={selectedCols} onChange={setSelectedCols} />
+              )}
+              {/* View toggle */}
+              <div className="flex items-center p-0.5 bg-[#F5F5F5] rounded-lg">
+                <button onClick={() => setView('table')} title="Table" aria-pressed={view === 'table'}
+                  className={cn('p-1.5 rounded-md transition-colors', view === 'table' ? 'bg-white text-olive-700 shadow-sm' : 'text-[#9B9B9B] hover:text-[#6B6B6B]')}>
+                  <List size={14} />
+                </button>
+                <button onClick={() => setView('grid')} title="Grid" aria-pressed={view === 'grid'}
+                  className={cn('p-1.5 rounded-md transition-colors', view === 'grid' ? 'bg-white text-olive-700 shadow-sm' : 'text-[#9B9B9B] hover:text-[#6B6B6B]')}>
+                  <LayoutGrid size={14} />
+                </button>
+              </div>
+              {/* Compact toggle */}
+              {view === 'table' && (
+                <button onClick={() => setCompact(v => !v)} title={compact ? 'Comfortable' : 'Compact'}
+                  className={cn('p-1.5 rounded-lg border transition-colors', compact ? 'bg-olive-50 border-olive-700 text-olive-700' : 'bg-white border-[#E5E5E5] text-[#9B9B9B] hover:text-[#5F790B]')}>
                   <svg className="w-[14px] h-[14px]" fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={1.8}>
-                    <rect x="1" y="1" width="14" height="4" rx="1" />
-                    <line x1="3" y1="8"  x2="15" y2="8" />
-                    <line x1="3" y1="11" x2="15" y2="11" />
-                    <line x1="3" y1="14" x2="15" y2="14" />
+                    <line x1="1" y1="4" x2="15" y2="4" /><line x1="1" y1="7" x2="15" y2="7" /><line x1="1" y1="10" x2="15" y2="10" /><line x1="1" y1="13" x2="15" y2="13" />
                   </svg>
-                  Groups
                 </button>
+              )}
+              {/* Groups toggle */}
+              {view === 'table' && (
+                <button onClick={() => setGroupByName(v => !v)} title={groupByName ? 'Flat' : 'Groups'}
+                  className={cn('p-1.5 rounded-lg border transition-colors', groupByName ? 'bg-olive-50 border-olive-700 text-olive-700' : 'bg-white border-[#E5E5E5] text-[#9B9B9B] hover:text-[#5F790B]')}>
+                  <svg className="w-[14px] h-[14px]" fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={1.8}>
+                    <rect x="1" y="1" width="14" height="4" rx="1" /><line x1="3" y1="8" x2="15" y2="8" /><line x1="3" y1="11" x2="15" y2="11" /><line x1="3" y1="14" x2="15" y2="14" />
+                  </svg>
+                </button>
+              )}
+              {/* Sort — mobile */}
+              <div className="sm:hidden">
+                <SortDropdown current={sortKey} dir={sortDir} onSort={handleSort} />
               </div>
-            )}
-            {/* View toggle for grid mode (outside row 2) */}
-            {view === 'grid' && (
-              <div className="flex items-center gap-2 px-4 pb-3 border-t border-[#F5F5F5] pt-2">
-                {(() => {
-                  const v = view as ViewMode
-                  return (
-                    <div className="flex items-center gap-0.5 p-0.5 bg-[#F5F5F5] rounded-xl shrink-0">
-                      <button
-                        onClick={() => setView('table')}
-                        title="Table view"
-                        aria-label="Table view"
-                        aria-pressed={v === 'table'}
-                        className={cn('p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center', v === 'table' ? 'bg-white text-olive-700 shadow-sm' : 'text-[#9B9B9B] hover:text-[#6B6B6B]')}
-                      >
-                        <List size={15} />
-                      </button>
-                      <button
-                        onClick={() => setView('grid')}
-                        title="Grid view"
-                        aria-label="Grid view"
-                        aria-pressed={v === 'grid'}
-                        className={cn('p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center', v === 'grid' ? 'bg-white text-olive-700 shadow-sm' : 'text-[#9B9B9B] hover:text-[#6B6B6B]')}
-                      >
-                        <LayoutGrid size={15} />
-                      </button>
-                    </div>
-                  )
-                })()}
-              </div>
-            )}
-
-            {/* Filter chips — Row 1: verdict */}
-            <div className="flex items-center gap-1.5 px-4 pb-2 flex-wrap">
-              {([
-                { value: 'all',         label: 'All' },
-                { value: 'undervalued', label: 'Undervalued' },
-                { value: 'fair',        label: 'Fairly Valued' },
-                { value: 'overvalued',  label: 'Overvalued' },
-              ] as const).map(opt => {
-                const cnt = opt.value === 'all' ? entries.length
-                  : opt.value === 'undervalued' ? entries.filter(e => (e.snapshot.upsidePct ?? 0) >= 0.20).length
-                  : opt.value === 'fair' ? entries.filter(e => { const u = e.snapshot.upsidePct ?? null; return u != null && u >= 0 && u < 0.20 }).length
-                  : entries.filter(e => (e.snapshot.upsidePct ?? 0) < 0).length
-                return (
-                  <button
-                    key={opt.value}
-                    onClick={() => setFilterUpside(opt.value)}
-                    className={cn(
-                      'inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-[11px] font-[650] transition-colors min-h-[32px]',
-                      filterUpside === opt.value
-                        ? 'bg-[#5F790B] border-[#5F790B] text-white'
-                        : 'bg-white border-[#E5E5E5] text-[#6B6B6B] hover:border-[#5F790B] hover:text-[#5F790B]'
-                    )}
-                  >
-                    {opt.label}
-                    {cnt > 0 && <span className={cn('text-[10px] font-[700] tabular-nums', filterUpside === opt.value ? 'opacity-75' : 'opacity-50')}>{cnt}</span>}
-                  </button>
-                )
-              })}
-            </div>
-            {/* Filter chips — Row 2: confidence + workflow */}
-            <div className="flex items-center gap-1.5 px-4 pb-3 flex-wrap border-t border-[#F5F5F5] pt-2">
-              <span className="text-[10px] font-[650] text-[#9B9B9B] shrink-0">Also:</span>
-              <button
-                onClick={() => setFilterConfidence(filterConfidence === 'high' ? 'all' : 'high')}
-                className={cn('inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-[11px] font-[650] transition-colors min-h-[28px]',
-                  filterConfidence === 'high'
-                    ? 'bg-[#2563EB] border-[#2563EB] text-white'
-                    : 'bg-white border-[#E5E5E5] text-[#6B6B6B] hover:border-[#2563EB] hover:text-[#2563EB]'
-                )}
-              >High conviction</button>
-              <button
-                onClick={() => setFilterStale(v => !v)}
-                className={cn('inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-[11px] font-[650] transition-colors min-h-[28px]',
-                  filterStale
-                    ? 'bg-[#B56A00] border-[#B56A00] text-white'
-                    : 'bg-white border-[#E5E5E5] text-[#6B6B6B] hover:border-[#B56A00] hover:text-[#B56A00]'
-                )}
-              >Stale</button>
-              <button
-                onClick={() => setFilterHasNote(v => !v)}
-                className={cn('inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-[11px] font-[650] transition-colors min-h-[28px]',
-                  filterHasNote
-                    ? 'bg-[#2563EB] border-[#2563EB] text-white'
-                    : 'bg-white border-[#E5E5E5] text-[#6B6B6B] hover:border-[#2563EB] hover:text-[#2563EB]'
-                )}
-              >Has notes</button>
+              <button onClick={handleExport} title="Export CSV"
+                className="p-1.5 rounded-lg border border-[#E5E5E5] text-[#9B9B9B] hover:text-[#5F790B] bg-white transition-colors">
+                <Download size={14} />
+              </button>
+              {hasFilters && (
+                <button onClick={() => { setFilterUpside('all'); setFilterConfidence('all'); setSearch(''); setFilterStale(false); setFilterHasNote(false) }}
+                  className="p-1.5 rounded-lg border border-[#E5E5E5] bg-olive-50 border-olive-700 text-olive-700 transition-colors">
+                  <SlidersHorizontal size={14} />
+                </button>
+              )}
             </div>
           </div>
 

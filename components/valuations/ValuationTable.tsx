@@ -608,273 +608,6 @@ function Th({ label, sortKey, current, dir, onSort, align = 'right', className }
   )
 }
 
-// ── Company Logo (FMP with initials fallback) ─────────────────────────────────
-
-function CompanyLogo({ ticker }: { ticker: string }) {
-  const [failed, setFailed] = useState(false)
-  const colors = ['#5F790B','#2563EB','#B56A00','#11875D','#D83B3B','#6D28D9','#0891B2']
-  const color  = colors[ticker.charCodeAt(0) % colors.length]
-
-  if (failed) {
-    return (
-      <div
-        className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-white text-[11px] font-bold"
-        style={{ background: color }}
-      >
-        {ticker.slice(0, 2)}
-      </div>
-    )
-  }
-
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={`https://financialmodelingprep.com/image-stock/${ticker}.png`}
-      alt={ticker}
-      onError={() => setFailed(true)}
-      className="w-9 h-9 rounded-xl object-cover border border-[#E5E5E5] shrink-0"
-    />
-  )
-}
-
-// ── Mobile Row (Koyfin-style compact row with tap-to-expand) ──────────────────
-
-function MobileValuationRow({ entry, sparklines, onDelete, onTagUpdate, onGroupUpdate, onNoteSave, groups, selectedCols, onRefresh, refreshing }: {
-  entry:         WatchlistEntry
-  sparklines:    Record<string, number[] | null>
-  groups:        string[]
-  selectedCols:  SortKey[]
-  onDelete:      () => void
-  onTagUpdate:   (tag: ListTag) => void
-  onGroupUpdate: (groupName: string | null) => void
-  onNoteSave:    (ticker: string, note: string) => Promise<void>
-  onRefresh?:    (ticker: string) => Promise<void>
-  refreshing?:   Set<string>
-}) {
-  const [expanded, setExpanded] = useState(false)
-  const prices     = sparklines[entry.ticker]
-  const upside     = entry.snapshot.upsidePct
-  const verdict    = getVerdict(entry)
-  const vtInfo     = verdictInfo(verdict)
-  const tInfo      = tagInfo(entry.listTag)
-  const activeCols = OPTIONAL_COLUMNS.filter(c => selectedCols.includes(c.id))
-
-  // Since-save delta
-  const currentPrice = prices?.[prices.length - 1] ?? null
-  const savedPrice   = entry.snapshot.price
-  const priceDelta   = currentPrice != null && savedPrice != null && savedPrice > 0
-    ? (currentPrice - savedPrice) / savedPrice : null
-
-  return (
-    <div className="bg-white border-b border-[#F0F0F0] last:border-b-0">
-      {/* ── Collapsed row ── */}
-      <button
-        onClick={() => setExpanded(v => !v)}
-        className="w-full flex items-center gap-3 px-4 py-3 text-left transition-colors active:bg-[#F0F4E8] active:scale-[0.99]"
-        style={{ WebkitTapHighlightColor: 'transparent' }}
-      >
-        {/* Logo */}
-        <CompanyLogo ticker={entry.ticker} />
-
-        {/* Name + conviction */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5">
-            <span className="text-[14px] font-bold text-[#111111] tracking-tight">{entry.ticker}</span>
-            {tInfo && (
-              <span className={cn('inline-flex items-center gap-0.5 text-[9px] font-bold rounded-full px-1.5 py-0.5 border leading-none', tInfo.cls)}>
-                <span className={cn('w-1 h-1 rounded-full', tInfo.dot)} />
-                {tInfo.label}
-              </span>
-            )}
-          </div>
-          <p className="text-[12px] text-[#9B9B9B] truncate mt-0.5 leading-none">
-            {entry.companyName.length > 28 ? entry.companyName.slice(0, 26) + '…' : entry.companyName}
-          </p>
-        </div>
-
-        {/* Price + upside */}
-        <div className="flex flex-col items-end gap-0.5 shrink-0">
-          {entry.snapshot.price != null && (
-            <span className="text-[14px] font-semibold text-[#111111] tabular-nums leading-none">
-              {fmtPrice(entry.snapshot.price, 'USD')}
-            </span>
-          )}
-          {upside != null && (
-            <span className={cn('text-[11px] font-bold tabular-nums leading-none', upside >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
-              {upside >= 0 ? '+' : ''}{(upside * 100).toFixed(1)}%
-            </span>
-          )}
-        </div>
-
-        {/* Chevron */}
-        <svg
-          className={cn('w-4 h-4 text-[#9B9B9B] shrink-0 transition-transform', expanded && 'rotate-180')}
-          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-
-      {/* ── Expanded detail — animated ── */}
-      <div
-        className="overflow-hidden transition-all duration-300 ease-in-out"
-        style={{ maxHeight: expanded ? '600px' : '0px', opacity: expanded ? 1 : 0 }}
-      >
-        <div className="border-t border-[#F0F0F0] bg-[#FAFAFA] px-4 py-4">
-          {/* Core metrics row */}
-          <div className="grid grid-cols-3 gap-3 mb-4">
-            <div>
-              <p className="text-[10px] text-[#9B9B9B] font-semibold uppercase tracking-wide mb-0.5">Fair Value</p>
-              <p className="text-[13px] font-semibold text-[#111111] tabular-nums">
-                {entry.snapshot.fairValue != null ? fmtPrice(entry.snapshot.fairValue, 'USD') : '—'}
-              </p>
-            </div>
-            <div>
-              <p className="text-[10px] text-[#9B9B9B] font-semibold uppercase tracking-wide mb-0.5">Verdict</p>
-              <span className={cn('inline-flex items-center justify-center text-[10px] font-bold rounded-full px-2 py-0.5 border min-w-[88px] text-center', vtInfo.cls)}>
-                {verdict}
-              </span>
-            </div>
-            <div>
-              <p className="text-[10px] text-[#9B9B9B] font-semibold uppercase tracking-wide mb-0.5">Since Save</p>
-              <p className={cn('text-[13px] font-semibold tabular-nums', priceDelta == null ? 'text-[#9B9B9B]' : priceDelta >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
-                {priceDelta != null ? `${priceDelta >= 0 ? '+' : ''}${(priceDelta * 100).toFixed(1)}%` : '—'}
-              </p>
-            </div>
-          </div>
-
-          {/* Scenarios */}
-          {(entry.snapshot.bearScenario != null || entry.snapshot.baseScenario != null || entry.snapshot.bullScenario != null) && (
-            <div className="grid grid-cols-3 gap-2 mb-4 bg-white rounded-xl border border-[#E5E5E5] p-2.5">
-              {[
-                { label: 'Bear', val: entry.snapshot.bearScenario, cls: 'text-[#D83B3B]' },
-                { label: 'Base', val: entry.snapshot.baseScenario, cls: 'text-[#2563EB]' },
-                { label: 'Bull', val: entry.snapshot.bullScenario, cls: 'text-[#11875D]' },
-              ].map(({ label, val, cls }) => (
-                <div key={label} className="text-center">
-                  <p className="text-[9px] font-bold uppercase tracking-wide text-[#9B9B9B] mb-0.5">{label}</p>
-                  <p className={cn('text-[12px] font-bold tabular-nums', cls)}>
-                    {val != null ? fmtPrice(val, 'USD') : '—'}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Optional columns */}
-          {activeCols.length > 0 && (
-            <div className="grid grid-cols-3 gap-3 mb-4">
-              {activeCols.map(col => {
-                let val: number | null = null
-                if (col.id === 'downsideToBear') {
-                  const bear = entry.snapshot.bearScenario ?? null
-                  const price = entry.snapshot.price ?? null
-                  val = (bear != null && price != null && price > 0) ? (bear - price) / price : null
-                } else {
-                  const rawVal = entry.snapshot[col.id as keyof typeof entry.snapshot] as number | null | undefined
-                  val = typeof rawVal === 'number' ? rawVal : null
-                }
-                return (
-                  <div key={col.id}>
-                    <p className="text-[10px] text-[#9B9B9B] font-semibold uppercase tracking-wide mb-0.5">{col.label}</p>
-                    <p className={cn('text-[13px] font-semibold tabular-nums', colValueClass(val, col.format, col.id))}>
-                      {formatColValue(val, col.format)}
-                    </p>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-
-          {/* Bottom actions */}
-          <div className="flex items-center gap-3 pt-3 border-t border-[#E5E5E5]">
-            <Link
-              href={`/stock/${entry.ticker}`}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-[#5F790B] text-white text-[12px] font-semibold transition-colors active:bg-[#526A08]"
-            >
-              View full analysis
-              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-            {onRefresh && (
-              <button
-                onClick={(e) => { e.stopPropagation(); onRefresh(entry.ticker) }}
-                disabled={refreshing?.has(entry.ticker)}
-                aria-label="Refresh analysis"
-                title="Refresh live data"
-                className="p-1.5 rounded-lg text-[#9B9B9B] hover:text-[#5F790B] hover:bg-[#F0F4E8] transition-colors disabled:opacity-40"
-              >
-                {refreshing?.has(entry.ticker)
-                  ? <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                  : <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                }
-              </button>
-            )}
-            <ActionsMenu
-              entry={entry}
-              groups={groups}
-              onDelete={onDelete}
-              onTagUpdate={onTagUpdate}
-              onGroupUpdate={onGroupUpdate}
-            />
-          </div>
-
-          {/* Note */}
-          <div className="mt-3">
-            <NoteEditorMobile entry={entry} onNoteSave={onNoteSave} />
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function NoteEditorMobile({ entry, onNoteSave }: {
-  entry: WatchlistEntry
-  onNoteSave: (ticker: string, note: string) => Promise<void>
-}) {
-  const thesis = entry.notes?.['__thesis__'] ?? ''
-  const [text, setText]    = useState(thesis)
-  const [saving, setSaving] = useState(false)
-  const [edited, setEdited] = useState(false)
-
-  const handleSave = async () => {
-    setSaving(true)
-    await onNoteSave(entry.ticker, text)
-    setSaving(false)
-    setEdited(false)
-  }
-
-  return (
-    <div>
-      <p className="text-[10px] font-bold text-[#2563EB] uppercase tracking-wider mb-1.5">Analyst note</p>
-      <textarea
-        value={text}
-        onChange={(e) => { setText(e.target.value); setEdited(true) }}
-        rows={3}
-        placeholder="Write your thesis…"
-        style={{ fontSize: '16px' }}
-        className="w-full text-[12px] text-[#111111] bg-white border border-[#93B4F5] rounded-lg px-3 py-2 focus:outline-none focus:border-[#93B4F5] resize-none placeholder-slate-300"
-      />
-      <div className="flex items-center gap-3 mt-1.5">
-        {edited && (
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="text-[11px] font-semibold text-white bg-olive-700 hover:bg-olive-600 px-3 py-1 rounded-lg transition-colors disabled:opacity-60"
-          >
-            {saving ? 'Saving…' : 'Save'}
-          </button>
-        )}
-        <Link href={`/stock/${entry.ticker}`} className="text-[11px] font-semibold text-olive-700 hover:text-[#2563EB] transition-colors">
-          View full analysis →
-        </Link>
-      </div>
-    </div>
-  )
-}
-
 // ── MoS heatmap helper ─────────────────────────────────────────────────────────
 
 function mosCls(upside: number | null): string {
@@ -1374,23 +1107,112 @@ export function ValuationTable({ entries, sparklines, livePrices = {}, groups, s
         </div>
       </div>
 
-      {/* Mobile row list — Koyfin-style compact rows */}
-      <div className="sm:hidden bg-white border border-[#E5E5E5] rounded-2xl overflow-hidden">
-        {sorted.map((entry) => (
-          <MobileValuationRow
-            key={entry.ticker}
-            entry={entry}
-            sparklines={sparklines}
-            groups={groups}
-            selectedCols={selectedCols}
-            onDelete={() => onDelete(entry.ticker)}
-            onTagUpdate={(tag) => onTagUpdate(entry.ticker, tag)}
-            onGroupUpdate={(g) => onGroupUpdate(entry.ticker, g)}
-            onNoteSave={onNoteSave}
-            onRefresh={onRefresh}
-            refreshing={refreshing}
-          />
-        ))}
+      {/* Mobile table — horizontal scroll, sticky ticker column */}
+      <div className="sm:hidden bg-white border border-[#E5E5E5] rounded-xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[480px] text-[12px]">
+            <thead>
+              <tr className="bg-[#F8F8F8] border-b border-[#E5E5E5]">
+                {/* Sticky ticker column */}
+                <th className="sticky left-0 z-10 bg-[#F8F8F8] px-3 py-2 text-left text-[10px] font-[650] text-[#6B6B6B] whitespace-nowrap min-w-[90px]">Ticker</th>
+                <th className="px-3 py-2 text-right text-[10px] font-[650] text-[#6B6B6B] whitespace-nowrap">Price</th>
+                <th className="px-3 py-2 text-right text-[10px] font-[650] text-[#6B6B6B] whitespace-nowrap">Today</th>
+                <th className="px-3 py-2 text-right text-[10px] font-[650] text-[#6B6B6B] whitespace-nowrap">Upside</th>
+                <th className="px-3 py-2 text-right text-[10px] font-[650] text-[#6B6B6B] whitespace-nowrap">FV</th>
+                <th className="px-3 py-2 text-center text-[10px] font-[650] text-[#6B6B6B] whitespace-nowrap">Tag</th>
+                <th className="w-8" />
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#F0F0F0]">
+              {sorted.map((entry) => {
+                const livePrice  = livePrices[entry.ticker] ?? null
+                const displayPrice = livePrice ?? entry.snapshot.price
+                const prices      = sparklines[entry.ticker]
+
+                // Today % from last two sparkline points (1M data)
+                const todayPct: number | null = (() => {
+                  if (livePrice != null && prices && prices.length >= 2) {
+                    const prev = prices[prices.length - 2]
+                    return prev > 0 ? (livePrice - prev) / prev : null
+                  }
+                  return null
+                })()
+
+                const upside = livePrice != null && entry.snapshot.fairValue != null
+                  ? (entry.snapshot.fairValue - livePrice) / livePrice
+                  : entry.snapshot.upsidePct
+                const tInfo   = tagInfo(entry.listTag)
+                const verdict = getVerdict(entry)
+                const vtInfo  = verdictInfo(verdict)
+
+                return (
+                  <tr key={entry.ticker} className="hover:bg-[#FAFAFA] active:bg-[#F0F4E8] transition-colors">
+                    {/* Ticker — sticky */}
+                    <td className="sticky left-0 z-10 bg-white px-3 py-2.5">
+                      <Link href={`/stock/${entry.ticker}`} className="block">
+                        <span className="text-[12px] font-[800] text-[#111111] font-mono tracking-tight">{entry.ticker}</span>
+                        <p className="text-[10px] text-[#9B9B9B] leading-none mt-0.5 truncate max-w-[80px]">{entry.companyName}</p>
+                      </Link>
+                    </td>
+
+                    {/* Price */}
+                    <td className="px-3 py-2.5 text-right tabular-nums whitespace-nowrap">
+                      <span className={cn('text-[12px] font-[600]', livePrice != null ? 'text-[#111111]' : 'text-[#6B6B6B]')}>
+                        {displayPrice != null ? fmtPrice(displayPrice, 'USD') : '—'}
+                      </span>
+                    </td>
+
+                    {/* Today % */}
+                    <td className="px-3 py-2.5 text-right tabular-nums whitespace-nowrap">
+                      {todayPct != null ? (
+                        <span className={cn('text-[12px] font-[650]', todayPct >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
+                          {todayPct >= 0 ? '+' : ''}{(todayPct * 100).toFixed(2)}%
+                        </span>
+                      ) : <span className="text-[#C0C0C0] text-[11px]">—</span>}
+                    </td>
+
+                    {/* Upside */}
+                    <td className="px-3 py-2.5 text-right tabular-nums whitespace-nowrap">
+                      {upside != null ? (
+                        <span className={cn('text-[12px] font-[700]', upside >= 0 ? 'text-[#11875D]' : 'text-[#D83B3B]')}>
+                          {upside >= 0 ? '+' : ''}{(upside * 100).toFixed(1)}%
+                        </span>
+                      ) : <span className="text-[#C0C0C0] text-[11px]">—</span>}
+                    </td>
+
+                    {/* Fair Value with verdict colour */}
+                    <td className="px-3 py-2.5 text-right tabular-nums whitespace-nowrap">
+                      {entry.snapshot.fairValue != null ? (
+                        <span className={cn('text-[11px] font-[600] px-1.5 py-0.5 rounded-full border', vtInfo.cls)}>
+                          {fmtPrice(entry.snapshot.fairValue, 'USD')}
+                        </span>
+                      ) : <span className="text-[#C0C0C0] text-[11px]">—</span>}
+                    </td>
+
+                    {/* Tag dot */}
+                    <td className="px-3 py-2.5 text-center">
+                      {tInfo ? (
+                        <span className={cn('inline-flex items-center gap-0.5 text-[9px] font-[700] px-1.5 py-0.5 rounded-full border', tInfo.cls)}>
+                          <span className={cn('w-1.5 h-1.5 rounded-full shrink-0', tInfo.dot)} />
+                          {tInfo.label}
+                        </span>
+                      ) : <span className="text-[#E0E0E0] text-[11px]">—</span>}
+                    </td>
+
+                    {/* Open */}
+                    <td className="px-2 py-2.5">
+                      <Link href={`/stock/${entry.ticker}`} className="text-[#9B9B9B] hover:text-[#5F790B] transition-colors">
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                        </svg>
+                      </Link>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     </>
   )
