@@ -1050,7 +1050,7 @@ async function runMacro() {
   const typeEmoji = { CPI: '📊', NFP: '💼', FOMC: '🏦' }
   const upcomingContext = {
     CPI:  `CPI inflation data in ${daysAway} day${daysAway > 1 ? 's' : ''}.\n\nThis is the single most market-moving release right now. A hot print keeps rates elevated — which raises WACC and compresses fair values on growth stocks. A cool print opens the door to rate cuts and lifts them.\n\nWatch the core CPI number closely. The headline can be distorted by energy.`,
-    NFP:  `Jobs report in ${daysAway} day${daysAway > 1 ? 's' : ''}.\n\nStrong payrolls = Fed on hold, rates stay elevated. Weak payrolls = rate cuts come sooner, discount rates fall.\n\nThe prior month revision often matters as much as the headline — markets trade the trend, not the single print.`,
+    NFP:  `The most important number in markets drops in ${daysAway} day${daysAway > 1 ? 's' : ''}: NFP.\n\nHere's the bet everyone is making right now without realizing it:\n\nIf payrolls beat: the Fed holds. Rates stay elevated. Growth stocks stay under pressure.\n\nIf payrolls miss: cuts come sooner. Discount rates fall. Every DCF model on a growth stock reprices up — mechanically, not because the business got better.\n\nThe prior month revision matters as much as the headline. Markets trade the trend, not the single print. Two consecutive downward revisions move more than one soft number.`,
     FOMC: `Federal Reserve rate decision in ${daysAway} day${daysAway > 1 ? 's' : ''}.\n\nThe rate decision itself is usually priced in. The real signal is the dot plot (where committee members expect rates to go) and Powell's language on the timing of cuts.\n\nEvery basis point shift in the path of rates flows directly into WACC — and into every fair value estimate.`,
   }
   const lines = [
@@ -1238,7 +1238,7 @@ const FEATURE_POSTS = {
       ``,
       ``,
       `1. FCFF DCF (Unlevered)`,
-      `Free cash flow to the firm, discounted at WACC. The Damodaran standard. WACC is calculated from CAPM + country risk premium.`,
+      `Free cash flow to the firm, discounted at WACC. The standard approach for operating businesses with stable capital structures. WACC is calculated from CAPM + country risk premium.`,
       ``,
       `2. FCFE DCF (Levered)`,
       `Free cash flow to equity, discounted at the cost of equity. Strips out the debt layer.`,
@@ -1381,7 +1381,16 @@ async function runWeeklyWrap() {
     lines.push(``)
   }
 
-  lines.push(`Which one would you bet on?`)
+  // Check if any stock has extreme downside (>50%) — use more provocative CTA
+  const hasExtremeDownside = stocks.some(s => (s.upside ?? 0) < -0.50)
+  const hasExtremeUpside   = stocks.some(s => (s.upside ?? 0) > 0.50)
+  const closingQ = hasExtremeDownside
+    ? `Which one would you bet against?`
+    : hasExtremeUpside && allUndervalued
+    ? `Which one would you add to first?`
+    : `Which one would you bet on?`
+
+  lines.push(closingQ)
   lines.push(``)
   // link removed — no card
   lines.push(`#DCF #Investing #ValueInvesting`)
@@ -1673,8 +1682,16 @@ async function runEtfPulse() {
       lines.push(`VIX ${vix.price.toFixed(1)} — ${sentiment.label.toLowerCase()}`)
       lines.push(``, sentiment.note)
     }
+    // Add a context line if QQQ and IWM diverge significantly — that's the real insight
+    if (qqq && iwm && Math.abs(qqq.changePct - iwm.changePct) > 1.0) {
+      const spread = (qqq.changePct - iwm.changePct).toFixed(1)
+      const note = qqq.changePct > iwm.changePct
+        ? `Tech (QQQ) leading small caps (IWM) by ${spread}pp. Growth appetite is selective today — not broad-based.`
+        : `Small caps (IWM) leading tech (QQQ) by ${Math.abs(Number(spread)).toFixed(1)}pp. Risk appetite is rotating toward cyclicals, not just megacap names.`
+      lines.push(``, note)
+    }
     // link removed — no card
-    lines.push(`#SPY #QQQ #Markets #Investing`)
+    lines.push(`#SPY #QQQ #ETF #Markets #Investing`)
 
     await post(lines.join('\n'))
 
@@ -1981,22 +1998,15 @@ async function runMorningBrief() {
   const spyMove  = sp500?.changePct ?? 0
   const vixLevel = vix?.price    ?? 0
 
-  // Clean, professional market language — uses live S&P 500 data (^GSPC via Yahoo Finance)
-  const openTone = spyMove > 1.5
-    ? `US equities opening strongly. S&P 500 ${spyMove >= 0 ? '+' : ''}${spyMove.toFixed(1)}% — broad-based buying, risk appetite high.`
-    : spyMove > 0.5
-    ? `US equities in positive territory. S&P 500 ${spyMove >= 0 ? '+' : ''}${spyMove.toFixed(1)}% — moderate gains at the open.`
-    : spyMove > 0.1
-    ? `US equities marginally higher. S&P 500 ${spyMove >= 0 ? '+' : ''}${spyMove.toFixed(1)}% — no clear directional catalyst yet.`
-    : spyMove > -0.1
-    ? `US equities near flat. S&P 500 ${spyMove >= 0 ? '+' : ''}${spyMove.toFixed(1)}% — markets in consolidation mode.`
+  // Lead with the brand hook — the question that frames the whole account's purpose
+  // Followed by specific market data. Closing note is session-specific, not repeated daily.
+  const openingHook = spyMove > 1.0
+    ? `The price moved. Did the value? Strong open — S&P 500 ${spyMove >= 0 ? '+' : ''}${spyMove.toFixed(1)}% — but a green tape is not a thesis.`
+    : spyMove > 0
+    ? `The price moved. Did the value? S&P 500 ${spyMove >= 0 ? '+' : ''}${spyMove.toFixed(1)}% to start.`
     : spyMove > -0.5
-    ? `US equities under mild pressure. S&P 500 ${spyMove.toFixed(1)}% — sellers have a slight edge.`
-    : spyMove > -1.5
-    ? `US equities declining. S&P 500 ${spyMove.toFixed(1)}% — risk-off tone, defensives and bonds outperforming.`
-    : `US equities under significant pressure. S&P 500 ${spyMove.toFixed(1)}% — risk-off conditions, elevated volatility.`
-    ? `US futures under pressure (${spyMove.toFixed(1)}%). Risk-off tone early — defensives and bonds outperforming.`
-    : `Significant pre-market weakness (${spyMove.toFixed(1)}%). Risk-off conditions — elevated volatility expected at the open.`
+    ? `The price moved. Did the value? Markets nearly flat — low-conviction morning.`
+    : `The price moved. Did the value? S&P ${spyMove.toFixed(1)}% — sellers have the early edge.`
 
   const vixNote = vixLevel >= 30
     ? ` VIX at ${vixLevel.toFixed(0)} signals elevated fear and uncertainty in the options market.`
@@ -2051,7 +2061,7 @@ async function runMorningBrief() {
     vix    ? `VIX ${vix.price.toFixed(1)}` : null,
   ].filter(Boolean).join(' · ')
 
-  const lines = [openTone + vixNote]
+  const lines = [openingHook + vixNote]
   if (usIndicesLine) lines.push(usIndicesLine)
 
   const overnightItems = [
@@ -2098,7 +2108,6 @@ async function runMorningBrief() {
 
   if (tomorrowNote) lines.push(``, tomorrowNote)
 
-  lines.push(``, `The price moved. Did the value?`)
   // link removed — no card
   lines.push(`#Markets #Investing #DCF`)
 
@@ -2154,9 +2163,10 @@ async function runMiddayPulse() {
   const rotationNote = best && worst ? (() => {
     const riskOn = ['Tech', 'Energy', 'Industrials'].includes(best.name)
     const defBad = ['Utilities', 'Healthcare'].includes(worst.name)
-    if (riskOn && defBad) return `Money rotating INTO ${best.name.toLowerCase()}, OUT OF defensives. Classic risk-on signal.`
-    if (!riskOn && defBad === false) return `Defensive rotation underway — ${best.name} leads while ${worst.name} lags. Market hedging.`
-    return `${best.name} leads (+${best.changePct.toFixed(1)}%), ${worst.name} lags (${worst.changePct.toFixed(1)}%).`
+    const gap = (best.changePct - worst.changePct).toFixed(1)
+    if (riskOn && defBad) return `${best.name} up, defensives lagging — ${gap}pp spread. Before calling this risk-on: check whether it's rate-driven (rising 10Y = utilities/healthcare sell off mechanically) or true growth appetite. They look the same in the data, but they're different signals.`
+    if (!riskOn && defBad === false) return `Defensive rotation underway — ${best.name} leads while ${worst.name} lags. Market is hedging, not expanding.`
+    return `${best.name} leads (+${best.changePct.toFixed(1)}%), ${worst.name} lags (${worst.changePct.toFixed(1)}%). ${gap}pp spread — watch whether this holds into the close.`
   })() : null
 
   const yieldNote = tnx ? (() => {
@@ -2297,7 +2307,7 @@ async function runMarketClose() {
 
   const weekOfYear = Math.floor((Date.now() / 86400000 + 4) / 7)
   const hooks = [
-    `The price moved. Did the value? insic.app`,
+    `The tape closed. The model didn't change. Check which of your positions moved on price vs. fundamentals.`,
     `Worth running the model after a session like this — insic.app`,
     `The market priced something in today. Was it already in your model? insic.app`,
     `Some of these moves will matter. Most won't. Hard part is knowing which. insic.app`,
@@ -2362,15 +2372,16 @@ async function runMarketOpen() {
   const openEmoji = spChg > 0.5 ? '🟢' : spChg < -0.5 ? '🔴' : '🟡'
 
   // Process-oriented insight, not just price reporting
+  // Provides a mental framework for interpreting the open — not just descriptive
   const processNote = spChg > 1.0
-    ? `Strong open. Before you act, ask what actually changed in the fundamentals — not just the sentiment.`
+    ? `Strong open. Before acting: what actually changed in the fundamentals? A green tape isn't a thesis. A rising price can mean opportunity missed or overvaluation widening — depends on whether value moved with it.`
     : spChg > 0.2
-    ? `Positive start. Does this move change anything in your models, or is it noise?`
+    ? `Positive start. Check whether today's move changes anything in your models, or whether it's the tape making noise without signal.`
     : spChg > -0.2
-    ? `Flat open. Low conviction day. Good time to update assumptions, not chase moves.`
+    ? `Flat open. Low conviction day. The best time to update assumptions is when nothing is happening — not when a catalyst forces your hand.`
     : spChg > -1.0
-    ? `Soft open, risk-off tone. If defensives are leading, rate expectations may be quietly shifting.`
-    : `Risk-off open. The model doesn't panic — do your positions still have a margin of safety here?`
+    ? `Soft open, risk-off tone. If defensives are leading, rate expectations may be quietly shifting — that changes WACC before anyone announces it.`
+    : `Risk-off open. The model doesn't panic. Ask which of your positions moved on fundamentals vs. fear — those are different situations.`
 
   const sp = sp500 ? `S&P ${sp500.changePct >= 0 ? '+' : ''}${sp500.changePct.toFixed(2)}%` : null
   const nq = nasdaq ? `Nasdaq ${nasdaq.changePct >= 0 ? '+' : ''}${nasdaq.changePct.toFixed(2)}%` : null
@@ -2510,7 +2521,17 @@ async function runDcf2() {
   const impliedGrowth = data.valuationMethods?.models?.reverseDcf?.impliedCAGR
   const historicalCagr = data.cagrAnalysis?.historicalCagr3y
 
+  // If bear/bull range is unusually wide, make that the story — it IS the insight
+  const bearBullRange = validScenarios(bear, bull, fair) ? (bull - bear) / fair : 0
+  const isWideRange = bearBullRange > 1.0  // more than 100% spread vs base = unusually wide
+
   const stressTest = (() => {
+    if (isWideRange && validScenarios(bear, bull, fair)) {
+      const bearPct = ((bear - price) / price * 100).toFixed(0)
+      const bullPct = ((bull - price) / price * 100).toFixed(0)
+      const spreadMultiple = (bull / bear).toFixed(1)
+      return `$${ticker} has one of the widest scenario spreads in our model.\n\nBear case: ${fmt(bear)} — ${bearPct}% from here.\nBull case: ${fmt(bull)} — +${bullPct}% from here.\n\nThat's a ${spreadMultiple}× gap between outcomes. Not because the model is uncertain — because the business genuinely sits at a fork in the road.`
+    }
     if (upside < -0.15 && impliedGrowth != null) {
       return `For $${ticker} at ${fmt(price)} to be fairly valued, you need ~${pct(impliedGrowth, false)}/yr revenue growth for 5 years. Is that realistic?`
     }
@@ -2540,9 +2561,8 @@ async function runDcf2() {
     ...(qualityNote ? [qualityNote] : []),
     ``,
     ...(recLabel ? [`Wall St: ${recLabel}${analyst1y != null && numAnalysts >= 3 ? ` · ${numAnalysts} analysts expect ${pct(analyst1y, false)}/yr growth` : ''}`] : []),
-    `Model fair value ${fmt(fair)} (${pct(upside)})${validScenarios(bear, bull, fair) ? ` · range ${fmt(bear)}–${fmt(bull)}` : ''}`,
+    `Model fair value ${fmt(fair)} (${pct(upside)})${validScenarios(bear, bull, fair) && !isWideRange ? ` · range ${fmt(bear)}–${fmt(bull)}` : ''}`,
     ``,
-    `The price moved. Did the value?`,
     `insic.app/stock/${ticker}`,
     `$${ticker} #DCF #Investing`,
   ].filter(Boolean)
@@ -2575,9 +2595,15 @@ async function runPreClose() {
 
   const macroTomorrow = MACRO_CALENDAR.filter(e => e.date === tomorrowUtc)
   const spChg = sp500?.changePct ?? 0
-  const lateSignal = Math.abs(spChg) > 0.5
-    ? spChg > 0 ? 'Buyers holding control into the close.' : 'Sellers maintaining pressure into the close.'
-    : 'Choppy session. Close will matter for tomorrow\'s open.'
+  // More specific closing signal — references the actual tape dynamic, not just direction
+  const lateSignal = Math.abs(spChg) > 1.0
+    ? spChg > 0
+      ? `Strong buyers into the close. When gains hold this well into the final 30 minutes, there's conviction — or at least no one selling into strength. Check whether today's move reflects a change in business value or just a change in appetite.`
+      : `Sellers maintaining pressure with 30 minutes left. Price is moving. Whether value moved is the question that will matter tomorrow.`
+    : Math.abs(spChg) > 0.3
+    ? spChg > 0 ? `Buyers holding control into the close, but muted. The tape isn't making a strong statement today.`
+      : `Soft close shaping up. Choppy sessions are where assumptions get tested quietly.`
+    : `Indecisive session. Close will set the tone for tomorrow's open — watch whether the last 30 minutes adds conviction in either direction.`
 
   const sp = sp500 ? `S&P ${sp500?.changePct >= 0 ? '+' : ''}${sp500?.changePct.toFixed(2)}%` : null
   const nq = nasdaq ? `Nasdaq ${nasdaq?.changePct >= 0 ? '+' : ''}${nasdaq?.changePct.toFixed(2)}%` : null
@@ -2596,7 +2622,6 @@ async function runPreClose() {
     lateSignal,
     ...(macroTomorrow.length > 0 ? [``, `Tomorrow: ${macroTomorrow.map(e => e.label).join(' · ')}`] : []),
     ``,
-    `The price moved. Did the value? insic.app`,
     `#Markets #PreClose #Investing`,
   ].filter(Boolean)
 
@@ -2644,11 +2669,21 @@ async function runAfterHours() {
   const macroTomorrow = MACRO_CALENDAR.filter(e => e.date === tomorrowUtc)
 
   const spChg = sp500?.changePct ?? 0
-  const sessionSummary = spChg > 1 ? `Strong session — S&P closed up ${spChg.toFixed(2)}%.`
-    : spChg > 0.1 ? `Markets edged higher — S&P +${spChg.toFixed(2)}% at the close.`
-    : spChg > -0.1 ? `Flat day — markets went nowhere in particular.`
-    : spChg > -1 ? `Modest selling today — S&P finished ${spChg.toFixed(2)}%.`
-    : `Heavy selling session — S&P ${spChg.toFixed(2)}%.`
+  const nqChg = nasdaq?.changePct ?? 0
+
+  // Lead with the sector story, not the index number — more informative for after-hours
+  const sectorStory = (() => {
+    if (Math.abs(nqChg - spChg) > 1.0) {
+      return nqChg > spChg
+        ? `Tech outpaced the broader market by ${(nqChg - spChg).toFixed(1)}pp. Growth buyers were active; rate-sensitive names stayed flat.`
+        : `Tech underperformed the broader tape by ${(spChg - nqChg).toFixed(1)}pp. Rotation into value was the story today.`
+    }
+    if (spChg > 1.0) return `Broad-based buying. Every major index closed positive — risk appetite held all session.`
+    if (spChg > 0.1) return `Markets edged higher. No single catalyst — tape-driven gains into the close.`
+    if (spChg > -0.1) return `Flat close. Market digesting recent moves with no clear conviction in either direction.`
+    if (spChg > -1.0) return `Sellers had a slight edge today. Defensives outperformed; cyclicals lagged.`
+    return `Heavy selling session. Risk-off tone dominated — check which positions moved on fundamentals vs. sentiment.`
+  })()
 
   const sp = sp500 ? `S&P ${sp500.changePct >= 0 ? '+' : ''}${sp500.changePct.toFixed(2)}%` : null
   const nq = nasdaq ? `Nasdaq ${nasdaq.changePct >= 0 ? '+' : ''}${nasdaq.changePct.toFixed(2)}%` : null
@@ -2658,12 +2693,12 @@ async function runAfterHours() {
   const lines = [
     ahIndexLine,
     ``,
-    sessionSummary,
+    sectorStory,
   ]
 
   if (todayEarners.length > 0) {
     lines.push(``, `Reporting tonight: ${todayEarners.map(t => `$${t.symbol}`).join(' · ')}`)
-    lines.push(`The consensus is already priced in. What matters is the guide.`)
+    lines.push(`The consensus is already priced in. What matters is the guide — and whether the business trajectory changed.`)
   }
 
   if (tomorrowEarners.length > 0) {
@@ -2672,9 +2707,11 @@ async function runAfterHours() {
 
   if (macroTomorrow.length > 0) {
     lines.push(``, `Tomorrow: ${macroTomorrow.map(e => e.label).join(' · ')}`)
+  } else if (todayEarners.length === 0 && tomorrowEarners.length === 0) {
+    lines.push(``, `Nothing on the calendar overnight. Tomorrow's tape is tape-driven — price action without a catalyst is the hardest to read.`)
   }
 
-  lines.push(``, `#AfterHours #Earnings #Markets #Investing`)
+  lines.push(``, `#AfterHours #Markets #Investing`)
 
   await post(lines.join('\n'))
 }
@@ -7966,20 +8003,23 @@ async function runAnalystTopBuys() {
   const tension = top.find(s => s.upside != null && s.upside < -0.10)
   const agreement = top.find(s => s.upside != null && s.upside > 0.10)
 
+  // Hook-first: lead with the tension, not the list
+  const hookLine = tension
+    ? [`${tension.bullPct}% of analysts are bullish on $${tension.ticker}.`, ``, `Our model says it's ${Math.abs((tension.upside*100)).toFixed(0)}% above fair value.`, ``, `Someone is wrong.`]
+    : agreement
+    ? [`$${agreement.ticker}: ${agreement.bullPct}% analyst consensus AND our model sees ${(agreement.upside*100).toFixed(0)}% upside.`, ``, `Both sides agree — that combination is rare.`]
+    : [`${leader.bullPct}% of analysts are bullish on $${leader.ticker}. Here's what the model says.`]
+
   const lines = [
-    `Wall Street is most bullish on these stocks right now.`,
+    ...hookLine,
+    ``,
+    `Wall Street's most-loved stocks right now:`,
     ``,
     ...top.map((s, i) => {
       const targetNote = s.target ? ` · target ${fmt(s.target)}` : ''
       const modelNote = s.upside != null ? ` · model ${s.upside >= 0 ? '+' : ''}${(s.upside*100).toFixed(0)}%` : ''
       return `${i+1}. $${s.ticker} — ${s.bullPct}% bullish (${s.total} analysts)${targetNote}${modelNote}`
     }),
-    ``,
-    tension
-      ? `Interesting: ${tension.bullPct}% of analysts love $${tension.ticker} — our model sees it ${Math.abs((tension.upside*100)).toFixed(0)}% above fair value. Someone is wrong.`
-      : agreement
-      ? `$${agreement.ticker} is rare: ${agreement.bullPct}% analyst consensus AND our model sees ${(agreement.upside*100).toFixed(0)}% upside. Both sides agree.`
-      : `$${leader.ticker} leads with ${leader.bullPct}% of analysts bullish. Run the DCF before you follow the crowd.`,
     ``,
     question,
     ``,
@@ -8025,12 +8065,17 @@ async function runHighestUpsideConsensus() {
     ``,
     ...top.map((s, i) => {
       const modelNote = s.ourUpside != null
-        ? ` · our model: ${s.ourUpside >= 0 ? '+' : ''}${(s.ourUpside*100).toFixed(0)}%`
+        ? ` · model: ${s.ourUpside >= 0 ? '+' : ''}${(s.ourUpside*100).toFixed(0)}%`
         : ''
-      return `${i+1}. $${s.ticker} — ${(s.streetUpside*100).toFixed(0)}% to ${fmt(s.target)} (${s.numAnalysts} analysts)${modelNote}`
+      return `${i+1}. $${s.ticker} — ${(s.streetUpside*100).toFixed(0)}% to target · ${s.numAnalysts} analysts${modelNote}`
     }),
     ``,
-    `$${leader.ticker} has ${(leader.streetUpside*100).toFixed(0)}% upside to the analyst target of ${fmt(leader.target)}. ${leader.ourUpside != null && Math.abs(leader.ourUpside - leader.streetUpside) > 0.15 ? `Our DCF ${leader.ourUpside > leader.streetUpside ? 'agrees and then some' : `disagrees — we see fair value at ${fmt(leader.fair)}`}.` : `Our model aligns.`}`,
+    // Flag extreme outliers where our model sharply disagrees with street
+    leader.ourUpside != null && leader.ourUpside < -0.15
+      ? `$${leader.ticker} at ${(leader.streetUpside*100).toFixed(0)}% to the analyst target — but our model says it's already ${Math.abs((leader.ourUpside*100)).toFixed(0)}% above fair value. Either the street is modeling a trajectory the fundamentals don't yet show, or the model is too conservative. That's the disagreement worth resolving.`
+      : leader.ourUpside != null && leader.ourUpside > 0.10
+      ? `$${leader.ticker}: Street target implies ${(leader.streetUpside*100).toFixed(0)}% upside. Our model agrees — and then some. When both agree on direction, the question is execution and timing.`
+      : `$${leader.ticker} has ${(leader.streetUpside*100).toFixed(0)}% upside to the analyst target of ${fmt(leader.target)}. Run the DCF before trusting the consensus.`,
     ``,
     question,
     ``,
@@ -8072,6 +8117,8 @@ async function runHighRoicCheap() {
   const leader = top[0]
   const question = LIST_QUESTIONS_BULLISH[dayOfYear % LIST_QUESTIONS_BULLISH.length]
 
+  const roicInsight = `$${leader.ticker} is the standout: ${(leader.roicSpread*100).toFixed(0)}pp ROIC spread and still ${(leader.upside*100).toFixed(0)}% below our fair value estimate. When a business earns well above its cost of capital and trades below intrinsic value, the usual question isn't whether to look — it's what the market is seeing that you're not. That's the actual question worth answering before building a position.`
+
   const lines = [
     `High ROIC + trading below fair value. The rarest combination in large caps.`,
     ``,
@@ -8083,9 +8130,7 @@ async function runHighRoicCheap() {
       return `${i+1}. $${s.ticker} — ${roicStr} · ${upsideStr}`
     }),
     ``,
-    `$${leader.ticker} is the standout: ${(leader.roicSpread*100).toFixed(0)}pp ROIC spread and still ${(leader.upside*100).toFixed(0)}% below our fair value estimate.`,
-    ``,
-    question,
+    roicInsight,
     ``,
     `#ROIC #ValueInvesting #Compounders #Investing`,
   ]
@@ -8262,6 +8307,12 @@ async function runQualityRank() {
   const leader = top[0]
   const question = LIST_QUESTIONS_MIXED[dayOfYear % LIST_QUESTIONS_MIXED.length]
 
+  const qualityInsight = leader.upside != null && leader.upside > 0.08
+    ? `$${leader.ticker} scores highest — and it's still ${(leader.upside*100).toFixed(0)}% below our fair value estimate. Quality at a discount is rare. When you find it, the question isn't whether to look — it's whether the bear case at current prices is acceptable.`
+    : leader.upside != null && leader.upside < -0.08
+    ? `$${leader.ticker} scores highest. But it's ${Math.abs((leader.upside*100)).toFixed(0)}% above our fair value estimate. Quality has a price — and at this level, most of the quality premium is already in the stock. You're not buying a hidden gem; you're paying full freight for a business that has earned it. That's a different bet.`
+    : `$${leader.ticker} scores highest. Trading near fair value — the quality is real and the price reflects it.`
+
   const lines = [
     `Quality ranking: ROIC, FCF margin, gross margin, and financial momentum combined.`,
     ``,
@@ -8272,9 +8323,7 @@ async function runQualityRank() {
       return `${i+1}. $${s.ticker} — ${roicStr} · ${fcfStr}${modelNote}`
     }),
     ``,
-    `$${leader.ticker} scores highest. ${leader.upside != null && leader.upside > 0.08 ? `And it's still ${(leader.upside*100).toFixed(0)}% below our fair value estimate. Quality at a discount.` : leader.upside != null && leader.upside < -0.08 ? `But it's ${Math.abs((leader.upside*100)).toFixed(0)}% above our fair value. Quality has a price.` : `Trading near fair value.`}`,
-    ``,
-    question,
+    qualityInsight,
     ``,
     `#Quality #ROIC #ValueInvesting #Stocks`,
   ]
@@ -8462,13 +8511,21 @@ async function runMomentumLeaders() {
     }
   } catch { /* skip */ }
   const q = LIST_QUESTIONS_MIXED[dayOfYear % LIST_QUESTIONS_MIXED.length]
+  // Context-aware momentum insight — names what the data actually shows
+  const momentumInsight = dcfLine
+    ? dcfLine.includes('below today')
+      ? `That's momentum without fundamental confirmation. If you're buying here, you're making a turnaround bet, not a value bet. Know which trade you're in.`
+      : dcfLine.includes('upside')
+      ? `Momentum and fundamentals aligned — the rarest combination. Worth understanding why the model still sees upside after a ${leader.moChg.toFixed(0)}% run.`
+      : `Near fair value after the run. The thesis holds but the margin of safety has compressed.`
+    : null
   const lines = [
     `Strongest 1-month momentum in large caps.`,
     ``,
     ...top.map((s, i) => `${i+1}. $${s.symbol} — +${s.moChg.toFixed(1)}% in 30 days · ${fmt(s.price)}`),
     ``,
     dcfLine, ``,
-    `Momentum + fundamentals is the combo. Momentum alone is hope.`,
+    momentumInsight,
     q, ``,
     `#Momentum #Stocks #Investing`,
   ].filter(Boolean)
@@ -8551,10 +8608,10 @@ async function runValueVsGrowth() {
     `Value vs Growth — same DCF engine, different philosophies.`,
     ``,
     `Value picks:`,
-    ...topV.map((s, i) => `${i+1}. $${s.ticker} — ${s.upside != null ? `${(s.upside*100).toFixed(0)}% upside` : 'fair'}${s.fwdPE ? ` · ${s.fwdPE.toFixed(0)}× P/E` : ''}`),
+    ...topV.map((s, i) => `${i+1}. $${s.ticker} — ${s.upside != null ? `${(s.upside*100).toFixed(0)}% upside` : 'fair'}${s.fwdPE ? ` · ${s.fwdPE.toFixed(0)}× fwd P/E` : ''}`),
     ``,
     `Growth picks:`,
-    ...topG.map((s, i) => `${i+1}. $${s.ticker} — ${s.analyst1y != null ? `+${(s.analyst1y*100).toFixed(0)}% growth` : 'high growth'}${s.fwdPE ? ` · ${s.fwdPE.toFixed(0)}× P/E` : ''}`),
+    ...topG.map((s, i) => `${i+1}. $${s.ticker} — ${s.analyst1y != null ? `+${(s.analyst1y*100).toFixed(0)}% est. revenue growth` : 'high growth'}${s.fwdPE ? ` · ${s.fwdPE.toFixed(0)}× fwd P/E` : ''}`),
     ``,
     `Value = margin of safety. Growth = compounding. The best investments offer both.`,
     q, ``,
@@ -8842,9 +8899,9 @@ async function runMacroPreview() {
       sectors: `Rate relief benefits: tech, utilities, REITs. Higher-for-longer benefits: financials (NIM expansion), energy (demand signal).`,
     },
     NFP: {
-      beat: `Beat (strong jobs): Fed stays on hold. High rates for longer = pressure on rate-sensitive sectors. Financials benefit from margin expansion. Consumer discretionary benefits from employment strength.`,
-      miss: `Miss (weak jobs): cuts come sooner. Lower discount rates lift growth stocks and REITs. But a weak labor market also signals slower consumer spending — watch retail and consumer discretionary.`,
-      sectors: `Jobs beat benefits: banks, consumer discretionary, industrials. Jobs miss benefits: tech growth names, utilities, REITs.`,
+      beat: `Beat (strong jobs, >200K): Fed stays on hold. Rates higher for longer = pressure on rate-sensitive sectors. Banks and consumer discretionary benefit from employment strength.`,
+      miss: `Miss (weak jobs, <150K): cuts move up the calendar. Lower discount rates lift growth stocks and REITs. But a deteriorating labor market also cuts revenue forecasts for consumer-facing tech and advertising — the net effect depends on which channel dominates.`,
+      sectors: `Jobs beat benefits: banks, consumer discretionary, industrials. Jobs miss benefits: long-duration tech, utilities, REITs.\n\nThe Fed needs payrolls consistently below 150K to gain confidence to cut. A single soft print won't move them — but a trend will. Watch the prior-month revision: markets trade the direction, not the headline number.`,
     },
     FOMC: {
       beat: `Hawkish surprise (hold or hike): yields rise, WACC rises, growth stocks reprice lower. Value and dividend names are relatively insulated — their near-term cash flows discount less.`,
@@ -8934,7 +8991,7 @@ async function runRateImpact() {
     ``,
     waccNote,
     ``,
-    `Rule of thumb: a 1% rise in the 10Y yield increases WACC by roughly 0.6–0.8% for most stocks. For a growth stock with 70% of value in the terminal period, that can cut fair value by 20–30%.`,
+    `Rule of thumb: every 100bps rise in the 10Y yield pushes WACC up ~50–70bps for most stocks (higher for equity-heavy, high-beta businesses — lower for leveraged, low-beta names where the tax shield on debt partially offsets the move). For a growth stock where 70% of value sits in the terminal period, that cuts fair value by 20–30%.`,
     ``,
     `3 rate-sensitive names and where the model stands:`,
     ``,
@@ -9019,6 +9076,8 @@ async function runSectorCatalyst() {
     process.exit(0)
   }
 
+  // Context-aware sector narrative — explains the WHY, not just the what
+  const etfChg = etf?.changePct ?? 0
   const etfStr = etf
     ? `${sector.name} ETF (${sector.sym}): ${etf.changePct >= 0 ? '+' : ''}${etf.changePct.toFixed(2)}% today`
     : null
@@ -9042,17 +9101,46 @@ async function runSectorCatalyst() {
     ? `Macro this week: ${macroThisWeek.map(e => e.label).join(' · ')}`
     : null
 
+  const sectorContext = (() => {
+    if (!etf) return null
+    // Sector-specific narratives for why it's moving
+    const narratives = {
+      XLK: etfChg > 0
+        ? `Tech is leading. Before calling it risk-on: is this rate-driven or earnings-driven? Rate relief lifts every tech name mechanically. Earnings momentum is selective. The two look identical in the price action — they aren't.`
+        : `Tech is lagging. When the biggest sector in the index underperforms, the macro picture is usually changing. Watch the 10Y — rate pressure on growth multiples shows up here first.`,
+      XLF: etfChg > 0
+        ? `Financials leading — the market is pricing in a steeper yield curve or better credit. Higher rates expand bank margins but compress every other sector's valuation. Both things can be true simultaneously.`
+        : `Financials selling off. When banks lag in a risk-on session, check whether credit concerns or rate-path uncertainty is driving it — those have very different implications for the rest of the market.`,
+      XLV: etfChg > 0
+        ? `Healthcare bid. When defensives lead, investors are hedging. Either growth expectations are getting trimmed or macro risk is rising — either reduces what they'll pay for higher-beta names.`
+        : `Healthcare lagging while the market runs — classic rotation out of defensives into risk. This compresses valuations in healthcare without any change to the underlying business. That gap is where opportunities form.`,
+      XLE: etfChg > 0
+        ? `Energy outperforming. Check whether it's an oil supply story or a geopolitical premium. For integrated majors, the FCF at current crude prices is what justifies the multiple — not the commodity move itself.`
+        : `Energy selling off despite the broader tape. When oil stocks fall while the market rises, it's usually a demand signal — slowing economic expectations often hit energy before consumer sentiment catches up.`,
+      XLU: etfChg > 0
+        ? `Utilities leading — classic rate-cut signal. The market is front-running lower rates. Utilities are long-duration assets; lower cost of capital mechanically increases their fair value.`
+        : `Utilities lagging — risk-on rotation. When investors sell safety for growth, the implicit bet is that growth assumptions are about to be revised upward. That may or may not be justified.`,
+      XLI: etfChg > 0
+        ? `Industrials up — cyclical leadership. This usually confirms GDP expectations are stable or rising. Good environment for capex-heavy businesses where ROIC is above the cost of capital.`
+        : `Industrials lagging — cyclical softness. When this sector underperforms, the market may be signaling that near-term growth expectations are being trimmed.`,
+    }
+    return narratives[sector.sym] ?? `${sector.name} is moving — understanding the why matters more than the direction.`
+  })()
+
   const lines = [
     `${sector.name} sector — what's in play this week`,
     ``,
     ...(etfStr ? [etfStr] : []),
-    ...(earningsStr ? [earningsStr] : []),
+    ...(sectorContext ? [sectorContext] : []),
+    ...(earningsStr ? [``, earningsStr] : []),
     ...(macroStr ? [macroStr] : []),
     ``,
     ...(valuationStr ? [valuationStr] : []),
     ``,
-    `Catalysts move the price. Valuation determines whether the move is justified.`,
-    `#${sector.name.replace(/\s/g, '')} #SectorRotation #Earnings #Investing`,
+    ...(sector.tickers.length > 0 ? [`Names to watch in ${sector.name}: ${sector.tickers.slice(0, 3).map(t => `$${t}`).join(' · ')}`] : []),
+    ``,
+    `Is ${sector.name} on your radar right now?`,
+    `#${sector.name.replace(/\s/g, '')} #SectorRotation #Investing`,
   ].filter(Boolean)
 
   await post(lines.join('\n'))
@@ -9202,19 +9290,26 @@ async function runEuropeanOpen() {
     ? `On the calendar today: ${macroToday.map(e => e.label).join(' · ')}.`
     : null
 
+  // Build opening hook: lead with stock tension, not generic "risk-on tone"
+  // If we have a named stock with a meaningful valuation gap, lead with it
+  const openHook = stockLine && spChg !== 0
+    ? `European open. ${stockLine.replace('On the radar: ', '').replace(/\. Model.*$/, '')} is pricing in ${spChg > 0 ? 'a risk-on morning' : 'caution'} — but here's what the model says.`
+    : spChg > 0.5 ? `European open. US futures pointing higher — but a rising tide doesn't raise all fair values equally.`
+    : spChg < -0.5 ? `European open. US futures under pressure. Check your positions before London sets the tone.`
+    : `European open. Flat US futures — Europe sets its own direction today.`
+
   const lines = [
-    `European open — ${dayName}`,
+    openHook,
     ``,
-    tone,
+    ...(stockLine ? [stockLine] : []),
     ``,
     euLines.length > 0 ? euLines.join(' · ') : null,
     sp500 ? `S&P futures ${sp500.changePct >= 0 ? '+' : ''}${sp500.changePct.toFixed(2)}%` : null,
     commLines.length > 0 ? commLines.join(' · ') : null,
     ``,
     macroLine,
-    stockLine,
     ``,
-    `#EuropeanMarkets #StockMarket #Investing #Premarket`,
+    `#EuropeanMarkets #Premarket #DCF #Investing`,
   ].filter(Boolean)
 
   await post(lines.join('\n'))
