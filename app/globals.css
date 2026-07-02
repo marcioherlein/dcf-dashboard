@@ -705,6 +705,19 @@ h3 {
   .tabular-nums { font-variant-numeric: tabular-nums; }
 }
 
+/* ── Events marquee ──────────────────────────────────────────────────────────── */
+@keyframes marquee-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.marquee-track {
+  animation: marquee-scroll linear infinite;
+}
+.marquee-track:hover,
+.marquee-wrap:hover .marquee-track {
+  animation-play-state: paused;
+}
+
 /* ── Scroll entrance animations ──────────────────────────────────────────────── */
 .scroll-reveal {
   opacity: 0;

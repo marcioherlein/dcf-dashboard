@@ -114,6 +114,58 @@ export default function TodayEventsStrip() {
 
   if (events.length === 0) return null
 
+  // Speed: ~8s per event, min 20s, max 80s — scales naturally with count
+  const duration = Math.max(20, Math.min(80, events.length * 8))
+
+  // Card renderer — extracted so we render the list twice for seamless loop
+  const renderCards = (keySuffix: string) =>
+    events.map((ev, i) => {
+      const flag = COUNTRY_FLAG[ev.country] ?? '🌐'
+      const isEarnings = ev.kind === 'earnings'
+      const impactDot = ev.impact === 'High'
+        ? 'bg-[#D83B3B]'
+        : ev.impact === 'Medium'
+        ? 'bg-[#B56A00]'
+        : null
+
+      return (
+        <div
+          key={`${keySuffix}-${i}`}
+          className={cn(
+            'shrink-0 flex flex-col justify-between rounded-xl border px-3 py-2 w-[164px]',
+            isEarnings
+              ? 'bg-[#EAF1FF] border-[#C7D9FC]'
+              : ev.impact === 'High'
+              ? 'bg-white border-[#F0B8B8]'
+              : 'bg-white border-[#E5E5E5]',
+          )}
+        >
+          {/* Time + indicator */}
+          <div className="flex items-center justify-between gap-1.5 mb-1">
+            <span className="text-[10px] font-[700] text-[#6B6B6B] tabular-nums whitespace-nowrap">
+              {ev.time}
+            </span>
+            <div className="flex items-center gap-1">
+              {impactDot && (
+                <span className={cn('w-1.5 h-1.5 rounded-full shrink-0', impactDot)} />
+              )}
+              <span className="text-[11px] leading-none">{isEarnings ? '📊' : flag}</span>
+            </div>
+          </div>
+          {/* Label */}
+          <p className="text-[11px] font-[650] text-[#111111] leading-tight line-clamp-2">
+            {ev.label}
+          </p>
+          {/* Estimate / actual */}
+          {(ev.estimate || ev.actual) && (
+            <p className="text-[10px] text-[#6B6B6B] mt-1 leading-none tabular-nums truncate">
+              {ev.actual ? `Actual: ${ev.actual}` : `Est: ${ev.estimate}`}
+            </p>
+          )}
+        </div>
+      )
+    })
+
   return (
     <div className="shrink-0">
       {/* Section label */}
@@ -121,56 +173,23 @@ export default function TodayEventsStrip() {
         Today&apos;s Events to Watch
       </p>
 
-      {/* Horizontal scroll strip */}
-      <div className="flex items-stretch gap-2 overflow-x-auto scrollbar-hide pb-0.5">
-        {events.map((ev, i) => {
-          const flag = COUNTRY_FLAG[ev.country] ?? '🌐'
-          const isEarnings = ev.kind === 'earnings'
-          const impactDot = ev.impact === 'High'
-            ? 'bg-[#D83B3B]'
-            : ev.impact === 'Medium'
-            ? 'bg-[#B56A00]'
-            : null
+      {/* Marquee container — overflow hidden, full width */}
+      <div className="marquee-wrap overflow-hidden relative">
+        {/* Fade edges */}
+        <div className="absolute left-0 top-0 bottom-0 w-8 z-10 pointer-events-none bg-gradient-to-r from-background to-transparent" />
+        <div className="absolute right-0 top-0 bottom-0 w-8 z-10 pointer-events-none bg-gradient-to-l from-background to-transparent" />
 
-          return (
-            <div
-              key={i}
-              className={cn(
-                'shrink-0 flex flex-col justify-between rounded-xl border px-3 py-2 min-w-[156px] max-w-[220px]',
-                isEarnings
-                  ? 'bg-[#EAF1FF] border-[#C7D9FC]'
-                  : ev.impact === 'High'
-                  ? 'bg-white border-[#F0B8B8]'
-                  : 'bg-white border-[#E5E5E5]',
-              )}
-            >
-              {/* Time + flag */}
-              <div className="flex items-center justify-between gap-1.5 mb-1">
-                <span className="text-[10px] font-[700] text-[#6B6B6B] tabular-nums whitespace-nowrap">
-                  {ev.time}
-                </span>
-                <div className="flex items-center gap-1">
-                  {impactDot && (
-                    <span className={cn('w-1.5 h-1.5 rounded-full shrink-0', impactDot)} />
-                  )}
-                  <span className="text-[11px] leading-none">{isEarnings ? '📊' : flag}</span>
-                </div>
-              </div>
-
-              {/* Label */}
-              <p className="text-[11px] font-[650] text-[#111111] leading-tight line-clamp-2">
-                {ev.label}
-              </p>
-
-              {/* Estimate / actual */}
-              {(ev.estimate || ev.actual) && (
-                <p className="text-[10px] text-[#6B6B6B] mt-1 leading-none tabular-nums truncate">
-                  {ev.actual ? `Actual: ${ev.actual}` : `Est: ${ev.estimate}`}
-                </p>
-              )}
-            </div>
-          )
-        })}
+        {/* Track: two copies for seamless loop */}
+        <div
+          className="marquee-track flex items-stretch gap-2"
+          style={{ animationDuration: `${duration}s`, width: 'max-content' }}
+        >
+          {renderCards('a')}
+          {/* Separator between loops */}
+          <div className="shrink-0 w-8" />
+          {renderCards('b')}
+          <div className="shrink-0 w-8" />
+        </div>
       </div>
     </div>
   )
