@@ -836,44 +836,202 @@ async function runNews() {
 
 // ─── Macro calendar — known FOMC/CPI/NFP dates ───────────────────────────────
 // Hardcoded 2025-2026 dates (UTC). Update annually.
-// Sources: federalreserve.gov, bls.gov release calendars.
+// Sources: federalreserve.gov, bls.gov, bea.gov, ism.ws release calendars.
 const MACRO_CALENDAR = [
-  // FOMC meetings
-  { date: '2026-01-29', type: 'FOMC',  label: 'FOMC Rate Decision' },
-  { date: '2026-03-19', type: 'FOMC',  label: 'FOMC Rate Decision' },
-  { date: '2026-05-07', type: 'FOMC',  label: 'FOMC Rate Decision' },
-  { date: '2026-06-18', type: 'FOMC',  label: 'FOMC Rate Decision' },
-  { date: '2026-07-30', type: 'FOMC',  label: 'FOMC Rate Decision' },
-  { date: '2026-09-17', type: 'FOMC',  label: 'FOMC Rate Decision' },
-  { date: '2026-11-05', type: 'FOMC',  label: 'FOMC Rate Decision' },
-  { date: '2026-12-16', type: 'FOMC',  label: 'FOMC Rate Decision' },
-  // CPI releases (BLS, ~2nd week of month)
-  { date: '2026-01-15', type: 'CPI',   label: 'CPI Inflation Report' },
-  { date: '2026-02-12', type: 'CPI',   label: 'CPI Inflation Report' },
-  { date: '2026-03-12', type: 'CPI',   label: 'CPI Inflation Report' },
-  { date: '2026-04-10', type: 'CPI',   label: 'CPI Inflation Report' },
-  { date: '2026-05-13', type: 'CPI',   label: 'CPI Inflation Report' },
-  { date: '2026-06-10', type: 'CPI',   label: 'CPI Inflation Report' },
-  { date: '2026-07-15', type: 'CPI',   label: 'CPI Inflation Report' },
-  { date: '2026-08-12', type: 'CPI',   label: 'CPI Inflation Report' },
-  { date: '2026-09-11', type: 'CPI',   label: 'CPI Inflation Report' },
-  { date: '2026-10-14', type: 'CPI',   label: 'CPI Inflation Report' },
-  { date: '2026-11-12', type: 'CPI',   label: 'CPI Inflation Report' },
-  { date: '2026-12-11', type: 'CPI',   label: 'CPI Inflation Report' },
-  // NFP releases (BLS, 1st Friday of month)
-  { date: '2026-01-09', type: 'NFP',   label: 'Jobs Report (NFP)' },
-  { date: '2026-02-06', type: 'NFP',   label: 'Jobs Report (NFP)' },
-  { date: '2026-03-06', type: 'NFP',   label: 'Jobs Report (NFP)' },
-  { date: '2026-04-03', type: 'NFP',   label: 'Jobs Report (NFP)' },
-  { date: '2026-05-08', type: 'NFP',   label: 'Jobs Report (NFP)' },
-  { date: '2026-06-05', type: 'NFP',   label: 'Jobs Report (NFP)' },
-  { date: '2026-07-10', type: 'NFP',   label: 'Jobs Report (NFP)' },
-  { date: '2026-08-07', type: 'NFP',   label: 'Jobs Report (NFP)' },
-  { date: '2026-09-04', type: 'NFP',   label: 'Jobs Report (NFP)' },
-  { date: '2026-10-02', type: 'NFP',   label: 'Jobs Report (NFP)' },
-  { date: '2026-11-06', type: 'NFP',   label: 'Jobs Report (NFP)' },
-  { date: '2026-12-04', type: 'NFP',   label: 'Jobs Report (NFP)' },
+  // ── FOMC meetings ─────────────────────────────────────────────────────────────
+  { date: '2026-01-29', type: 'FOMC',   label: 'FOMC Rate Decision' },
+  { date: '2026-03-19', type: 'FOMC',   label: 'FOMC Rate Decision' },
+  { date: '2026-05-07', type: 'FOMC',   label: 'FOMC Rate Decision' },
+  { date: '2026-06-18', type: 'FOMC',   label: 'FOMC Rate Decision' },
+  { date: '2026-07-30', type: 'FOMC',   label: 'FOMC Rate Decision' },
+  { date: '2026-09-17', type: 'FOMC',   label: 'FOMC Rate Decision' },
+  { date: '2026-11-05', type: 'FOMC',   label: 'FOMC Rate Decision' },
+  { date: '2026-12-16', type: 'FOMC',   label: 'FOMC Rate Decision' },
+  // ── CPI (BLS, ~2nd week of month) ─────────────────────────────────────────────
+  { date: '2026-01-15', type: 'CPI',    label: 'CPI Inflation Report' },
+  { date: '2026-02-12', type: 'CPI',    label: 'CPI Inflation Report' },
+  { date: '2026-03-12', type: 'CPI',    label: 'CPI Inflation Report' },
+  { date: '2026-04-10', type: 'CPI',    label: 'CPI Inflation Report' },
+  { date: '2026-05-13', type: 'CPI',    label: 'CPI Inflation Report' },
+  { date: '2026-06-10', type: 'CPI',    label: 'CPI Inflation Report' },
+  { date: '2026-07-15', type: 'CPI',    label: 'CPI Inflation Report' },
+  { date: '2026-08-12', type: 'CPI',    label: 'CPI Inflation Report' },
+  { date: '2026-09-11', type: 'CPI',    label: 'CPI Inflation Report' },
+  { date: '2026-10-14', type: 'CPI',    label: 'CPI Inflation Report' },
+  { date: '2026-11-12', type: 'CPI',    label: 'CPI Inflation Report' },
+  { date: '2026-12-11', type: 'CPI',    label: 'CPI Inflation Report' },
+  // ── NFP (BLS, 1st Friday of month) ────────────────────────────────────────────
+  { date: '2026-01-09', type: 'NFP',    label: 'Jobs Report (NFP)' },
+  { date: '2026-02-06', type: 'NFP',    label: 'Jobs Report (NFP)' },
+  { date: '2026-03-06', type: 'NFP',    label: 'Jobs Report (NFP)' },
+  { date: '2026-04-03', type: 'NFP',    label: 'Jobs Report (NFP)' },
+  { date: '2026-05-08', type: 'NFP',    label: 'Jobs Report (NFP)' },
+  { date: '2026-06-05', type: 'NFP',    label: 'Jobs Report (NFP)' },
+  { date: '2026-07-10', type: 'NFP',    label: 'Jobs Report (NFP)' },
+  { date: '2026-08-07', type: 'NFP',    label: 'Jobs Report (NFP)' },
+  { date: '2026-09-04', type: 'NFP',    label: 'Jobs Report (NFP)' },
+  { date: '2026-10-02', type: 'NFP',    label: 'Jobs Report (NFP)' },
+  { date: '2026-11-06', type: 'NFP',    label: 'Jobs Report (NFP)' },
+  { date: '2026-12-04', type: 'NFP',    label: 'Jobs Report (NFP)' },
+  // ── PCE Deflator (BEA, last Friday of month — Fed's preferred inflation gauge)
+  { date: '2026-01-30', type: 'PCE',    label: 'PCE Inflation (Fed\'s gauge)' },
+  { date: '2026-02-27', type: 'PCE',    label: 'PCE Inflation (Fed\'s gauge)' },
+  { date: '2026-03-27', type: 'PCE',    label: 'PCE Inflation (Fed\'s gauge)' },
+  { date: '2026-04-30', type: 'PCE',    label: 'PCE Inflation (Fed\'s gauge)' },
+  { date: '2026-05-29', type: 'PCE',    label: 'PCE Inflation (Fed\'s gauge)' },
+  { date: '2026-06-26', type: 'PCE',    label: 'PCE Inflation (Fed\'s gauge)' },
+  { date: '2026-07-31', type: 'PCE',    label: 'PCE Inflation (Fed\'s gauge)' },
+  { date: '2026-08-28', type: 'PCE',    label: 'PCE Inflation (Fed\'s gauge)' },
+  { date: '2026-09-25', type: 'PCE',    label: 'PCE Inflation (Fed\'s gauge)' },
+  { date: '2026-10-30', type: 'PCE',    label: 'PCE Inflation (Fed\'s gauge)' },
+  { date: '2026-11-25', type: 'PCE',    label: 'PCE Inflation (Fed\'s gauge)' },
+  { date: '2026-12-23', type: 'PCE',    label: 'PCE Inflation (Fed\'s gauge)' },
+  // ── PPI (BLS, ~2nd week, day before CPI) ──────────────────────────────────────
+  { date: '2026-01-14', type: 'PPI',    label: 'PPI Producer Prices' },
+  { date: '2026-02-11', type: 'PPI',    label: 'PPI Producer Prices' },
+  { date: '2026-03-11', type: 'PPI',    label: 'PPI Producer Prices' },
+  { date: '2026-04-09', type: 'PPI',    label: 'PPI Producer Prices' },
+  { date: '2026-05-12', type: 'PPI',    label: 'PPI Producer Prices' },
+  { date: '2026-06-09', type: 'PPI',    label: 'PPI Producer Prices' },
+  { date: '2026-07-14', type: 'PPI',    label: 'PPI Producer Prices' },
+  { date: '2026-08-11', type: 'PPI',    label: 'PPI Producer Prices' },
+  { date: '2026-09-10', type: 'PPI',    label: 'PPI Producer Prices' },
+  { date: '2026-10-13', type: 'PPI',    label: 'PPI Producer Prices' },
+  { date: '2026-11-11', type: 'PPI',    label: 'PPI Producer Prices' },
+  { date: '2026-12-10', type: 'PPI',    label: 'PPI Producer Prices' },
+  // ── Retail Sales (Census, ~2nd week of month) ─────────────────────────────────
+  { date: '2026-01-16', type: 'RETAIL', label: 'Retail Sales' },
+  { date: '2026-02-13', type: 'RETAIL', label: 'Retail Sales' },
+  { date: '2026-03-13', type: 'RETAIL', label: 'Retail Sales' },
+  { date: '2026-04-15', type: 'RETAIL', label: 'Retail Sales' },
+  { date: '2026-05-15', type: 'RETAIL', label: 'Retail Sales' },
+  { date: '2026-06-12', type: 'RETAIL', label: 'Retail Sales' },
+  { date: '2026-07-16', type: 'RETAIL', label: 'Retail Sales' },
+  { date: '2026-08-14', type: 'RETAIL', label: 'Retail Sales' },
+  { date: '2026-09-15', type: 'RETAIL', label: 'Retail Sales' },
+  { date: '2026-10-15', type: 'RETAIL', label: 'Retail Sales' },
+  { date: '2026-11-13', type: 'RETAIL', label: 'Retail Sales' },
+  { date: '2026-12-11', type: 'RETAIL', label: 'Retail Sales' },
+  // ── GDP (BEA, advance estimate last week of month following quarter) ──────────
+  { date: '2026-01-28', type: 'GDP',    label: 'GDP Advance Estimate (Q4 2025)' },
+  { date: '2026-04-29', type: 'GDP',    label: 'GDP Advance Estimate (Q1 2026)' },
+  { date: '2026-07-29', type: 'GDP',    label: 'GDP Advance Estimate (Q2 2026)' },
+  { date: '2026-10-28', type: 'GDP',    label: 'GDP Advance Estimate (Q3 2026)' },
+  // ── ISM Manufacturing PMI (1st business day of month) ─────────────────────────
+  { date: '2026-02-02', type: 'ISM',    label: 'ISM Manufacturing PMI' },
+  { date: '2026-03-02', type: 'ISM',    label: 'ISM Manufacturing PMI' },
+  { date: '2026-04-01', type: 'ISM',    label: 'ISM Manufacturing PMI' },
+  { date: '2026-05-01', type: 'ISM',    label: 'ISM Manufacturing PMI' },
+  { date: '2026-06-01', type: 'ISM',    label: 'ISM Manufacturing PMI' },
+  { date: '2026-07-01', type: 'ISM',    label: 'ISM Manufacturing PMI' },
+  { date: '2026-08-03', type: 'ISM',    label: 'ISM Manufacturing PMI' },
+  { date: '2026-09-01', type: 'ISM',    label: 'ISM Manufacturing PMI' },
+  { date: '2026-10-01', type: 'ISM',    label: 'ISM Manufacturing PMI' },
+  { date: '2026-11-02', type: 'ISM',    label: 'ISM Manufacturing PMI' },
+  { date: '2026-12-01', type: 'ISM',    label: 'ISM Manufacturing PMI' },
+  // ── JOLTS Job Openings (BLS, ~1 month lag, 1st Tuesday of following month) ────
+  { date: '2026-02-03', type: 'JOLTS',  label: 'JOLTS Job Openings' },
+  { date: '2026-03-10', type: 'JOLTS',  label: 'JOLTS Job Openings' },
+  { date: '2026-04-07', type: 'JOLTS',  label: 'JOLTS Job Openings' },
+  { date: '2026-05-05', type: 'JOLTS',  label: 'JOLTS Job Openings' },
+  { date: '2026-06-02', type: 'JOLTS',  label: 'JOLTS Job Openings' },
+  { date: '2026-07-07', type: 'JOLTS',  label: 'JOLTS Job Openings' },
+  { date: '2026-08-04', type: 'JOLTS',  label: 'JOLTS Job Openings' },
+  { date: '2026-09-08', type: 'JOLTS',  label: 'JOLTS Job Openings' },
+  { date: '2026-10-06', type: 'JOLTS',  label: 'JOLTS Job Openings' },
+  { date: '2026-11-03', type: 'JOLTS',  label: 'JOLTS Job Openings' },
+  { date: '2026-12-08', type: 'JOLTS',  label: 'JOLTS Job Openings' },
+  // ── UMich Consumer Sentiment (preliminary, ~2nd Friday of month) ──────────────
+  { date: '2026-01-16', type: 'UMICH',  label: 'UMich Consumer Sentiment' },
+  { date: '2026-02-13', type: 'UMICH',  label: 'UMich Consumer Sentiment' },
+  { date: '2026-03-13', type: 'UMICH',  label: 'UMich Consumer Sentiment' },
+  { date: '2026-04-17', type: 'UMICH',  label: 'UMich Consumer Sentiment' },
+  { date: '2026-05-15', type: 'UMICH',  label: 'UMich Consumer Sentiment' },
+  { date: '2026-06-12', type: 'UMICH',  label: 'UMich Consumer Sentiment' },
+  { date: '2026-07-17', type: 'UMICH',  label: 'UMich Consumer Sentiment' },
+  { date: '2026-08-14', type: 'UMICH',  label: 'UMich Consumer Sentiment' },
+  { date: '2026-09-11', type: 'UMICH',  label: 'UMich Consumer Sentiment' },
+  { date: '2026-10-16', type: 'UMICH',  label: 'UMich Consumer Sentiment' },
+  { date: '2026-11-13', type: 'UMICH',  label: 'UMich Consumer Sentiment' },
+  { date: '2026-12-11', type: 'UMICH',  label: 'UMich Consumer Sentiment' },
 ]
+
+// ─── Finnhub earnings calendar helper ─────────────────────────────────────────
+// Returns large-cap stocks (mcap >= minMcap) reporting between fromDate and toDate.
+// Each result: { symbol, date, epsEstimate, revenueEstimate }
+// Falls back to empty array on any error — never throws.
+
+async function fetchFinnhubEarnings(fromDate, toDate, minMcap = 5_000_000_000) {
+  if (!FINNHUB_KEY) return []
+  try {
+    const url = `https://finnhub.io/api/v1/calendar/earnings?from=${fromDate}&to=${toDate}&token=${FINNHUB_KEY}`
+    const res = await fetch(url, { signal: AbortSignal.timeout(10000) })
+    if (!res.ok) { console.warn(`Finnhub earnings ${res.status} — skipping`); return [] }
+    const json = await res.json()
+    const raw = (json?.earningsCalendar ?? [])
+      .filter(e => e.symbol && e.date)
+    if (raw.length === 0) return []
+
+    // Finnhub free tier doesn't include market cap — filter by fetching quote for top tickers
+    // Use a known-large-cap allowlist first to avoid rate limits, then filter unknown ones
+    const LARGE_CAP_KNOWN = new Set([
+      'AAPL','MSFT','GOOGL','GOOG','AMZN','NVDA','META','TSLA','BRK-B','LLY',
+      'JPM','V','UNH','XOM','MA','JNJ','AVGO','HD','PG','MRK','ABBV','COST',
+      'CVX','AMD','ORCL','CRM','BAC','NFLX','KO','PEP','WMT','MCD','TMO',
+      'ABT','CSCO','ACN','LIN','DHR','TXN','VZ','ADBE','INTC','QCOM','NEE',
+      'PM','RTX','UNP','HON','AMGN','UPS','IBM','CAT','DE','GS','MS','SPGI',
+      'BLK','AXP','ISRG','GILD','SYK','MDT','SCHW','CB','ZTS','ADP','MMC',
+      'CME','ICE','MO','USB','TJX','PLD','AMT','WFC','C','BK','USB','ETN',
+      'DUK','SO','D','PEG','ED','EIX','PCG','XEL','AES','NRG','OXY','SLB',
+      'EOG','PSX','MPC','VLO','HAL','DVN','FANG','APA','MRO','BKR','NOV',
+      'GLW','NTRS','RF','HBAN','KEY','CFG','ALLY','SYF','DFS','COF','AIG',
+      'PRU','MET','ALL','TRV','HIG','AFL','LNC','UNM','CNO','FG','PFG',
+      'INTU','NOW','WDAY','SNOW','PLTR','UBER','LYFT','DASH','ABNB','BKNG',
+      'EXPD','CHRW','JBHT','ODFL','XPO','ZTO','SAIA','ARCB','WERN','MRTN',
+      'F','GM','STLA','TM','HMC','RIVN','LCID','NIO','LI','XPEV','PSNY',
+      'DAL','UAL','AAL','LUV','WN','HA','ALK','SAVE','SKYW','MESA','JBLU',
+      'CCL','RCL','NCLH','MAR','HLT','H','IHG','WH','CHH','RHP','EPR',
+      'AMC','CNK','DIS','PARA','WBD','FOX','FOXA','NWSA','NYT','SCCO',
+      'FCX','NEM','GOLD','AEM','KGC','HBM','WPM','AG','HL','CDE','USA',
+    ])
+
+    const results = raw.map(e => ({
+      symbol:          e.symbol,
+      date:            e.date,
+      epsEstimate:     e.epsEstimate ?? null,
+      revenueEstimate: e.revenueEstimate ?? null,
+      isLargeCap:      LARGE_CAP_KNOWN.has(e.symbol),
+    }))
+
+    // Keep known large caps immediately; for unknowns, spot-check market cap
+    const known = results.filter(e => e.isLargeCap)
+    const unknown = results.filter(e => !e.isLargeCap).slice(0, 20) // cap checks
+
+    const checkedUnknown = await Promise.allSettled(
+      unknown.map(async e => {
+        const res2 = await fetch(
+          `https://query1.finance.yahoo.com/v8/finance/chart/${e.symbol}?interval=1d&range=1d`,
+          { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(5000) }
+        ).catch(() => null)
+        if (!res2?.ok) return null
+        const d = await res2.json().catch(() => null)
+        const mcap = d?.chart?.result?.[0]?.meta?.marketCap ?? 0
+        return mcap >= minMcap ? { ...e, marketCap: mcap } : null
+      })
+    )
+
+    const validUnknown = checkedUnknown
+      .filter(r => r.status === 'fulfilled' && r.value)
+      .map(r => r.value)
+
+    const all = [...known, ...validUnknown]
+    all.sort((a, b) => (b.marketCap ?? 1e12) - (a.marketCap ?? 1e12))
+    return all
+  } catch (e) {
+    console.warn('fetchFinnhubEarnings error:', e.message)
+    return []
+  }
+}
 
 // ─── Alpha Vantage helpers ─────────────────────────────────────────────────────
 
@@ -8563,41 +8721,51 @@ async function runEarningsWeekPreview() {
   const monday = new Date(now)
   monday.setUTCDate(now.getUTCDate() - (dow === 0 ? 6 : dow - 1))
   monday.setUTCHours(0, 0, 0, 0)
-  const weekDates = new Set(Array.from({length: 5}, (_, i) => {
-    const d = new Date(monday); d.setUTCDate(monday.getUTCDate() + i)
-    return d.toISOString().split('T')[0]
-  }))
-  const reporting = []
-  for (let i = 0; i < SP500_SAMPLE.length; i += 8) {
-    const batch = SP500_SAMPLE.slice(i, i + 8)
-    const settled = await Promise.allSettled(batch.map(async t => {
-      const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${t}?interval=1d&range=1d`,
-        { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(5000) }).catch(() => null)
-      if (!res?.ok) return null
-      const d = await res.json().catch(() => null)
-      const meta = d?.chart?.result?.[0]?.meta
-      if (!meta?.earningsTimestampStart || (meta.marketCap ?? 0) < 20_000_000_000) return null
-      const date = new Date(meta.earningsTimestampStart * 1000).toISOString().split('T')[0]
-      return weekDates.has(date) ? { symbol: t, date, marketCap: meta.marketCap ?? 0 } : null
-    }))
-    for (const r of settled) if (r.status === 'fulfilled' && r.value) reporting.push(r.value)
-    if (i + 8 < SP500_SAMPLE.length) await new Promise(r => setTimeout(r, 300))
+  const friday = new Date(monday); friday.setUTCDate(monday.getUTCDate() + 4)
+  const weekFrom = monday.toISOString().split('T')[0]
+  const weekTo   = friday.toISOString().split('T')[0]
+
+  // Use Finnhub for real earnings calendar data
+  const reporting = await fetchFinnhubEarnings(weekFrom, weekTo, 10_000_000_000)
+
+  if (reporting.length === 0) {
+    console.warn('earnings_week_preview: no earnings found from Finnhub — skipping')
+    return
   }
-  if (reporting.length === 0) { console.warn('earnings_week_preview: no earnings found'); return }
-  reporting.sort((a, b) => b.marketCap - a.marketCap)
-  const top = reporting.slice(0, 8)
+
+  // Group by day
+  const byDate = {}
+  for (const e of reporting) {
+    if (!byDate[e.date]) byDate[e.date] = []
+    byDate[e.date].push(e)
+  }
+
+  const weekLabel = `${new Date(weekFrom + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}–${new Date(weekTo + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+
   const lines = [
-    `Every large cap reporting this week. Run the model before the number hits.`,
+    `Earnings this week (${weekLabel}). Run models before the numbers hit.`,
     ``,
-    ...top.map(e => {
-      const dayLabel = new Date(e.date + 'T12:00:00Z').toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'})
-      return `▸ $${e.symbol} — ${dayLabel}`
-    }),
-    ``,
-    `The beat/miss moves the price. Whether the intrinsic value changed is the real question.`,
-    ``,
-    `#Earnings #Stocks #EarningsSeason`,
   ]
+
+  for (const [d, entries] of Object.entries(byDate).sort()) {
+    const dayStr = new Date(d + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+    const symbols = entries.slice(0, 5).map(e => `$${e.symbol}`).join(' · ')
+    lines.push(`${dayStr}: ${symbols}`)
+  }
+
+  const macroThisWeek = MACRO_CALENDAR.filter(e => e.date >= weekFrom && e.date <= weekTo)
+  if (macroThisWeek.length > 0) {
+    lines.push(``)
+    for (const e of macroThisWeek) {
+      const emoji = { FOMC:'🏦', CPI:'📊', NFP:'💼', PCE:'📈', PPI:'🏭', RETAIL:'🛒', GDP:'📉', ISM:'🏗️', JOLTS:'👷', UMICH:'🧭' }[e.type] ?? '📅'
+      const d = new Date(e.date + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+      lines.push(`${emoji} ${e.label} — ${d}`)
+    }
+  }
+
+  lines.push(``)
+  lines.push(`Beat/miss moves price short term. Whether value changed is what matters long term.`)
+  lines.push(`#Earnings #EarningsSeason #Stocks #Investing`)
   await post(lines.join('\n'))
 }
 
@@ -8739,154 +8907,214 @@ async function runMorningStockPick() {
 }
 
 // ─── Mode: calendar_today ─────────────────────────────────────────────────────
-// What's on the economic/earnings calendar today + what it means for stocks.
+// What's on the economic/earnings calendar today. Uses Finnhub earnings calendar
+// (real data) + expanded MACRO_CALENDAR. Falls back to "quiet day" with upcoming
+// events rather than silently skipping.
 
 async function runCalendarToday() {
   const todayUtc = new Date().toISOString().split('T')[0]
 
-  // Check MACRO_CALENDAR for today
+  // Macro events today
   const macroToday = MACRO_CALENDAR.filter(e => e.date === todayUtc)
 
-  // Scan for earnings today from SP500_SAMPLE
-  const earningsToday = []
-  for (let i = 0; i < SP500_SAMPLE.length; i += 8) {
-    const batch = SP500_SAMPLE.slice(i, i + 8)
-    const settled = await Promise.allSettled(batch.map(async t => {
-      const res = await fetch(
-        `https://query1.finance.yahoo.com/v8/finance/chart/${t}?interval=1d&range=1d`,
-        { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(6000) }
-      ).catch(() => null)
-      if (!res?.ok) return null
-      const json = await res.json().catch(() => null)
-      const meta = json?.chart?.result?.[0]?.meta
-      if (!meta?.earningsTimestampStart) return null
-      if ((meta.marketCap ?? 0) < 5_000_000_000) return null
-      const d = new Date(meta.earningsTimestampStart * 1000).toISOString().split('T')[0]
-      return d === todayUtc ? { symbol: t, marketCap: meta.marketCap } : null
-    }))
-    for (const r of settled) if (r.status === 'fulfilled' && r.value) earningsToday.push(r.value)
-    if (i + 8 < SP500_SAMPLE.length) await new Promise(r => setTimeout(r, 300))
-  }
-  earningsToday.sort((a, b) => b.marketCap - a.marketCap)
+  // Earnings today via Finnhub
+  const earningsToday = await fetchFinnhubEarnings(todayUtc, todayUtc)
 
+  // If nothing today, look ahead 5 days for a "coming up" post
   if (macroToday.length === 0 && earningsToday.length === 0) {
-    console.log(`No calendar events for ${todayUtc} — skipping`)
-    process.exit(0)
+    const fiveDaysOut = new Date(Date.now() + 5 * 86400000).toISOString().split('T')[0]
+    const macroSoon = MACRO_CALENDAR.filter(e => e.date > todayUtc && e.date <= fiveDaysOut)
+    const earningsSoon = await fetchFinnhubEarnings(
+      new Date(Date.now() + 86400000).toISOString().split('T')[0],
+      fiveDaysOut
+    )
+
+    if (macroSoon.length === 0 && earningsSoon.length === 0) {
+      console.log(`No calendar events today or upcoming 5 days — skipping`)
+      process.exit(0)
+    }
+
+    // Post a "quiet today, watch this week" format
+    const dayLabel = new Date(todayUtc + 'T12:00:00Z').toLocaleDateString('en-US', {
+      weekday: 'long', month: 'short', day: 'numeric',
+    })
+    const lines = [`No major data today — but here's what's coming:`, ``]
+    for (const e of macroSoon.slice(0, 3)) {
+      const daysAway = Math.round((new Date(e.date) - new Date(todayUtc)) / 86400000)
+      const evLabel = new Date(e.date + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+      const emoji = { FOMC:'🏦', CPI:'📊', NFP:'💼', PCE:'📈', PPI:'🏭', RETAIL:'🛒', GDP:'📉', ISM:'🏗️', JOLTS:'👷', UMICH:'🧭' }[e.type] ?? '📅'
+      lines.push(`${emoji} ${e.label} — ${evLabel} (${daysAway}d)`)
+    }
+    if (earningsSoon.length > 0) {
+      const names = earningsSoon.slice(0, 6).map(e => `$${e.symbol}`)
+      const nextDate = earningsSoon[0].date
+      const daysAway = Math.round((new Date(nextDate) - new Date(todayUtc)) / 86400000)
+      lines.push(``, `📊 Earnings in the next 5 days: ${names.join(' · ')}`)
+    }
+    lines.push(``, `Use the quiet days to run models before the numbers hit.`)
+    lines.push(`#Earnings #Macro #Investing #Calendar`)
+    await post(lines.join('\n'))
+    return
   }
 
   const dayLabel = new Date(todayUtc + 'T12:00:00Z').toLocaleDateString('en-US', {
     weekday: 'long', month: 'short', day: 'numeric',
   })
-
-  const lines = [`What's moving markets today — ${dayLabel}`, ``]
+  const lines = [`What's on the calendar today — ${dayLabel}`, ``]
 
   if (macroToday.length > 0) {
-    const macroImpact = {
-      FOMC: `Fed rate decision. Whatever they decide, the dot plot and Powell's guidance on cut timing matters more than the headline number. Any shift in the rate path reprices WACC on every stock in your watchlist.`,
-      CPI:  `Inflation data. Watch the core print — that's what actually moves the Fed's calculus. Above consensus = rates stay elevated, DCF fair values compress. Below = path to cuts opens, especially for growth names.`,
-      NFP:  `Jobs report. Strong = Fed stays on hold, discount rates stay high. Weak = cuts are coming, growth stocks benefit. Don't ignore the prior month revision — it often changes the story.`,
+    const macroContext = {
+      FOMC:   `Fed rate decision. The headline rate is priced in — what moves markets is the dot plot and Powell's language on the timing of cuts. Any shift in the rate path reprices WACC on every stock.`,
+      CPI:    `Inflation print. Watch core CPI (ex food & energy) — that's what actually moves Fed policy. Above consensus = rates stay elevated, DCF fair values compress. Below = path to cuts opens, especially for long-duration growth names.`,
+      NFP:    `Jobs report. Strong payrolls = Fed stays on hold, discount rates stay high. Weak payrolls = cuts move closer, growth stocks benefit. Watch the prior-month revision — it often changes the story completely.`,
+      PCE:    `PCE inflation — the Fed's preferred gauge. Tends to run below CPI because of different weightings. This is what the Fed actually watches. Surprises here move rate expectations even when CPI was in-line.`,
+      PPI:    `Producer prices — an early read on inflation before it hits consumers. Rising input costs can squeeze margins for manufacturers and retailers. A hot PPI often precedes a hot CPI by a month.`,
+      RETAIL: `Retail sales — direct read on consumer spending. Strong = economy growing, Fed less likely to cut. Weak = consumer is slowing, cuts move closer. Watch the control group (ex autos/gas) for the cleanest signal.`,
+      GDP:    `GDP advance estimate — first look at economic growth for the quarter. Markets care most about the direction of change and any revision to prior quarters. Real GDP vs. nominal tells the inflation story inside the headline.`,
+      ISM:    `ISM Manufacturing PMI. Above 50 = expansion, below 50 = contraction. New orders sub-index is the leading indicator. Prices paid sub-index feeds directly into inflation expectations.`,
+      JOLTS:  `JOLTS job openings — tells you how tight the labor market really is. High openings = tight labor = upward wage pressure = sticky inflation = Fed stays on hold. The quits rate inside JOLTS is the best gauge of worker confidence.`,
+      UMICH:  `UMich Consumer Sentiment — forward-looking. Weak sentiment often leads to weaker spending. The 1-year inflation expectations inside this survey directly influence Fed communication.`,
     }
     for (const e of macroToday) {
-      const emoji = { FOMC: '🏦', CPI: '📊', NFP: '💼' }[e.type] ?? '📅'
+      const emoji = { FOMC:'🏦', CPI:'📊', NFP:'💼', PCE:'📈', PPI:'🏭', RETAIL:'🛒', GDP:'📉', ISM:'🏗️', JOLTS:'👷', UMICH:'🧭' }[e.type] ?? '📅'
       lines.push(`${emoji} ${e.label}`)
-      if (macroImpact[e.type]) lines.push(macroImpact[e.type])
+      if (macroContext[e.type]) lines.push(macroContext[e.type])
       lines.push(``)
     }
   }
 
   if (earningsToday.length > 0) {
-    const names = earningsToday.slice(0, 5).map(t => `$${t.symbol}`)
-    lines.push(`📊 Earnings today: ${names.join(' · ')}`)
-    lines.push(`Beat or miss matters less than whether the result justifies the valuation. Run the model before the print, not after.`)
+    const names = earningsToday.slice(0, 6).map(e => `$${e.symbol}`)
+    lines.push(`📊 Reporting today: ${names.join(' · ')}`)
+    const withEst = earningsToday.filter(e => e.epsEstimate != null)
+    if (withEst.length > 0) {
+      const topEst = withEst[0]
+      lines.push(`Consensus EPS for $${topEst.symbol}: $${topEst.epsEstimate?.toFixed(2) ?? 'N/A'}. Beat or miss matters less than whether the result justifies the valuation.`)
+    } else {
+      lines.push(`Beat or miss moves the price for a day. Whether the intrinsic value changed is what matters for the long term.`)
+    }
     lines.push(``)
   }
 
-  lines.push(`The calendar tells you when. The model tells you what it's worth.`)
+  lines.push(`The calendar tells you when. insic.app tells you what it's worth.`)
   lines.push(`#Earnings #Macro #Markets #Investing`)
 
   await post(lines.join('\n'))
 }
 
 // ─── Mode: calendar_tomorrow ──────────────────────────────────────────────────
-// What to watch tomorrow — macro events + earnings + why it matters.
+// What to watch tomorrow. Uses Finnhub for real earnings data.
+// Falls back to "this week's earnings" when tomorrow is quiet.
 
 async function runCalendarTomorrow() {
-  const tomorrowUtc = new Date(Date.now() + 86400000).toISOString().split('T')[0]
-  // Skip weekend: advance to Monday if tomorrow is Saturday/Sunday
-  const tomorrowDay = new Date(tomorrowUtc).getUTCDay()
-  let targetDate = tomorrowUtc
-  if (tomorrowDay === 6) targetDate = new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0]
-  else if (tomorrowDay === 0) targetDate = new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0]
+  const todayUtc   = new Date().toISOString().split('T')[0]
+  // Advance past weekend
+  const tomorrow   = new Date(Date.now() + 86400000)
+  const tomorrowDay = tomorrow.getUTCDay()
+  if (tomorrowDay === 6) tomorrow.setUTCDate(tomorrow.getUTCDate() + 2)
+  else if (tomorrowDay === 0) tomorrow.setUTCDate(tomorrow.getUTCDate() + 1)
+  const targetDate = tomorrow.toISOString().split('T')[0]
 
-  const macroTomorrow = MACRO_CALENDAR.filter(e => e.date === targetDate)
+  const macroTomorrow   = MACRO_CALENDAR.filter(e => e.date === targetDate)
+  const earningsTomorrow = await fetchFinnhubEarnings(targetDate, targetDate)
 
-  // Scan for earnings tomorrow
-  const earningsTomorrow = []
-  for (let i = 0; i < SP500_SAMPLE.length; i += 8) {
-    const batch = SP500_SAMPLE.slice(i, i + 8)
-    const settled = await Promise.allSettled(batch.map(async t => {
-      const res = await fetch(
-        `https://query1.finance.yahoo.com/v8/finance/chart/${t}?interval=1d&range=1d`,
-        { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(6000) }
-      ).catch(() => null)
-      if (!res?.ok) return null
-      const json = await res.json().catch(() => null)
-      const meta = json?.chart?.result?.[0]?.meta
-      if (!meta?.earningsTimestampStart) return null
-      if ((meta.marketCap ?? 0) < 5_000_000_000) return null
-      const d = new Date(meta.earningsTimestampStart * 1000).toISOString().split('T')[0]
-      return d === targetDate ? { symbol: t, marketCap: meta.marketCap } : null
-    }))
-    for (const r of settled) if (r.status === 'fulfilled' && r.value) earningsTomorrow.push(r.value)
-    if (i + 8 < SP500_SAMPLE.length) await new Promise(r => setTimeout(r, 300))
+  const macroContext = {
+    FOMC:   `The Fed decision is the most market-moving event of any quarter. Markets will start positioning today. The rate headline is almost always priced in — the surprise lives in the dot plot and language around future cuts.`,
+    CPI:    `Inflation print tomorrow. A hot core CPI keeps rates elevated, compressing DCF fair values. A cool print opens the door to cuts. Either way, every growth stock model updates.`,
+    NFP:    `Jobs report tomorrow. Strong payrolls keep the Fed on hold. Weak payrolls pull cuts closer. The prior-month revision often rewrites the interpretation of the headline number.`,
+    PCE:    `PCE inflation tomorrow — the Fed's preferred measure. Tends to run cooler than CPI. A surprise in either direction moves rate-cut expectations even when CPI was in-line.`,
+    PPI:    `Producer prices tomorrow. Leading indicator for consumer inflation. Hot PPI → hot CPI next month → rates stay elevated. Watch input cost pressures for manufacturing names.`,
+    RETAIL: `Retail sales tomorrow. Direct read on the consumer. Weak control group (ex autos/gas) signals consumer stress — cuts move closer, but earnings revisions follow.`,
+    GDP:    `GDP advance estimate tomorrow. First look at the quarter. Markets care most about the trend and revisions to prior quarters. Nominal vs. real tells the inflation story inside the headline.`,
+    ISM:    `ISM PMI tomorrow. Above 50 = expansion. New orders sub-index is the forward-looking signal. Prices paid sub-index feeds directly into inflation and margin expectations.`,
+    JOLTS:  `JOLTS job openings tomorrow. High openings = tight labor = sticky wages = Fed stays on hold. The quits rate is the real-time gauge of labor market confidence.`,
+    UMICH:  `UMich Consumer Sentiment tomorrow. Weak sentiment leads spending. The 1-year inflation expectations inside this number directly influence Fed communication.`,
   }
-  earningsTomorrow.sort((a, b) => b.marketCap - a.marketCap)
 
   if (macroTomorrow.length === 0 && earningsTomorrow.length === 0) {
-    console.log(`No calendar events for ${targetDate} — skipping`)
-    process.exit(0)
+    // Quiet tomorrow — post "earnings this week" as the fallback content
+    const now = new Date()
+    const dow = now.getUTCDay()
+    const monday = new Date(now)
+    monday.setUTCDate(now.getUTCDate() - (dow === 0 ? 6 : dow - 1))
+    const friday = new Date(monday); friday.setUTCDate(monday.getUTCDate() + 4)
+    const weekFrom = monday.toISOString().split('T')[0]
+    const weekTo   = friday.toISOString().split('T')[0]
+
+    const earningsWeek = await fetchFinnhubEarnings(weekFrom, weekTo)
+    const macroWeek    = MACRO_CALENDAR.filter(e => e.date >= weekFrom && e.date <= weekTo)
+
+    if (earningsWeek.length === 0 && macroWeek.length === 0) {
+      console.log(`No calendar events tomorrow or this week — skipping`)
+      process.exit(0)
+    }
+
+    const lines = [`Quiet tomorrow. Here's what matters this week:`, ``]
+    if (macroWeek.length > 0) {
+      for (const e of macroWeek) {
+        const d = new Date(e.date + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+        const emoji = { FOMC:'🏦', CPI:'📊', NFP:'💼', PCE:'📈', PPI:'🏭', RETAIL:'🛒', GDP:'📉', ISM:'🏗️', JOLTS:'👷', UMICH:'🧭' }[e.type] ?? '📅'
+        lines.push(`${emoji} ${e.label} — ${d}`)
+      }
+      lines.push(``)
+    }
+    if (earningsWeek.length > 0) {
+      const byDate = {}
+      for (const e of earningsWeek) {
+        if (!byDate[e.date]) byDate[e.date] = []
+        byDate[e.date].push(e.symbol)
+      }
+      for (const [d, symbols] of Object.entries(byDate).sort()) {
+        const dayStr = new Date(d + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+        lines.push(`📊 ${dayStr}: ${symbols.slice(0, 5).map(s => `$${s}`).join(' · ')}`)
+      }
+      lines.push(``, `Run models before the numbers hit. The beat/miss moves the price. Whether value changed is the real question.`)
+    }
+    lines.push(`#Earnings #EarningsSeason #Macro #Investing`)
+    await post(lines.join('\n'))
+    return
   }
 
   const dayLabel = new Date(targetDate + 'T12:00:00Z').toLocaleDateString('en-US', {
     weekday: 'long', month: 'short', day: 'numeric',
   })
-
   const lines = [`What to watch tomorrow — ${dayLabel}`, ``]
 
-  if (macroTomorrow.length > 0) {
-    const context = {
-      FOMC: `The Fed decision is the single most market-moving event of any quarter. Markets will start positioning today. The rate number itself is usually priced in — the surprise lives in the dot plot and language around cuts.`,
-      CPI:  `Inflation report tomorrow. A hot print = rates stay elevated, WACC stays high, growth stock fair values stay compressed. A cool print = door opens to cuts, discount rates fall. Both scenarios update every DCF model you run.`,
-      NFP:  `Jobs report tomorrow. Strong payrolls keep the Fed on hold. Weak payrolls pull rate cuts closer. The prior month revision frequently changes the interpretation of the headline.`,
-    }
-    for (const e of macroTomorrow) {
-      const emoji = { FOMC: '🏦', CPI: '📊', NFP: '💼' }[e.type] ?? '📅'
-      lines.push(`${emoji} ${e.label} — tomorrow`)
-      if (context[e.type]) lines.push(context[e.type])
-      lines.push(``)
-    }
-  }
-
-  if (earningsTomorrow.length > 0) {
-    const names = earningsTomorrow.slice(0, 5).map(t => `$${t.symbol}`)
-    lines.push(`📊 Reporting tomorrow: ${names.join(' · ')}`)
-    lines.push(`The best time to run the pre-earnings model is now — before the noise. What growth rate does the current price already assume?`)
+  for (const e of macroTomorrow) {
+    const emoji = { FOMC:'🏦', CPI:'📊', NFP:'💼', PCE:'📈', PPI:'🏭', RETAIL:'🛒', GDP:'📉', ISM:'🏗️', JOLTS:'👷', UMICH:'🧭' }[e.type] ?? '📅'
+    lines.push(`${emoji} ${e.label}`)
+    if (macroContext[e.type]) lines.push(macroContext[e.type])
     lines.push(``)
   }
 
-  lines.push(`Why it matters for investors: calendars move prices in the short term. Fundamentals determine value in the long term. Know which you're trading.`)
+  if (earningsTomorrow.length > 0) {
+    const names = earningsTomorrow.slice(0, 6).map(e => `$${e.symbol}`)
+    lines.push(`📊 Reporting tomorrow: ${names.join(' · ')}`)
+    const withEst = earningsTomorrow.filter(e => e.epsEstimate != null)
+    if (withEst.length > 0) {
+      lines.push(`Best time to run the pre-earnings model is now — before the noise. Consensus EPS for $${withEst[0].symbol}: $${withEst[0].epsEstimate?.toFixed(2)}.`)
+    } else {
+      lines.push(`Best time to run the pre-earnings model is now — before the noise and the price move.`)
+    }
+    lines.push(``)
+  }
+
+  lines.push(`Calendars move prices short term. Fundamentals determine value long term. Know which you're playing.`)
   lines.push(`#Calendar #Earnings #Macro #Investing`)
 
   await post(lines.join('\n'))
 }
 
 // ─── Mode: macro_preview ──────────────────────────────────────────────────────
-// Deep dive on the next upcoming CPI/NFP/FOMC event.
+// Deep dive on the next CPI/NFP/FOMC/PCE event — only fires when ≤5 days away.
+// Skips silently when the next event is >5 days out (no "8 days away" spam).
 
 async function runMacroPreview() {
   const todayUtc = new Date().toISOString().split('T')[0]
 
-  // Find the next upcoming event — prefer CPI/NFP/FOMC in that priority for depth
+  // Priority order: FOMC/CPI/NFP/PCE are highest-impact; others fire if within window
+  const HIGH_IMPACT = new Set(['FOMC', 'CPI', 'NFP', 'PCE'])
+
   const upcoming = MACRO_CALENDAR
     .filter(e => e.date > todayUtc)
     .sort((a, b) => a.date.localeCompare(b.date))
@@ -8896,60 +9124,132 @@ async function runMacroPreview() {
     process.exit(0)
   }
 
-  // Pick the soonest event
-  const next = upcoming[0]
+  // Find the soonest high-impact event within 5 days
+  const soonHighImpact = upcoming.find(e => {
+    const days = Math.round((new Date(e.date) - new Date(todayUtc)) / 86400000)
+    return HIGH_IMPACT.has(e.type) && days <= 5
+  })
+
+  // Fall back to any event within 3 days
+  const soonAny = upcoming.find(e => {
+    const days = Math.round((new Date(e.date) - new Date(todayUtc)) / 86400000)
+    return days <= 3
+  })
+
+  const next = soonHighImpact ?? soonAny
+
+  if (!next) {
+    // Nothing within window — skip silently, do not post "X days away" spam
+    const nextHighImpact = upcoming.find(e => HIGH_IMPACT.has(e.type))
+    const daysToNext = nextHighImpact
+      ? Math.round((new Date(nextHighImpact.date) - new Date(todayUtc)) / 86400000)
+      : 999
+    console.log(`Next macro event (${nextHighImpact?.label ?? 'none'}) is ${daysToNext} days away — outside 5-day window, skipping`)
+    process.exit(0)
+  }
+
   const daysAway = Math.round((new Date(next.date) - new Date(todayUtc)) / 86400000)
 
   const eventDate = new Date(next.date + 'T12:00:00Z').toLocaleDateString('en-US', {
     weekday: 'long', month: 'short', day: 'numeric',
   })
 
-  const typeEmoji = { CPI: '📊', NFP: '💼', FOMC: '🏦' }
+  const typeEmoji = { CPI:'📊', NFP:'💼', FOMC:'🏦', PCE:'📈', PPI:'🏭', RETAIL:'🛒', GDP:'📉', ISM:'🏗️', JOLTS:'👷', UMICH:'🧭' }
+
   const hookMap = {
-    CPI:  `CPI drops in ${daysAway} day${daysAway !== 1 ? 's' : ''}. Here's what matters:`,
-    NFP:  `Jobs report in ${daysAway} day${daysAway !== 1 ? 's' : ''}. Here's what's at stake:`,
-    FOMC: `Fed decision in ${daysAway} day${daysAway !== 1 ? 's' : ''}. Here's what actually moves markets:`,
+    CPI:    `CPI in ${daysAway} day${daysAway !== 1 ? 's' : ''}. Here's what moves markets:`,
+    NFP:    `Jobs report in ${daysAway} day${daysAway !== 1 ? 's' : ''}. Here's what's at stake:`,
+    FOMC:   `Fed decision in ${daysAway} day${daysAway !== 1 ? 's' : ''}. Here's what actually moves markets:`,
+    PCE:    `PCE inflation in ${daysAway} day${daysAway !== 1 ? 's' : ''} — the Fed's own gauge. What to watch:`,
+    PPI:    `Producer prices in ${daysAway} day${daysAway !== 1 ? 's' : ''}. Here's why it matters for margins:`,
+    RETAIL: `Retail sales in ${daysAway} day${daysAway !== 1 ? 's' : ''}. Direct read on the consumer:`,
+    GDP:    `GDP advance estimate in ${daysAway} day${daysAway !== 1 ? 's' : ''}. Here's what to focus on:`,
+    ISM:    `ISM PMI in ${daysAway} day${daysAway !== 1 ? 's' : ''}. The business cycle indicator:`,
+    JOLTS:  `JOLTS job openings in ${daysAway} day${daysAway !== 1 ? 's' : ''}. The real labor market read:`,
+    UMICH:  `UMich Consumer Sentiment in ${daysAway} day${daysAway !== 1 ? 's' : ''}. Forward-looking consumer data:`,
   }
 
   const expectationsMap = {
-    CPI: `What consensus expects: core CPI near 0.3% month-over-month. A beat (above 0.4%) keeps rates elevated. A miss (below 0.2%) opens the door to earlier cuts.`,
-    NFP: `What consensus expects: ~150–200K new jobs. Above 250K = Fed stays on hold well into the year. Below 100K = rate cuts move up the calendar.`,
-    FOMC: `What consensus expects: no change at this meeting. The real signal is the dot plot — how many cuts are projected for the year — and any shift in Powell's language on the timing.`,
+    CPI:    `What consensus expects: core CPI near 0.3% month-over-month. A beat (above 0.4%) keeps rates elevated. A miss (below 0.2%) opens the door to earlier cuts.`,
+    NFP:    `What consensus expects: ~150–200K new jobs. Above 250K = Fed stays on hold well into the year. Below 100K = rate cuts move up the calendar.`,
+    FOMC:   `What consensus expects: no change at this meeting. The real signal is the dot plot and any shift in Powell's language on the timing of cuts.`,
+    PCE:    `What consensus expects: core PCE near 0.2–0.3% month-over-month. This is the number the Fed literally targets at 2% annually. Surprises here move rate cut expectations even when CPI was already in-line.`,
+    PPI:    `What consensus expects: modest month-over-month gains. Hot PPI → higher input costs → either margin compression or price pass-through to CPI next month. Watch services PPI — it leads core services CPI.`,
+    RETAIL: `What consensus expects: modest month-over-month gain. Weak control group (ex autos/gas) signals the consumer is slowing. That pulls rate cuts closer, but it also cuts revenue forecasts — especially for consumer discretionary and advertising.`,
+    GDP:    `What consensus expects: positive real GDP growth. Markets care more about the trend than the headline. Real vs. nominal GDP tells you whether growth is genuine or inflation-inflated. Revisions to prior quarters can be market-moving.`,
+    ISM:    `What consensus expects: PMI near 50 (expansion/contraction threshold). New orders sub-index is the forward indicator. Prices paid sub-index leads to CPI and margin pressure. Below 48 for 2+ months = recession signal.`,
+    JOLTS:  `What consensus expects: ~7–8M open jobs. High openings = tight labor = Fed stays on hold. Watch the quits rate — rising quits = workers confident = upward wage pressure = sticky inflation.`,
+    UMICH:  `What consensus expects: sentiment in the 60–70 range. Below 60 = consumer stress. The 1-year inflation expectations inside this survey directly influence Fed communication. Deteriorating expectations can become self-fulfilling.`,
   }
 
   const beatMissMap = {
     CPI: {
-      beat: `Beat (hot print): yields spike, WACC rises, fair values across the market compress. Growth stocks — especially long-duration tech — take the biggest hit. A 1% rise in WACC reduces a typical growth stock's fair value by 15–25%.`,
-      miss: `Miss (cool print): yields fall, rate cut expectations accelerate, discount rates drop. Growth stocks and REITs benefit most. The sectors most sensitive: tech, utilities, and real estate.`,
-      sectors: `Rate relief benefits: tech, utilities, REITs. Higher-for-longer benefits: financials (NIM expansion), energy (demand signal).`,
+      beat: `Hot print: yields spike, WACC rises, fair values compress. Long-duration growth stocks (tech) take the biggest hit. A 100bps rise in the 10Y pushes WACC up ~50–70bps — that's a 15–25% hit on a typical growth stock's fair value.`,
+      miss: `Cool print: yields fall, rate cut expectations accelerate, discount rates drop. Growth stocks and REITs benefit most. Sectors: tech, utilities, real estate.`,
+      sectors: `Rate relief benefits: tech, utilities, REITs. Higher-for-longer benefits: financials (NIM expansion), energy.`,
     },
     NFP: {
-      beat: `Beat (strong jobs, >200K): Fed stays on hold. Rates higher for longer = pressure on rate-sensitive sectors. Banks and consumer discretionary benefit from employment strength.`,
-      miss: `Miss (weak jobs, <150K): cuts move up the calendar. Lower discount rates lift growth stocks and REITs. But a deteriorating labor market also cuts revenue forecasts for consumer-facing tech and advertising — the net effect depends on which channel dominates.`,
-      sectors: `Jobs beat benefits: banks, consumer discretionary, industrials. Jobs miss benefits: long-duration tech, utilities, REITs.\n\nThe Fed needs payrolls consistently below 150K to gain confidence to cut. A single soft print won't move them — but a trend will. Watch the prior-month revision: markets trade the direction, not the headline number.`,
+      beat: `Strong jobs (>200K): Fed stays on hold. Banks and consumer discretionary benefit from employment strength. Rate-sensitive sectors (REITs, utilities, long-duration tech) stay under pressure.`,
+      miss: `Weak jobs (<150K): cuts move up. Lower discount rates lift growth stocks and REITs. But a deteriorating labor market also cuts revenue forecasts for consumer-facing and advertising names.`,
+      sectors: `Jobs beat: banks, consumer discretionary, industrials. Jobs miss: long-duration tech, utilities, REITs. Watch the prior-month revision — it often changes the story more than the headline.`,
     },
     FOMC: {
-      beat: `Hawkish surprise (hold or hike): yields rise, WACC rises, growth stocks reprice lower. Value and dividend names are relatively insulated — their near-term cash flows discount less.`,
-      miss: `Dovish surprise (cut or dovish tone): yields fall, growth stocks rally. But if markets already priced in cuts, the real alpha comes from stocks where fair value hasn't caught up to the new rate regime yet.`,
-      sectors: `Dovish outcome benefits: long-duration growth (tech), REITs, utilities. Hawkish outcome benefits: banks, insurance, short-duration value stocks.`,
+      beat: `Hawkish surprise: yields rise, WACC rises, growth stocks reprice lower. Value and dividend names are relatively insulated — near-term cash flows discount less.`,
+      miss: `Dovish surprise: yields fall, growth stocks rally. If markets already priced in cuts, the real alpha is in stocks where fair value hasn't caught up to the new rate regime.`,
+      sectors: `Dovish: long-duration growth (tech), REITs, utilities. Hawkish: banks, insurance, short-duration value.`,
+    },
+    PCE: {
+      beat: `Hot PCE: Fed's own target being missed to the upside. Reinforces higher-for-longer. Growth stock fair values under pressure as WACC stays elevated.`,
+      miss: `Cool PCE: Fed's target within reach. Rate-cut confidence builds. Long-duration assets — tech, REITs — benefit from discount rate compression.`,
+      sectors: `PCE miss benefits: same as CPI miss — growth, REITs, utilities. PCE beat: financials, energy, value.`,
+    },
+    PPI: {
+      beat: `Hot PPI: upstream pressure building. Either margins compress (bad for industrial earnings) or price pass-through to CPI next month. Watch gross margin guidance from manufacturers.`,
+      miss: `Cool PPI: input cost relief. Better margin outlook for manufacturers and retailers. May foreshadow a softer CPI print next month.`,
+      sectors: `PPI beat pressure: industrials, consumer staples (margin compression). PPI miss relief: same sectors via better margin outlook.`,
+    },
+    RETAIL: {
+      beat: `Strong retail: consumer healthy, GDP tracking higher, Fed less likely to cut. Positive for consumer discretionary, advertising, and payments. Negative for rate-cut timeline.`,
+      miss: `Weak retail: consumer slowing. Pulls cuts closer but also pressures revenue estimates for retail, consumer discretionary, and ad-supported platforms.`,
+      sectors: `Retail beat: consumer discretionary, payments, advertising. Retail miss: same sectors hurt, but financials benefit if cuts accelerate.`,
+    },
+    GDP: {
+      beat: `Strong GDP: economy resilient, Fed stays on hold longer. Positive for cyclicals. Negative for rate-sensitive sectors.`,
+      miss: `Weak GDP: growth concerns. Cuts move closer. But deteriorating growth hurts earnings across the board — don't assume a cut alone lifts all stocks.`,
+      sectors: `GDP beat: cyclicals, industrials, materials. GDP miss: defensive sectors, REITs, utilities initially — but watch earnings revisions which follow.`,
+    },
+    ISM: {
+      beat: `ISM above 52: manufacturing expanding. Positive for industrials, materials, energy. May pressure rate-cut timeline if it signals broad economic strength.`,
+      miss: `ISM below 48: manufacturing contracting. Recession risk signal if sustained. Defensives outperform. Watch new orders for the turn.`,
+      sectors: `ISM beat: industrials, materials, energy. ISM miss: defensives, utilities. Sub-50 for 3+ months historically precedes broader slowdowns.`,
+    },
+    JOLTS: {
+      beat: `High openings (>8M): tight labor, Fed stays on hold. Wage pressure persists. Sectors: banks benefit from higher-for-longer.`,
+      miss: `Low openings (<7M): labor market softening. Cuts move closer. Growth stocks benefit. Watch quits rate for the leading edge of wage deceleration.`,
+      sectors: `JOLTS beat (tight labor): financials, staples. JOLTS miss (loosening): growth, REITs, long-duration.`,
+    },
+    UMICH: {
+      beat: `High sentiment: consumers confident, spending likely resilient. Positive for consumer discretionary, advertising. Fed stays on hold.`,
+      miss: `Low sentiment: consumer caution ahead. Retail and discretionary at risk. Cuts may come sooner — but for the wrong reason.`,
+      sectors: `Sentiment beat: consumer discretionary, payments. Sentiment miss: defensives, staples, utilities.`,
     },
   }
 
-  const detail = expectationsMap[next.type] ?? `${next.label} is ${daysAway} days away.`
-  const beat = beatMissMap[next.type]?.beat ?? ''
-  const miss = beatMissMap[next.type]?.miss ?? ''
+  const detail  = expectationsMap[next.type] ?? `${next.label} is in ${daysAway} days.`
+  const beat    = beatMissMap[next.type]?.beat ?? ''
+  const miss    = beatMissMap[next.type]?.miss ?? ''
   const sectors = beatMissMap[next.type]?.sectors ?? ''
 
   const lines = [
-    `${typeEmoji[next.type] ?? '📅'} ${hookMap[next.type] ?? `${next.label} in ${daysAway} days:`}`,
+    `${typeEmoji[next.type] ?? '📅'} ${hookMap[next.type] ?? `${next.label} in ${daysAway} days — ${eventDate}`}`,
     ``,
     detail,
     ``,
-    `Beat: ${beat}`,
+    beat    ? `If hot: ${beat}`    : null,
     ``,
-    `Miss: ${miss}`,
+    miss    ? `If cool: ${miss}`   : null,
     ``,
-    sectors ? sectors : null,
+    sectors ? sectors              : null,
     ``,
     `The number moves prices for a day. The rate path it implies moves valuations for a year.`,
     `#${next.type} #Macro #FedWatch #Rates #Investing`,
