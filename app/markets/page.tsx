@@ -18,7 +18,8 @@ import { useSetTopBarTabs }  from '@/contexts/TopBarTabsContext'
 import CalendarTab           from '@/components/markets/CalendarTab'
 import YieldCurveChart       from '@/components/markets/YieldCurveChart'
 import PriceTable            from '@/components/markets/PriceTable'
-import SectorStocksCard      from '@/components/markets/SectorStocksCard'
+import TodayEventsStrip       from '@/components/markets/TodayEventsStrip'
+import SectorStocksCard        from '@/components/markets/SectorStocksCard'
 import type { MarketTab }    from '@/components/markets/MarketsTabNav'
 
 import type { MarketsData }          from '@/app/api/markets/data/route'
@@ -171,6 +172,11 @@ export default function MarketsPage() {
             aria-labelledby="markets-tab-overview"
             className={cn(activeTab === 'overview' ? 'lg:h-full lg:flex lg:flex-col lg:overflow-hidden' : 'hidden')}
           >
+            {/* Today's events strip */}
+            <div className="shrink-0 mb-2">
+              <TodayEventsStrip />
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 lg:flex-1 lg:min-h-[200px] lg:overflow-hidden">
               <div className="lg:col-span-3 lg:h-full lg:min-h-0 lg:overflow-hidden">
                 {ctx ? <MarketPulse pulse={ctx.pulse} /> : <Sk h="h-[280px]" />}
