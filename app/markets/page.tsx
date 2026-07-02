@@ -177,14 +177,14 @@ export default function MarketsPage() {
               <TodayEventsStrip />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 lg:flex-1 lg:min-h-[200px] lg:overflow-hidden">
-              <div className="lg:col-span-3 lg:h-full lg:min-h-0 lg:overflow-hidden">
+            <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr_260px] gap-3 lg:flex-1 lg:min-h-[200px] lg:overflow-hidden">
+              <div className="lg:h-full lg:min-h-0 lg:overflow-hidden">
                 {ctx ? <MarketPulse pulse={ctx.pulse} /> : <Sk h="h-[280px]" />}
               </div>
-              <div className="lg:col-span-6 lg:h-full lg:min-h-0 lg:overflow-hidden">
+              <div className="lg:h-full lg:min-h-0 lg:overflow-hidden">
                 <NormalizedPerfChart />
               </div>
-              <div className="lg:col-span-3 lg:h-full lg:min-h-0 lg:overflow-hidden">
+              <div className="lg:h-full lg:min-h-0 lg:overflow-hidden">
                 <TopMoversCard />
               </div>
             </div>
@@ -201,16 +201,22 @@ export default function MarketsPage() {
             className={cn(activeTab === 'sectors' ? 'lg:h-full lg:flex lg:flex-col lg:overflow-hidden' : 'hidden')}
           >
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 lg:flex-1 lg:min-h-0 lg:overflow-hidden pb-4 lg:pb-0">
-              <div className="lg:col-span-7 lg:h-full lg:min-h-0 lg:overflow-hidden">
+              {/* Left: heatmap */}
+              <div className="lg:col-span-5 lg:h-full lg:min-h-0 lg:overflow-hidden">
                 {mkt ? <MarketHeatmapCard sectors={mkt.sectors} /> : <Sk h="h-[320px]" />}
               </div>
-              <div className="lg:col-span-5 lg:h-full lg:min-h-0 flex flex-col gap-3 lg:overflow-hidden">
-                <div className="flex-1 min-h-0 lg:overflow-hidden">
-                  {ctx ? <SectorRotation sectors={ctx.sectors} /> : <Sk h="h-[240px]" />}
+              {/* Center: sector rotation chart */}
+              <div className="lg:col-span-3 lg:h-full lg:min-h-0 flex flex-col gap-3 lg:overflow-hidden">
+                <div className="flex-1 min-h-0">
+                  {ctx ? <SectorRotation sectors={ctx.sectors} /> : <Sk h="h-full" />}
                 </div>
-                <div className="shrink-0 lg:overflow-hidden">
+                <div className="shrink-0">
                   {mkt ? <SectorPerformanceCard sectors={mkt.sectors} /> : <Sk h="h-[160px]" />}
                 </div>
+              </div>
+              {/* Right: sector stocks */}
+              <div className="lg:col-span-4 lg:h-full lg:min-h-0 lg:overflow-hidden">
+                <SectorStocksCard />
               </div>
             </div>
           </div>
