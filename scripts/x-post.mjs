@@ -3059,8 +3059,13 @@ async function claimAndPost(mode, platform, ticker = '') {
       })
       if (error) claimError = error
       else if (claimed) {
-        queueRowId = claimed.id ?? claimed  // RPC may return the row or just the id
-        console.log(`Claimed queue row (id=${queueRowId}) for ${mode} [${platform}]`)
+        // claim_post returns SETOF post_queue — Supabase client wraps it as an array
+        const row = Array.isArray(claimed) ? claimed[0] : claimed
+        if (row?.id) {
+          queueRowId = row.id
+          console.log(`Claimed queue row (id=${queueRowId}) for ${mode} [${platform}]`)
+        }
+        // If row is empty/null another worker already claimed it — fall through to legacy
       }
     } catch (rpcErr) {
       claimError = rpcErr
