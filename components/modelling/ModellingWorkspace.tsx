@@ -26,6 +26,10 @@ interface ModellingWorkspaceProps {
   statementsData?: StatementsDataLike | null
   onDerivedFVChange?: (fv: number | null) => void
   cockpitWacc?: number
+  /** When AssumptionsPanel changes CAGR, cockpit passes the new value here so the Full DCF Table stays in sync */
+  cockpitCagr?: number
+  /** Called when the user edits CAGR inside the Full DCF Table so the cockpit can stay in sync */
+  onCagrChange?: (cagr: number) => void
 }
 
 // Derive ΔNWC from balance sheet: NWC = (currentAssets - cash) - currentLiabilities
@@ -295,7 +299,7 @@ function DCFSetupBar({
   )
 }
 
-export default function ModellingWorkspace({ apiData, ticker, statementsData, onDerivedFVChange, cockpitWacc }: ModellingWorkspaceProps) {
+export default function ModellingWorkspace({ apiData, ticker, statementsData, onDerivedFVChange, cockpitWacc, cockpitCagr, onCagrChange }: ModellingWorkspaceProps) {
   // Overridable assumptions
   const [waccOverride, setWaccOverride] = useState<number | null>(null)
   const [terminalGOverride, setTerminalGOverride] = useState<number | null>(null)
@@ -321,8 +325,29 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData, on
   const [rowOverrides, setRowOverrides] = useState<Record<string, Record<string, number>>>({})
 
   const wacc = Math.max(0.01, waccOverride ?? baseInput.wacc)
-  const cagr = Math.max(0, baseInput.cagr)
+  // cagr: prefer cockpitCagr (set by AssumptionsPanel) when user hasn't manually overridden via flatCagrPct
+  const cagr = Math.max(0, flatCagrPct != null ? flatCagrPct / 100 : cockpitCagr ?? baseInput.cagr)
   const terminalG = Math.max(0, terminalGOverride ?? baseInput.terminalG)
+
+  // When cockpitCagr changes meaningfully (user edited AssumptionsPanel), sync the workspace:
+  // switch to 'cagr' mode and set flatCagrPct so the projected revenue rows recalculate.
+  useEffect(() => {
+    if (cockpitCagr == null) return
+    const baseCagr = baseInput.cagr
+    const diff = Math.abs(cockpitCagr - baseCagr)
+    // Only auto-switch when the change is intentional (>0.5pp) and user hasn't manually overridden
+    if (diff > 0.005 && flatCagrPct == null) {
+      setGrowthMode('cagr')
+      setFlatCagrPct(Math.round(cockpitCagr * 10000) / 100) // store as %
+    }
+    // When reset back to base value, return to analyst mode
+    if (diff <= 0.001 && flatCagrPct != null) {
+      setGrowthMode('analyst')
+      setFlatCagrPct(null)
+    }
+  // Only fire when cockpitCagr changes, not on every render
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cockpitCagr])
   const taxRate = baseInput.taxRate
 
   // Build assumption set (for exitMultiple default)
@@ -591,6 +616,8 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData, on
     setRowOverrides({})
     setGrowthMode('analyst')
     setFlatCagrPct(null)
+    // Restore cockpit CAGR to the base API value
+    onCagrChange?.(baseInput.cagr)
   }
 
   // Fair value: Damodaran four-model blend of UFCF and LFCF × both terminal methods.
@@ -698,10 +725,19 @@ export default function ModellingWorkspace({ apiData, ticker, statementsData, on
         cockpitWacc={cockpitWacc}
         onWaccChange={(pct) => setWaccOverride(pct / 100)}
         growthMode={growthMode}
-        onGrowthModeChange={setGrowthMode}
-        flatCagrPct={flatCagrPct}
+        onGrowthModeChange={(mode) => {
+          setGrowthMode(mode)
+          // When switching back to analyst mode, tell the cockpit to restore baseInput.cagr
+          if (mode === 'analyst') onCagrChange?.(baseInput.cagr)
+        }}
+        flatCagrPct={flatCagrPct ?? (cagr * 100)}
         baseCagrPct={baseInput.cagr * 100}
-        onFlatCagrChange={setFlatCagrPct}
+        onFlatCagrChange={(v) => {
+          setFlatCagrPct(v)
+          setGrowthMode('cagr')
+          // Sync back to cockpit so AssumptionsPanel and method cards update
+          onCagrChange?.(v / 100)
+        }}
         hasOverrides={
           waccOverride !== null || terminalMethod !== 'multiple' || isLfcf ||
           growthMode !== 'analyst' || flatCagrPct !== null || Object.keys(rowOverrides).length > 0

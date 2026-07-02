@@ -772,6 +772,8 @@ export default function ValuationCockpit({ apiData, ticker, statementsData, limi
             statementsData={statementsData}
             onDerivedFVChange={setLiveDcfFV}
             cockpitWacc={assumptions.wacc}
+            cockpitCagr={assumptions.cagr}
+            onCagrChange={v => handleAssumptionChange({ ...assumptions, cagr: v })}
           />
         </div>
       </details>
